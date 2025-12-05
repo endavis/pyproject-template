@@ -21,7 +21,7 @@ jobs:
     outputs:
       normalized_tag: ${{ steps.normalize_tag.outputs.normalized_tag }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Normalize tag name
         id: normalize_tag
