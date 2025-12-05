@@ -388,7 +388,7 @@ Your contributions make this project better for everyone. We appreciate your tim
 ---
 
 For more detailed information, see:
-- [README.md](README.md) - Project overview
-- [AGENTS.md](AGENTS.md) - Development guide for AI agents
+- [README.md](../README.md) - Project overview
+- [AGENTS.md](../AGENTS.md) - Development guide for AI agents
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - Community guidelines
-- [SECURITY.md](.github/SECURITY.md) - Security policy
+- [SECURITY.md](SECURITY.md) - Security policy

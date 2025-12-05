@@ -11,7 +11,7 @@ Package Name is a modern Python project template with comprehensive tooling for 
 - [Installation Guide](installation.md)
 - [User Guide](usage.md)
 - [API Reference](api.md)
-- [Contributing](../CONTRIBUTING.md)
+- [Contributing](../.github/CONTRIBUTING.md)
 
 ## Features
 
@@ -45,8 +45,8 @@ print(message)  # Output: Hello, Python!
 
 ### For Contributors
 
-- **[Contributing Guide](../CONTRIBUTING.md)** - How to contribute
-- **[Code of Conduct](../CODE_OF_CONDUCT.md)** - Community guidelines
+- **[Contributing Guide](../.github/CONTRIBUTING.md)** - How to contribute
+- **[Code of Conduct](../.github/CODE_OF_CONDUCT.md)** - Community guidelines
 - **[Development Guide](../AGENTS.md)** - Development setup and standards
 
 ## Support

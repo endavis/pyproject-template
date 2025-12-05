@@ -74,8 +74,6 @@ This is a modern Python project template using `uv` for package management, `doi
 ├── AGENTS.md             # AI agent documentation
 ├── AI_SETUP.md           # AI tools setup guide
 ├── CHANGELOG.md          # Release history
-├── CODE_OF_CONDUCT.md    # Community guidelines
-├── CONTRIBUTING.md       # Contributing guide
 ├── dodo.py               # Task automation definitions
 ├── LICENSE               # Project license (MIT by default)
 ├── pyproject.toml        # Project metadata and tool configuration
@@ -688,7 +686,7 @@ Proceed without asking when:
 - **Explain clearly**: Provide context in commit messages
 - **Check CI**: Ensure all checks pass
 - **Update docs**: Keep documentation synchronized
-- **Review guidelines**: See **CONTRIBUTING.md** for detailed development guidelines and standards
+- **Review guidelines**: See **.github/CONTRIBUTING.md** for detailed development guidelines and standards
 
 ## Testing Expectations
 
@@ -841,10 +839,10 @@ Consider creating separate template variants for different use cases:
 - **LICENSE**: Project license (MIT)
 
 ### Community & Contributing
-- **CONTRIBUTING.md**: Development setup, coding standards, testing requirements, and contribution workflow
-- **CODE_OF_CONDUCT.md**: Contributor Covenant code of conduct for community guidelines
-- **SECURITY.md**: Security policy, vulnerability reporting, and supported versions
-- **CODEOWNERS**: Code ownership and review assignments
+- **.github/CONTRIBUTING.md**: Development setup, coding standards, testing requirements, and contribution workflow
+- **.github/CODE_OF_CONDUCT.md**: Contributor Covenant code of conduct for community guidelines
+- **.github/SECURITY.md**: Security policy, vulnerability reporting, and supported versions
+- **.github/CODEOWNERS**: Code ownership and review assignments
 
 ### Task Automation
 - **dodo.py**: All development tasks (see `doit list` for available commands)
@@ -882,7 +880,7 @@ Consider creating separate template variants for different use cases:
 - Review CI logs for detailed error messages
 - Run `doit list` to see all available tasks
 - Check `.envrc` and `.envrc.local` configuration for environment issues
-- Read **CONTRIBUTING.md** for development guidelines
+- Read **.github/CONTRIBUTING.md** for development guidelines
 - See **AI_SETUP.md** for AI assistant configuration
 
 ---

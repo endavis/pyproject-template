@@ -242,4 +242,4 @@ See [CHANGELOG.md](../CHANGELOG.md) for version history and changes.
 
 ## Contributing
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for information on contributing to the API.
+See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for information on contributing to the API.

@@ -61,4 +61,4 @@ Have an interesting use case? We'd love to add it!
 3. Add it to this README
 4. Submit a pull request
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for more details.
+See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for more details.

@@ -384,5 +384,5 @@ uv run pre-commit install
 ## Next Steps
 
 - Check the [API Reference](api.md) for complete documentation
-- Read [CONTRIBUTING.md](../CONTRIBUTING.md) for contribution guidelines
+- Read [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for contribution guidelines
 - Review [ANALYSIS_SUMMARY.md](../ANALYSIS_SUMMARY.md) for template improvements
