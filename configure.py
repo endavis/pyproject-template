@@ -111,6 +111,15 @@ def main() -> int:
 
     github_user = prompt("GitHub username", "username")
 
+    # Optional features
+    print("\n" + "-" * 70)
+    print("Optional Features")
+    print("-" * 70)
+
+    enable_dependabot = input(
+        "Enable Dependabot for automatic dependency updates? [y/N]: "
+    ).strip().lower() in ("y", "yes")
+
     # Confirm configuration
     print("\n" + "=" * 70)
     print("Configuration Summary")
@@ -121,6 +130,7 @@ def main() -> int:
     print(f"Description:      {description}")
     print(f"Author:           {author_name} <{author_email}>")
     print(f"GitHub:           {github_user}")
+    print(f"Dependabot:       {'Enabled' if enable_dependabot else 'Disabled'}")
     print("=" * 70)
 
     confirm = input("\nProceed with configuration? [y/N]: ").strip().lower()
@@ -176,6 +186,13 @@ def main() -> int:
         print("  ✓ Updating test files")
         for py_file in test_dir.rglob("*.py"):
             update_file(py_file, replacements)
+
+    # Enable Dependabot if requested
+    dependabot_example = Path(".github/dependabot.yml.example")
+    dependabot_config = Path(".github/dependabot.yml")
+    if enable_dependabot and dependabot_example.exists():
+        print("  ✓ Enabling Dependabot")
+        shutil.copy(dependabot_example, dependabot_config)
 
     print("\n✅ Configuration complete!")
     print("\n" + "=" * 70)
