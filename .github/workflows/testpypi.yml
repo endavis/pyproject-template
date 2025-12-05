@@ -43,7 +43,7 @@ jobs:
           perl -0777 -pe "s/^version\s*=\s*\".*\"$/version = \"$version\"/m" -i pyproject.toml
           perl -0777 -pe "s/__version__\s*=\s*\".*\"/__version__ = \"$version\"/" -i src/package_name/_version.py
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
 
