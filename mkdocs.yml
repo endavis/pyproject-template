@@ -1,0 +1,68 @@
+site_name: Package Name
+site_description: A short description of your package
+site_author: Your Name
+site_url: https://username.github.io/package_name
+
+repo_name: username/package_name
+repo_url: https://github.com/username/package_name
+edit_uri: edit/main/docs/
+
+# Theme configuration
+# Default: readthedocs (built-in, always works)
+# Alternative: material (mkdocs-material package included in dev dependencies)
+# To use material theme, change 'name: readthedocs' to 'name: material' and uncomment features below
+theme:
+  name: readthedocs
+  navigation_depth: 3
+  # Uncomment these for material theme:
+  # palette:
+  #   - media: "(prefers-color-scheme: light)"
+  #     scheme: default
+  #     primary: indigo
+  #     toggle:
+  #       icon: material/brightness-7
+  #       name: Switch to dark mode
+  #   - media: "(prefers-color-scheme: dark)"
+  #     scheme: slate
+  #     primary: indigo
+  #     toggle:
+  #       icon: material/brightness-4
+  #       name: Switch to light mode
+  # features:
+  #   - navigation.tabs
+  #   - navigation.sections
+  #   - navigation.top
+  #   - search.suggest
+  #   - search.highlight
+  #   - content.code.copy
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - pymdownx.tabbed:
+      alternate_style: true
+  - tables
+  - attr_list
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Installation: installation.md
+  - Usage: usage.md
+  - API Reference: api.md
+  - Extensions: extensions.md
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/username
+    - icon: fontawesome/brands/python
+      link: https://pypi.org/project/package-name

@@ -1,0 +1,9 @@
+# This file keeps the tmp/ directory in version control
+# All temporary files generated during development go here:
+# - .ruff_cache/
+# - .mypy_cache/
+# - .pytest_cache/
+# - htmlcov/
+# - coverage.xml
+# - .coverage
+# - .uv_cache/
