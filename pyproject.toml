@@ -70,6 +70,7 @@ version-file = "src/package_name/_version.py"
 # cache-dir controlled by RUFF_CACHE_DIR environment variable (set in .envrc)
 line-length = 100
 target-version = "py312"
+extend-exclude = ["**/_version.py"]
 
 [tool.ruff.lint]
 select = [
