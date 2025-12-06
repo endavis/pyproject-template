@@ -221,7 +221,7 @@ uv run pytest -v
 uv run pytest --cov=package_name --cov-report=term-missing
 
 # Run specific test
-uv run pytest tests/test_core.py::test_greet_default -v
+uv run pytest tests/test_example.py::test_version -v
 ```
 
 ## Type Checking

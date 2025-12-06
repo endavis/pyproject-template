@@ -1,6 +1,6 @@
 # Package Name
 
-[![CI](https://github.com/username/package_name/workflows/CI/badge.svg)](https://github.com/username/package_name/actions)
+[![CI](https://github.com/username/package_name/actions/workflows/ci.yml/badge.svg)](https://github.com/username/package_name/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/username/package_name/branch/main/graph/badge.svg)](https://codecov.io/gh/username/package_name)
 [![PyPI version](https://badge.fury.io/py/package-name.svg)](https://badge.fury.io/py/package-name)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
@@ -9,9 +9,9 @@ A short description of your package.
 
 ## Features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- Modern tooling: `uv` for deps, `ruff` for format/lint, `mypy` in strict mode
+- CI/CD ready: GitHub Actions for checks, coverage upload, and releases
+- Release automation: hatch-vcs + commitizen-driven tagging and changelog
 
 ## Installation
 
@@ -90,9 +90,7 @@ git clone https://github.com/username/package_name.git
 cd package_name
 
 # Create virtual environment and install dependencies
-uv venv
-source .venv/bin/activate
-uv pip install -e ".[dev]"
+uv sync --all-extras --dev
 
 # Install pre-commit hooks
 doit pre_commit_install
@@ -177,7 +175,7 @@ source .venv/bin/activate
 export UV_CACHE_DIR="$(pwd)/tmp/.uv_cache"
 
 # Install dependencies
-uv pip install -e ".[dev]"
+uv sync --all-extras --dev
 ```
 
 ## Available Tasks
@@ -240,7 +238,7 @@ doit coverage
 open tmp/htmlcov/index.html
 
 # Advanced: Run specific test directly
-uv run pytest tests/test_core.py::test_greet_default -v
+uv run pytest tests/test_example.py::test_version -v
 ```
 
 ## Code Quality

@@ -40,8 +40,7 @@ def task_install():
     """Install package with dependencies."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv venv --seed",
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv pip install -e .",
+            f"UV_CACHE_DIR={UV_CACHE_DIR} uv sync",
         ],
         "title": title_with_actions,
     }
@@ -51,8 +50,7 @@ def task_dev():
     """Install package with dev dependencies."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv venv --seed",
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv pip install -e '.[dev]'",
+            f"UV_CACHE_DIR={UV_CACHE_DIR} uv sync --all-extras --dev",
         ],
         "title": title_with_actions,
     }
@@ -345,7 +343,6 @@ def task_update_deps():
         ))
         console.print()
 
-        # Show outdated packages
         print("Checking for outdated dependencies...")
         print()
         subprocess.run(
@@ -356,13 +353,13 @@ def task_update_deps():
 
         print()
         print("=" * 70)
-        print("Updating all dependencies...")
+        print("Updating all dependencies (including extras)...")
         print("=" * 70)
         print()
 
-        # Update dependencies
+        # Update dependencies and refresh lockfile
         result = subprocess.run(
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv pip install --upgrade -e '.[dev]'",
+            f"UV_CACHE_DIR={UV_CACHE_DIR} uv sync --all-extras --dev --upgrade",
             shell=True,
         )
 

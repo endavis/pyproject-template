@@ -67,10 +67,10 @@ uv run doit test
 uv run doit coverage
 
 # Run specific test file
-uv run pytest tests/test_core.py -v
+uv run pytest tests/test_example.py -v
 
 # Run specific test function
-uv run pytest tests/test_core.py::test_greet_default -v
+uv run pytest tests/test_example.py::test_version -v
 ```
 
 #### Code Quality Tasks
@@ -393,4 +393,4 @@ uv run pre-commit install
 
 - Check the [API Reference](api.md) for complete documentation
 - Read [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for contribution guidelines
-- Review [ANALYSIS_SUMMARY.md](../ANALYSIS_SUMMARY.md) for template improvements
+- Review the docs and TODOs in this template to identify improvements for your project

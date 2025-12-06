@@ -8,33 +8,30 @@ repo_url: https://github.com/username/package_name
 edit_uri: edit/main/docs/
 
 # Theme configuration
-# Default: readthedocs (built-in, always works)
-# Alternative: material (mkdocs-material package included in dev dependencies)
-# To use material theme, change 'name: readthedocs' to 'name: material' and uncomment features below
+# Default: material (modern, responsive theme)
 theme:
-  name: readthedocs
-  navigation_depth: 3
-  # Uncomment these for material theme:
-  # palette:
-  #   - media: "(prefers-color-scheme: light)"
-  #     scheme: default
-  #     primary: indigo
-  #     toggle:
-  #       icon: material/brightness-7
-  #       name: Switch to dark mode
-  #   - media: "(prefers-color-scheme: dark)"
-  #     scheme: slate
-  #     primary: indigo
-  #     toggle:
-  #       icon: material/brightness-4
-  #       name: Switch to light mode
-  # features:
-  #   - navigation.tabs
-  #   - navigation.sections
-  #   - navigation.top
-  #   - search.suggest
-  #   - search.highlight
-  #   - content.code.copy
+  name: material
+  # Optional features (uncomment to enable)
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
 
 plugins:
   - search

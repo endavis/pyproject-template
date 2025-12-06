@@ -4,7 +4,7 @@
 This example demonstrates the most common usage patterns for the package.
 """
 
-from package_name import __version__
+from package_name import __version__, greet
 
 
 def main():
@@ -16,9 +16,14 @@ def main():
     # Example 1: Basic operation
     print("Example 1: Basic Operation")
     print("-" * 40)
-    # TODO: Add your basic usage example here
-    # result = your_function()
-    # print(f"Result: {result}")
+    
+    # Use the greet function
+    message = greet()
+    print(f"Default greeting: {message}")
+    
+    custom_message = greet("Developer")
+    print(f"Custom greeting:  {custom_message}")
+    
     print("Basic operation completed successfully!")
     print()
 
@@ -27,16 +32,15 @@ def main():
     print("-" * 40)
     data = {"key": "value", "count": 42}
     print(f"Input data: {data}")
-    # TODO: Process data with your package
-    # processed = process_data(data)
-    # print(f"Processed: {processed}")
+    # Placeholder for future data processing capabilities
+    print("Data processing is ready to be implemented.")
     print()
 
     # Example 3: Error handling
     print("Example 3: Error Handling")
     print("-" * 40)
     try:
-        # TODO: Add code that might raise an exception
+        # Example of handling potential errors (if applicable)
         # result = might_fail()
         print("Operation succeeded!")
     except Exception as e:
