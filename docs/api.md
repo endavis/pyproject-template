@@ -61,7 +61,7 @@ The current version of the package as a string.
 
 ```python
 import package_name
-print(package_name.__version__)  # e.g., "0.0.0"
+print(package_name.__version__)  # Derived from the git tag by hatch-vcs
 ```
 
 ## Module Structure
@@ -71,7 +71,7 @@ The package is organized as follows:
 ```
 package_name/
 ├── __init__.py      # Package initialization, exports greet and __version__
-├── _version.py      # Version information
+├── _version.py      # Version information (generated from git tags at build time)
 └── core.py          # Core functionality (greet function)
 ```
 

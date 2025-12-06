@@ -255,7 +255,7 @@ This will:
 2. Check for uncommitted changes
 3. Pull latest changes
 4. Run all quality checks
-5. Use commitizen to update CHANGELOG.md and create the `v*` git tag
+5. Use commitizen to update CHANGELOG.md (merging prerelease entries) and create the `v*` git tag
 6. Push the tag
 7. Trigger CI/CD to build and publish to PyPI
 

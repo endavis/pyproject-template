@@ -124,7 +124,7 @@ cp .envrc.local.example .envrc.local
 
 This project uses automated versioning and releases powered by `commitizen` and `hatch-vcs`.
 
-- **Single Source of Truth:** The Git tag is the definitive version. `pyproject.toml` and `_version.py` are updated dynamically at build time or by automation tools.
+- **Single Source of Truth:** The Git tag is the definitive version. `pyproject.toml` and `_version.py` are generated at build time from tags (no manual edits).
 - **Versioning Scheme:**
     - **Production:** Standard SemVer (e.g., `v1.0.0`).
     - **Development:** SemVer Pre-release (e.g., `v1.0.0-alpha.1`, `v1.0.0-beta.0`).
@@ -137,7 +137,7 @@ doit release
 ```
 This automated task will:
 1.  Calculate the next version based on conventional commits.
-2.  Update `CHANGELOG.md`, merging any pre-release entries.
+2.  Update `CHANGELOG.md`, merging any pre-release entries (commitizen `--merge-prerelease`).
 3.  Create a git tag (e.g., `v1.0.0`).
 4.  Push commits and tags to GitHub, triggering the `release` workflow.
 
@@ -148,8 +148,9 @@ doit release_dev --type beta  # Specify type (alpha, beta, rc)
 ```
 This automated task will:
 1.  Bump the version to the next pre-release (e.g., `v1.0.0-alpha.1`).
-2.  Create a git tag.
-3.  Push to GitHub, triggering the `testpypi` workflow.
+2.  Update `CHANGELOG.md` for the prerelease.
+3.  Create a prerelease git tag (e.g., `v1.0.0-alpha.1`).
+4.  Push to GitHub, triggering the `testpypi` workflow.
 
 ### Environment Variables
 
@@ -207,8 +208,8 @@ doit fmt_pyproject # Format pyproject.toml with pyproject-fmt
 
 # Version Management (Commitizen)
 doit commit        # Interactive commit with conventional format
-doit bump          # Bump version based on commits
-doit changelog     # Generate CHANGELOG from commits
+doit release       # Production release (commitizen-driven)
+doit release_dev   # Pre-release/TestPyPI (commitizen-driven)
 
 # Documentation
 doit docs_serve    # Serve docs locally with live reload
