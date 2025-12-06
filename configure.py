@@ -149,6 +149,15 @@ def main() -> int:
         "Your Name": author_name,
         "your.email@example.com": author_email,
         "username": github_user,
+        "original-owner": github_user,
+        "https://github.com/username/package_name": f"https://github.com/{github_user}/{package_name}",
+        "https://github.com/username/package_name/": f"https://github.com/{github_user}/{package_name}/",
+        "https://github.com/username/package_name/workflows/CI/badge.svg": f"https://github.com/{github_user}/{package_name}/workflows/CI/badge.svg",
+        "https://codecov.io/gh/username/package_name": f"https://codecov.io/gh/{github_user}/{package_name}",
+        "https://github.com/username/package_name/issues": f"https://github.com/{github_user}/{package_name}/issues",
+        "https://github.com/username/package_name/pulls": f"https://github.com/{github_user}/{package_name}/pulls",
+        "package-name.svg": f"{pypi_name}.svg",
+        "package-name/": f"{pypi_name}/",
     }
 
     # Update files
@@ -159,9 +168,14 @@ def main() -> int:
         "dodo.py",
         "mkdocs.yml",
         "AGENTS.md",
+        "CHANGELOG.md",
         ".github/workflows/ci.yml",
         ".github/workflows/release.yml",
         ".github/workflows/testpypi.yml",
+        ".github/CONTRIBUTING.md",
+        ".github/SECURITY.md",
+        ".github/CODEOWNERS",
+        ".github/pull_request_template.md",
     ]
 
     for file_path in files_to_update:
@@ -176,6 +190,21 @@ def main() -> int:
         print("  ✓ Updating documentation files")
         for md_file in docs_dir.rglob("*.md"):
             update_file(md_file, replacements)
+
+    # Update issue/PR templates
+    issue_template_dir = Path(".github/ISSUE_TEMPLATE")
+    if issue_template_dir.exists():
+        print("  ✓ Updating issue templates")
+        for md_file in issue_template_dir.rglob("*.md"):
+            update_file(md_file, replacements)
+
+    # Update examples directory
+    examples_dir = Path("examples")
+    if examples_dir.exists():
+        print("  ✓ Updating example files")
+        for file_path in examples_dir.rglob("*"):
+            if file_path.suffix in {".py", ".md"}:
+                update_file(file_path, replacements)
 
     # Rename package directory
     old_package_dir = Path("src/package_name")
