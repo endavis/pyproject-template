@@ -60,5 +60,3 @@ Have an interesting use case? We'd love to add it!
 2. Add clear comments explaining what it does
 3. Add it to this README
 4. Submit a pull request
-
-See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for more details.

@@ -194,4 +194,4 @@ uv pip install package-name
 
 - Read the [Usage Guide](usage.md) to learn how to use the package
 - Check the [API Reference](api.md) for detailed documentation
-- See [examples/](../examples/) for usage examples
+- See [Examples](examples.md) for usage examples

@@ -238,8 +238,8 @@ uv run mypy src/package_name/core.py
 
 ## Changelog
 
-See [CHANGELOG.md](../CHANGELOG.md) for version history and changes.
+See [CHANGELOG.md](https://github.com/username/package_name/blob/main/CHANGELOG.md) for version history and changes.
 
 ## Contributing
 
-See [CONTRIBUTING.md](../.github/CONTRIBUTING.md) for information on contributing to the API.
+See [CONTRIBUTING.md](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md) for information on contributing to the API.

@@ -57,6 +57,7 @@ nav:
   - API Reference: api.md
   - Extensions: extensions.md
   - Migration Guide: migration.md
+  - Examples: examples.md
 
 extra:
   social:

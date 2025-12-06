@@ -11,7 +11,7 @@ Package Name is a modern Python project template with comprehensive tooling for 
 - [Installation Guide](installation.md)
 - [User Guide](usage.md)
 - [API Reference](api.md)
-- [Contributing](../.github/CONTRIBUTING.md)
+- [Contributing](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)
 
 ## Features
 
@@ -46,16 +46,16 @@ print(message)  # Output: Hello, Python!
 
 ### For Contributors
 
-- **[Contributing Guide](../.github/CONTRIBUTING.md)** - How to contribute
-- **[Code of Conduct](../.github/CODE_OF_CONDUCT.md)** - Community guidelines
-- **[Development Guide](../AGENTS.md)** - Development setup and standards
+- **[Contributing Guide](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)** - How to contribute
+- **[Code of Conduct](https://github.com/username/package_name/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
+- **[Development Guide](https://github.com/username/package_name/blob/main/AGENTS.md)** - Development setup and standards
 
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/username/package_name/issues)
 - **Discussions:** [GitHub Discussions](https://github.com/username/package_name/discussions)
-- **Security:** See [SECURITY.md](../.github/SECURITY.md)
+- **Security:** See [SECURITY.md](https://github.com/username/package_name/blob/main/.github/SECURITY.md)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](../LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/username/package_name/blob/main/LICENSE) file for details.
