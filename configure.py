@@ -157,6 +157,8 @@ def main() -> int:
         "README.md",
         "LICENSE",
         "dodo.py",
+        "mkdocs.yml",
+        "AGENTS.md",
         ".github/workflows/ci.yml",
         ".github/workflows/release.yml",
         ".github/workflows/testpypi.yml",
@@ -167,6 +169,13 @@ def main() -> int:
         if path.exists():
             print(f"  ✓ Updating {file_path}")
             update_file(path, replacements)
+    
+    # Update docs directory
+    docs_dir = Path("docs")
+    if docs_dir.exists():
+        print("  ✓ Updating documentation files")
+        for md_file in docs_dir.rglob("*.md"):
+            update_file(md_file, replacements)
 
     # Rename package directory
     old_package_dir = Path("src/package_name")
