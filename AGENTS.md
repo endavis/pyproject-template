@@ -856,6 +856,7 @@ Consider creating separate template variants for different use cases:
 - **docs/usage.md**: Usage guide and examples
 - **docs/api.md**: API reference documentation
 - **docs/extensions.md**: Optional tools and extensions guide
+- **docs/migration.md**: How to migrate an existing project into this template
 
 ### Example Code
 - **examples/README.md**: Overview of available examples

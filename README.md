@@ -129,6 +129,10 @@ This project uses automated versioning and releases powered by `commitizen` and 
     - **Production:** Standard SemVer (e.g., `v1.0.0`).
     - **Development:** SemVer Pre-release (e.g., `v1.0.0-alpha.1`, `v1.0.0-beta.0`).
 
+### Migrating an Existing Project
+
+See `docs/migration.md` for a step-by-step guide to bring an existing project into this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
+
 ### Creating a Release
 
 **Production Release (PyPI):**
