@@ -18,30 +18,10 @@ jobs:
   build:
     needs: test
     runs-on: ubuntu-latest
-    outputs:
-      normalized_tag: ${{ steps.normalize_tag.outputs.normalized_tag }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Normalize tag name
-        id: normalize_tag
-        run: |
-          ref="${GITHUB_REF_NAME}"
-          if [[ "$ref" =~ ^d(.*)$ ]]; then
-            echo "normalized_tag=${BASH_REMATCH[1]}" >> "$GITHUB_OUTPUT"
-          else
-            echo "normalized_tag=$ref" >> "$GITHUB_OUTPUT"
-          fi
-
-      - name: Set package version from tag
-        env:
-          NORMALIZED_TAG: ${{ steps.normalize_tag.outputs.normalized_tag }}
-        run: |
-          version="${NORMALIZED_TAG}"
-          [ -z "$version" ] && echo "No normalized tag found" && exit 1
-          echo "Set package version to $version"
-          perl -0777 -pe "s/^version\s*=\s*\".*\"$/version = \"$version\"/m" -i pyproject.toml
-          perl -0777 -pe "s/__version__\s*=\s*\".*\"/__version__ = \"$version\"/" -i src/package_name/_version.py
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:
@@ -72,10 +52,6 @@ jobs:
         with:
           name: dist
           path: dist
-
-      - name: Show normalized tag
-        run: |
-          echo "Normalized tag: ${{ needs.build.outputs.normalized_tag }}"
 
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1

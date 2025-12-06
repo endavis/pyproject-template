@@ -20,14 +20,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - name: Set package version from tag
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          [ -z "$version" ] && echo "No version found in tag" && exit 1
-          echo "Set package version to $version"
-          perl -0777 -pe "s/^version\s*=\s*\".*\"$/version = \"$version\"/m" -i pyproject.toml
-          perl -0777 -pe "s/__version__\s*=\s*\".*\"/__version__ = \"$version\"/" -i src/package_name/_version.py
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-python@v5
         with:

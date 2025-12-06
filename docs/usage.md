@@ -242,9 +242,13 @@ This builds the documentation and pushes to the `gh-pages` branch. Enable GitHub
 ### Creating a Release
 
 ```bash
-# Set version and create release
-VERSION=1.0.0 uv run doit release
+# Create release tag, changelog, and push (commitizen-powered)
+uv run doit release
 ```
+
+Notes:
+- Versions are derived from git tags via hatch-vcs; no manual edits to `pyproject.toml` or `_version.py` are required.
+- Use `v*` tags for production (e.g., `v1.0.0`) and `d*` tags for TestPyPI (e.g., `d1.0.0`). The `doit release` task will create the `v*` tag via commitizen; for TestPyPI, run `uv run doit test_release` to compute the next version via commitizen (dry run), tag `d*`, and push.
 
 This will:
 1. Verify you're on the main branch

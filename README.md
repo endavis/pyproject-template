@@ -120,6 +120,13 @@ direnv allow
 cp .envrc.local.example .envrc.local
 ```
 
+## Versioning & Releases
+
+- The package version is derived automatically from git tags via hatch-vcs (no manual edits to `pyproject.toml` or `_version.py`).
+- Use `v*` tags for production releases (e.g., `v1.2.3`) and `d*` tags for TestPyPI (e.g., `d1.2.3`); the leading prefix is stripped from the published version.
+- CI release workflows build from the tag version directly; run `doit release` or tag manually to publish.
+- For TestPyPI, run `doit test_release` to compute the next version via commitizen (dry-run), create a `d*` tag, and push it to trigger the `testpypi.yml` workflow.
+
 ### Environment Variables
 
 This project uses direnv for automatic environment management. After setup:

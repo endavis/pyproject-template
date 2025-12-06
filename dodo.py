@@ -406,90 +406,217 @@ def task_update_deps():
     }
 
 
-def task_release():
-    """Create a release tag and push to GitHub (triggers CI/CD)."""
+def task_test_release():
+    """Create a development (d*) release tag for TestPyPI and push to GitHub."""
 
-    def create_release():
+    def create_dev_release():
         import re
 
-        # Get version from command line
-        # doit release VERSION=1.0.0
-        version = os.environ.get("VERSION")
-        if not version:
-            print("❌ Error: VERSION environment variable required")
-            print("Usage: VERSION=1.0.0 doit release")
-            print("   or: doit release VERSION=1.0.0")
+        console = Console()
+        console.print("=" * 70)
+        console.print("[bold green]Starting development release tagging...[/bold green]")
+        console.print("=" * 70)
+        console.print()
+
+        console.print("[cyan]Determining next version via commitizen (dry run)...[/cyan]")
+        try:
+            result = subprocess.run(
+                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --dry-run --yes",
+                shell=True,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ commitizen bump dry-run failed. Ensure commit history is conventional.[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
-        # Validate version format
-        if not re.match(r"^\d+\.\d+\.\d+", version):
-            print(f"❌ Error: Invalid version format: {version}")
-            print("Expected format: X.Y.Z (e.g., 1.0.0)")
+        match = re.search(r"to version (\d+\.\d+\.\d+[^\s]*)", result.stdout)
+        if not match:
+            console.print("[bold red]❌ Could not determine next version from commitizen output.[/bold red]")
+            console.print(f"[red]{result.stdout}[/red]")
             sys.exit(1)
 
-        tag = f"v{version}"
-
-        print("=" * 70)
-        print(f" Starting release process for version {version}")
-        print("=" * 70)
-        print()
+        next_version = match.group(1)
+        tag = f"d{next_version}"
+        console.print(f"[green]✓ Next dev version: {next_version} (tag {tag})[/green]")
 
         # Check if on main branch
-        current_branch = subprocess.getoutput("git branch --show-current")
+        current_branch = subprocess.getoutput("git branch --show-current").strip()
         if current_branch != "main":
-            print(f"⚠ Warning: Not on main branch (currently on {current_branch})")
-            response = input("Continue anyway? (y/N) ")
-            if response.lower() != "y":
+            console.print(f"[bold yellow]⚠ Warning: Not on main branch (currently on {current_branch})[/bold yellow]")
+            response = input("Continue anyway? (y/N) ").strip().lower()
+            if response != "y":
+                console.print("[bold red]❌ Release cancelled.[/bold red]")
                 sys.exit(1)
 
         # Check for uncommitted changes
-        status = subprocess.getoutput("git status -s")
+        status = subprocess.getoutput("git status -s").strip()
         if status:
-            print("❌ Error: Uncommitted changes detected")
-            print(status)
+            console.print("[bold red]❌ Error: Uncommitted changes detected.[/bold red]")
+            console.print(status)
+            sys.exit(1)
+
+        # Ensure tag does not already exist
+        existing_tags = subprocess.getoutput(f"git tag -l {tag}").strip()
+        if existing_tags:
+            console.print(f"[bold red]❌ Tag {tag} already exists.[/bold red]")
             sys.exit(1)
 
         # Pull latest changes
-        print("Pulling latest changes...")
-        subprocess.run("git pull", shell=True, check=True)
-
-        # Run all checks
-        print()
-        print("Running all checks...")
-        result = subprocess.run("doit check", shell=True)
-        if result.returncode != 0:
-            print()
-            print("❌ Checks failed! Fix issues before releasing.")
+        console.print("\n[cyan]Pulling latest changes...[/cyan]")
+        try:
+            subprocess.run("git pull", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ Git pull successful.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
-        # Prompt for CHANGELOG update
-        print()
-        print("=" * 70)
-        print(f"⚠ Please update CHANGELOG.md with release notes for {version}")
-        print("=" * 70)
-        input("Press Enter when ready to continue...")
+        # Run checks
+        console.print("\n[cyan]Running all pre-release checks...[/cyan]")
+        try:
+            subprocess.run("doit check", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ All checks passed.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Pre-release checks failed! Please fix issues before tagging.[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
 
         # Create and push tag
-        print()
-        print(f"Creating git tag {tag}...")
-        subprocess.run(f"git tag -a {tag} -m 'Release version {version}'", shell=True, check=True)
+        console.print(f"\n[cyan]Creating git tag {tag}...[/cyan]")
+        try:
+            subprocess.run(f"git tag -a {tag} -m 'Development release {next_version}'", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ Tag created.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Error creating tag:[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
 
-        print(f"Pushing tag to GitHub...")
-        subprocess.run(f"git push origin {tag}", shell=True, check=True)
+        console.print(f"\n[cyan]Pushing tag {tag} to origin...[/cyan]")
+        try:
+            subprocess.run(f"git push origin {tag}", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ Tag pushed to origin.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Error pushing tag to origin:[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
 
-        print()
-        print("=" * 70)
-        print(f" ✓ Release {version} complete!")
-        print("=" * 70)
-        print()
-        print("Next steps:")
-        print("1. Monitor GitHub Actions for build and publish")
-        print("2. Check TestPyPI: https://test.pypi.org/project/package-name/")
-        print("3. Check PyPI: https://pypi.org/project/package-name/")
-        print("4. Create GitHub release with notes from CHANGELOG.md")
+        console.print("\n" + "=" * 70)
+        console.print(f"[bold green]✓ Development release tag {tag} created and pushed.[/bold green]")
+        console.print("=" * 70)
+        console.print("\nNext steps:")
+        console.print("1. Monitor GitHub Actions (testpypi.yml) for the TestPyPI publish.")
+        console.print("2. Verify on TestPyPI once the workflow completes.")
 
     return {
-        "actions": [create_release],
+        "actions": [create_dev_release],
+        "title": title_with_actions,
+    }
+
+
+def task_release():
+    """Automate release: bump version, update CHANGELOG, and push to GitHub (triggers CI/CD)."""
+
+    def automated_release():
+        console = Console()
+        console.print("=" * 70)
+        console.print("[bold green]Starting automated release process...[/bold green]")
+        console.print("=" * 70)
+        console.print()
+
+        # Check if on main branch
+        current_branch = subprocess.getoutput("git branch --show-current").strip()
+        if current_branch != "main":
+            console.print(f"[bold yellow]⚠ Warning: Not on main branch (currently on {current_branch})[/bold yellow]")
+            response = input("Continue anyway? (y/N) ").strip().lower()
+            if response != "y":
+                console.print("[bold red]❌ Release cancelled.[/bold red]")
+                sys.exit(1)
+
+        # Check for uncommitted changes
+        status = subprocess.getoutput("git status -s").strip()
+        if status:
+            console.print("[bold red]❌ Error: Uncommitted changes detected.[/bold red]")
+            console.print(status)
+            sys.exit(1)
+
+        # Pull latest changes
+        console.print("\n[cyan]Pulling latest changes...[/cyan]")
+        try:
+            subprocess.run("git pull", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ Git pull successful.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print(f"[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Run all checks
+        console.print("\n[cyan]Running all pre-release checks...[/cyan]")
+        try:
+            subprocess.run("doit check", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ All checks passed.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Pre-release checks failed! Please fix issues before releasing.[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Automated version bump and CHANGELOG generation using commitizen
+        console.print("\n[cyan]Bumping version and generating CHANGELOG with commitizen...[/cyan]")
+        try:
+            # Use cz bump --changelog to update version, changelog, commit, and tag
+            result = subprocess.run(
+                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --changelog",
+                shell=True, check=True, capture_output=True, text=True
+            )
+            console.print("[green]✓ Version bumped and CHANGELOG updated.[/green]")
+            console.print(f"[dim]{result.stdout}[/dim]")
+            # Extract new version from cz output (example: "Bumping to version 1.0.0")
+            version_match = Text(result.stdout).search(r"Bumping to version (\d+\.\d+\.\d+)")
+            if version_match:
+                new_version = version_match.group(1)
+            else:
+                new_version = "unknown" # Fallback if regex fails
+
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ commitizen bump failed! Ensure your commit history is conventional.[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+        except Exception as e:
+            console.print(f"[bold red]❌ An unexpected error occurred during commitizen bump: {e}[/bold red]")
+            sys.exit(1)
+
+        # Push commits and tags to GitHub
+        console.print("\n[cyan]Pushing commits and tags to GitHub...[/cyan]")
+        try:
+            subprocess.run(f"git push --follow-tags origin {current_branch}", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ Pushed new commits and tags to GitHub.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Error pushing to GitHub:[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        console.print("\n" + "=" * 70)
+        console.print(f"[bold green]✓ Automated release {new_version} complete![/bold green]")
+        console.print("=" * 70)
+        console.print("\nNext steps:")
+        console.print("1. Monitor GitHub Actions for build and publish.")
+        console.print("2. Check TestPyPI: [link=https://test.pypi.org/project/package-name/]https://test.pypi.org/project/package-name/[/link]")
+        console.print("3. Check PyPI: [link=https://pypi.org/project/package-name/]https://pypi.org/project/package-name/[/link]")
+        console.print("4. Verify the updated CHANGELOG.md in the repository.")
+
+    return {
+        "actions": [automated_release],
         "title": title_with_actions,
     }
 
