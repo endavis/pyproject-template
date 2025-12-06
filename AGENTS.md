@@ -43,7 +43,8 @@ This is a modern Python project template using `uv` for package management, `doi
 │   ├── installation.md     # Installation guide
 │   ├── usage.md            # Usage guide
 │   ├── api.md              # API reference
-│   └── extensions.md       # Optional tools and extensions guide
+│   ├── extensions.md       # Optional tools and extensions guide
+│   └── migration.md        # Migration guide
 ├── examples/               # Usage examples
 │   ├── README.md           # Examples overview
 │   ├── basic_usage.py      # Basic usage example
@@ -796,6 +797,9 @@ The `docs/` directory contains comprehensive documentation:
 - Container support (Docker, docker-compose)
 - Multi-version Testing (tox, nox)
 - When to add each extension based on project needs
+
+**`docs/migration.md`** - Migration guide
+- How to migrate an existing project into this template
 
 The documentation is built using MkDocs with the Material theme. View locally with `doit docs_serve` or build with `doit docs_build`.
 

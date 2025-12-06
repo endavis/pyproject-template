@@ -59,6 +59,7 @@ nav:
   - Usage: usage.md
   - API Reference: api.md
   - Extensions: extensions.md
+  - Migration Guide: migration.md
 
 extra:
   social:
