@@ -141,23 +141,28 @@ def main() -> int:
     print("\n🔧 Configuring project...")
 
     # Define replacements
+    # IMPORTANT: Longer/Specific replacements must come before shorter substrings
     replacements = {
+        # URLs (Specific matches first)
+        "https://github.com/username/package_name": f"https://github.com/{github_user}/{package_name}",
+        "https://github.com/original-owner/package_name": f"https://github.com/{github_user}/{package_name}",
+        "https://codecov.io/gh/username/package_name": f"https://codecov.io/gh/{github_user}/{package_name}",
+        "https://codecov.io/gh/username/package_name/branch/main/graph/badge.svg": f"https://codecov.io/gh/{github_user}/{package_name}/branch/main/graph/badge.svg",
+        "https://github.com/username/package_name/actions/workflows/ci.yml/badge.svg": f"https://github.com/{github_user}/{package_name}/actions/workflows/ci.yml/badge.svg",
+        "https://github.com/username": f"https://github.com/{github_user}",
+        
+        # Files and Paths
+        "package-name.svg": f"{pypi_name}.svg",
+        "package-name/": f"{pypi_name}/",
+        
+        # General Placeholders (Substrings)
         "package_name": package_name,
         "package-name": pypi_name,
         "Package Name": project_name,
         "A short description of your package": description,
         "Your Name": author_name,
         "your.email@example.com": author_email,
-        "username": github_user,
-        "original-owner": github_user,
-        "https://github.com/username/package_name": f"https://github.com/{github_user}/{package_name}",
-        "https://github.com/username/package_name/": f"https://github.com/{github_user}/{package_name}/",
-        "https://github.com/username/package_name/workflows/CI/badge.svg": f"https://github.com/{github_user}/{package_name}/workflows/CI/badge.svg",
-        "https://codecov.io/gh/username/package_name": f"https://codecov.io/gh/{github_user}/{package_name}",
-        "https://github.com/username/package_name/issues": f"https://github.com/{github_user}/{package_name}/issues",
-        "https://github.com/username/package_name/pulls": f"https://github.com/{github_user}/{package_name}/pulls",
-        "package-name.svg": f"{pypi_name}.svg",
-        "package-name/": f"{pypi_name}/",
+        # Note: "username" is NOT replaced globally to avoid breaking code variables (e.g. in extensions.md)
     }
 
     # Update files
@@ -176,6 +181,7 @@ def main() -> int:
         ".github/SECURITY.md",
         ".github/CODEOWNERS",
         ".github/pull_request_template.md",
+        ".envrc",
     ]
 
     for file_path in files_to_update:
@@ -241,7 +247,8 @@ def main() -> int:
     print("3. Install dependencies: uv sync --all-extras --dev")
     print("4. Install pre-commit hooks: uv run pre-commit install")
     print("5. Run tests: uv run pytest")
-    print("6. Start coding!")
+    print("6. Cut a prerelease (if desired): uv run doit release_dev")
+    print("7. Start coding!")
     print("=" * 70)
 
     # Self-destruct
