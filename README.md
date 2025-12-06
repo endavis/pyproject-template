@@ -122,10 +122,34 @@ cp .envrc.local.example .envrc.local
 
 ## Versioning & Releases
 
-- The package version is derived automatically from git tags via hatch-vcs (no manual edits to `pyproject.toml` or `_version.py`).
-- Use `v*` tags for production releases (e.g., `v1.2.3`) and `d*` tags for TestPyPI (e.g., `d1.2.3`); the leading prefix is stripped from the published version.
-- CI release workflows build from the tag version directly; run `doit release` or tag manually to publish.
-- For TestPyPI, run `doit test_release` to compute the next version via commitizen (dry-run), create a `d*` tag, and push it to trigger the `testpypi.yml` workflow.
+This project uses automated versioning and releases powered by `commitizen` and `hatch-vcs`.
+
+- **Single Source of Truth:** The Git tag is the definitive version. `pyproject.toml` and `_version.py` are updated dynamically at build time or by automation tools.
+- **Versioning Scheme:**
+    - **Production:** Standard SemVer (e.g., `v1.0.0`).
+    - **Development:** SemVer Pre-release (e.g., `v1.0.0-alpha.1`, `v1.0.0-beta.0`).
+
+### Creating a Release
+
+**Production Release (PyPI):**
+```bash
+doit release
+```
+This automated task will:
+1.  Calculate the next version based on conventional commits.
+2.  Update `CHANGELOG.md`, merging any pre-release entries.
+3.  Create a git tag (e.g., `v1.0.0`).
+4.  Push commits and tags to GitHub, triggering the `release` workflow.
+
+**Development/Pre-release (TestPyPI):**
+```bash
+doit release_dev              # Defaults to alpha
+doit release_dev --type beta  # Specify type (alpha, beta, rc)
+```
+This automated task will:
+1.  Bump the version to the next pre-release (e.g., `v1.0.0-alpha.1`).
+2.  Create a git tag.
+3.  Push to GitHub, triggering the `testpypi` workflow.
 
 ### Environment Variables
 

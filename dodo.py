@@ -406,42 +406,19 @@ def task_update_deps():
     }
 
 
-def task_test_release():
-    """Create a development (d*) release tag for TestPyPI and push to GitHub."""
+def task_release_dev(type="alpha"):
+    """Create a pre-release (alpha/beta) tag for TestPyPI and push to GitHub.
+
+    Args:
+        type (str): Pre-release type (e.g., 'alpha', 'beta', 'rc'). Defaults to 'alpha'.
+    """
 
     def create_dev_release():
-        import re
-
         console = Console()
         console.print("=" * 70)
-        console.print("[bold green]Starting development release tagging...[/bold green]")
+        console.print(f"[bold green]Starting {type} release tagging...[/bold green]")
         console.print("=" * 70)
         console.print()
-
-        console.print("[cyan]Determining next version via commitizen (dry run)...[/cyan]")
-        try:
-            result = subprocess.run(
-                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --dry-run --yes",
-                shell=True,
-                check=True,
-                capture_output=True,
-                text=True,
-            )
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ commitizen bump dry-run failed. Ensure commit history is conventional.[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
-            sys.exit(1)
-
-        match = re.search(r"to version (\d+\.\d+\.\d+[^\s]*)", result.stdout)
-        if not match:
-            console.print("[bold red]❌ Could not determine next version from commitizen output.[/bold red]")
-            console.print(f"[red]{result.stdout}[/red]")
-            sys.exit(1)
-
-        next_version = match.group(1)
-        tag = f"d{next_version}"
-        console.print(f"[green]✓ Next dev version: {next_version} (tag {tag})[/green]")
 
         # Check if on main branch
         current_branch = subprocess.getoutput("git branch --show-current").strip()
@@ -459,19 +436,13 @@ def task_test_release():
             console.print(status)
             sys.exit(1)
 
-        # Ensure tag does not already exist
-        existing_tags = subprocess.getoutput(f"git tag -l {tag}").strip()
-        if existing_tags:
-            console.print(f"[bold red]❌ Tag {tag} already exists.[/bold red]")
-            sys.exit(1)
-
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
             subprocess.run("git pull", shell=True, check=True, capture_output=True, text=True)
             console.print("[green]✓ Git pull successful.[/green]")
         except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print(f"[bold red]❌ Error pulling latest changes:[/bold red]")
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
@@ -487,21 +458,33 @@ def task_test_release():
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
-        # Create and push tag
-        console.print(f"\n[cyan]Creating git tag {tag}...[/cyan]")
+        # Automated version bump and tagging
+        console.print(f"\n[cyan]Bumping version ({type}) and updating changelog...[/cyan]")
         try:
-            subprocess.run(f"git tag -a {tag} -m 'Development release {next_version}'", shell=True, check=True, capture_output=True, text=True)
-            console.print("[green]✓ Tag created.[/green]")
+            # Use cz bump --prerelease <type> --changelog
+            result = subprocess.run(
+                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --prerelease {type} --changelog",
+                shell=True, check=True, capture_output=True, text=True
+            )
+            console.print(f"[green]✓ Version bumped to {type}.[/green]")
+            console.print(f"[dim]{result.stdout}[/dim]")
+            # Extract new version
+            version_match = Text(result.stdout).search(r"Bumping to version (\d+\.\d+\.\d+[^\s]*)")
+            if version_match:
+                new_version = version_match.group(1)
+            else:
+                new_version = "unknown"
+
         except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error creating tag:[/bold red]")
+            console.print("[bold red]❌ commitizen bump failed![/bold red]")
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
-        console.print(f"\n[cyan]Pushing tag {tag} to origin...[/cyan]")
+        console.print(f"\n[cyan]Pushing tag v{new_version} to origin...[/cyan]")
         try:
-            subprocess.run(f"git push origin {tag}", shell=True, check=True, capture_output=True, text=True)
-            console.print("[green]✓ Tag pushed to origin.[/green]")
+            subprocess.run(f"git push --follow-tags origin {current_branch}", shell=True, check=True, capture_output=True, text=True)
+            console.print("[green]✓ Tags pushed to origin.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Error pushing tag to origin:[/bold red]")
             console.print(f"[red]Stdout: {e.stdout}[/red]")
@@ -509,7 +492,7 @@ def task_test_release():
             sys.exit(1)
 
         console.print("\n" + "=" * 70)
-        console.print(f"[bold green]✓ Development release tag {tag} created and pushed.[/bold green]")
+        console.print(f"[bold green]✓ Development release {new_version} complete![/bold green]")
         console.print("=" * 70)
         console.print("\nNext steps:")
         console.print("1. Monitor GitHub Actions (testpypi.yml) for the TestPyPI publish.")
@@ -517,6 +500,15 @@ def task_test_release():
 
     return {
         "actions": [create_dev_release],
+        "params": [
+            {
+                "name": "type",
+                "short": "t",
+                "long": "type",
+                "default": "alpha",
+                "help": "Pre-release type (alpha, beta, rc)",
+            }
+        ],
         "title": title_with_actions,
     }
 
@@ -572,12 +564,13 @@ def task_release():
         # Automated version bump and CHANGELOG generation using commitizen
         console.print("\n[cyan]Bumping version and generating CHANGELOG with commitizen...[/cyan]")
         try:
-            # Use cz bump --changelog to update version, changelog, commit, and tag
+            # Use cz bump --changelog --merge-prerelease to update version, changelog, commit, and tag
+            # This consolidates pre-release changes into the final release entry
             result = subprocess.run(
-                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --changelog",
+                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --changelog --merge-prerelease",
                 shell=True, check=True, capture_output=True, text=True
             )
-            console.print("[green]✓ Version bumped and CHANGELOG updated.[/green]")
+            console.print("[green]✓ Version bumped and CHANGELOG updated (merged pre-releases).[/green]")
             console.print(f"[dim]{result.stdout}[/dim]")
             # Extract new version from cz output (example: "Bumping to version 1.0.0")
             version_match = Text(result.stdout).search(r"Bumping to version (\d+\.\d+\.\d+)")

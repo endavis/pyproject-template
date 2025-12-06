@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "d*"
+      - "v*-[a-zA-Z]*"
 
 permissions:
   contents: read
@@ -30,6 +30,12 @@ jobs:
       - uses: astral-sh/setup-uv@v1
         with:
           version: "latest"
+
+      - name: Show resolved version
+        run: uv run python - <<'PY'
+import package_name
+print(f"Resolved version: {package_name.__version__}")
+PY
 
       - name: Build artifacts
         run: uv build

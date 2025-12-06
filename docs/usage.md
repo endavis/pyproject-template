@@ -248,15 +248,15 @@ uv run doit release
 
 Notes:
 - Versions are derived from git tags via hatch-vcs; no manual edits to `pyproject.toml` or `_version.py` are required.
-- Use `v*` tags for production (e.g., `v1.0.0`) and `d*` tags for TestPyPI (e.g., `d1.0.0`). The `doit release` task will create the `v*` tag via commitizen; for TestPyPI, run `uv run doit test_release` to compute the next version via commitizen (dry run), tag `d*`, and push.
+- Use `v*` tags for production (e.g., `v1.0.0`) and prerelease `v*` tags for TestPyPI (e.g., `v1.0.0-alpha.1`). The `doit release` task runs commitizen to choose the next version, update CHANGELOG.md, and create/push the stable `v*` tag; for TestPyPI, run `uv run doit release_dev` to compute the next prerelease via commitizen, create the prerelease `v*` tag, and push.
 
 This will:
 1. Verify you're on the main branch
 2. Check for uncommitted changes
 3. Pull latest changes
 4. Run all quality checks
-5. Prompt for CHANGELOG update
-6. Create and push a git tag
+5. Use commitizen to update CHANGELOG.md and create the `v*` git tag
+6. Push the tag
 7. Trigger CI/CD to build and publish to PyPI
 
 The release workflow includes:
