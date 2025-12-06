@@ -22,7 +22,7 @@ def test_greet_with_fixture(tmp_path):
     output_file = tmp_path / "greeting.txt"
     message = greet("File System")
     output_file.write_text(message)
-    
+
     assert output_file.read_text() == "Hello, File System!"
 
 
