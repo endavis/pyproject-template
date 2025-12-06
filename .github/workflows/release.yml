@@ -32,10 +32,11 @@ jobs:
           version: "latest"
 
       - name: Show resolved version
-        run: uv run python - <<'PY'
-import package_name
-print(f"Resolved version: {package_name.__version__}")
-PY
+        run: |
+          uv run python - <<'PY'
+          import package_name
+          print(f"Resolved version: {package_name.__version__}")
+          PY
 
       - name: Build artifacts
         run: uv build
