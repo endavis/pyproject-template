@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
-"""Interactive script to configure the project template.
+"""Interactive/non-interactive script to configure the project template.
 
-This script:
-1. Prompts for project details (name, author, email, description)
-2. Renames the package directory
-3. Updates all template placeholders
-4. Self-destructs after successful completion
-
-Run this script immediately after cloning the template.
+Modes:
+- Interactive (default): prompts for values with defaults pulled from pyproject.toml.
+- Auto: use values from pyproject.toml (and git remote) with no prompts (--auto).
+Optional: skip final confirmation with --yes.
 """
 
 import os
@@ -15,6 +12,28 @@ import re
 import shutil
 import sys
 from pathlib import Path
+import argparse
+from typing import Optional
+
+try:
+    import tomllib  # py312+
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Configure the project template.")
+    parser.add_argument(
+        "--auto",
+        action="store_true",
+        help="Use values from pyproject.toml (and git remote) without prompts.",
+    )
+    parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip confirmation prompt (useful with --auto).",
+    )
+    return parser.parse_args()
 
 
 def prompt(question: str, default: str = "") -> str:
@@ -22,12 +41,11 @@ def prompt(question: str, default: str = "") -> str:
     if default:
         response = input(f"{question} [{default}]: ").strip()
         return response or default
-    else:
-        while True:
-            response = input(f"{question}: ").strip()
-            if response:
-                return response
-            print("This field is required. Please enter a value.")
+    while True:
+        response = input(f"{question}: ").strip()
+        if response:
+            return response
+        print("This field is required. Please enter a value.")
 
 
 def validate_package_name(name: str) -> str:
@@ -70,55 +88,201 @@ def update_file(filepath: Path, replacements: dict[str, str]) -> None:
     filepath.write_text(content)
 
 
+def read_pyproject(path: Path) -> dict:
+    if not path.exists():
+        return {}
+    with path.open("rb") as f:
+        return tomllib.load(f)
+
+
+def find_backup_pyproject() -> Optional[Path]:
+    """Find the most recent backup pyproject.toml from migration helper (in tmp/)."""
+    candidates = []
+    for backup_dir in Path("tmp").glob("template-migration-backup-*"):
+        pyproject = backup_dir / "pyproject.toml"
+        if pyproject.exists():
+            candidates.append(pyproject)
+    if not candidates:
+        return None
+    candidates.sort(key=lambda p: p.stat().st_mtime, reverse=True)
+    return candidates[0]
+
+
+def guess_github_user(pyproject_data: dict) -> str:
+    repo_url = (
+        pyproject_data.get("project", {})
+        .get("urls", {})
+        .get("Repository")
+    )
+    if repo_url:
+        parts = repo_url.rstrip("/").split("/")
+        if len(parts) >= 2:
+            return parts[-2]
+
+    # Fallback: try git remote origin
+    try:
+        import subprocess
+
+        url = (
+            subprocess.check_output(
+                ["git", "config", "--get", "remote.origin.url"], stderr=subprocess.DEVNULL
+            )
+            .decode()
+            .strip()
+        )
+        if url.endswith(".git"):
+            url = url[:-4]
+        # handle git@github.com:org/repo or https://github.com/org/repo
+        if "github.com" in url:
+            url = url.replace("git@github.com:", "https://github.com/")
+            parts = url.rstrip("/").split("/")
+            if len(parts) >= 2:
+                return parts[-2]
+    except Exception:
+        pass
+
+    return ""
+
+
+def first_author(pyproject_data: dict) -> tuple[str, str]:
+    authors = pyproject_data.get("project", {}).get("authors", [])
+    if not authors:
+        return "", ""
+    author = authors[0]
+    return author.get("name", ""), author.get("email", "")
+
+
+def read_readme_title(readme_path: Path) -> str:
+    if not readme_path.exists():
+        return ""
+    for line in readme_path.read_text().splitlines():
+        if line.startswith("#"):
+            return line.lstrip("#").strip()
+    return ""
+
+
+def load_defaults(pyproject_path: Path) -> dict[str, str]:
+    data = read_pyproject(pyproject_path)
+    project = data.get("project", {})
+    project_name = project.get("name", "")
+    package_name = validate_package_name(project_name) if project_name else ""
+    pypi_name = validate_pypi_name(project_name) if project_name else ""
+    description = project.get("description") or read_readme_title(Path("README.md"))
+    author_name, author_email = first_author(data)
+    github_user = guess_github_user(data)
+
+    # If current pyproject still has template placeholders, try backup for real values
+    backup_pyproject = find_backup_pyproject()
+    if backup_pyproject:
+        backup_data = read_pyproject(backup_pyproject)
+        b_project = backup_data.get("project", {})
+
+        def not_placeholder(val: str, placeholders: set[str]) -> bool:
+            return bool(val) and val not in placeholders
+
+        if not_placeholder(project_name, {"package_name", "Package Name", ""}):
+            pass
+        else:
+            project_name = b_project.get("name", project_name)
+            package_name = validate_package_name(project_name) if project_name else package_name
+            pypi_name = validate_pypi_name(project_name) if project_name else pypi_name
+
+        if not_placeholder(description, {"A short description of your package", ""}):
+            pass
+        else:
+            description = b_project.get("description", description)
+
+        b_author_name, b_author_email = first_author(backup_data)
+        if not_placeholder(author_name, {"Your Name", ""}):
+            pass
+        else:
+            author_name = b_author_name or author_name
+        if not_placeholder(author_email, {"your.email@example.com", ""}):
+            pass
+        else:
+            author_email = b_author_email or author_email
+
+        if not_placeholder(github_user, {"username", ""}):
+            pass
+        else:
+            github_user = guess_github_user(backup_data) or github_user
+
+    return {
+        "project_name": project_name,
+        "package_name": package_name,
+        "pypi_name": pypi_name,
+        "description": description,
+        "author_name": author_name,
+        "author_email": author_email,
+        "github_user": github_user,
+    }
+
+
+def require(value: str, label: str) -> str:
+    if value:
+        return value
+    raise SystemExit(f"❌ Missing required value for {label} (supply in pyproject.toml or via prompt).")
+
+
 def main() -> int:
     """Run the configuration wizard."""
+    args = parse_args()
+    defaults = load_defaults(Path("pyproject.toml"))
+
     print("=" * 70)
     print("Python Project Template Configuration")
     print("=" * 70)
     print("\nThis script will help you set up your new Python project.\n")
 
-    # Check if already configured
-    if not Path("src/package_name").exists():
-        print("❌ Error: Template appears to already be configured.")
-        print("   (src/package_name directory not found)")
-        return 1
-
     # Gather project information
     print("Project Information")
     print("-" * 70)
 
-    project_name = prompt("Project name (human-readable)", "My Awesome Project")
+    if args.auto:
+        project_name = require(defaults["project_name"], "[project].name")
+        package_name = require(defaults["package_name"], "package name")
+        pypi_name = require(defaults["pypi_name"], "PyPI name")
+        description = require(defaults["description"], "description")
+        author_name = require(defaults["author_name"], "author name")
+        author_email = require(defaults["author_email"], "author email")
+        if not validate_email(author_email):
+            raise SystemExit("❌ Invalid email format in pyproject.toml")
+        github_user = require(defaults["github_user"], "GitHub user (from Repository URL or git remote)")
+        enable_dependabot = False
+    else:
+        project_name = prompt("Project name (human-readable)", defaults["project_name"] or "My Awesome Project")
 
-    # Suggest package names
-    suggested_package = validate_package_name(project_name)
-    suggested_pypi = validate_pypi_name(project_name)
+        suggested_package = validate_package_name(project_name)
+        suggested_pypi = validate_pypi_name(project_name)
 
-    package_name = prompt("Python package name", suggested_package)
-    package_name = validate_package_name(package_name)
+        package_name = prompt("Python package name", defaults["package_name"] or suggested_package)
+        package_name = validate_package_name(package_name)
 
-    pypi_name = prompt("PyPI package name", suggested_pypi)
-    pypi_name = validate_pypi_name(pypi_name)
+        pypi_name = prompt("PyPI package name", defaults["pypi_name"] or suggested_pypi)
+        pypi_name = validate_pypi_name(pypi_name)
 
-    description = prompt("Short description", "A short description of your package")
+        description = prompt("Short description", defaults["description"] or "A short description of your package")
 
-    author_name = prompt("Author name", "Your Name")
+        author_name = prompt("Author name", defaults["author_name"] or "Your Name")
 
-    while True:
-        author_email = prompt("Author email", "your.email@example.com")
-        if validate_email(author_email):
-            break
-        print("❌ Invalid email format. Please try again.")
+        while True:
+            author_email = prompt("Author email", defaults["author_email"] or "your.email@example.com")
+            if validate_email(author_email):
+                break
+            print("❌ Invalid email format. Please try again.")
 
-    github_user = prompt("GitHub username", "username")
+        github_user = prompt("GitHub username", defaults["github_user"] or "username")
 
     # Optional features
-    print("\n" + "-" * 70)
-    print("Optional Features")
-    print("-" * 70)
-
-    enable_dependabot = input(
-        "Enable Dependabot for automatic dependency updates? [y/N]: "
-    ).strip().lower() in ("y", "yes")
+    if args.auto:
+        enable_dependabot = False
+    else:
+        print("\n" + "-" * 70)
+        print("Optional Features")
+        print("-" * 70)
+        enable_dependabot = input(
+            "Enable Dependabot for automatic dependency updates? [y/N]: "
+        ).strip().lower() in ("y", "yes")
 
     # Confirm configuration
     print("\n" + "=" * 70)
@@ -133,10 +297,11 @@ def main() -> int:
     print(f"Dependabot:       {'Enabled' if enable_dependabot else 'Disabled'}")
     print("=" * 70)
 
-    confirm = input("\nProceed with configuration? [y/N]: ").strip().lower()
-    if confirm not in ("y", "yes"):
-        print("❌ Configuration cancelled.")
-        return 1
+    if not args.yes:
+        confirm = input("\nProceed with configuration? [y/N]: ").strip().lower()
+        if confirm not in ("y", "yes"):
+            print("❌ Configuration cancelled.")
+            return 1
 
     print("\n🔧 Configuring project...")
 
@@ -217,12 +382,21 @@ def main() -> int:
     new_package_dir = Path(f"src/{package_name}")
 
     if old_package_dir.exists() and old_package_dir != new_package_dir:
-        print(f"  ✓ Renaming src/package_name → src/{package_name}")
-        shutil.move(str(old_package_dir), str(new_package_dir))
+        if new_package_dir.exists():
+            print(
+                f"  ⚠️  src/{package_name} already exists; "
+                "skipping rename of src/package_name"
+            )
+        else:
+            print(f"  ✓ Renaming src/package_name → src/{package_name}")
+            shutil.move(str(old_package_dir), str(new_package_dir))
+    elif not old_package_dir.exists():
+        print("  ⚠️  src/package_name not found; assuming code already relocated")
 
     # Update imports in renamed package
-    for py_file in new_package_dir.rglob("*.py"):
-        update_file(py_file, replacements)
+    if new_package_dir.exists():
+        for py_file in new_package_dir.rglob("*.py"):
+            update_file(py_file, replacements)
 
     # Update test files
     test_dir = Path("tests")

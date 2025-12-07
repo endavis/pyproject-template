@@ -131,6 +131,15 @@ This project uses automated versioning and releases powered by `commitizen` and 
 
 See `docs/migration.md` for a step-by-step guide to bring an existing project into this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
 
+For older projects already in-flight, you can copy the helper script from this repo and let it do the initial file swap with backups:
+
+```bash
+# From the template repo root
+python tools/migrate_existing_project.py --target /path/to/your/project
+```
+
+The script backs up anything it overwrites into a timestamped folder in your project, copies template tooling/docs/workflows/editor configs, and prints a summary of what moved. After it runs, follow `docs/migration.md` (run `configure.py`, move your code under `src/<package_name>/`, merge dependencies, regenerate `uv.lock`, and run `doit check`).
+
 ### Creating a Release
 
 **Production Release (PyPI):**
