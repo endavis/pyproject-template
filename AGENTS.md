@@ -565,6 +565,67 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
 - Validate all user-provided paths (prevent path traversal)
 - Use `yaml.safe_load()`, never `yaml.load()`
 
+## Development Workflow
+
+**Rule:** All *code* changes must originate from a GitHub Issue. Documentation updates are exempt from this rule.
+
+### Issue-Driven Development Flow
+
+1. **Issue:** Ensure a GitHub Issue exists for the code task (e.g., "Add user authentication").
+   - Use YAML issue forms to create structured, validated issues
+   - Required fields ensure all necessary information is captured
+   - Auto-labeling helps with project management and triage
+
+2. **Branch:** Create a branch linked to the issue
+   - Format: `issue/<number>-<short-desc>`, `feat/<number>-<desc>`, or `fix/<number>-<desc>`
+   - Examples:
+     - `issue/42-add-user-auth`
+     - `feat/42-user-authentication`
+     - `fix/123-handle-null-values`
+   - Branch naming is enforced by pre-commit hooks
+
+3. **Commit:** Use Conventional Commits format for all commits
+   - Format: `<type>: <subject>`
+   - Enforced by pre-commit hooks locally and PR checks in CI
+   - Use `doit commit` for interactive commit message creation with commitizen
+
+4. **Pull Request:** Submit a PR from your branch to `main` (or `develop` if active)
+   - Reference the issue in PR description (e.g., "Closes #42")
+   - PR title must follow conventional commit format
+   - Automated checks validate:
+     - PR title format
+     - Issue link presence (except docs-only PRs)
+     - PR description completeness
+     - Breaking change documentation
+
+5. **PR Merge:** When merging, ensure the merge commit follows the format:
+   - `<type>: <subject> (merges PR #XX, closes #YY)` - when PR has associated issue
+   - `<type>: <subject> (merges PR #XX)` - when PR has no issue (docs-only)
+
+**Examples - Correct Merge Commit Format:**
+```
+feat: add user authentication (merges PR #18, closes #42)
+fix: handle None values in data processing (merges PR #23, closes #19)
+docs: update installation guide (merges PR #29)
+refactor: extract common validation logic (merges PR #31, closes #28)
+```
+
+**Examples - Incorrect Format:**
+```
+❌ Merge pull request #18 from user/branch-name
+❌ feat: Add User Authentication (capitalized subject)
+❌ added user authentication (missing type)
+❌ feat: add user authentication (missing PR reference)
+```
+
+### Why Issue-Driven Development?
+
+- **Traceability:** Every code change is linked to a documented need
+- **Context:** Issues capture the "why" behind changes
+- **Planning:** Better project management and prioritization
+- **History:** Searchable record of decisions and rationale
+- **Collaboration:** Clear communication about work in progress
+
 ## Commit Guidelines
 
 ### Commit Message Format
@@ -615,46 +676,199 @@ test: add tests for edge cases in parser
 chore: update dependencies to latest versions
 ```
 
-### Breaking Changes
-For breaking changes, include `BREAKING CHANGE:` in commit footer:
+### Breaking Changes Policy
+
+**What Constitutes a Breaking Change:**
+- Changes to public function/method signatures
+- Removal of public functions, classes, or modules
+- Changes to CLI command syntax or options
+- Changes to configuration file formats
+- Changes to default behavior that affects existing code
+- Changes to exception types or error handling
+- Removal of deprecated features
+
+**How to Handle Breaking Changes:**
+
+1. **Document in Commit Message:**
+   ```
+   refactor: change API to use async/await
+
+   Migrate to async for better concurrency handling.
+
+   BREAKING CHANGE: All public methods are now async and must be awaited.
+   Update calling code to use `await` or `asyncio.run()`.
+   See docs/migration.md for detailed migration guide.
+   ```
+
+2. **Document in PR Description:**
+   - Add "BREAKING CHANGE" section to PR description
+   - Explain what changed and why
+   - Provide migration guide with before/after examples
+   - List affected APIs or features
+
+3. **Update CHANGELOG.md:**
+   - Add breaking changes to "Breaking Changes" section
+   - Include migration instructions
+   - Provide code examples showing the change
+
+4. **Version Bump:**
+   - Breaking changes require a major version bump (e.g., 1.x.x → 2.0.0)
+   - Commitizen will handle this automatically based on commit message
+
+5. **Consider Deprecation Period:**
+   - For widely-used features, consider deprecating first (with warnings)
+   - Remove in next major version
+   - Gives users time to migrate
+
+**Automated Detection:**
+- PR checks will scan for potential breaking changes
+- Comments will be added to PRs highlighting concerns
+- CI will fail if breaking changes are not documented
+
+## Issue Creation Guidelines
+
+### Issue Title Format
+Use clear, actionable titles with type prefix matching conventional commits:
 
 ```
-refactor: change API to use async/await
-
-Migrate to async for better concurrency handling.
-
-BREAKING CHANGE: All public methods are now async and must be awaited.
-Update calling code to use `await` or `asyncio.run()`.
+<type>: <brief description>
 ```
+
+**Examples:**
+- `feat: add support for custom validators`
+- `bug: application crashes when processing large files`
+- `refactor: extract duplicate validation logic`
+- `docs: add examples for advanced usage`
+
+### Issue Templates
+
+The project uses GitHub YAML issue forms with required fields:
+
+**Bug Reports (bug_report.yml):**
+- Required: title, description, steps to reproduce, expected/actual behavior
+- Dropdowns: Python version, OS, priority (CRITICAL/HIGH/MEDIUM/LOW)
+- Optional: error output, additional context, possible solution
+- Auto-labels: `bug`, `needs-triage`
+
+**Feature Requests (feature_request.yml):**
+- Required: title, problem statement, proposed solution, use cases
+- Dropdowns: complexity (1-10 scale), priority
+- Optional: alternatives, implementation ideas, benefits
+- Checkbox: breaking changes flag
+- Auto-labels: `enhancement`, `needs-triage`
+
+**Refactor Requests (refactor.yml):**
+- Required: title, current situation, proposed improvement, technical debt impact
+- Dropdowns: complexity, priority
+- Optional: affected areas, benefits
+- Checkboxes: breaking changes, test updates, doc updates, API impact
+- Auto-labels: `refactor`, `needs-triage`
+
+### When to Create an Issue
+
+**Always create an issue for:**
+- New features or enhancements
+- Bug fixes
+- Refactoring work
+- Performance improvements
+- Security updates
+
+**Optional for:**
+- Documentation-only changes (can PR directly)
+- Typo fixes in comments
+- Minor README updates
+
+**Before starting work:**
+- Check if an issue already exists
+- Create the issue first, then the branch
+- Link the branch to the issue number
+
+### Issue Best Practices
+
+- **Be specific:** Clear, concise descriptions
+- **Be complete:** Fill all required fields
+- **Add context:** Include examples, screenshots, or code snippets
+- **Estimate complexity:** Helps with prioritization and planning
+- **Set priority:** CRITICAL for blockers, HIGH for important work, MEDIUM/LOW otherwise
+- **Link related issues:** Reference related issues or PRs
+- **Update as needed:** Add information as you learn more
 
 ## Pull Request Guidelines
 
 ### PR Title Format
 Same as commit messages: `<type>: <subject>`
 
-### PR Template
-See `.github/pull_request_template.md` for the complete PR description template, which includes:
-- Summary section
-- Changes checklist
-- Related issues
-- Testing checklist
-- Breaking changes section
-- Documentation updates
+**The PR title becomes the merge commit message, so make it clear and descriptive.**
+
+**Examples:**
+- ✅ `feat: add support for custom validators`
+- ✅ `fix: handle None values in data processing`
+- ✅ `docs: update installation guide`
+- ❌ `Add validators` (missing type)
+- ❌ `Feat: Add Validators` (capitalization wrong)
+
+### PR Description Requirements
+
+**Minimum requirements (enforced by CI):**
+- At least 50 characters
+- Include reference to related issue (except docs-only PRs)
+- Describe what changed and why
+- Include testing information
+
+**Complete PR template includes:**
+- **Summary:** 2-3 sentence overview of changes
+- **Changes:** Bullet list of specific changes with file paths
+- **Related Issues:** "Closes #123" or "Fixes #123"
+- **Testing:** How changes were tested
+- **Breaking Changes:** Document any breaking changes
+- **Documentation:** List doc updates
+
+### Automated PR Checks
+
+All PRs are automatically validated for:
+
+✅ **PR Title Format** - Must follow conventional commits
+✅ **Issue Link** - Must reference an issue (code changes only)
+✅ **Description Length** - Minimum 50 characters
+✅ **Breaking Changes** - Detects and requires documentation
+✅ **Tests** - All tests must pass
+✅ **Coverage** - Must maintain ≥80% coverage
+✅ **Linting** - Ruff checks must pass
+✅ **Type Checking** - Mypy must pass
+✅ **Format** - Code must be formatted with ruff
+
+**Docs-only PRs are exempt from issue linking requirement.**
 
 ### Code Review Checklist
+
 **Before submitting:**
+- [ ] Created and linked GitHub Issue (for code changes)
+- [ ] Branch name follows convention (`feat/123-description`)
 - [ ] Self-reviewed code
 - [ ] All CI checks passing locally (`doit check`)
-- [ ] Tests added/updated
-- [ ] Documentation updated
+- [ ] Tests added/updated with ≥80% coverage
+- [ ] Documentation updated (README, docstrings, guides)
 - [ ] CHANGELOG.md updated (for notable changes)
+- [ ] Breaking changes documented (if applicable)
 
 **Reviewers verify:**
-- [ ] Code follows project conventions
+- [ ] Code follows project conventions (style, patterns, architecture)
 - [ ] Tests adequate and passing
-- [ ] No security vulnerabilities
-- [ ] Error handling appropriate
+- [ ] No security vulnerabilities (injection, secrets, path traversal)
+- [ ] Error handling appropriate with clear messages
 - [ ] Documentation clear and accurate
+- [ ] Breaking changes properly documented
+- [ ] Issue is fully addressed
+
+### Merge Process
+
+1. **All CI checks must pass** - No exceptions
+2. **At least one approval required** - From code owner or maintainer
+3. **Merge commit format** - Must include PR and issue numbers:
+   - `<type>: <subject> (merges PR #XX, closes #YY)`
+   - PR title is automatically used as merge commit message
+4. **Squash and merge** - Preferred for clean history (multiple commits → one)
+5. **Delete branch** - After successful merge
 
 ## AI Agent Guidelines
 
