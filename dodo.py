@@ -547,6 +547,21 @@ def task_release():
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
+        # Governance validation
+        console.print("\n[bold cyan]Running governance validations...[/bold cyan]")
+
+        # Validate merge commit format (blocking)
+        if not validate_merge_commits(console):
+            console.print("\n[bold red]❌ Merge commit validation failed![/bold red]")
+            console.print("[yellow]Please ensure all merge commits follow the format:[/yellow]")
+            console.print("[yellow]  <type>: <subject> (merges PR #XX, closes #YY)[/yellow]")
+            sys.exit(1)
+
+        # Validate issue links (warning only)
+        validate_issue_links(console)
+
+        console.print("[bold green]✓ Governance validations complete.[/bold green]")
+
         # Run all checks
         console.print("\n[cyan]Running all pre-release checks...[/cyan]")
         try:
@@ -696,3 +711,122 @@ def task_install_direnv():
         "actions": [_install_direnv],
         "title": title_with_actions,
     }
+
+
+# ==============================================================================
+# Governance Validation Helpers
+# ==============================================================================
+
+
+def validate_merge_commits(console: "Console") -> bool:
+    """Validate that all merge commits follow the required format.
+
+    Returns:
+        bool: True if all merge commits are valid, False otherwise.
+    """
+    import re
+
+    console.print("\n[cyan]Validating merge commit format...[/cyan]")
+
+    # Get merge commits since last tag (or all if no tags)
+    try:
+        last_tag = subprocess.getoutput("git describe --tags --abbrev=0 2>/dev/null").strip()
+        if last_tag:
+            range_spec = f"{last_tag}..HEAD"
+        else:
+            range_spec = "HEAD"
+
+        merge_commits = subprocess.getoutput(
+            f'git log --merges --pretty=format:"%h %s" {range_spec}'
+        ).strip().split('\n')
+
+    except Exception as e:
+        console.print(f"[yellow]⚠ Could not check merge commits: {e}[/yellow]")
+        return True  # Don't block on this check
+
+    if not merge_commits or merge_commits == ['']:
+        console.print("[green]✓ No merge commits to validate.[/green]")
+        return True
+
+    # Pattern: <type>: <subject> (merges PR #XX, closes #YY) or (merges PR #XX)
+    merge_pattern = re.compile(
+        r'^[a-f0-9]+\s+(feat|fix|refactor|docs|test|chore|ci|perf):\s.+\s\(merges PR #\d+(?:, closes #\d+)?\)$'
+    )
+
+    invalid_commits = []
+    for commit in merge_commits:
+        if commit and not merge_pattern.match(commit):
+            invalid_commits.append(commit)
+
+    if invalid_commits:
+        console.print("[bold red]❌ Invalid merge commit format found:[/bold red]")
+        for commit in invalid_commits:
+            console.print(f"  [red]{commit}[/red]")
+        console.print("\n[yellow]Expected format:[/yellow]")
+        console.print("  <type>: <subject> (merges PR #XX, closes #YY)")
+        console.print("  <type>: <subject> (merges PR #XX)")
+        return False
+
+    console.print("[green]✓ All merge commits follow required format.[/green]")
+    return True
+
+
+def validate_issue_links(console: "Console") -> bool:
+    """Validate that commits (except docs) reference issues.
+
+    Returns:
+        bool: True if validation passes, False otherwise.
+    """
+    import re
+
+    console.print("\n[cyan]Validating issue links in commits...[/cyan]")
+
+    try:
+        # Get commits since last tag
+        last_tag = subprocess.getoutput("git describe --tags --abbrev=0 2>/dev/null").strip()
+        if last_tag:
+            range_spec = f"{last_tag}..HEAD"
+        else:
+            # If no tags, check last 10 commits
+            range_spec = "HEAD~10..HEAD"
+
+        commits = subprocess.getoutput(
+            f'git log --pretty=format:"%h %s" {range_spec}'
+        ).strip().split('\n')
+
+    except Exception as e:
+        console.print(f"[yellow]⚠ Could not check issue links: {e}[/yellow]")
+        return True  # Don't block on this check
+
+    if not commits or commits == ['']:
+        console.print("[green]✓ No commits to validate.[/green]")
+        return True
+
+    issue_pattern = re.compile(r'#\d+')
+    docs_pattern = re.compile(r'^[a-f0-9]+\s+docs:', re.IGNORECASE)
+
+    commits_without_issues = []
+    for commit in commits:
+        if commit:
+            # Skip docs commits
+            if docs_pattern.match(commit):
+                continue
+            # Skip merge commits (already validated separately)
+            if 'merge' in commit.lower():
+                continue
+            # Check for issue reference
+            if not issue_pattern.search(commit):
+                commits_without_issues.append(commit)
+
+    if commits_without_issues:
+        console.print("[bold yellow]⚠ Warning: Some commits don't reference issues:[/bold yellow]")
+        for commit in commits_without_issues[:5]:  # Show first 5
+            console.print(f"  [yellow]{commit}[/yellow]")
+        if len(commits_without_issues) > 5:
+            console.print(f"  [dim]...and {len(commits_without_issues) - 5} more[/dim]")
+        console.print("\n[dim]This is a warning only - release can continue.[/dim]")
+        console.print("[dim]Consider linking commits to issues for better traceability.[/dim]")
+    else:
+        console.print("[green]✓ All non-docs commits reference issues.[/green]")
+
+    return True  # Warning only, don't block release
