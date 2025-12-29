@@ -152,7 +152,381 @@ Install hooks after cloning:
 uv run pre-commit install
 ```
 
-### Making Changes
+## Creating Custom doit Tasks
+
+While the template provides standard tasks (test, lint, format, etc.), you'll likely need application-specific tasks for your project. This section shows patterns for extending `dodo.py`.
+
+### Pattern 1: CLI Wrapper Tasks
+
+If your package provides a CLI, create convenience tasks:
+
+```python
+# dodo.py
+def task_run_server():
+    """Start development server."""
+    return {
+        "actions": ["uv run package-name server --debug --port 8080"],
+        "title": title_with_actions,
+    }
+
+def task_init_db():
+    """Initialize database."""
+    return {
+        "actions": [
+            "uv run package-name db create",
+            "uv run package-name db migrate",
+            "uv run package-name db seed-dev",
+        ],
+        "title": title_with_actions,
+    }
+```
+
+Usage:
+```bash
+doit run_server
+doit init_db
+```
+
+### Pattern 2: Environment-Specific Tasks
+
+For applications with multiple deployment environments:
+
+```python
+def task_deploy_dev():
+    """Deploy to development environment."""
+    return {
+        "actions": [
+            "uv run package-name validate --env dev",
+            "uv run package-name deploy --env dev --auto-approve",
+        ],
+        "title": title_with_actions,
+    }
+
+def task_deploy_prod():
+    """Deploy to production (with safety checks)."""
+
+    def check_and_deploy():
+        console = Console()
+
+        # Safety check
+        response = input("Deploy to PRODUCTION? Type 'yes' to confirm: ")
+        if response.lower() != "yes":
+            console.print("[red]✗ Deployment cancelled[/red]")
+            return False
+
+        # Run deployment
+        subprocess.run(
+            "uv run package-name deploy --env prod",
+            shell=True,
+            check=True
+        )
+        console.print("[green]✓ Deployed to production[/green]")
+
+    return {
+        "actions": [check_and_deploy],
+        "verbosity": 2,
+    }
+```
+
+### Pattern 3: Integration Test Tasks
+
+For tests requiring external services (databases, APIs, Docker containers):
+
+```python
+def task_test_integration():
+    """Run integration tests (requires Docker)."""
+    return {
+        "actions": [
+            # Start services
+            "docker-compose up -d postgres redis",
+            # Wait for services to be ready
+            "sleep 5",
+            # Run integration tests
+            "pytest tests/integration/ -v --maxfail=1",
+            # Cleanup (always runs)
+            "docker-compose down || true",
+        ],
+        "title": title_with_actions,
+    }
+
+def task_test_e2e():
+    """Run end-to-end tests with full stack."""
+    return {
+        "actions": [
+            "docker-compose -f docker-compose.test.yml up --abort-on-container-exit",
+            "docker-compose -f docker-compose.test.yml down -v",
+        ],
+        "title": title_with_actions,
+    }
+```
+
+### Pattern 4: Data Processing Tasks
+
+For data pipelines, ETL operations, or batch processing:
+
+```python
+def task_process_data():
+    """Run data processing pipeline."""
+    return {
+        "actions": [
+            "uv run package-name extract --source api --output tmp/raw.json",
+            "uv run package-name transform --input tmp/raw.json --output tmp/clean.json",
+            "uv run package-name load --input tmp/clean.json --target postgres",
+        ],
+        "title": title_with_actions,
+    }
+
+def task_backup_data():
+    """Backup production database."""
+    return {
+        "actions": [
+            "uv run package-name backup create --env prod --output backups/$(date +%Y%m%d-%H%M%S).sql.gz",
+        ],
+        "title": title_with_actions,
+    }
+
+def task_restore_data():
+    """Restore from latest backup."""
+
+    def restore_latest():
+        import glob
+        backups = sorted(glob.glob("backups/*.sql.gz"), reverse=True)
+        if not backups:
+            print("No backups found!")
+            return False
+
+        latest = backups[0]
+        print(f"Restoring from: {latest}")
+        subprocess.run(
+            f"uv run package-name backup restore --file {latest} --env dev",
+            shell=True,
+            check=True
+        )
+
+    return {
+        "actions": [restore_latest],
+        "title": title_with_actions,
+    }
+```
+
+### Pattern 5: Dependency Tasks
+
+Tasks that depend on other tasks completing first:
+
+```python
+def task_full_check():
+    """Run all quality checks before committing."""
+    return {
+        "actions": [success_message],  # Run after all deps complete
+        "task_dep": [
+            "format_check",
+            "lint",
+            "type_check",
+            "test",
+            "security",
+            "spell_check",
+        ],
+        "title": title_with_actions,
+    }
+
+def task_build_all():
+    """Build package and documentation."""
+    return {
+        "actions": [
+            lambda: print("✓ All builds complete!"),
+        ],
+        "task_dep": ["build", "docs_build"],
+        "title": title_with_actions,
+    }
+```
+
+### Pattern 6: Tasks with Parameters
+
+Create tasks that accept arguments:
+
+```python
+def task_deploy():
+    """Deploy to specified environment."""
+
+    def deploy_to_env(env):
+        console = Console()
+        console.print(f"[cyan]Deploying to {env}...[/cyan]")
+
+        # Validate environment
+        valid_envs = ["dev", "staging", "prod"]
+        if env not in valid_envs:
+            console.print(f"[red]Invalid environment: {env}[/red]")
+            console.print(f"Valid: {', '.join(valid_envs)}")
+            return False
+
+        # Deploy
+        subprocess.run(
+            f"uv run package-name deploy --env {env}",
+            shell=True,
+            check=True
+        )
+        console.print(f"[green]✓ Deployed to {env}[/green]")
+
+    return {
+        "actions": [CmdAction(deploy_to_env)],
+        "params": [
+            {
+                "name": "env",
+                "short": "e",
+                "long": "env",
+                "default": "dev",
+                "help": "Environment to deploy to (dev, staging, prod)",
+            }
+        ],
+        "title": title_with_actions,
+    }
+```
+
+Usage:
+```bash
+doit deploy              # Deploys to dev (default)
+doit deploy --env staging # Deploys to staging
+doit deploy -e prod      # Deploys to prod
+```
+
+### Pattern 7: Monitoring and Validation Tasks
+
+Tasks for checking system health, validating configs, or monitoring:
+
+```python
+def task_validate_config():
+    """Validate all configuration files."""
+    return {
+        "actions": [
+            "uv run package-name config validate --env dev",
+            "uv run package-name config validate --env prod",
+        ],
+        "title": title_with_actions,
+    }
+
+def task_health_check():
+    """Check health of all services."""
+    return {
+        "actions": [
+            "curl -f http://localhost:8000/health || echo 'Service down!'",
+            "uv run package-name db ping",
+            "uv run package-name cache status",
+        ],
+        "title": title_with_actions,
+    }
+```
+
+### Pattern 8: Code Generation Tasks
+
+For projects that generate code from schemas, templates, or specs:
+
+```python
+def task_generate_models():
+    """Generate data models from OpenAPI spec."""
+    return {
+        "actions": [
+            "uv run datamodel-codegen --input api-spec.yaml --output src/package_name/models/",
+        ],
+        "file_dep": ["api-spec.yaml"],
+        "targets": ["src/package_name/models/api.py"],
+        "title": title_with_actions,
+    }
+
+def task_generate_client():
+    """Generate API client from specification."""
+    return {
+        "actions": [
+            "openapi-generator generate -i api-spec.yaml -g python -o generated/client/",
+        ],
+        "file_dep": ["api-spec.yaml"],
+        "title": title_with_actions,
+    }
+```
+
+### Best Practices for Custom Tasks
+
+1. **Descriptive Names**: Use verb-noun format (e.g., `run_server`, `deploy_prod`, `backup_data`)
+2. **Clear Docstrings**: They appear in `doit list` - make them helpful
+3. **Use title_with_actions**: Shows what's running during execution
+4. **Set Verbosity**: For important tasks, set `"verbosity": 2`
+5. **Handle Errors**: Use `|| true` for optional steps, or proper error handling in Python functions
+6. **Cleanup After Failures**: Use try/finally or `|| cleanup_command` patterns
+7. **Group Related Tasks**: Use task dependencies to compose workflows
+8. **Document Parameters**: If using params, document them clearly
+9. **Validate Inputs**: Check that required files/configs exist before running
+10. **Provide Feedback**: Use Rich console or simple prints to show progress
+
+### Example: Complete Custom Task
+
+Here's a complete example combining several patterns:
+
+```python
+import os
+import subprocess
+from pathlib import Path
+from rich.console import Console
+from doit.action import CmdAction
+from doit.tools import title_with_actions
+
+console = Console()
+
+def task_benchmark():
+    """Run performance benchmarks and generate report."""
+
+    def run_benchmarks(suite="all"):
+        console.print(f"[cyan]Running benchmark suite: {suite}[/cyan]")
+
+        # Validate benchmark suite exists
+        benchmark_dir = Path("benchmarks")
+        if not benchmark_dir.exists():
+            console.print("[red]✗ benchmarks/ directory not found[/red]")
+            return False
+
+        # Create output directory
+        output_dir = Path("tmp/benchmarks")
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Run benchmarks
+        cmd = f"uv run pytest benchmarks/test_{suite}.py --benchmark-only --benchmark-json=tmp/benchmarks/results.json"
+        result = subprocess.run(cmd, shell=True)
+
+        if result.returncode != 0:
+            console.print("[red]✗ Benchmarks failed[/red]")
+            return False
+
+        # Generate HTML report
+        subprocess.run(
+            "uv run pytest-benchmark compare tmp/benchmarks/results.json --html=tmp/benchmarks/report.html",
+            shell=True
+        )
+
+        console.print("[green]✓ Benchmarks complete[/green]")
+        console.print(f"Report: tmp/benchmarks/report.html")
+
+    return {
+        "actions": [CmdAction(run_benchmarks)],
+        "params": [
+            {
+                "name": "suite",
+                "short": "s",
+                "long": "suite",
+                "default": "all",
+                "help": "Benchmark suite to run (all, api, database, etc.)",
+            }
+        ],
+        "verbosity": 2,
+        "title": title_with_actions,
+    }
+```
+
+Usage:
+```bash
+doit benchmark                  # Run all benchmarks
+doit benchmark --suite api      # Run API benchmarks only
+doit list                       # See the task description
+```
+
+## Making Changes
 
 1. **Create a branch**:
    ```bash

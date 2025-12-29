@@ -419,6 +419,343 @@ uv run pipdeptree
 uv run pipdeptree --reverse  # Show what depends on a package
 ```
 
+## Building Extensible Applications with Entry Points
+
+Python entry points enable plugin architectures that allow users to extend your package without modifying core code.
+
+### Why Use Entry Points?
+
+Entry points are ideal when you want to:
+- Allow third-party plugins to extend your application
+- Discover extensions automatically at runtime
+- Create a plugin ecosystem around your package
+- Keep core code separate from optional functionality
+
+### Basic Pattern
+
+**1. Define Plugin Interface**
+
+Create a protocol or abstract base class that all plugins must implement:
+
+```python
+# src/package_name/plugin_interface.py
+from typing import Protocol
+
+class PluginInterface(Protocol):
+    """Protocol that all plugins must implement."""
+
+    @property
+    def name(self) -> str:
+        """Plugin name."""
+        ...
+
+    @property
+    def version(self) -> str:
+        """Plugin version."""
+        ...
+
+    def execute(self, data: dict) -> dict:
+        """Execute plugin logic."""
+        ...
+```
+
+**2. Create Plugin Discovery**
+
+Load and validate plugins from entry points:
+
+```python
+# src/package_name/plugin_loader.py
+from importlib.metadata import entry_points
+from typing import Dict
+from .plugin_interface import PluginInterface
+
+def discover_plugins() -> Dict[str, PluginInterface]:
+    """Discover and load all plugins."""
+    plugins = {}
+
+    # Find all entry points in 'package_name.plugins' group
+    eps = entry_points(group='package_name.plugins')
+
+    for ep in eps:
+        try:
+            # Load the plugin class
+            plugin_class = ep.load()
+
+            # Instantiate and validate
+            plugin = plugin_class()
+            if not isinstance(plugin, PluginInterface):
+                print(f"Warning: {ep.name} doesn't implement PluginInterface")
+                continue
+
+            plugins[plugin.name] = plugin
+            print(f"Loaded plugin: {plugin.name} v{plugin.version}")
+
+        except Exception as e:
+            print(f"Failed to load plugin {ep.name}: {e}")
+            continue
+
+    return plugins
+```
+
+**3. Use Plugins in Your Application**
+
+```python
+# src/package_name/main.py
+from .plugin_loader import discover_plugins
+
+def main():
+    """Main application entry point."""
+    plugins = discover_plugins()
+
+    print(f"Found {len(plugins)} plugins")
+
+    for name, plugin in plugins.items():
+        print(f"Running plugin: {name}")
+        result = plugin.execute({"input": "data"})
+        print(f"Result: {result}")
+```
+
+**4. Create Built-in Plugins**
+
+Register your own plugins in `pyproject.toml`:
+
+```toml
+[project.entry-points."package_name.plugins"]
+default = "package_name.plugins.default:DefaultPlugin"
+csv_export = "package_name.plugins.csv_export:CSVExportPlugin"
+```
+
+**5. Enable Third-Party Plugins**
+
+Users can create their own plugins:
+
+```python
+# third-party-plugin/src/myplugin/analytics.py
+class AnalyticsPlugin:
+    """Custom analytics plugin."""
+
+    @property
+    def name(self) -> str:
+        return "analytics"
+
+    @property
+    def version(self) -> str:
+        return "1.0.0"
+
+    def execute(self, data: dict) -> dict:
+        # Custom analytics logic
+        return {"result": "analyzed", "data": data}
+```
+
+And register it in their `pyproject.toml`:
+
+```toml
+[project.entry-points."package_name.plugins"]
+analytics = "myplugin.analytics:AnalyticsPlugin"
+```
+
+When users install both packages:
+
+```bash
+pip install package-name
+pip install package-name-analytics
+```
+
+Your application automatically discovers and loads the third-party plugin!
+
+### Advanced: Multiple Plugin Types
+
+For complex systems, you can have different types of plugins with different entry point groups:
+
+**Define plugin types in your pyproject.toml:**
+
+```toml
+# Your core package
+[project.entry-points."package_name.plugin_types"]
+processor = "package_name.plugin_types.processor:ProcessorPluginType"
+exporter = "package_name.plugin_types.exporter:ExporterPluginType"
+
+# Register built-in plugins by type
+[project.entry-points."package_name.processors"]
+csv = "package_name.plugins.csv_processor:CSVProcessor"
+json = "package_name.plugins.json_processor:JSONProcessor"
+
+[project.entry-points."package_name.exporters"]
+s3 = "package_name.plugins.s3_exporter:S3Exporter"
+local = "package_name.plugins.local_exporter:LocalExporter"
+```
+
+**Plugin Type Manager:**
+
+```python
+# src/package_name/plugin_types/processor.py
+from dataclasses import dataclass
+from typing import Any, Protocol
+
+class ProcessorProtocol(Protocol):
+    """Protocol for processor plugins."""
+
+    def process(self, data: Any) -> Any:
+        """Process data."""
+        ...
+
+@dataclass
+class PluginMetadata:
+    """Generic plugin metadata."""
+    name: str
+    version: str
+    plugin_type: str
+    implementation: type
+    description: str = ""
+
+class ProcessorPluginType:
+    """Manages processor plugins."""
+
+    @property
+    def entry_point_group(self) -> str:
+        return "package_name.processors"
+
+    @property
+    def type_name(self) -> str:
+        return "processor"
+
+    def load_plugin(self, entry_point) -> PluginMetadata:
+        """Load a processor plugin."""
+        plugin_class = entry_point.load()
+
+        # Validate it implements the protocol
+        if not hasattr(plugin_class, 'process'):
+            raise ValueError(f"{entry_point.name} missing 'process' method")
+
+        return PluginMetadata(
+            name=entry_point.name,
+            version=getattr(plugin_class, '__version__', '0.0.0'),
+            plugin_type=self.type_name,
+            implementation=plugin_class,
+        )
+```
+
+**Third-party developers can now create plugins:**
+
+```toml
+# third-party-package/pyproject.toml
+[project.entry-points."package_name.processors"]
+xml = "thirdparty_plugin.xml:XMLProcessor"
+
+[project.entry-points."package_name.exporters"]
+ftp = "thirdparty_plugin.ftp:FTPExporter"
+```
+
+### Real-World Example: CLI Command Registration
+
+A common use case is auto-registering CLI commands from plugins:
+
+```python
+# src/package_name/cli.py
+import click
+from importlib.metadata import entry_points
+
+@click.group()
+def cli():
+    """Main CLI application."""
+    pass
+
+# Discover and register all plugin commands
+for ep in entry_points(group='package_name.cli_plugins'):
+    try:
+        command = ep.load()
+        cli.add_command(command)
+    except Exception as e:
+        click.echo(f"Failed to load plugin {ep.name}: {e}", err=True)
+
+if __name__ == '__main__':
+    cli()
+```
+
+Third-party plugins can add commands:
+
+```python
+# third-party-plugin/src/myplugin/commands.py
+import click
+
+@click.command()
+@click.option('--output', help='Output file')
+def export(output):
+    """Export data to file."""
+    click.echo(f"Exporting to {output}")
+```
+
+Register in their pyproject.toml:
+
+```toml
+[project.entry-points."package_name.cli_plugins"]
+export = "myplugin.commands:export"
+```
+
+Now the command is automatically available:
+
+```bash
+$ package-cli export --output data.csv
+Exporting to data.csv
+```
+
+### Testing Plugin Systems
+
+**Test plugin discovery:**
+
+```python
+# tests/test_plugins.py
+from package_name.plugin_loader import discover_plugins
+
+def test_discovers_built_in_plugins():
+    plugins = discover_plugins()
+    assert 'default' in plugins
+    assert 'csv_export' in plugins
+
+def test_plugin_implements_interface():
+    plugins = discover_plugins()
+    for name, plugin in plugins.items():
+        assert hasattr(plugin, 'execute')
+        assert hasattr(plugin, 'name')
+        assert hasattr(plugin, 'version')
+```
+
+**Test plugin execution:**
+
+```python
+def test_plugin_execution():
+    plugins = discover_plugins()
+    plugin = plugins['default']
+
+    result = plugin.execute({'test': 'data'})
+    assert 'result' in result
+```
+
+### Best Practices
+
+1. **Use Protocols**: Define clear interfaces using `typing.Protocol`
+2. **Validate Plugins**: Check plugins implement required methods
+3. **Handle Errors**: Gracefully handle plugin loading failures
+4. **Document Interface**: Clearly document what plugins must implement
+5. **Version Compatibility**: Consider plugin version compatibility
+6. **Lazy Loading**: Load plugins only when needed
+7. **Provide Examples**: Include example plugin implementation
+8. **Test Discovery**: Test that built-in plugins are discovered correctly
+
+### Resources
+
+- [Python Packaging Guide - Entry Points](https://packaging.python.org/en/latest/specifications/entry-points/)
+- [Setuptools Entry Points](https://setuptools.pypa.io/en/latest/userguide/entry_point.html)
+- [PEP 621 - Storing project metadata in pyproject.toml](https://peps.python.org/pep-0621/)
+
+### Example Plugin Systems in the Wild
+
+- **pytest**: Plugins via `pytest11` entry points
+- **setuptools**: Build backends and plugins
+- **Flask**: Extensions via entry points
+- **Sphinx**: Documentation extensions
+- **Pylint**: Custom checkers
+
 ## Additional Code Quality Tools
 
 ### vulture - Dead code detection
