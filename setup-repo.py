@@ -129,7 +129,7 @@ class RepositorySetup:
         print()
         print(f"{Colors.CYAN}╔═══════════════════════════════════════════════════════════╗{Colors.NC}")
         print(f"{Colors.CYAN}║                                                           ║{Colors.NC}")
-        print(f"{Colors.CYAN}║     Python Project Template - Repository Setup           ║{Colors.NC}")
+        print(f"{Colors.CYAN}║     Python Project Template - Repository Setup            ║{Colors.NC}")
         print(f"{Colors.CYAN}║                                                           ║{Colors.NC}")
         print(f"{Colors.CYAN}╚═══════════════════════════════════════════════════════════╝{Colors.NC}")
         print()
@@ -441,48 +441,47 @@ class RepositorySetup:
             Logger.info(f"  https://github.com/{self.config['repo_full']}/settings")
 
     def configure_branch_protection(self) -> None:
-        """Configure branch protection for main."""
-        Logger.step("Configuring branch protection for main...")
+        """Configure branch protection using rulesets."""
+        Logger.step("Configuring branch protection rulesets...")
 
         try:
-            data = {
-                "required_status_checks": {
-                    "strict": True,
-                    "contexts": [
-                        "test (3.12)",
-                        "test (3.13)",
-                        "format-check",
-                        "lint",
-                        "type-check",
-                    ],
-                },
-                "enforce_admins": False,
-                "required_pull_request_reviews": {
-                    "dismissal_restrictions": {},
-                    "dismiss_stale_reviews": True,
-                    "require_code_owner_reviews": True,
-                    "required_approving_review_count": 1,
-                },
-                "restrictions": None,
-                "required_linear_history": False,
-                "allow_force_pushes": False,
-                "allow_deletions": False,
-                "required_conversation_resolution": True,
-            }
+            # Get rulesets from template
+            template_rulesets = GitHubCLI.api(f"repos/{self.TEMPLATE_FULL}/rulesets")
 
-            GitHubCLI.api(
-                f"repos/{self.config['repo_full']}/branches/main/protection",
-                method="PUT",
-                data=data,
-            )
-            Logger.success("Branch protection configured")
+            if not template_rulesets:
+                Logger.warning("No rulesets found in template repository")
+                return
+
+            # Replicate each ruleset
+            for template_ruleset in template_rulesets:
+                # Get full ruleset details
+                ruleset_id = template_ruleset["id"]
+                full_ruleset = GitHubCLI.api(f"repos/{self.TEMPLATE_FULL}/rulesets/{ruleset_id}")
+
+                # Prepare ruleset data for creation (remove read-only fields)
+                ruleset_data = {
+                    "name": full_ruleset["name"],
+                    "target": full_ruleset["target"],
+                    "enforcement": full_ruleset["enforcement"],
+                    "bypass_actors": full_ruleset.get("bypass_actors", []),
+                    "conditions": full_ruleset.get("conditions", {}),
+                    "rules": full_ruleset.get("rules", []),
+                }
+
+                # Create ruleset in new repository
+                GitHubCLI.api(
+                    f"repos/{self.config['repo_full']}/rulesets",
+                    method="POST",
+                    data=ruleset_data,
+                )
+                Logger.success(f"Ruleset '{full_ruleset['name']}' configured")
 
         except subprocess.CalledProcessError as e:
-            Logger.warning("Branch protection configuration failed")
+            Logger.warning("Branch protection ruleset configuration failed")
             if e.stderr:
                 print(f"  Error: {e.stderr.strip()}")
-            Logger.info("You can configure branch protection manually at:")
-            Logger.info(f"  https://github.com/{self.config['repo_full']}/settings/branches")
+            Logger.info("You can configure rulesets manually at:")
+            Logger.info(f"  https://github.com/{self.config['repo_full']}/settings/rules")
 
     def replicate_labels(self) -> None:
         """Replicate labels from template."""
@@ -561,8 +560,8 @@ class RepositorySetup:
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review and adjust repository settings:")
         print(f"      https://github.com/{self.config['repo_full']}/settings")
         print()
-        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review branch protection rules:")
-        print(f"      https://github.com/{self.config['repo_full']}/settings/branches")
+        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review branch protection rulesets:")
+        print(f"      https://github.com/{self.config['repo_full']}/settings/rules")
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Invite collaborators (if needed):")
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
