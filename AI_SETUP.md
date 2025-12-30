@@ -99,8 +99,9 @@ Claude Code supports Language Server Protocol for fast code navigation and type 
 
 **Quick LSP Setup:**
 ```bash
-# 1. Enable LSP tool
-export ENABLE_LSP_TOOL=1
+# 1. Enable LSP tool (already in .envrc.local.example)
+cp .envrc.local.example .envrc.local
+# direnv will auto-load ENABLE_LSP_TOOL=1
 
 # 2. Install Pyright plugin in Claude Code
 /plugin install pyright-lsp@claude-plugins-official
