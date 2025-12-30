@@ -143,13 +143,13 @@ check_token_permissions() {
     if echo "$auth_info" | grep -q "github_pat_"; then
         log_warning "You're using a Personal Access Token (PAT)"
         echo ""
-        echo "  ${YELLOW}Required permissions for fine-grained PAT:${NC}"
+        echo -e "  ${YELLOW}Required permissions for fine-grained PAT:${NC}"
         echo "  - Repository permissions:"
         echo "    • Administration: Read and write"
         echo "    • Contents: Read and write"
         echo "    • Metadata: Read"
         echo ""
-        echo "  ${YELLOW}To create/update your PAT:${NC}"
+        echo -e "  ${YELLOW}To create/update your PAT:${NC}"
         echo "  1. Go to: https://github.com/settings/tokens?type=beta"
         echo "  2. Create new token or edit existing"
         echo "  3. Select 'All repositories' or specific repos"
@@ -271,18 +271,18 @@ create_repository() {
         echo ""
 
         if echo "$create_response" | grep -q "Resource not accessible by personal access token"; then
-            echo "${RED}Permission Error:${NC} Your GitHub token doesn't have the required permissions."
+            echo -e "${RED}Permission Error:${NC} Your GitHub token doesn't have the required permissions."
             echo ""
             echo "This happens when using a Personal Access Token (PAT) without proper permissions."
             echo ""
-            echo "${YELLOW}Solution:${NC}"
+            echo -e "${YELLOW}Solution:${NC}"
             echo ""
-            echo "1. ${CYAN}Re-authenticate with OAuth (recommended):${NC}"
+            echo -e "1. ${CYAN}Re-authenticate with OAuth (recommended):${NC}"
             echo "   gh auth logout"
             echo "   gh auth login"
             echo "   # Choose: GitHub.com → HTTPS → Login with browser"
             echo ""
-            echo "2. ${CYAN}Or update your fine-grained PAT:${NC}"
+            echo -e "2. ${CYAN}Or update your fine-grained PAT:${NC}"
             echo "   https://github.com/settings/tokens?type=beta"
             echo "   Required permissions:"
             echo "   - Administration: Read and write"
@@ -338,8 +338,8 @@ $AUTHOR_EMAIL
 $REPO_OWNER
 EOF
 
-    # Run configure.py with the inputs
-    if python3 configure.py < /tmp/configure_input.txt; then
+    # Run configure.py with the inputs (suppress errors as it may not support piped input)
+    if python3 configure.py < /tmp/configure_input.txt 2>/dev/null; then
         log_success "Placeholders configured"
 
         # Commit the changes
@@ -355,7 +355,8 @@ EOF
         git push || true
         log_success "Changes committed and pushed"
     else
-        log_warning "Placeholder configuration failed - you may need to run configure.py manually"
+        log_warning "Automatic placeholder configuration skipped"
+        log_info "Run 'python3 configure.py' manually to configure project placeholders"
     fi
 
     rm -f /tmp/configure_input.txt
@@ -464,25 +465,25 @@ print_manual_steps() {
 
     log_step "Manual steps required:"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Add PyPI token to repository secrets:"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Add PyPI token to repository secrets:"
     echo "      gh secret set PYPI_TOKEN --repo $REPO_FULL"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Add TestPyPI token to repository secrets (optional):"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Add TestPyPI token to repository secrets (optional):"
     echo "      gh secret set TEST_PYPI_TOKEN --repo $REPO_FULL"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Add Codecov token to repository secrets (optional):"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Add Codecov token to repository secrets (optional):"
     echo "      gh secret set CODECOV_TOKEN --repo $REPO_FULL"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Review and adjust repository settings:"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Review and adjust repository settings:"
     echo "      https://github.com/$REPO_FULL/settings"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Review branch protection rules:"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Review branch protection rules:"
     echo "      https://github.com/$REPO_FULL/settings/branches"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Invite collaborators (if needed):"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Invite collaborators (if needed):"
     echo "      https://github.com/$REPO_FULL/settings/access"
     echo ""
-    echo "  ${YELLOW}[${NC} ${YELLOW}]${NC} Enable Dependabot security updates:"
+    echo -e "  ${YELLOW}[${NC} ${YELLOW}]${NC} Enable Dependabot security updates:"
     echo "      https://github.com/$REPO_FULL/settings/security_analysis"
     echo ""
 
