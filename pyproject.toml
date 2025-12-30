@@ -101,6 +101,12 @@ ignore = [
     "ANN202",  # Missing return type annotation for private function
 ]
 
+[tool.ruff.lint.per-file-ignores]
+"setup-repo.py" = [
+    "E501",    # Line too long - banner boxes and formatted output
+    "RUF001",  # Ambiguous unicode - intentional for better UX
+]
+
 [tool.ruff.format]
 quote-style = "double"
 indent-style = "space"
