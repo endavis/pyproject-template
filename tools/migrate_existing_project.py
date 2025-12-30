@@ -30,7 +30,6 @@ import tarfile
 import urllib.request
 import zipfile
 from pathlib import Path
-from typing import Iterable
 
 DEFAULT_ARCHIVE_URL = "https://github.com/endavis/pyproject-template/archive/refs/heads/main.zip"
 
@@ -79,7 +78,8 @@ def parse_args() -> argparse.Namespace:
         "--template",
         type=Path,
         default=None,
-        help="Path to the pyproject-template root (defaults to this script's repo unless --download).",
+        help="Path to the pyproject-template root (defaults to this script's "
+        "repo unless --download).",
     )
     parser.add_argument(
         "--download",
@@ -127,7 +127,11 @@ def main() -> None:
         elif tarfile.is_tarfile(archive_path):
             with tarfile.open(archive_path, "r:*") as tf:
                 # Filter out dangerous members (path traversal, absolute paths, devices)
-                safe_members = [m for m in tf.getmembers() if m.name and not (m.name.startswith("/") or ".." in m.name)]
+                safe_members = [
+                    m
+                    for m in tf.getmembers()
+                    if m.name and not (m.name.startswith("/") or ".." in m.name)
+                ]
                 tf.extractall(extract_dir, members=safe_members)  # nosec B202 - members are validated above
             contents = list(extract_dir.iterdir())
             template_root = contents[0] if contents else extract_dir

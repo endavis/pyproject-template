@@ -96,6 +96,7 @@ ignore = [
     "ANN001",  # Missing type annotation for function argument - fix incrementally
     "ANN002",  # Missing type annotation for *args
     "ANN003",  # Missing type annotation for **kwargs
+    "ANN101",  # Missing type annotation for self in method
     "ANN201",  # Missing return type annotation for public function
     "ANN202",  # Missing return type annotation for private function
 ]
@@ -157,7 +158,24 @@ directory = "tmp/htmlcov"
 output = "tmp/coverage.xml"
 
 [tool.bandit]
-exclude_dirs = ["tests", "tmp", ".venv"]
+exclude_dirs = [
+    "tests",
+    "tmp",
+    ".venv",
+    "docs",
+    "examples",
+    ".git",
+    ".github",
+    ".pytest_cache",
+    ".mypy_cache",
+    ".ruff_cache",
+    "site",
+    ".claude",
+    ".gemini",
+    ".codex",
+    ".devcontainer",
+    ".vscode",
+]
 skips = [
     "B101",  # assert_used - asserts are fine in tests
     "B603",  # subprocess_without_shell_equals_true - we use list args (safe)

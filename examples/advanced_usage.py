@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 class AdvancedExample:
     """Example class demonstrating advanced usage patterns."""
 
-    def __init__(self, config: dict[str, str] | None = None):
+    def __init__(self, config: dict[str, str] | None = None) -> None:
         """Initialize with optional configuration.
 
         Args:
@@ -80,7 +80,7 @@ class AdvancedExample:
         return results
 
 
-def main():
+def main() -> None:
     """Run advanced usage examples."""
     print(f"Advanced Examples - package_name v{__version__}")
     print("=" * 60)
