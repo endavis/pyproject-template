@@ -562,9 +562,40 @@ class RepositorySetup:
 - Format code with ruff
 
 🤖 Generated with setup-repo.py"""
-                subprocess.run(["git", "commit", "-m", commit_msg], check=True, capture_output=True)
-                subprocess.run(["git", "push"], check=True, capture_output=True)
-                Logger.success("Formatting changes committed and pushed")
+                commit_result = subprocess.run(
+                    ["git", "commit", "-m", commit_msg],
+                    capture_output=True,
+                    text=True,
+                )
+                if commit_result.returncode != 0:
+                    Logger.error("Failed to commit formatting changes")
+                    print()
+                    print(f"{Colors.RED}Git commit error:{Colors.NC}")
+                    if commit_result.stderr:
+                        print(f"  {commit_result.stderr.strip()}")
+                    if commit_result.stdout:
+                        print(f"  {commit_result.stdout.strip()}")
+                    print()
+                    print(f"{Colors.YELLOW}Possible solutions:{Colors.NC}")
+                    print("  1. Check pre-commit hook output above for specific issues")
+                    print("  2. Fix any failing pre-commit checks manually")
+                    print("  3. Run: git status")
+                    print("  4. Review changes and commit manually")
+                    print()
+                    # Don't raise exception, continue with validation
+                else:
+                    push_result = subprocess.run(
+                        ["git", "push"],
+                        capture_output=True,
+                        text=True,
+                    )
+                    if push_result.returncode != 0:
+                        Logger.error("Failed to push formatting changes")
+                        if push_result.stderr:
+                            print(f"  Error: {push_result.stderr.strip()}")
+                        print("  You can push manually later with: git push")
+                    else:
+                        Logger.success("Formatting changes committed and pushed")
 
             # Run validation checks
             Logger.info("Running validation checks (doit check)...")
@@ -580,12 +611,34 @@ class RepositorySetup:
                 Logger.warning("Some validation checks failed")
                 Logger.info("Review the output above and fix any issues")
 
+        except subprocess.CalledProcessError as e:
+            Logger.error("Development environment setup failed")
+            print()
+            print(f"{Colors.RED}Error details:{Colors.NC}")
+            if e.stderr:
+                print(f"  {e.stderr.strip()}")
+            if e.stdout:
+                print(f"  {e.stdout.strip()}")
+            print()
+            print(f"{Colors.YELLOW}You can complete setup manually with:{Colors.NC}")
+            print("  cd", self.config["repo_name"])
+            print("  uv sync --all-extras")
+            print("  uv run pre-commit install")
+            print("  uv run doit check")
+            print()
         except Exception as e:
-            Logger.warning(f"Development environment setup had issues: {e}")
-            Logger.info("You can complete setup manually with:")
-            Logger.info("  uv sync --all-extras")
-            Logger.info("  uv run pre-commit install")
-            Logger.info("  uv run doit check")
+            Logger.error(f"Development environment setup failed: {e}")
+            print()
+            import traceback
+            print(f"{Colors.RED}Full error:{Colors.NC}")
+            traceback.print_exc()
+            print()
+            print(f"{Colors.YELLOW}You can complete setup manually with:{Colors.NC}")
+            print("  cd", self.config["repo_name"])
+            print("  uv sync --all-extras")
+            print("  uv run pre-commit install")
+            print("  uv run doit check")
+            print()
 
     def configure_repository_settings(self) -> None:
         """Configure repository settings to match template."""
