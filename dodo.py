@@ -359,8 +359,8 @@ def task_update_deps():
 
         # Update dependencies and refresh lockfile
         result = subprocess.run(
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv sync --all-extras --dev --upgrade",
-            shell=True,
+            ["uv", "sync", "--all-extras", "--dev", "--upgrade"],
+            env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
         )
 
         if result.returncode != 0:
@@ -432,7 +432,12 @@ def task_release_dev(type="alpha"):
                 sys.exit(1)
 
         # Check for uncommitted changes
-        status = subprocess.getoutput("git status -s").strip()
+        status = subprocess.run(
+            ["git", "status", "-s"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
         if status:
             console.print("[bold red]❌ Error: Uncommitted changes detected.[/bold red]")
             console.print(status)
@@ -541,7 +546,12 @@ def task_release():
                 sys.exit(1)
 
         # Check for uncommitted changes
-        status = subprocess.getoutput("git status -s").strip()
+        status = subprocess.run(
+            ["git", "status", "-s"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
         if status:
             console.print("[bold red]❌ Error: Uncommitted changes detected.[/bold red]")
             console.print(status)
@@ -709,8 +719,8 @@ def _install_direnv():
         )
         bin_path = os.path.join(install_dir, "direnv")
         print(f"Downloading {bin_url}...")
-        urllib.request.urlretrieve(bin_url, bin_path)
-        os.chmod(bin_path, 0o755)  # rwxr-xr-x
+        urllib.request.urlretrieve(bin_url, bin_path)  # nosec B310 - downloading from hardcoded GitHub release URL
+        os.chmod(bin_path, 0o755)  # nosec B103 - rwxr-xr-x is required for executable binary
     elif system == "darwin":
         subprocess.run(["brew", "install", "direnv"], check=True)
     else:
@@ -748,15 +758,23 @@ def validate_merge_commits(console: "Console") -> bool:
 
     # Get merge commits since last tag (or all if no tags)
     try:
-        last_tag = subprocess.getoutput("git describe --tags --abbrev=0 2>/dev/null").strip()
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True,
+            text=True,
+        )
+        last_tag = result.stdout.strip() if result.returncode == 0 else ""
         if last_tag:
             range_spec = f"{last_tag}..HEAD"
         else:
             range_spec = "HEAD"
 
-        merge_commits = subprocess.getoutput(
-            f'git log --merges --pretty=format:"%h %s" {range_spec}'
-        ).strip().split('\n')
+        result = subprocess.run(
+            ["git", "log", "--merges", "--pretty=format:%h %s", range_spec],
+            capture_output=True,
+            text=True,
+        )
+        merge_commits = result.stdout.strip().split('\n') if result.stdout.strip() else []
 
     except Exception as e:
         console.print(f"[yellow]⚠ Could not check merge commits: {e}[/yellow]")
@@ -801,16 +819,24 @@ def validate_issue_links(console: "Console") -> bool:
 
     try:
         # Get commits since last tag
-        last_tag = subprocess.getoutput("git describe --tags --abbrev=0 2>/dev/null").strip()
+        result = subprocess.run(
+            ["git", "describe", "--tags", "--abbrev=0"],
+            capture_output=True,
+            text=True,
+        )
+        last_tag = result.stdout.strip() if result.returncode == 0 else ""
         if last_tag:
             range_spec = f"{last_tag}..HEAD"
         else:
             # If no tags, check last 10 commits
             range_spec = "HEAD~10..HEAD"
 
-        commits = subprocess.getoutput(
-            f'git log --pretty=format:"%h %s" {range_spec}'
-        ).strip().split('\n')
+        result = subprocess.run(
+            ["git", "log", "--pretty=format:%h %s", range_spec],
+            capture_output=True,
+            text=True,
+        )
+        commits = result.stdout.strip().split('\n') if result.stdout.strip() else []
 
     except Exception as e:
         console.print(f"[yellow]⚠ Could not check issue links: {e}[/yellow]")
