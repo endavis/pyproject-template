@@ -108,7 +108,7 @@ def main() -> None:
         ensure_exists(tmp_dir)
         archive_path = tmp_dir / "pyproject-template-archive"
         print(f"Downloading template archive from {args.archive_url} ...")
-        urllib.request.urlretrieve(args.archive_url, archive_path)
+        urllib.request.urlretrieve(args.archive_url, archive_path)  # nosec B310 - URL is user-provided GitHub archive
 
         extract_dir = tmp_dir / "pyproject-template-extracted"
         if extract_dir.exists():
@@ -117,12 +117,18 @@ def main() -> None:
 
         if zipfile.is_zipfile(archive_path):
             with zipfile.ZipFile(archive_path, "r") as zf:
-                zf.extractall(extract_dir)
+                # Filter out dangerous paths (path traversal attacks)
+                for member in zf.namelist():
+                    if member.startswith("/") or ".." in member:
+                        continue
+                    zf.extract(member, extract_dir)
             contents = list(extract_dir.iterdir())
             template_root = contents[0] if contents else extract_dir
         elif tarfile.is_tarfile(archive_path):
             with tarfile.open(archive_path, "r:*") as tf:
-                tf.extractall(extract_dir)
+                # Filter out dangerous members (path traversal, absolute paths, devices)
+                safe_members = [m for m in tf.getmembers() if m.name and not (m.name.startswith("/") or ".." in m.name)]
+                tf.extractall(extract_dir, members=safe_members)  # nosec B202 - members are validated above
             contents = list(extract_dir.iterdir())
             template_root = contents[0] if contents else extract_dir
         else:

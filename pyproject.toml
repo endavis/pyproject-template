@@ -158,7 +158,11 @@ output = "tmp/coverage.xml"
 
 [tool.bandit]
 exclude_dirs = ["tests", "tmp", ".venv"]
-skips = ["B101"]  # Skip assert_used - asserts are fine in tests
+skips = [
+    "B101",  # assert_used - asserts are fine in tests
+    "B603",  # subprocess_without_shell_equals_true - we use list args (safe)
+    "B607",  # start_process_with_partial_path - hardcoded commands (git, uv, etc.)
+]
 
 [tool.codespell]
 skip = "tmp,.venv,.git,*.lock,*.pyc,__pycache__"
