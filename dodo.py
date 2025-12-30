@@ -2,7 +2,7 @@ import json
 import os
 import platform
 import shutil
-import subprocess
+import subprocess  # nosec B404 - subprocess is required for doit tasks
 import sys
 import urllib.request
 from doit.action import CmdAction
@@ -346,8 +346,8 @@ def task_update_deps():
         print("Checking for outdated dependencies...")
         print()
         subprocess.run(
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv pip list --outdated",
-            shell=True,
+            ["uv", "pip", "list", "--outdated"],
+            env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
             check=False,
         )
 
@@ -374,7 +374,7 @@ def task_update_deps():
         print()
 
         # Run all checks
-        check_result = subprocess.run("doit check", shell=True)
+        check_result = subprocess.run(["doit", "check"])
 
         print()
         if check_result.returncode == 0:
@@ -418,7 +418,12 @@ def task_release_dev(type="alpha"):
         console.print()
 
         # Check if on main branch
-        current_branch = subprocess.getoutput("git branch --show-current").strip()
+        current_branch = subprocess.run(
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
         if current_branch != "main":
             console.print(f"[bold yellow]⚠ Warning: Not on main branch (currently on {current_branch})[/bold yellow]")
             response = input("Continue anyway? (y/N) ").strip().lower()
@@ -436,7 +441,7 @@ def task_release_dev(type="alpha"):
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
-            subprocess.run("git pull", shell=True, check=True, capture_output=True, text=True)
+            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
             console.print("[green]✓ Git pull successful.[/green]")
         except subprocess.CalledProcessError as e:
             console.print(f"[bold red]❌ Error pulling latest changes:[/bold red]")
@@ -447,7 +452,7 @@ def task_release_dev(type="alpha"):
         # Run checks
         console.print("\n[cyan]Running all pre-release checks...[/cyan]")
         try:
-            subprocess.run("doit check", shell=True, check=True, capture_output=True, text=True)
+            subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
             console.print("[green]✓ All checks passed.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Pre-release checks failed! Please fix issues before tagging.[/bold red]")
@@ -460,8 +465,9 @@ def task_release_dev(type="alpha"):
         try:
             # Use cz bump --prerelease <type> --changelog
             result = subprocess.run(
-                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --prerelease {type} --changelog",
-                shell=True, check=True, capture_output=True, text=True
+                ["uv", "run", "cz", "bump", "--prerelease", type, "--changelog"],
+                env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
+                check=True, capture_output=True, text=True
             )
             console.print(f"[green]✓ Version bumped to {type}.[/green]")
             console.print(f"[dim]{result.stdout}[/dim]")
@@ -480,7 +486,7 @@ def task_release_dev(type="alpha"):
 
         console.print(f"\n[cyan]Pushing tag v{new_version} to origin...[/cyan]")
         try:
-            subprocess.run(f"git push --follow-tags origin {current_branch}", shell=True, check=True, capture_output=True, text=True)
+            subprocess.run(["git", "push", "--follow-tags", "origin", current_branch], check=True, capture_output=True, text=True)
             console.print("[green]✓ Tags pushed to origin.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Error pushing tag to origin:[/bold red]")
@@ -521,7 +527,12 @@ def task_release():
         console.print()
 
         # Check if on main branch
-        current_branch = subprocess.getoutput("git branch --show-current").strip()
+        current_branch = subprocess.run(
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
         if current_branch != "main":
             console.print(f"[bold yellow]⚠ Warning: Not on main branch (currently on {current_branch})[/bold yellow]")
             response = input("Continue anyway? (y/N) ").strip().lower()
@@ -539,7 +550,7 @@ def task_release():
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
-            subprocess.run("git pull", shell=True, check=True, capture_output=True, text=True)
+            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
             console.print("[green]✓ Git pull successful.[/green]")
         except subprocess.CalledProcessError as e:
             console.print(f"[bold red]❌ Error pulling latest changes:[/bold red]")
@@ -565,7 +576,7 @@ def task_release():
         # Run all checks
         console.print("\n[cyan]Running all pre-release checks...[/cyan]")
         try:
-            subprocess.run("doit check", shell=True, check=True, capture_output=True, text=True)
+            subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
             console.print("[green]✓ All checks passed.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Pre-release checks failed! Please fix issues before releasing.[/bold red]")
@@ -579,8 +590,9 @@ def task_release():
             # Use cz bump --changelog --merge-prerelease to update version, changelog, commit, and tag
             # This consolidates pre-release changes into the final release entry
             result = subprocess.run(
-                f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump --changelog --merge-prerelease",
-                shell=True, check=True, capture_output=True, text=True
+                ["uv", "run", "cz", "bump", "--changelog", "--merge-prerelease"],
+                env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
+                check=True, capture_output=True, text=True
             )
             console.print("[green]✓ Version bumped and CHANGELOG updated (merged pre-releases).[/green]")
             console.print(f"[dim]{result.stdout}[/dim]")
@@ -603,7 +615,7 @@ def task_release():
         # Push commits and tags to GitHub
         console.print("\n[cyan]Pushing commits and tags to GitHub...[/cyan]")
         try:
-            subprocess.run(f"git push --follow-tags origin {current_branch}", shell=True, check=True, capture_output=True, text=True)
+            subprocess.run(["git", "push", "--follow-tags", "origin", current_branch], check=True, capture_output=True, text=True)
             console.print("[green]✓ Pushed new commits and tags to GitHub.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Error pushing to GitHub:[/bold red]")
@@ -664,7 +676,7 @@ def _get_latest_github_release(repo):
     if github_token:
         request.add_header("Authorization", f"token {github_token}")
 
-    with urllib.request.urlopen(request) as response:
+    with urllib.request.urlopen(request) as response:  # nosec B310 - URL is hardcoded GitHub API
         data = json.loads(response.read().decode())
         return data["tag_name"].lstrip("v")
 
@@ -672,7 +684,13 @@ def _get_latest_github_release(repo):
 def _install_direnv():
     """Install direnv if not already installed."""
     if shutil.which("direnv"):
-        print(f"✓ direnv already installed: {subprocess.getoutput('direnv --version')}")
+        version = subprocess.run(
+            ["direnv", "--version"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        print(f"✓ direnv already installed: {version}")
         return
 
     print("Installing direnv...")
@@ -692,9 +710,9 @@ def _install_direnv():
         bin_path = os.path.join(install_dir, "direnv")
         print(f"Downloading {bin_url}...")
         urllib.request.urlretrieve(bin_url, bin_path)
-        subprocess.run(f"chmod +x {bin_path}", shell=True, check=True)
+        os.chmod(bin_path, 0o755)  # rwxr-xr-x
     elif system == "darwin":
-        subprocess.run("brew install direnv", shell=True, check=True)
+        subprocess.run(["brew", "install", "direnv"], check=True)
     else:
         print(f"Unsupported OS: {system}")
         sys.exit(1)
