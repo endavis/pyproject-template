@@ -173,6 +173,19 @@ class RepositorySetup:
         ).stdout.strip()
         Logger.success(f"Git found: {git_version}")
 
+        # Check for uv
+        if not self._command_exists("uv"):
+            Logger.error("uv is not installed")
+            print("  Install from: https://docs.astral.sh/uv/getting-started/installation/")
+            sys.exit(1)
+
+        uv_version = subprocess.run(
+            ["uv", "--version"],
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        Logger.success(f"uv found: {uv_version}")
+
     def _command_exists(self, command: str) -> bool:
         """Check if a command exists in PATH."""
         result = subprocess.run(
