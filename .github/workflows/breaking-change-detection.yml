@@ -27,42 +27,73 @@ jobs:
               pull_number: pr.number
             });
 
+            // Helper function to normalize function signature (remove type annotations)
+            function normalizeSignature(line) {
+              // Remove leading +/- from diff
+              let sig = line.replace(/^[+-]\s*/, '');
+              // Remove return type annotations (-> Type:)
+              sig = sig.replace(/\s*->\s*[^:]+:/, ':');
+              // Remove parameter type annotations (param: Type -> param)
+              sig = sig.replace(/(\w+)\s*:\s*[^,)=]+/g, '$1');
+              return sig.trim();
+            }
+
+            // Helper function to extract function name from signature
+            function extractFunctionName(line) {
+              const match = line.match(/def\s+(\w+)\s*\(/);
+              return match ? match[1] : null;
+            }
+
+            // Helper function to check if signature change is only type annotations
+            function isOnlyTypeAnnotationChange(removedLine, addedLine) {
+              const normalizedRemoved = normalizeSignature(removedLine);
+              const normalizedAdded = normalizeSignature(addedLine);
+              return normalizedRemoved === normalizedAdded;
+            }
+
             // Patterns that may indicate breaking changes
             const breakingPatterns = [
               {
                 pattern: /^-\s*def\s+\w+\(/m,
                 description: 'Function signature removed or modified',
-                severity: 'high'
+                severity: 'high',
+                checkTypeAnnotations: true
               },
               {
                 pattern: /^-\s*class\s+\w+/m,
                 description: 'Class definition removed or modified',
-                severity: 'high'
+                severity: 'high',
+                checkTypeAnnotations: false
               },
               {
                 pattern: /^-\s*async\s+def\s+\w+\(/m,
                 description: 'Async function removed or modified',
-                severity: 'high'
+                severity: 'high',
+                checkTypeAnnotations: true
               },
               {
                 pattern: /^-.*__init__\s*\(/m,
                 description: 'Constructor signature changed',
-                severity: 'high'
+                severity: 'high',
+                checkTypeAnnotations: true
               },
               {
                 pattern: /^-.*raise\s+\w+Error/m,
                 description: 'Exception type changed',
-                severity: 'medium'
+                severity: 'medium',
+                checkTypeAnnotations: false
               },
               {
                 pattern: /__all__.*=/,
                 description: 'Public API exports modified',
-                severity: 'high'
+                severity: 'high',
+                checkTypeAnnotations: false
               },
               {
                 pattern: /^-.*@property/m,
                 description: 'Property removed or modified',
-                severity: 'medium'
+                severity: 'medium',
+                checkTypeAnnotations: false
               }
             ];
 
@@ -77,8 +108,54 @@ jobs:
               if (!file.patch) continue;
 
               const matches = [];
-              for (const {pattern, description, severity} of breakingPatterns) {
-                if (pattern.test(file.patch)) {
+              const patchLines = file.patch.split('\n');
+
+              for (const {pattern, description, severity, checkTypeAnnotations} of breakingPatterns) {
+                if (!pattern.test(file.patch)) continue;
+
+                // For function signature patterns, check if it's only type annotations
+                if (checkTypeAnnotations) {
+                  let isBreaking = false;
+
+                  // Find all removed function signatures
+                  for (let i = 0; i < patchLines.length; i++) {
+                    const line = patchLines[i];
+                    if (!pattern.test(line)) continue;
+
+                    const funcName = extractFunctionName(line);
+                    if (!funcName) {
+                      isBreaking = true;
+                      break;
+                    }
+
+                    // Look for corresponding added line with same function name
+                    let foundMatch = false;
+                    for (let j = 0; j < patchLines.length; j++) {
+                      const addedLine = patchLines[j];
+                      if (!addedLine.startsWith('+')) continue;
+
+                      const addedFuncName = extractFunctionName(addedLine);
+                      if (addedFuncName === funcName) {
+                        // Check if only type annotations changed
+                        if (isOnlyTypeAnnotationChange(line, addedLine)) {
+                          foundMatch = true;
+                          break;
+                        }
+                      }
+                    }
+
+                    // If no matching added line, or signatures differ beyond type hints, it's breaking
+                    if (!foundMatch) {
+                      isBreaking = true;
+                      break;
+                    }
+                  }
+
+                  if (isBreaking) {
+                    matches.push({description, severity});
+                  }
+                } else {
+                  // For non-function patterns, use simple pattern matching
                   matches.push({description, severity});
                 }
               }
