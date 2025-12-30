@@ -122,6 +122,7 @@ class RepositorySetup:
 
     def __init__(self) -> None:
         self.config: dict[str, Any] = {}
+        self.start_dir = os.getcwd()
 
     def print_banner(self) -> None:
         """Print welcome banner."""
@@ -561,11 +562,15 @@ class RepositorySetup:
 
         Logger.step("Next steps:")
         print()
-        print(f"  Your repository is ready in: {os.getcwd()}")
+        repo_path = os.path.join(self.start_dir, self.config['repo_name'])
+        print(f"  {Colors.GREEN}✓{Colors.NC} Repository cloned to: {repo_path}")
         print()
-        print(f"  1. Navigate to the repository: cd {self.config['repo_name']}")
-        print("  2. Install dependencies: uv sync --all-extras")
-        print("  3. Install pre-commit hooks: uv run pre-commit install")
+        print(f"  1. Navigate to the repository:")
+        print(f"     cd {self.config['repo_name']}")
+        print("  2. Install dependencies:")
+        print("     uv sync --all-extras")
+        print("  3. Install pre-commit hooks:")
+        print("     uv run pre-commit install")
         print("  4. Start developing!")
         print()
 
