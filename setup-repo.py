@@ -433,8 +433,12 @@ class RepositorySetup:
             GitHubCLI.api(f"repos/{self.config['repo_full']}", method="PATCH", data=data)
             Logger.success("Repository settings configured")
 
-        except subprocess.CalledProcessError:
-            Logger.warning("Some settings may not have been applied")
+        except subprocess.CalledProcessError as e:
+            Logger.warning("Repository settings configuration failed")
+            if e.stderr:
+                print(f"  Error: {e.stderr.strip()}")
+            Logger.info("You can configure settings manually at:")
+            Logger.info(f"  https://github.com/{self.config['repo_full']}/settings")
 
     def configure_branch_protection(self) -> None:
         """Configure branch protection for main."""
@@ -473,8 +477,12 @@ class RepositorySetup:
             )
             Logger.success("Branch protection configured")
 
-        except subprocess.CalledProcessError:
-            Logger.warning("Branch protection configuration may be incomplete")
+        except subprocess.CalledProcessError as e:
+            Logger.warning("Branch protection configuration failed")
+            if e.stderr:
+                print(f"  Error: {e.stderr.strip()}")
+            Logger.info("You can configure branch protection manually at:")
+            Logger.info(f"  https://github.com/{self.config['repo_full']}/settings/branches")
 
     def replicate_labels(self) -> None:
         """Replicate labels from template."""
@@ -507,8 +515,10 @@ class RepositorySetup:
 
             Logger.success("Labels replicated")
 
-        except subprocess.CalledProcessError:
-            Logger.warning("Could not retrieve labels from template")
+        except subprocess.CalledProcessError as e:
+            Logger.warning("Failed to retrieve labels from template")
+            if e.stderr:
+                print(f"  Error: {e.stderr.strip()}")
 
     def enable_github_pages(self) -> None:
         """Enable GitHub Pages."""
@@ -523,8 +533,9 @@ class RepositorySetup:
             }
             GitHubCLI.api(f"repos/{self.config['repo_full']}/pages", method="POST", data=data)
             Logger.success("GitHub Pages enabled")
-        except subprocess.CalledProcessError:
-            Logger.warning("GitHub Pages configuration skipped (will be enabled after first docs deployment)")
+        except subprocess.CalledProcessError as e:
+            Logger.warning("GitHub Pages not enabled (gh-pages branch doesn't exist yet)")
+            Logger.info("Pages will be enabled automatically after first docs deployment")
 
     def print_manual_steps(self) -> None:
         """Print manual steps that need to be completed."""
