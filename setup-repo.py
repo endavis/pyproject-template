@@ -554,6 +554,29 @@ class RepositorySetup:
                 text=True,
             )
 
+            # Run validation checks BEFORE committing
+            Logger.info("Running validation checks (doit check)...")
+            check_result = subprocess.run(
+                ["uv", "run", "doit", "check"],
+                capture_output=False,
+                text=True,
+            )
+
+            if check_result.returncode != 0:
+                Logger.error("Validation checks failed")
+                print()
+                print(f"{Colors.YELLOW}Please fix the issues above before continuing.{Colors.NC}")
+                print("The formatting changes have been applied but not committed.")
+                print()
+                print("After fixing issues, you can commit with:")
+                print("  git add .")
+                print("  git commit -m 'chore: apply code formatting'")
+                print("  git push")
+                print()
+                return
+
+            Logger.success("All validation checks passed")
+
             # Check if there are any formatting changes to commit
             result = subprocess.run(
                 ["git", "status", "--porcelain"],
@@ -566,6 +589,7 @@ class RepositorySetup:
                 subprocess.run(["git", "add", "."], check=True, capture_output=True)
                 commit_msg = """chore: apply code formatting
 
+- Fix linting issues with ruff
 - Format pyproject.toml with pyproject-fmt
 - Format code with ruff
 
@@ -590,34 +614,22 @@ class RepositorySetup:
                     print("  3. Run: git status")
                     print("  4. Review changes and commit manually")
                     print()
-                    # Don't raise exception, continue with validation
+                    return
+
+                push_result = subprocess.run(
+                    ["git", "push"],
+                    capture_output=True,
+                    text=True,
+                )
+                if push_result.returncode != 0:
+                    Logger.error("Failed to push formatting changes")
+                    if push_result.stderr:
+                        print(f"  Error: {push_result.stderr.strip()}")
+                    print("  You can push manually later with: git push")
                 else:
-                    push_result = subprocess.run(
-                        ["git", "push"],
-                        capture_output=True,
-                        text=True,
-                    )
-                    if push_result.returncode != 0:
-                        Logger.error("Failed to push formatting changes")
-                        if push_result.stderr:
-                            print(f"  Error: {push_result.stderr.strip()}")
-                        print("  You can push manually later with: git push")
-                    else:
-                        Logger.success("Formatting changes committed and pushed")
-
-            # Run validation checks
-            Logger.info("Running validation checks (doit check)...")
-            result = subprocess.run(
-                ["uv", "run", "doit", "check"],
-                capture_output=False,
-                text=True,
-            )
-
-            if result.returncode == 0:
-                Logger.success("All validation checks passed")
+                    Logger.success("Formatting changes committed and pushed")
             else:
-                Logger.warning("Some validation checks failed")
-                Logger.info("Review the output above and fix any issues")
+                Logger.success("No formatting changes needed")
 
         except subprocess.CalledProcessError as e:
             Logger.error("Development environment setup failed")
