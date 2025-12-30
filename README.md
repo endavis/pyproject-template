@@ -44,7 +44,38 @@ Key documentation files:
 - [API Reference](docs/api.md) - Complete API documentation
 - [Extensions Guide](docs/extensions.md) - Optional tools and extensions
 
-## Using This Template
+## Quick Setup (Automated)
+
+🚀 **The fastest way to create a new project from this template:**
+
+```bash
+# Download and run the setup script
+curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/setup-repo.py | python3
+
+# Or download first, then run
+curl -O https://raw.githubusercontent.com/endavis/pyproject-template/main/setup-repo.py
+python3 setup-repo.py
+```
+
+The script will:
+- ✅ Create a new repository from this template
+- ✅ Configure repository settings (merge options, features)
+- ✅ Set up branch protection rules
+- ✅ Replicate labels
+- ✅ Run placeholder replacement automatically
+- ✅ Provide a checklist of manual steps (secrets, etc.)
+
+**Requirements:**
+- [GitHub CLI](https://cli.github.com/) installed and authenticated (`gh auth login`)
+- Git installed
+- Python 3.12+
+
+**What you'll need to add manually:**
+- PyPI tokens (for publishing packages)
+- Codecov token (optional, for coverage reports)
+- Collaborators/team access
+
+## Using This Template (Manual)
 
 **First time setup:** This is a template repository. After cloning, run the configuration script to customize it for your project:
 
