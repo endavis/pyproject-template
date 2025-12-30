@@ -413,25 +413,45 @@ class RepositorySetup:
             Logger.info("Run 'python3 configure.py' manually to configure project placeholders")
 
     def configure_repository_settings(self) -> None:
-        """Configure repository settings."""
+        """Configure repository settings to match template."""
         Logger.step("Configuring repository settings...")
 
         try:
+            # Get settings from template repository
+            template_settings = GitHubCLI.api(f"repos/{self.TEMPLATE_FULL}")
+
+            # Build settings data from template
             data = {
                 "description": self.config["description"],
-                "has_issues": True,
-                "has_projects": True,
-                "has_wiki": False,
-                "allow_squash_merge": True,
-                "allow_merge_commit": True,
-                "allow_rebase_merge": True,
-                "delete_branch_on_merge": True,
-                "allow_auto_merge": True,
-                "allow_update_branch": True,
+                "has_issues": template_settings.get("has_issues", True),
+                "has_projects": template_settings.get("has_projects", True),
+                "has_wiki": template_settings.get("has_wiki", False),
+                "has_discussions": template_settings.get("has_discussions", False),
+                "allow_squash_merge": template_settings.get("allow_squash_merge", True),
+                "allow_merge_commit": template_settings.get("allow_merge_commit", False),
+                "allow_rebase_merge": template_settings.get("allow_rebase_merge", False),
+                "delete_branch_on_merge": template_settings.get("delete_branch_on_merge", True),
+                "allow_auto_merge": template_settings.get("allow_auto_merge", False),
+                "allow_update_branch": template_settings.get("allow_update_branch", False),
+                "squash_merge_commit_title": template_settings.get("squash_merge_commit_title", "COMMIT_OR_PR_TITLE"),
+                "squash_merge_commit_message": template_settings.get("squash_merge_commit_message", "COMMIT_MESSAGES"),
+                "merge_commit_title": template_settings.get("merge_commit_title", "MERGE_MESSAGE"),
+                "merge_commit_message": template_settings.get("merge_commit_message", "PR_TITLE"),
             }
+
+            # Add homepage if template has one
+            if template_settings.get("homepage"):
+                data["homepage"] = template_settings["homepage"]
+
+            # Add topics if template has them
+            if template_settings.get("topics"):
+                data["topics"] = template_settings["topics"]
 
             GitHubCLI.api(f"repos/{self.config['repo_full']}", method="PATCH", data=data)
             Logger.success("Repository settings configured")
+
+            # Configure security and analysis settings
+            self._configure_security_settings(template_settings)
 
         except subprocess.CalledProcessError as e:
             Logger.warning("Repository settings configuration failed")
@@ -439,6 +459,45 @@ class RepositorySetup:
                 print(f"  Error: {e.stderr.strip()}")
             Logger.info("You can configure settings manually at:")
             Logger.info(f"  https://github.com/{self.config['repo_full']}/settings")
+
+    def _configure_security_settings(self, template_settings: dict[str, Any]) -> None:
+        """Configure security and analysis settings."""
+        security_settings = template_settings.get("security_and_analysis", {})
+
+        if not security_settings:
+            return
+
+        try:
+            # Enable secret scanning if template has it
+            if security_settings.get("secret_scanning", {}).get("status") == "enabled":
+                GitHubCLI.api(
+                    f"repos/{self.config['repo_full']}/secret-scanning",
+                    method="PATCH",
+                    data={"status": "enabled"},
+                )
+                Logger.success("Secret scanning enabled")
+
+            # Enable secret scanning push protection if template has it
+            if security_settings.get("secret_scanning_push_protection", {}).get("status") == "enabled":
+                GitHubCLI.api(
+                    f"repos/{self.config['repo_full']}/secret-scanning/push-protection",
+                    method="PATCH",
+                    data={"status": "enabled"},
+                )
+                Logger.success("Secret scanning push protection enabled")
+
+            # Enable Dependabot security updates if template has it
+            if security_settings.get("dependabot_security_updates", {}).get("status") == "enabled":
+                GitHubCLI.api(
+                    f"repos/{self.config['repo_full']}/automated-security-fixes",
+                    method="PUT",
+                )
+                Logger.success("Dependabot security updates enabled")
+
+        except subprocess.CalledProcessError as e:
+            Logger.warning("Some security settings could not be configured")
+            if e.stderr:
+                print(f"  Error: {e.stderr.strip()}")
 
     def configure_branch_protection(self) -> None:
         """Configure branch protection using rulesets."""
@@ -563,11 +622,11 @@ class RepositorySetup:
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review branch protection rulesets:")
         print(f"      https://github.com/{self.config['repo_full']}/settings/rules")
         print()
+        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Set up CodeQL code scanning (if required by rulesets):")
+        print(f"      https://github.com/{self.config['repo_full']}/security/code-scanning")
+        print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Invite collaborators (if needed):")
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
-        print()
-        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Enable Dependabot security updates:")
-        print(f"      https://github.com/{self.config['repo_full']}/settings/security_analysis")
         print()
 
         Logger.step("Next steps:")
