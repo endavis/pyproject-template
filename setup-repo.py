@@ -368,10 +368,6 @@ class RepositorySetup:
 
         # Import and run configure.py directly
         try:
-            # Save original input
-            import io
-            from contextlib import redirect_stdin
-
             # Create input stream with our configuration
             inputs = "\n".join([
                 self.config["repo_name"],
@@ -565,8 +561,10 @@ class RepositorySetup:
 
         Logger.step("Next steps:")
         print()
-        print(f"  1. Clone the repository: gh repo clone {self.config['repo_full']}")
-        print(f"  2. Install dependencies: cd {self.config['repo_name']} && uv sync --all-extras")
+        print(f"  Your repository is ready in: {os.getcwd()}")
+        print()
+        print(f"  1. Navigate to the repository: cd {self.config['repo_name']}")
+        print("  2. Install dependencies: uv sync --all-extras")
         print("  3. Install pre-commit hooks: uv run pre-commit install")
         print("  4. Start developing!")
         print()
