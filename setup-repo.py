@@ -164,6 +164,7 @@ class RepositorySetup:
         # Check for git
         if not self._command_exists("git"):
             Logger.error("Git is not installed")
+            print("  Install from: https://git-scm.com/downloads")
             sys.exit(1)
 
         git_version = subprocess.run(
@@ -760,7 +761,18 @@ def main() -> None:
         Logger.warning("Setup cancelled by user")
         sys.exit(1)
     except Exception as e:
-        Logger.error(f"Setup failed: {e}")
+        print()
+        Logger.error(f"Setup failed with unexpected error: {e}")
+        print()
+        print("This is likely a bug in the setup script.")
+        print("Please report this issue with the error details above at:")
+        print("  https://github.com/endavis/pyproject-template/issues")
+        print()
+
+        # Show traceback for debugging
+        import traceback
+        print("Full traceback:")
+        traceback.print_exc()
         sys.exit(1)
 
 
