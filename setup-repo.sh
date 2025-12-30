@@ -195,19 +195,35 @@ gather_inputs() {
 create_repository() {
     log_step "Creating repository from template..."
 
-    # Create repo from template
-    if ! gh repo create "$REPO_FULL" \
-        --template "$TEMPLATE_FULL" \
-        --${VISIBILITY} \
-        --clone; then
-        log_error "Failed to create repository"
+    # Use REST API to create from template (more reliable than gh repo create --template)
+    local create_response
+    create_response=$(gh api "repos/$TEMPLATE_FULL/generate" -X POST \
+        -f owner="$REPO_OWNER" \
+        -f name="$REPO_NAME" \
+        -f description="$DESCRIPTION" \
+        -F private=$([ "$VISIBILITY" = "private" ] && echo "true" || echo "false") \
+        -F include_all_branches=false \
+        2>&1) || {
+        log_error "Failed to create repository from template"
+        echo "$create_response" | grep -i "error\|message" || echo "$create_response"
         exit 1
-    fi
+    }
 
     log_success "Repository created: https://github.com/$REPO_FULL"
 
+    # Wait a moment for repo to be fully ready
+    sleep 2
+
+    # Clone the newly created repository
+    log_info "Cloning repository..."
+    if ! gh repo clone "$REPO_FULL" "$REPO_NAME"; then
+        log_error "Failed to clone repository"
+        exit 1
+    fi
+
     # Change to repo directory
     cd "$REPO_NAME" || exit 1
+    log_success "Repository cloned locally"
 }
 
 configure_placeholders() {
