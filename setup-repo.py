@@ -355,9 +355,9 @@ class RepositorySetup:
             )
             return result in ("y", "yes")
 
-    def create_repository(self) -> None:
-        """Create repository from template."""
-        Logger.step("Creating repository from template...")
+    def create_github_repository(self) -> None:
+        """Create repository on GitHub from template (without cloning)."""
+        Logger.step("Creating repository on GitHub from template...")
 
         try:
             # Use REST API to create from template
@@ -412,8 +412,10 @@ class RepositorySetup:
 
         time.sleep(2)
 
-        # Clone the repository
-        Logger.info("Cloning repository...")
+    def clone_repository(self) -> None:
+        """Clone the repository locally and change to its directory."""
+        Logger.step("Cloning repository locally...")
+
         try:
             GitHubCLI.run(
                 ["repo", "clone", self.config["repo_full"], self.config["repo_name"]], capture=False
@@ -1077,18 +1079,32 @@ class RepositorySetup:
         print()
 
     def run(self) -> None:
-        """Run the complete setup process."""
+        """Run the complete setup process.
+
+        Order of operations:
+        1. Create GitHub repository (fail fast if there are auth/permission issues)
+        2. Configure all GitHub settings (before cloning to avoid partial setup)
+        3. Clone repository locally
+        4. Configure local files and development environment
+        """
         self.print_banner()
         self.check_requirements()
         self.gather_inputs()
-        self.create_repository()
-        self.configure_placeholders()
-        self.setup_development_environment()
+
+        # Create repository on GitHub and configure all GitHub settings
+        # BEFORE cloning to avoid partial setup if GitHub operations fail
+        self.create_github_repository()
         self.configure_repository_settings()
         self.configure_branch_protection()
         self.replicate_labels()
         self.enable_github_pages()
         self.configure_codeql()
+
+        # Now clone and configure locally
+        self.clone_repository()
+        self.configure_placeholders()
+        self.setup_development_environment()
+
         self.print_manual_steps()
 
 
