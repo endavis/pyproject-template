@@ -7,7 +7,7 @@ This example demonstrates the most common usage patterns for the package.
 from package_name import __version__, greet
 
 
-def main():
+def main() -> None:
     """Run basic usage examples."""
     # Display package version
     print(f"Using package_name version {__version__}")
@@ -16,14 +16,14 @@ def main():
     # Example 1: Basic operation
     print("Example 1: Basic Operation")
     print("-" * 40)
-    
+
     # Use the greet function
     message = greet()
     print(f"Default greeting: {message}")
-    
+
     custom_message = greet("Developer")
     print(f"Custom greeting:  {custom_message}")
-    
+
     print("Basic operation completed successfully!")
     print()
 

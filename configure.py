@@ -7,18 +7,17 @@ Modes:
 Optional: skip final confirmation with --yes.
 """
 
-import os
+import argparse
 import re
 import shutil
 import sys
 from pathlib import Path
-import argparse
-from typing import Optional
+from typing import Any
 
 try:
     import tomllib  # py312+
 except ModuleNotFoundError:  # pragma: no cover
-    import tomli as tomllib
+    import tomli as tomllib  # type: ignore[no-redef]
 
 
 def parse_args() -> argparse.Namespace:
@@ -88,14 +87,14 @@ def update_file(filepath: Path, replacements: dict[str, str]) -> None:
     filepath.write_text(content)
 
 
-def read_pyproject(path: Path) -> dict:
+def read_pyproject(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     with path.open("rb") as f:
         return tomllib.load(f)
 
 
-def find_backup_pyproject() -> Optional[Path]:
+def find_backup_pyproject() -> Path | None:
     """Find the most recent backup pyproject.toml from migration helper (in tmp/)."""
     candidates = []
     for backup_dir in Path("tmp").glob("template-migration-backup-*"):
@@ -108,20 +107,17 @@ def find_backup_pyproject() -> Optional[Path]:
     return candidates[0]
 
 
-def guess_github_user(pyproject_data: dict) -> str:
-    repo_url = (
-        pyproject_data.get("project", {})
-        .get("urls", {})
-        .get("Repository")
-    )
-    if repo_url:
+def guess_github_user(pyproject_data: dict[str, Any]) -> str:
+    repo_url = pyproject_data.get("project", {}).get("urls", {}).get("Repository")
+    if repo_url and isinstance(repo_url, str):
         parts = repo_url.rstrip("/").split("/")
         if len(parts) >= 2:
-            return parts[-2]
+            user: str = parts[-2]
+            return user
 
     # Fallback: try git remote origin
     try:
-        import subprocess
+        import subprocess  # nosec B404 - subprocess is required for git operations
 
         url = (
             subprocess.check_output(
@@ -137,14 +133,15 @@ def guess_github_user(pyproject_data: dict) -> str:
             url = url.replace("git@github.com:", "https://github.com/")
             parts = url.rstrip("/").split("/")
             if len(parts) >= 2:
-                return parts[-2]
-    except Exception:
+                github_user: str = parts[-2]
+                return github_user
+    except Exception:  # nosec B110 - intentionally silent fallback for git operations
         pass
 
     return ""
 
 
-def first_author(pyproject_data: dict) -> tuple[str, str]:
+def first_author(pyproject_data: dict[str, Any]) -> tuple[str, str]:
     authors = pyproject_data.get("project", {}).get("authors", [])
     if not authors:
         return "", ""
@@ -221,7 +218,9 @@ def load_defaults(pyproject_path: Path) -> dict[str, str]:
 def require(value: str, label: str) -> str:
     if value:
         return value
-    raise SystemExit(f"❌ Missing required value for {label} (supply in pyproject.toml or via prompt).")
+    raise SystemExit(
+        f"❌ Missing required value for {label} " "(supply in pyproject.toml or via prompt)."
+    )
 
 
 def main() -> int:
@@ -247,10 +246,16 @@ def main() -> int:
         author_email = require(defaults["author_email"], "author email")
         if not validate_email(author_email):
             raise SystemExit("❌ Invalid email format in pyproject.toml")
-        github_user = require(defaults["github_user"], "GitHub user (from Repository URL or git remote)")
+        github_user = require(
+            defaults["github_user"],
+            "GitHub user (from Repository URL or git remote)",
+        )
         enable_dependabot = False
     else:
-        project_name = prompt("Project name (human-readable)", defaults["project_name"] or "My Awesome Project")
+        project_name = prompt(
+            "Project name (human-readable)",
+            defaults["project_name"] or "My Awesome Project",
+        )
 
         suggested_package = validate_package_name(project_name)
         suggested_pypi = validate_pypi_name(project_name)
@@ -261,12 +266,18 @@ def main() -> int:
         pypi_name = prompt("PyPI package name", defaults["pypi_name"] or suggested_pypi)
         pypi_name = validate_pypi_name(pypi_name)
 
-        description = prompt("Short description", defaults["description"] or "A short description of your package")
+        description = prompt(
+            "Short description",
+            defaults["description"] or "A short description of your package",
+        )
 
         author_name = prompt("Author name", defaults["author_name"] or "Your Name")
 
         while True:
-            author_email = prompt("Author email", defaults["author_email"] or "your.email@example.com")
+            author_email = prompt(
+                "Author email",
+                defaults["author_email"] or "your.email@example.com",
+            )
             if validate_email(author_email):
                 break
             print("❌ Invalid email format. Please try again.")
@@ -315,11 +326,9 @@ def main() -> int:
         "https://codecov.io/gh/username/package_name/branch/main/graph/badge.svg": f"https://codecov.io/gh/{github_user}/{package_name}/branch/main/graph/badge.svg",
         "https://github.com/username/package_name/actions/workflows/ci.yml/badge.svg": f"https://github.com/{github_user}/{package_name}/actions/workflows/ci.yml/badge.svg",
         "https://github.com/username": f"https://github.com/{github_user}",
-        
         # Files and Paths
         "package-name.svg": f"{pypi_name}.svg",
         "package-name/": f"{pypi_name}/",
-        
         # General Placeholders (Substrings)
         "package_name": package_name,
         "package-name": pypi_name,
@@ -327,7 +336,8 @@ def main() -> int:
         "A short description of your package": description,
         "Your Name": author_name,
         "your.email@example.com": author_email,
-        # Note: "username" is NOT replaced globally to avoid breaking code variables (e.g. in extensions.md)
+        # Note: "username" is NOT replaced globally to avoid breaking code
+        # variables (e.g. in extensions.md)
     }
 
     # Update files
@@ -354,7 +364,7 @@ def main() -> int:
         if path.exists():
             print(f"  ✓ Updating {file_path}")
             update_file(path, replacements)
-    
+
     # Update docs directory
     docs_dir = Path("docs")
     if docs_dir.exists():
@@ -373,9 +383,9 @@ def main() -> int:
     examples_dir = Path("examples")
     if examples_dir.exists():
         print("  ✓ Updating example files")
-        for file_path in examples_dir.rglob("*"):
-            if file_path.suffix in {".py", ".md"}:
-                update_file(file_path, replacements)
+        for example_file in examples_dir.rglob("*"):
+            if example_file.suffix in {".py", ".md"}:
+                update_file(example_file, replacements)
 
     # Rename package directory
     old_package_dir = Path("src/package_name")
@@ -383,10 +393,7 @@ def main() -> int:
 
     if old_package_dir.exists() and old_package_dir != new_package_dir:
         if new_package_dir.exists():
-            print(
-                f"  ⚠️  src/{package_name} already exists; "
-                "skipping rename of src/package_name"
-            )
+            print(f"  ⚠️  src/{package_name} already exists; " "skipping rename of src/package_name")
         else:
             print(f"  ✓ Renaming src/package_name → src/{package_name}")
             shutil.move(str(old_package_dir), str(new_package_dir))

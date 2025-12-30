@@ -5,7 +5,7 @@
 # using uv, doit, git, and GitHub CLI.
 
 # Default approval policy
-approval_policy = "untrusted"  # Prompt before running untrusted commands
+default_policy = "untrusted"  # Prompt before running untrusted commands
 
 # Whitelist standard development tools
 [[approval_policy]]
