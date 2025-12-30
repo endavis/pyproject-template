@@ -2,10 +2,10 @@
 
 # DEVELOPMENT WORKFLOW (MANDATORY)
 
-Before making ANY code changes, Claude MUST:
+Before making ANY changes, Claude MUST:
 1. Read AGENTS.md and locate the "## Development Workflow" section
 2. Verify the workflow: Issue → Branch → Commit → PR → Merge
-3. **NEVER commit code directly to main** (docs are exempt)
+3. **NEVER commit directly to main**
 4. Ensure a GitHub Issue exists for the task
 5. Create a branch linked to the issue
 6. Work on the branch, then create a PR
