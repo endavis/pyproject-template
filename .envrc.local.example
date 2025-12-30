@@ -23,4 +23,4 @@
 # Claude Code LSP support (enables fast code navigation)
 # Uncomment to enable Language Server Protocol in Claude Code
 # See .claude/lsp-setup.md for setup instructions
-export ENABLE_LSP_TOOL=1
+# export ENABLE_LSP_TOOL=1

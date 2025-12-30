@@ -24,13 +24,16 @@ With LSP, Claude can navigate code in ~50ms instead of ~45 seconds using traditi
 
 **Option A: Using .envrc.local (Recommended)**
 
-This project uses direnv for environment management. The LSP tool is already enabled in `.envrc.local.example`:
+This project uses direnv for environment management:
 
 ```bash
 # Copy the example file if you haven't already
 cp .envrc.local.example .envrc.local
 
-# The ENABLE_LSP_TOOL=1 setting is already included
+# Uncomment the ENABLE_LSP_TOOL line in .envrc.local
+# Change: # export ENABLE_LSP_TOOL=1
+# To:     export ENABLE_LSP_TOOL=1
+
 # direnv will automatically load it when you cd into the project
 ```
 
