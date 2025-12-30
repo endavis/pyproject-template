@@ -481,6 +481,14 @@ class RepositorySetup:
             # Override description with user's description
             data["description"] = self.config["description"]
 
+            # Check if repository is in an organization
+            owner_info = GitHubCLI.api(f"users/{self.config['repo_owner']}")
+            is_org = owner_info.get("type") == "Organization"
+
+            # Remove allow_forking if not an org repo (only applies to orgs)
+            if not is_org and "allow_forking" in data:
+                data.pop("allow_forking")
+
             # Remove security_and_analysis - we'll handle it separately
             security_settings = data.pop("security_and_analysis", None)
 
