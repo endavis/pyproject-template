@@ -444,6 +444,7 @@ class RepositorySetup:
                 "fork", "language", "license", "permissions", "disabled", "mirror_url",
                 "default_branch",  # Keep as main
                 "private",  # Set separately via visibility
+                "is_template",  # Don't make new repos templates
                 # Deprecated
                 "use_squash_pr_title_as_default",
             }
@@ -610,6 +611,42 @@ class RepositorySetup:
             Logger.warning("GitHub Pages not enabled (gh-pages branch doesn't exist yet)")
             Logger.info("Pages will be enabled automatically after first docs deployment")
 
+    def configure_codeql(self) -> None:
+        """Configure CodeQL code scanning to match template."""
+        Logger.step("Configuring CodeQL code scanning...")
+
+        try:
+            # Get CodeQL setup from template
+            template_codeql = GitHubCLI.api(f"repos/{self.TEMPLATE_FULL}/code-scanning/default-setup")
+
+            if template_codeql.get("state") != "configured":
+                Logger.info("CodeQL not configured in template, skipping")
+                return
+
+            # Replicate CodeQL configuration
+            codeql_data = {
+                "state": "configured",
+                "query_suite": template_codeql.get("query_suite", "default"),
+            }
+
+            # Add languages if specified (will auto-detect if not provided)
+            if template_codeql.get("languages"):
+                codeql_data["languages"] = template_codeql["languages"]
+
+            GitHubCLI.api(
+                f"repos/{self.config['repo_full']}/code-scanning/default-setup",
+                method="PATCH",
+                data=codeql_data,
+            )
+            Logger.success(f"CodeQL configured with {template_codeql.get('query_suite', 'default')} query suite")
+
+        except subprocess.CalledProcessError as e:
+            Logger.warning("CodeQL configuration failed")
+            if e.stderr:
+                print(f"  Error: {e.stderr.strip()}")
+            Logger.info("You can configure CodeQL manually at:")
+            Logger.info(f"  https://github.com/{self.config['repo_full']}/security/code-scanning")
+
     def print_manual_steps(self) -> None:
         """Print manual steps that need to be completed."""
         print()
@@ -636,9 +673,6 @@ class RepositorySetup:
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review branch protection rulesets:")
         print(f"      https://github.com/{self.config['repo_full']}/settings/rules")
-        print()
-        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Set up CodeQL code scanning (if required by rulesets):")
-        print(f"      https://github.com/{self.config['repo_full']}/security/code-scanning")
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Invite collaborators (if needed):")
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
@@ -672,6 +706,7 @@ class RepositorySetup:
         self.configure_branch_protection()
         self.replicate_labels()
         self.enable_github_pages()
+        self.configure_codeql()
         self.print_manual_steps()
 
 
