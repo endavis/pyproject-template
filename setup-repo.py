@@ -417,41 +417,56 @@ class RepositorySetup:
         Logger.step("Configuring repository settings...")
 
         try:
-            # Get settings from template repository
+            # Get ALL settings from template repository
             template_settings = GitHubCLI.api(f"repos/{self.TEMPLATE_FULL}")
 
-            # Build settings data from template
-            data = {
-                "description": self.config["description"],
-                "has_issues": template_settings.get("has_issues", True),
-                "has_projects": template_settings.get("has_projects", True),
-                "has_wiki": template_settings.get("has_wiki", False),
-                "has_discussions": template_settings.get("has_discussions", False),
-                "allow_squash_merge": template_settings.get("allow_squash_merge", True),
-                "allow_merge_commit": template_settings.get("allow_merge_commit", False),
-                "allow_rebase_merge": template_settings.get("allow_rebase_merge", False),
-                "delete_branch_on_merge": template_settings.get("delete_branch_on_merge", True),
-                "allow_auto_merge": template_settings.get("allow_auto_merge", False),
-                "allow_update_branch": template_settings.get("allow_update_branch", False),
-                "squash_merge_commit_title": template_settings.get("squash_merge_commit_title", "COMMIT_OR_PR_TITLE"),
-                "squash_merge_commit_message": template_settings.get("squash_merge_commit_message", "COMMIT_MESSAGES"),
-                "merge_commit_title": template_settings.get("merge_commit_title", "MERGE_MESSAGE"),
-                "merge_commit_message": template_settings.get("merge_commit_message", "PR_TITLE"),
+            # Read-only fields that should not be copied
+            readonly_fields = {
+                # URLs
+                "archive_url", "assignees_url", "blobs_url", "branches_url", "clone_url",
+                "collaborators_url", "comments_url", "commits_url", "compare_url", "contents_url",
+                "contributors_url", "deployments_url", "downloads_url", "events_url", "forks_url",
+                "git_commits_url", "git_refs_url", "git_tags_url", "git_url", "hooks_url",
+                "html_url", "issue_comment_url", "issue_events_url", "issues_url", "keys_url",
+                "labels_url", "languages_url", "merges_url", "milestones_url", "notifications_url",
+                "pulls_url", "releases_url", "ssh_url", "stargazers_url", "statuses_url",
+                "subscribers_url", "subscription_url", "svn_url", "tags_url", "teams_url",
+                "trees_url", "url",
+                # IDs and metadata
+                "id", "node_id", "owner", "full_name", "name",
+                # Timestamps
+                "created_at", "updated_at", "pushed_at",
+                # Counts and computed values
+                "forks", "forks_count", "open_issues", "open_issues_count", "size",
+                "stargazers_count", "watchers", "watchers_count", "subscribers_count",
+                "network_count",
+                # Other read-only
+                "fork", "language", "license", "permissions", "disabled", "mirror_url",
+                "default_branch",  # Keep as main
+                "private",  # Set separately via visibility
+                # Deprecated
+                "use_squash_pr_title_as_default",
             }
 
-            # Add homepage if template has one
-            if template_settings.get("homepage"):
-                data["homepage"] = template_settings["homepage"]
+            # Build settings data by copying all writable fields from template
+            data = {}
+            for key, value in template_settings.items():
+                if key not in readonly_fields and value is not None:
+                    data[key] = value
 
-            # Add topics if template has them
-            if template_settings.get("topics"):
-                data["topics"] = template_settings["topics"]
+            # Override description with user's description
+            data["description"] = self.config["description"]
 
+            # Remove security_and_analysis - we'll handle it separately
+            security_settings = data.pop("security_and_analysis", None)
+
+            # Apply all settings in one call
             GitHubCLI.api(f"repos/{self.config['repo_full']}", method="PATCH", data=data)
             Logger.success("Repository settings configured")
 
-            # Configure security and analysis settings
-            self._configure_security_settings(template_settings)
+            # Configure security and analysis settings separately
+            if security_settings:
+                self._configure_security_settings({"security_and_analysis": security_settings})
 
         except subprocess.CalledProcessError as e:
             Logger.warning("Repository settings configuration failed")
