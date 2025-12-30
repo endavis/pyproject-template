@@ -334,11 +334,14 @@ class RepositorySetup:
             Logger.error("Failed to create repository from template")
             print()
 
+            # Always show the actual error message
+            if e.stderr:
+                print(f"{Colors.RED}Error details:{Colors.NC}")
+                print(f"  {e.stderr.strip()}")
+                print()
+
+            # Provide specific help for known errors
             if e.stderr and "Resource not accessible by personal access token" in e.stderr:
-                print(f"{Colors.RED}Permission Error:{Colors.NC} Your GitHub token doesn't have the required permissions.")
-                print()
-                print("This happens when using a Personal Access Token (PAT) without proper permissions.")
-                print()
                 print(f"{Colors.YELLOW}Solution:{Colors.NC}")
                 print()
                 print(f"1. {Colors.CYAN}Re-authenticate with OAuth (recommended):{Colors.NC}")
@@ -353,6 +356,12 @@ class RepositorySetup:
                 print("   - Contents: Read and write")
                 print("   - Metadata: Read")
                 print()
+            elif e.stderr and "name already exists" in e.stderr.lower():
+                print(f"{Colors.YELLOW}Solution:{Colors.NC}")
+                print(f"  A repository named '{self.config['repo_name']}' already exists.")
+                print(f"  Choose a different name or delete the existing repository at:")
+                print(f"  https://github.com/{self.config['repo_full']}/settings")
+                print()
 
             sys.exit(1)
 
@@ -365,8 +374,9 @@ class RepositorySetup:
         try:
             GitHubCLI.run(["repo", "clone", self.config["repo_full"], self.config["repo_name"]], capture=False)
             Logger.success("Repository cloned locally")
-        except subprocess.CalledProcessError:
+        except subprocess.CalledProcessError as e:
             Logger.error("Failed to clone repository")
+            print(f"  You can try cloning manually: gh repo clone {self.config['repo_full']}")
             sys.exit(1)
 
         # Change to repo directory
