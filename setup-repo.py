@@ -543,6 +543,8 @@ class RepositorySetup:
                 Logger.info("You can install manually with: uv run pre-commit install")
 
             # Fix linting issues (including import ordering)
+            # Note: We run ruff directly with --fix because doit lint only checks,
+            # doesn't auto-fix. This fixes import ordering (I001) and other auto-fixable issues.
             Logger.info("Fixing linting issues with ruff...")
             subprocess.run(
                 ["uv", "run", "ruff", "check", "--fix", "."],
@@ -550,7 +552,7 @@ class RepositorySetup:
                 text=True,
             )
 
-            # Format pyproject.toml
+            # Format pyproject.toml using doit task
             Logger.info("Formatting pyproject.toml...")
             subprocess.run(
                 ["uv", "run", "doit", "fmt_pyproject"],
@@ -558,7 +560,7 @@ class RepositorySetup:
                 text=True,
             )
 
-            # Format code
+            # Format code using doit task
             Logger.info("Formatting code with ruff...")
             subprocess.run(
                 ["uv", "run", "doit", "format"],
