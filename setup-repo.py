@@ -296,7 +296,7 @@ class RepositorySetup:
     def _prompt_input(self, prompt: str, default: str = "", required: bool = False) -> str:
         """Prompt user for input."""
         if default:
-            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{default}]: ").strip()
+            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}{default}{Colors.NC}]: ").strip()
             return result if result else default
         else:
             while True:
@@ -308,10 +308,10 @@ class RepositorySetup:
     def _prompt_confirm(self, prompt: str, default: bool = False) -> bool:
         """Prompt user for yes/no confirmation."""
         if default:
-            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [Y/n]: ").strip().lower()
+            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}Y{Colors.NC}/n]: ").strip().lower()
             return result in ("", "y", "yes")
         else:
-            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [y/N]: ").strip().lower()
+            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [y/{Colors.GREEN}N{Colors.NC}]: ").strip().lower()
             return result in ("y", "yes")
 
     def create_repository(self) -> None:
