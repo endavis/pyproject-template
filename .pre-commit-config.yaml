@@ -52,7 +52,20 @@ repos:
       # Branch naming enforcement
       - id: check-branch-name
         name: Check branch naming convention
-        entry: bash -c 'BRANCH=$(git branch --show-current); if [[ "$BRANCH" != "main" && "$BRANCH" != "develop" && ! "$BRANCH" =~ ^(issue|feat|fix|hotfix)/[0-9]+-[a-z0-9\-]+$ && ! "$BRANCH" =~ ^release/.+ ]]; then echo "❌ Branch name must follow convention:"; echo "   - issue/<num>-<description>"; echo "   - feat/<num>-<description>"; echo "   - fix/<num>-<description>"; echo "   - hotfix/<description>"; echo "   - release/<version>"; echo ""; echo "Current branch: $BRANCH"; exit 1; fi'
+        entry: |
+          bash -c '
+          BRANCH=$(git branch --show-current);
+          if [[ "$BRANCH" != "main" && "$BRANCH" != "develop" && ! "$BRANCH" =~ ^(issue|feat|fix|hotfix)/[0-9]+-[a-z0-9\-]+$ && ! "$BRANCH" =~ ^release/.+ ]]; then
+            echo "❌ Branch name must follow convention:";
+            echo "   - issue/<num>-<description>";
+            echo "   - feat/<num>-<description>";
+            echo "   - fix/<num>-<description>";
+            echo "   - hotfix/<description>";
+            echo "   - release/<version>";
+            echo "";
+            echo "Current branch: $BRANCH";
+            exit 1;
+          fi'
         language: system
         pass_filenames: false
         always_run: true
