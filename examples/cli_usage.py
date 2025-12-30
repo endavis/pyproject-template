@@ -5,8 +5,7 @@ This example demonstrates how to use the command-line interface
 programmatically and provides examples of CLI commands.
 """
 
-import subprocess
-import sys
+import subprocess  # nosec B404 - subprocess is required for CLI examples
 from pathlib import Path
 
 
@@ -24,7 +23,7 @@ def run_command(cmd: list[str]) -> tuple[int, str, str]:
     return result.returncode, result.stdout, result.stderr
 
 
-def main():
+def main() -> None:
     """Run CLI usage examples."""
     print("CLI Usage Examples")
     print("=" * 60)

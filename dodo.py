@@ -1,15 +1,17 @@
 import json
 import os
 import platform
+import re
 import shutil
 import subprocess  # nosec B404 - subprocess is required for doit tasks
 import sys
 import urllib.request
+from typing import Any
+
 from doit.action import CmdAction
 from doit.tools import title_with_actions
 from rich.console import Console
 from rich.panel import Panel
-from rich.text import Text
 
 # Configuration
 DOIT_CONFIG = {
@@ -21,22 +23,22 @@ DOIT_CONFIG = {
 UV_CACHE_DIR = os.environ.get("UV_CACHE_DIR", "tmp/.uv_cache")
 
 
-def success_message():
+def success_message() -> None:
     """Print success message after all checks pass."""
     console = Console()
     console.print()
-    console.print(Panel.fit(
-        "[bold green]✓ All checks passed![/bold green]",
-        border_style="green",
-        padding=(1, 2)
-    ))
+    console.print(
+        Panel.fit(
+            "[bold green]✓ All checks passed![/bold green]", border_style="green", padding=(1, 2)
+        )
+    )
     console.print()
 
 
 # --- Setup / Install Tasks ---
 
 
-def task_install():
+def task_install() -> dict[str, Any]:
     """Install package with dependencies."""
     return {
         "actions": [
@@ -46,7 +48,7 @@ def task_install():
     }
 
 
-def task_dev():
+def task_dev() -> dict[str, Any]:
     """Install package with dev dependencies."""
     return {
         "actions": [
@@ -56,10 +58,10 @@ def task_dev():
     }
 
 
-def task_cleanup():
+def task_cleanup() -> dict[str, Any]:
     """Clean build and cache artifacts (deep clean)."""
 
-    def clean_artifacts():
+    def clean_artifacts() -> None:
         console = Console()
         console.print("[bold yellow]Performing deep clean...[/bold yellow]")
         console.print()
@@ -127,11 +129,13 @@ def task_cleanup():
                     os.remove(full_path)
 
         console.print()
-        console.print(Panel.fit(
-            "[bold green]✓ Deep clean complete![/bold green]",
-            border_style="green",
-            padding=(1, 2)
-        ))
+        console.print(
+            Panel.fit(
+                "[bold green]✓ Deep clean complete![/bold green]",
+                border_style="green",
+                padding=(1, 2),
+            )
+        )
 
     return {
         "actions": [clean_artifacts],
@@ -142,7 +146,7 @@ def task_cleanup():
 # --- Development Tasks ---
 
 
-def task_test():
+def task_test() -> dict[str, Any]:
     """Run pytest with parallel execution."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pytest -n auto -v"],
@@ -150,7 +154,7 @@ def task_test():
     }
 
 
-def task_coverage():
+def task_coverage() -> dict[str, Any]:
     """Run pytest with coverage (note: parallel execution disabled for accurate coverage)."""
     return {
         "actions": [
@@ -162,7 +166,7 @@ def task_coverage():
     }
 
 
-def task_lint():
+def task_lint() -> dict[str, Any]:
     """Run ruff linting."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run ruff check src/ tests/"],
@@ -170,7 +174,7 @@ def task_lint():
     }
 
 
-def task_format():
+def task_format() -> dict[str, Any]:
     """Format code with ruff."""
     return {
         "actions": [
@@ -181,7 +185,7 @@ def task_format():
     }
 
 
-def task_format_check():
+def task_format_check() -> dict[str, Any]:
     """Check code formatting without modifying files."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run ruff format --check src/ tests/"],
@@ -189,7 +193,7 @@ def task_format_check():
     }
 
 
-def task_type_check():
+def task_type_check() -> dict[str, Any]:
     """Run mypy type checking."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mypy src/"],
@@ -197,7 +201,7 @@ def task_type_check():
     }
 
 
-def task_check():
+def task_check() -> dict[str, Any]:
     """Run all checks (format, lint, type check, test)."""
     return {
         "actions": [success_message],
@@ -206,7 +210,7 @@ def task_check():
     }
 
 
-def task_audit():
+def task_audit() -> dict[str, Any]:
     """Run security audit with pip-audit (requires security extras)."""
     return {
         "actions": [
@@ -217,7 +221,7 @@ def task_audit():
     }
 
 
-def task_security():
+def task_security() -> dict[str, Any]:
     """Run security checks with bandit (requires security extras)."""
     return {
         "actions": [
@@ -228,7 +232,7 @@ def task_security():
     }
 
 
-def task_spell_check():
+def task_spell_check() -> dict[str, Any]:
     """Check spelling in code and documentation."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run codespell src/ tests/ docs/ README.md"],
@@ -236,7 +240,7 @@ def task_spell_check():
     }
 
 
-def task_fmt_pyproject():
+def task_fmt_pyproject() -> dict[str, Any]:
     """Format pyproject.toml with pyproject-fmt."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pyproject-fmt pyproject.toml"],
@@ -244,7 +248,7 @@ def task_fmt_pyproject():
     }
 
 
-def task_licenses():
+def task_licenses() -> dict[str, Any]:
     """Check licenses of dependencies (requires security extras)."""
     return {
         "actions": [
@@ -255,7 +259,7 @@ def task_licenses():
     }
 
 
-def task_commit():
+def task_commit() -> dict[str, Any]:
     """Interactive commit with commitizen (ensures conventional commit format)."""
     return {
         "actions": [
@@ -266,7 +270,7 @@ def task_commit():
     }
 
 
-def task_bump():
+def task_bump() -> dict[str, Any]:
     """Bump version automatically based on conventional commits."""
     return {
         "actions": [
@@ -277,7 +281,7 @@ def task_bump():
     }
 
 
-def task_changelog():
+def task_changelog() -> dict[str, Any]:
     """Generate CHANGELOG from conventional commits."""
     return {
         "actions": [
@@ -288,7 +292,7 @@ def task_changelog():
     }
 
 
-def task_pre_commit_install():
+def task_pre_commit_install() -> dict[str, Any]:
     """Install pre-commit hooks."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pre-commit install"],
@@ -296,7 +300,7 @@ def task_pre_commit_install():
     }
 
 
-def task_pre_commit_run():
+def task_pre_commit_run() -> dict[str, Any]:
     """Run pre-commit on all files."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pre-commit run --all-files"],
@@ -307,7 +311,7 @@ def task_pre_commit_run():
 # --- Documentation Tasks ---
 
 
-def task_docs_serve():
+def task_docs_serve() -> dict[str, Any]:
     """Serve documentation locally with live reload."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mkdocs serve"],
@@ -315,7 +319,7 @@ def task_docs_serve():
     }
 
 
-def task_docs_build():
+def task_docs_build() -> dict[str, Any]:
     """Build documentation site."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mkdocs build"],
@@ -323,7 +327,7 @@ def task_docs_build():
     }
 
 
-def task_docs_deploy():
+def task_docs_deploy() -> dict[str, Any]:
     """Deploy documentation to GitHub Pages."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mkdocs gh-deploy --force"],
@@ -331,16 +335,15 @@ def task_docs_deploy():
     }
 
 
-def task_update_deps():
+def task_update_deps() -> dict[str, Any]:
     """Update dependencies and run tests to verify."""
 
-    def update_dependencies():
+    def update_dependencies() -> None:
         console = Console()
         console.print()
-        console.print(Panel.fit(
-            "[bold cyan]Updating Dependencies[/bold cyan]",
-            border_style="cyan"
-        ))
+        console.print(
+            Panel.fit("[bold cyan]Updating Dependencies[/bold cyan]", border_style="cyan")
+        )
         console.print()
 
         print("Checking for outdated dependencies...")
@@ -403,14 +406,14 @@ def task_update_deps():
     }
 
 
-def task_release_dev(type="alpha"):
+def task_release_dev(type: str = "alpha") -> dict[str, Any]:
     """Create a pre-release (alpha/beta) tag for TestPyPI and push to GitHub.
 
     Args:
         type (str): Pre-release type (e.g., 'alpha', 'beta', 'rc'). Defaults to 'alpha'.
     """
 
-    def create_dev_release():
+    def create_dev_release() -> None:
         console = Console()
         console.print("=" * 70)
         console.print(f"[bold green]Starting {type} release tagging...[/bold green]")
@@ -425,7 +428,10 @@ def task_release_dev(type="alpha"):
             check=True,
         ).stdout.strip()
         if current_branch != "main":
-            console.print(f"[bold yellow]⚠ Warning: Not on main branch (currently on {current_branch})[/bold yellow]")
+            console.print(
+                f"[bold yellow]⚠ Warning: Not on main branch "
+                f"(currently on {current_branch})[/bold yellow]"
+            )
             response = input("Continue anyway? (y/N) ").strip().lower()
             if response != "y":
                 console.print("[bold red]❌ Release cancelled.[/bold red]")
@@ -449,7 +455,7 @@ def task_release_dev(type="alpha"):
             subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
             console.print("[green]✓ Git pull successful.[/green]")
         except subprocess.CalledProcessError as e:
-            console.print(f"[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
@@ -460,7 +466,10 @@ def task_release_dev(type="alpha"):
             subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
             console.print("[green]✓ All checks passed.[/green]")
         except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Pre-release checks failed! Please fix issues before tagging.[/bold red]")
+            console.print(
+                "[bold red]❌ Pre-release checks failed! "
+                "Please fix issues before tagging.[/bold red]"
+            )
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
@@ -472,16 +481,15 @@ def task_release_dev(type="alpha"):
             result = subprocess.run(
                 ["uv", "run", "cz", "bump", "--prerelease", type, "--changelog"],
                 env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
-                check=True, capture_output=True, text=True
+                check=True,
+                capture_output=True,
+                text=True,
             )
             console.print(f"[green]✓ Version bumped to {type}.[/green]")
             console.print(f"[dim]{result.stdout}[/dim]")
             # Extract new version
-            version_match = Text(result.stdout).search(r"Bumping to version (\d+\.\d+\.\d+[^\s]*)")
-            if version_match:
-                new_version = version_match.group(1)
-            else:
-                new_version = "unknown"
+            version_match = re.search(r"Bumping to version (\d+\.\d+\.\d+[^\s]*)", result.stdout)
+            new_version = version_match.group(1) if version_match else "unknown"
 
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ commitizen bump failed![/bold red]")
@@ -491,7 +499,12 @@ def task_release_dev(type="alpha"):
 
         console.print(f"\n[cyan]Pushing tag v{new_version} to origin...[/cyan]")
         try:
-            subprocess.run(["git", "push", "--follow-tags", "origin", current_branch], check=True, capture_output=True, text=True)
+            subprocess.run(
+                ["git", "push", "--follow-tags", "origin", current_branch],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             console.print("[green]✓ Tags pushed to origin.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Error pushing tag to origin:[/bold red]")
@@ -521,10 +534,10 @@ def task_release_dev(type="alpha"):
     }
 
 
-def task_release():
+def task_release() -> dict[str, Any]:
     """Automate release: bump version, update CHANGELOG, and push to GitHub (triggers CI/CD)."""
 
-    def automated_release():
+    def automated_release() -> None:
         console = Console()
         console.print("=" * 70)
         console.print("[bold green]Starting automated release process...[/bold green]")
@@ -539,7 +552,10 @@ def task_release():
             check=True,
         ).stdout.strip()
         if current_branch != "main":
-            console.print(f"[bold yellow]⚠ Warning: Not on main branch (currently on {current_branch})[/bold yellow]")
+            console.print(
+                f"[bold yellow]⚠ Warning: Not on main branch "
+                f"(currently on {current_branch})[/bold yellow]"
+            )
             response = input("Continue anyway? (y/N) ").strip().lower()
             if response != "y":
                 console.print("[bold red]❌ Release cancelled.[/bold red]")
@@ -563,7 +579,7 @@ def task_release():
             subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
             console.print("[green]✓ Git pull successful.[/green]")
         except subprocess.CalledProcessError as e:
-            console.print(f"[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
@@ -589,7 +605,10 @@ def task_release():
             subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
             console.print("[green]✓ All checks passed.[/green]")
         except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Pre-release checks failed! Please fix issues before releasing.[/bold red]")
+            console.print(
+                "[bold red]❌ Pre-release checks failed! "
+                "Please fix issues before releasing.[/bold red]"
+            )
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
@@ -597,35 +616,48 @@ def task_release():
         # Automated version bump and CHANGELOG generation using commitizen
         console.print("\n[cyan]Bumping version and generating CHANGELOG with commitizen...[/cyan]")
         try:
-            # Use cz bump --changelog --merge-prerelease to update version, changelog, commit, and tag
-            # This consolidates pre-release changes into the final release entry
+            # Use cz bump --changelog --merge-prerelease to update version,
+            # changelog, commit, and tag. This consolidates pre-release changes
+            # into the final release entry
             result = subprocess.run(
                 ["uv", "run", "cz", "bump", "--changelog", "--merge-prerelease"],
                 env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
-                check=True, capture_output=True, text=True
+                check=True,
+                capture_output=True,
+                text=True,
             )
-            console.print("[green]✓ Version bumped and CHANGELOG updated (merged pre-releases).[/green]")
+            console.print(
+                "[green]✓ Version bumped and CHANGELOG updated (merged pre-releases).[/green]"
+            )
             console.print(f"[dim]{result.stdout}[/dim]")
             # Extract new version from cz output (example: "Bumping to version 1.0.0")
-            version_match = Text(result.stdout).search(r"Bumping to version (\d+\.\d+\.\d+)")
-            if version_match:
-                new_version = version_match.group(1)
-            else:
-                new_version = "unknown" # Fallback if regex fails
+            version_match = re.search(r"Bumping to version (\d+\.\d+\.\d+)", result.stdout)
+            # Fallback to "unknown" if regex fails
+            new_version = version_match.group(1) if version_match else "unknown"
 
         except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ commitizen bump failed! Ensure your commit history is conventional.[/bold red]")
+            console.print(
+                "[bold red]❌ commitizen bump failed! "
+                "Ensure your commit history is conventional.[/bold red]"
+            )
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
         except Exception as e:
-            console.print(f"[bold red]❌ An unexpected error occurred during commitizen bump: {e}[/bold red]")
+            console.print(
+                f"[bold red]❌ An unexpected error occurred during commitizen bump: {e}[/bold red]"
+            )
             sys.exit(1)
 
         # Push commits and tags to GitHub
         console.print("\n[cyan]Pushing commits and tags to GitHub...[/cyan]")
         try:
-            subprocess.run(["git", "push", "--follow-tags", "origin", current_branch], check=True, capture_output=True, text=True)
+            subprocess.run(
+                ["git", "push", "--follow-tags", "origin", current_branch],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
             console.print("[green]✓ Pushed new commits and tags to GitHub.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Error pushing to GitHub:[/bold red]")
@@ -638,8 +670,12 @@ def task_release():
         console.print("=" * 70)
         console.print("\nNext steps:")
         console.print("1. Monitor GitHub Actions for build and publish.")
-        console.print("2. Check TestPyPI: [link=https://test.pypi.org/project/package-name/]https://test.pypi.org/project/package-name/[/link]")
-        console.print("3. Check PyPI: [link=https://pypi.org/project/package-name/]https://pypi.org/project/package-name/[/link]")
+        console.print(
+            "2. Check TestPyPI: [link=https://test.pypi.org/project/package-name/]https://test.pypi.org/project/package-name/[/link]"
+        )
+        console.print(
+            "3. Check PyPI: [link=https://pypi.org/project/package-name/]https://pypi.org/project/package-name/[/link]"
+        )
         console.print("4. Verify the updated CHANGELOG.md in the repository.")
 
     return {
@@ -651,7 +687,7 @@ def task_release():
 # --- Build & Publish Tasks ---
 
 
-def task_build():
+def task_build() -> dict[str, Any]:
     """Build package."""
     return {
         "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv build"],
@@ -659,10 +695,10 @@ def task_build():
     }
 
 
-def task_publish():
+def task_publish() -> dict[str, Any]:
     """Build and publish package to PyPI."""
 
-    def publish_cmd():
+    def publish_cmd() -> str:
         token = os.environ.get("PYPI_TOKEN")
         if not token:
             raise RuntimeError("PYPI_TOKEN environment variable must be set.")
@@ -677,7 +713,7 @@ def task_publish():
 # --- Installation Helper Tasks ---
 
 
-def _get_latest_github_release(repo):
+def _get_latest_github_release(repo: str) -> str:
     """Helper to get latest GitHub release version."""
     url = f"https://api.github.com/repos/{repo}/releases/latest"
     request = urllib.request.Request(url)
@@ -688,10 +724,11 @@ def _get_latest_github_release(repo):
 
     with urllib.request.urlopen(request) as response:  # nosec B310 - URL is hardcoded GitHub API
         data = json.loads(response.read().decode())
-        return data["tag_name"].lstrip("v")
+        tag_name: str = data["tag_name"]
+        return tag_name.lstrip("v")
 
 
-def _install_direnv():
+def _install_direnv() -> None:
     """Install direnv if not already installed."""
     if shutil.which("direnv"):
         version = subprocess.run(
@@ -714,8 +751,7 @@ def _install_direnv():
 
     if system == "linux":
         bin_url = (
-            f"https://github.com/direnv/direnv/releases/download/"
-            f"v{version}/direnv.linux-amd64"
+            f"https://github.com/direnv/direnv/releases/download/" f"v{version}/direnv.linux-amd64"
         )
         bin_path = os.path.join(install_dir, "direnv")
         print(f"Downloading {bin_url}...")
@@ -729,11 +765,11 @@ def _install_direnv():
 
     print("✓ direnv installed.")
     print("\nIMPORTANT: Add direnv hook to your shell:")
-    print('  Bash: echo \'eval "$(direnv hook bash)"\' >> ~/.bashrc')
-    print('  Zsh:  echo \'eval "$(direnv hook zsh)"\' >> ~/.zshrc')
+    print("  Bash: echo 'eval \"$(direnv hook bash)\"' >> ~/.bashrc")
+    print("  Zsh:  echo 'eval \"$(direnv hook zsh)\"' >> ~/.zshrc")
 
 
-def task_install_direnv():
+def task_install_direnv() -> dict[str, Any]:
     """Install direnv for automatic environment loading."""
     return {
         "actions": [_install_direnv],
@@ -764,29 +800,27 @@ def validate_merge_commits(console: "Console") -> bool:
             text=True,
         )
         last_tag = result.stdout.strip() if result.returncode == 0 else ""
-        if last_tag:
-            range_spec = f"{last_tag}..HEAD"
-        else:
-            range_spec = "HEAD"
+        range_spec = f"{last_tag}..HEAD" if last_tag else "HEAD"
 
         result = subprocess.run(
             ["git", "log", "--merges", "--pretty=format:%h %s", range_spec],
             capture_output=True,
             text=True,
         )
-        merge_commits = result.stdout.strip().split('\n') if result.stdout.strip() else []
+        merge_commits = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
     except Exception as e:
         console.print(f"[yellow]⚠ Could not check merge commits: {e}[/yellow]")
         return True  # Don't block on this check
 
-    if not merge_commits or merge_commits == ['']:
+    if not merge_commits or merge_commits == [""]:
         console.print("[green]✓ No merge commits to validate.[/green]")
         return True
 
     # Pattern: <type>: <subject> (merges PR #XX, closes #YY) or (merges PR #XX)
     merge_pattern = re.compile(
-        r'^[a-f0-9]+\s+(feat|fix|refactor|docs|test|chore|ci|perf):\s.+\s\(merges PR #\d+(?:, closes #\d+)?\)$'
+        r"^[a-f0-9]+\s+(feat|fix|refactor|docs|test|chore|ci|perf):\s.+\s"
+        r"\(merges PR #\d+(?:, closes #\d+)?\)$"
     )
 
     invalid_commits = []
@@ -825,29 +859,26 @@ def validate_issue_links(console: "Console") -> bool:
             text=True,
         )
         last_tag = result.stdout.strip() if result.returncode == 0 else ""
-        if last_tag:
-            range_spec = f"{last_tag}..HEAD"
-        else:
-            # If no tags, check last 10 commits
-            range_spec = "HEAD~10..HEAD"
+        # If no tags, check last 10 commits
+        range_spec = f"{last_tag}..HEAD" if last_tag else "HEAD~10..HEAD"
 
         result = subprocess.run(
             ["git", "log", "--pretty=format:%h %s", range_spec],
             capture_output=True,
             text=True,
         )
-        commits = result.stdout.strip().split('\n') if result.stdout.strip() else []
+        commits = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
     except Exception as e:
         console.print(f"[yellow]⚠ Could not check issue links: {e}[/yellow]")
         return True  # Don't block on this check
 
-    if not commits or commits == ['']:
+    if not commits or commits == [""]:
         console.print("[green]✓ No commits to validate.[/green]")
         return True
 
-    issue_pattern = re.compile(r'#\d+')
-    docs_pattern = re.compile(r'^[a-f0-9]+\s+docs:', re.IGNORECASE)
+    issue_pattern = re.compile(r"#\d+")
+    docs_pattern = re.compile(r"^[a-f0-9]+\s+docs:", re.IGNORECASE)
 
     commits_without_issues = []
     for commit in commits:
@@ -856,7 +887,7 @@ def validate_issue_links(console: "Console") -> bool:
             if docs_pattern.match(commit):
                 continue
             # Skip merge commits (already validated separately)
-            if 'merge' in commit.lower():
+            if "merge" in commit.lower():
                 continue
             # Check for issue reference
             if not issue_pattern.search(commit):

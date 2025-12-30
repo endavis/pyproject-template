@@ -226,7 +226,7 @@ uv run doit fmt_pyproject
 - **Example**:
   ```bash
   $ uv run doit spell_check
-  docs/README.md:42: recieve ==> receive
+  # Checks all files for common typos and suggests corrections
   ```
 
 #### `doit fmt_pyproject`
