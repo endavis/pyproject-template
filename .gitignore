@@ -71,6 +71,7 @@ site/
 # Build and packaging
 *.whl
 .uv-cache/
+**/_version.py
 
 # Project specific
 *.log
