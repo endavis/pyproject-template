@@ -514,37 +514,46 @@ class RepositorySetup:
         if not security_settings:
             return
 
-        try:
-            # Enable secret scanning if template has it
-            if security_settings.get("secret_scanning", {}).get("status") == "enabled":
+        # Enable secret scanning if template has it
+        if security_settings.get("secret_scanning", {}).get("status") == "enabled":
+            try:
                 GitHubCLI.api(
                     f"repos/{self.config['repo_full']}/secret-scanning",
                     method="PATCH",
                     data={"status": "enabled"},
                 )
                 Logger.success("Secret scanning enabled")
+            except subprocess.CalledProcessError as e:
+                Logger.warning("Secret scanning configuration failed")
+                if e.stderr:
+                    print(f"  Error: {e.stderr.strip()}")
 
-            # Enable secret scanning push protection if template has it
-            if security_settings.get("secret_scanning_push_protection", {}).get("status") == "enabled":
+        # Enable secret scanning push protection if template has it
+        if security_settings.get("secret_scanning_push_protection", {}).get("status") == "enabled":
+            try:
                 GitHubCLI.api(
                     f"repos/{self.config['repo_full']}/secret-scanning/push-protection",
                     method="PATCH",
                     data={"status": "enabled"},
                 )
                 Logger.success("Secret scanning push protection enabled")
+            except subprocess.CalledProcessError as e:
+                Logger.warning("Secret scanning push protection configuration failed")
+                if e.stderr:
+                    print(f"  Error: {e.stderr.strip()}")
 
-            # Enable Dependabot security updates if template has it
-            if security_settings.get("dependabot_security_updates", {}).get("status") == "enabled":
+        # Enable Dependabot security updates if template has it
+        if security_settings.get("dependabot_security_updates", {}).get("status") == "enabled":
+            try:
                 GitHubCLI.api(
                     f"repos/{self.config['repo_full']}/automated-security-fixes",
                     method="PUT",
                 )
                 Logger.success("Dependabot security updates enabled")
-
-        except subprocess.CalledProcessError as e:
-            Logger.warning("Some security settings could not be configured")
-            if e.stderr:
-                print(f"  Error: {e.stderr.strip()}")
+            except subprocess.CalledProcessError as e:
+                Logger.warning("Dependabot security updates configuration failed")
+                if e.stderr:
+                    print(f"  Error: {e.stderr.strip()}")
 
     def configure_branch_protection(self) -> None:
         """Configure branch protection using rulesets."""
