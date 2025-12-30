@@ -21,6 +21,8 @@ License: MIT
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -229,6 +231,15 @@ class RepositorySetup:
         else:
             Logger.success("Token type appears to be OAuth (recommended)")
 
+    def _update_file(self, filepath: Path, replacements: dict[str, str]) -> None:
+        """Update file with string replacements."""
+        if not filepath.exists():
+            return
+        content = filepath.read_text(encoding="utf-8")
+        for old, new in replacements.items():
+            content = content.replace(old, new)
+        filepath.write_text(content, encoding="utf-8")
+
     def gather_inputs(self) -> None:
         """Gather repository configuration from user."""
         Logger.step("Gathering repository information...")
@@ -384,40 +395,93 @@ class RepositorySetup:
         os.chdir(self.config["repo_name"])
 
     def configure_placeholders(self) -> None:
-        """Configure project placeholders."""
+        """Configure project placeholders by replacing template strings."""
         Logger.step("Configuring project placeholders...")
 
-        if not Path("configure.py").exists():
-            Logger.warning("configure.py not found - skipping placeholder configuration")
-            return
-
-        # Import and run configure.py directly
         try:
-            # Create input stream with our configuration
-            inputs = "\n".join([
-                self.config["repo_name"],
-                self.config["description"],
-                self.config["package_name"],
-                self.config["pypi_name"],
-                self.config["author_name"],
-                self.config["author_email"],
-                self.config["repo_owner"],
-            ])
+            # Define replacements
+            replacements = {
+                # URLs
+                f"https://github.com/username/package_name": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
+                f"https://github.com/username/{self.config['package_name']}": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
+                f"gh username/package_name": f"gh {self.config['repo_owner']}/{self.config['package_name']}",
+                f"username/package_name": f"{self.config['repo_owner']}/{self.config['package_name']}",
+                "username": self.config["repo_owner"],
+                # Package names
+                "package_name": self.config["package_name"],
+                "package-name": self.config["pypi_name"],
+                "Package Name": self.config["repo_name"],
+                # Metadata
+                "A short description of your package": self.config["description"],
+                "Your Name": self.config["author_name"],
+                "your.email@example.com": self.config["author_email"],
+            }
 
-            # Run configure.py with our inputs
-            result = subprocess.run(
-                [sys.executable, "configure.py"],
-                input=inputs,
-                text=True,
-                capture_output=True,
-            )
+            # Update main configuration files
+            files_to_update = [
+                "pyproject.toml",
+                "README.md",
+                "LICENSE",
+                "dodo.py",
+                "mkdocs.yml",
+                "AGENTS.md",
+                "CHANGELOG.md",
+                ".github/workflows/ci.yml",
+                ".github/workflows/release.yml",
+                ".github/workflows/testpypi.yml",
+                ".github/CONTRIBUTING.md",
+                ".github/SECURITY.md",
+                ".github/CODEOWNERS",
+                ".github/pull_request_template.md",
+                ".envrc",
+                ".pre-commit-config.yaml",
+            ]
 
-            if result.returncode == 0:
-                Logger.success("Placeholders configured")
+            for file_path in files_to_update:
+                path = Path(file_path)
+                if path.exists():
+                    self._update_file(path, replacements)
 
-                # Commit the changes
-                subprocess.run(["git", "add", "."], check=True)
-                commit_msg = f"""chore: configure project from template
+            # Update documentation files
+            docs_dir = Path("docs")
+            if docs_dir.exists():
+                for doc_file in docs_dir.rglob("*.md"):
+                    self._update_file(doc_file, replacements)
+
+            # Update issue templates
+            issue_templates_dir = Path(".github/ISSUE_TEMPLATE")
+            if issue_templates_dir.exists():
+                for template_file in issue_templates_dir.glob("*.md"):
+                    self._update_file(template_file, replacements)
+                # Also update config.yml if it exists
+                config_file = issue_templates_dir / "config.yml"
+                if config_file.exists():
+                    self._update_file(config_file, replacements)
+
+            # Update example files
+            examples_dir = Path("examples")
+            if examples_dir.exists():
+                for example_file in examples_dir.rglob("*"):
+                    if example_file.is_file():
+                        self._update_file(example_file, replacements)
+
+            # Rename package directory
+            old_package_dir = Path("src/package_name")
+            new_package_dir = Path(f"src/{self.config['package_name']}")
+            if old_package_dir.exists() and old_package_dir != new_package_dir:
+                shutil.move(str(old_package_dir), str(new_package_dir))
+                Logger.success(f"Renamed package directory to src/{self.config['package_name']}")
+
+            # Remove configure.py as it's no longer needed
+            configure_file = Path("configure.py")
+            if configure_file.exists():
+                configure_file.unlink()
+
+            Logger.success("Placeholders configured")
+
+            # Commit the changes
+            subprocess.run(["git", "add", "."], check=True, capture_output=True)
+            commit_msg = f"""chore: configure project from template
 
 - Set project name to {self.config['repo_name']}
 - Configure package as {self.config['package_name']}
@@ -425,16 +489,103 @@ class RepositorySetup:
 
 🤖 Generated with setup-repo.py"""
 
-                subprocess.run(["git", "commit", "-m", commit_msg], check=False)
-                subprocess.run(["git", "push"], check=False)
-                Logger.success("Changes committed and pushed")
-            else:
-                Logger.warning("Automatic placeholder configuration skipped")
-                Logger.info("Run 'python3 configure.py' manually to configure project placeholders")
+            subprocess.run(["git", "commit", "-m", commit_msg], check=True, capture_output=True)
+            subprocess.run(["git", "push"], check=True, capture_output=True)
+            Logger.success("Changes committed and pushed")
 
         except Exception as e:
             Logger.warning(f"Placeholder configuration failed: {e}")
-            Logger.info("Run 'python3 configure.py' manually to configure project placeholders")
+            import traceback
+            traceback.print_exc()
+
+    def setup_development_environment(self) -> None:
+        """Set up the development environment with dependencies and pre-commit hooks."""
+        Logger.step("Setting up development environment...")
+
+        try:
+            # Install dependencies
+            Logger.info("Installing dependencies with uv sync --all-extras...")
+            result = subprocess.run(
+                ["uv", "sync", "--all-extras"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                Logger.warning("Failed to install dependencies")
+                Logger.info("You can install manually with: uv sync --all-extras")
+                return
+
+            Logger.success("Dependencies installed")
+
+            # Install pre-commit hooks
+            Logger.info("Installing pre-commit hooks...")
+            result = subprocess.run(
+                ["uv", "run", "pre-commit", "install"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode == 0:
+                Logger.success("Pre-commit hooks installed")
+            else:
+                Logger.warning("Failed to install pre-commit hooks")
+                Logger.info("You can install manually with: uv run pre-commit install")
+
+            # Format pyproject.toml
+            Logger.info("Formatting pyproject.toml...")
+            subprocess.run(
+                ["uv", "run", "doit", "fmt_pyproject"],
+                capture_output=True,
+                text=True,
+            )
+
+            # Format code
+            Logger.info("Formatting code with ruff...")
+            subprocess.run(
+                ["uv", "run", "doit", "format"],
+                capture_output=True,
+                text=True,
+            )
+
+            # Check if there are any formatting changes to commit
+            result = subprocess.run(
+                ["git", "status", "--porcelain"],
+                capture_output=True,
+                text=True,
+            )
+
+            if result.stdout.strip():
+                Logger.info("Committing formatting changes...")
+                subprocess.run(["git", "add", "."], check=True, capture_output=True)
+                commit_msg = """chore: apply code formatting
+
+- Format pyproject.toml with pyproject-fmt
+- Format code with ruff
+
+🤖 Generated with setup-repo.py"""
+                subprocess.run(["git", "commit", "-m", commit_msg], check=True, capture_output=True)
+                subprocess.run(["git", "push"], check=True, capture_output=True)
+                Logger.success("Formatting changes committed and pushed")
+
+            # Run validation checks
+            Logger.info("Running validation checks (doit check)...")
+            result = subprocess.run(
+                ["uv", "run", "doit", "check"],
+                capture_output=False,
+                text=True,
+            )
+
+            if result.returncode == 0:
+                Logger.success("All validation checks passed")
+            else:
+                Logger.warning("Some validation checks failed")
+                Logger.info("Review the output above and fix any issues")
+
+        except Exception as e:
+            Logger.warning(f"Development environment setup had issues: {e}")
+            Logger.info("You can complete setup manually with:")
+            Logger.info("  uv sync --all-extras")
+            Logger.info("  uv run pre-commit install")
+            Logger.info("  uv run doit check")
 
     def configure_repository_settings(self) -> None:
         """Configure repository settings to match template."""
@@ -719,18 +870,16 @@ class RepositorySetup:
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
         print()
 
-        Logger.step("Next steps:")
+        Logger.step("You're all set!")
         print()
         repo_path = os.path.join(self.start_dir, self.config['repo_name'])
         print(f"  {Colors.GREEN}✓{Colors.NC} Repository cloned to: {repo_path}")
+        print(f"  {Colors.GREEN}✓{Colors.NC} Dependencies installed")
+        print(f"  {Colors.GREEN}✓{Colors.NC} Pre-commit hooks configured")
+        print(f"  {Colors.GREEN}✓{Colors.NC} Code formatted and validated")
         print()
-        print(f"  1. Navigate to the repository:")
+        print(f"  Navigate to your repository and start developing:")
         print(f"     cd {self.config['repo_name']}")
-        print("  2. Install dependencies:")
-        print("     uv sync --all-extras")
-        print("  3. Install pre-commit hooks:")
-        print("     uv run pre-commit install")
-        print("  4. Start developing!")
         print()
 
         Logger.info(f"Documentation: https://github.com/{self.config['repo_full']}/blob/main/README.md")
@@ -743,6 +892,7 @@ class RepositorySetup:
         self.gather_inputs()
         self.create_repository()
         self.configure_placeholders()
+        self.setup_development_environment()
         self.configure_repository_settings()
         self.configure_branch_protection()
         self.replicate_labels()
