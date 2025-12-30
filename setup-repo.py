@@ -448,6 +448,18 @@ class RepositorySetup:
                 for doc_file in docs_dir.rglob("*.md"):
                     self._update_file(doc_file, replacements)
 
+            # Update test files
+            tests_dir = Path("tests")
+            if tests_dir.exists():
+                for test_file in tests_dir.rglob("*.py"):
+                    self._update_file(test_file, replacements)
+
+            # Update source files
+            src_dir = Path("src")
+            if src_dir.exists():
+                for src_file in src_dir.rglob("*.py"):
+                    self._update_file(src_file, replacements)
+
             # Update issue templates
             issue_templates_dir = Path(".github/ISSUE_TEMPLATE")
             if issue_templates_dir.exists():
