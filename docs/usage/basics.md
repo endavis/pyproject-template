@@ -20,7 +20,7 @@ print(message)  # Output: Hello, Python!
 
 ### API Documentation
 
-See the [API Reference](api.md) for complete documentation of all available functions and classes.
+See the [API Reference](../reference/api.md) for complete documentation of all available functions and classes.
 
 ---
 
@@ -30,7 +30,7 @@ This section is for developers working on the project.
 
 ### Migration
 
-Coming from an existing project? See the [Migration Guide](migration.md) for step-by-step instructions to adopt this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
+Coming from an existing project? See the [Migration Guide](../guides/migration.md) for step-by-step instructions to adopt this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
 
 ### Quick Reference
 
@@ -765,6 +765,6 @@ uv run pre-commit install
 
 ## Next Steps
 
-- Check the [API Reference](api.md) for complete documentation
+- Check the [API Reference](../reference/api.md) for complete documentation
 - Read [CONTRIBUTING.md](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md) for contribution guidelines
 - Review the docs and TODOs in this template to identify improvements for your project

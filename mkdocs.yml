@@ -52,12 +52,21 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Installation: installation.md
-  - Usage: usage.md
-  - API Reference: api.md
-  - Extensions: extensions.md
-  - Migration Guide: migration.md
-  - Examples: examples.md
+  - Documentation Index: TABLE_OF_CONTENTS.md
+  - Getting Started:
+      - Installation: getting-started/installation.md
+  - Usage:
+      - Basics: usage/basics.md
+  - Development:
+      - Coding Standards: development/coding-standards.md
+      - CI/CD & Testing: development/ci-cd-testing.md
+      - Extensions: development/extensions.md
+      - Release & Automation: development/release-and-automation.md
+  - Guides:
+      - Migration Guide: guides/migration.md
+  - Reference:
+      - API Reference: reference/api.md
+  - Examples: examples/README.md
 
 extra:
   social:

@@ -46,7 +46,7 @@ uv run pre-commit install
 
 ### 4. Start Developing
 
-You're ready to go! See the [Usage Guide](usage.md) for development workflows.
+You're ready to go! See the [Usage Guide](../usage/basics.md) for development workflows.
 
 ---
 
@@ -192,6 +192,6 @@ uv pip install package-name
 
 ## Next Steps
 
-- Read the [Usage Guide](usage.md) to learn how to use the package
-- Check the [API Reference](api.md) for detailed documentation
-- See [Examples](examples.md) for usage examples
+- Read the [Usage Guide](../usage/basics.md) to learn how to use the package
+- Check the [API Reference](../reference/api.md) for detailed documentation
+- See [Examples](../examples/README.md) for usage examples

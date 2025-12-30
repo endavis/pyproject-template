@@ -8,9 +8,9 @@ Package Name is a modern Python project template with comprehensive tooling for 
 
 ## Quick Links
 
-- [Installation Guide](installation.md)
-- [User Guide](usage.md)
-- [API Reference](api.md)
+- [Installation Guide](getting-started/installation.md)
+- [User Guide](usage/basics.md)
+- [API Reference](reference/api.md)
 - [Contributing](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)
 
 ## Features
@@ -39,10 +39,10 @@ print(message)  # Output: Hello, Python!
 
 ### For Users
 
-- **[Installation](installation.md)** - How to install the package
-- **[Usage Guide](usage.md)** - How to use the package
-- **[API Reference](api.md)** - Complete API documentation
-- **[Migration Guide](migration.md)** - Move an existing project into this template
+- **[Installation](getting-started/installation.md)** - How to install the package
+- **[Usage Guide](usage/basics.md)** - How to use the package
+- **[API Reference](reference/api.md)** - Complete API documentation
+- **[Migration Guide](guides/migration.md)** - Move an existing project into this template
 
 ### For Contributors
 

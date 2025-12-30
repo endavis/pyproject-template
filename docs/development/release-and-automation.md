@@ -5,7 +5,7 @@ This guide covers automated versioning, release management, governance validatio
 ## Table of Contents
 - [Automated Versioning](#automated-versioning)
 - [Release Management](#release-management)
-- [Security & Quality Tasks](#security--quality-tasks)
+- [Security & Quality Tasks](#security-quality-tasks)
 - [Governance Validation](#governance-validation)
 - [Environment Configuration](#environment-configuration)
 
