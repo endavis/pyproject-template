@@ -116,14 +116,19 @@ jobs:
                 // For function signature patterns, check if it's only type annotations
                 if (checkTypeAnnotations) {
                   let isBreaking = false;
+                  console.log(`\n=== Checking ${description} in ${file.filename} ===`);
 
                   // Find all removed function signatures
                   for (let i = 0; i < patchLines.length; i++) {
                     const line = patchLines[i];
                     if (!pattern.test(line)) continue;
 
+                    console.log(`Found removed line: ${line}`);
                     const funcName = extractFunctionName(line);
+                    console.log(`Extracted function name: ${funcName}`);
+
                     if (!funcName) {
+                      console.log('Failed to extract function name, marking as breaking');
                       isBreaking = true;
                       break;
                     }
@@ -136,21 +141,36 @@ jobs:
 
                       const addedFuncName = extractFunctionName(addedLine);
                       if (addedFuncName === funcName) {
+                        console.log(`Found potential match: ${addedLine}`);
+
+                        const normRemoved = normalizeSignature(line);
+                        const normAdded = normalizeSignature(addedLine);
+                        console.log(`Normalized removed: ${normRemoved}`);
+                        console.log(`Normalized added: ${normAdded}`);
+                        console.log(`Are they equal? ${normRemoved === normAdded}`);
+
                         // Check if only type annotations changed
                         if (isOnlyTypeAnnotationChange(line, addedLine)) {
+                          console.log(`Type annotation only change - NOT breaking`);
                           foundMatch = true;
                           break;
+                        } else {
+                          console.log(`Signatures differ beyond type annotations`);
                         }
                       }
                     }
 
                     // If no matching added line, or signatures differ beyond type hints, it's breaking
                     if (!foundMatch) {
+                      console.log(`No match found for ${funcName}, marking as breaking`);
                       isBreaking = true;
                       break;
+                    } else {
+                      console.log(`Match found for ${funcName}, continuing`);
                     }
                   }
 
+                  console.log(`Final decision: isBreaking = ${isBreaking}`);
                   if (isBreaking) {
                     matches.push({description, severity});
                   }
