@@ -89,6 +89,28 @@ Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`
 - `.claude/claude.md` - Imports AGENTS.md
 - `.claude/settings.local.json` - Command permissions
 
+**LSP Support (Recommended):**
+
+Claude Code supports Language Server Protocol for fast code navigation and type checking. With LSP enabled, Claude can:
+- Jump to definitions in ~50ms (vs ~45s with text search)
+- Find references across the codebase instantly
+- See type information and errors
+- Navigate code semantically rather than textually
+
+**Quick LSP Setup:**
+```bash
+# 1. Enable LSP tool
+export ENABLE_LSP_TOOL=1
+
+# 2. Install Pyright plugin in Claude Code
+/plugin install pyright-lsp@claude-plugins-official
+
+# 3. Install Pyright language server
+pip install pyright
+```
+
+For complete setup instructions and troubleshooting, see [.claude/lsp-setup.md](.claude/lsp-setup.md).
+
 ### 4. Other AI Tools
 
 The `AGENTS.md` file serves as general-purpose documentation for any AI coding assistant:
