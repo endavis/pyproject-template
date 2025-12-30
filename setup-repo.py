@@ -21,12 +21,12 @@ License: MIT
 
 import json
 import os
-import re
 import shutil
-import subprocess
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 from typing import Any
+
 
 # ANSI color codes
 class Colors:
@@ -66,9 +66,11 @@ class GitHubCLI:
     """Wrapper for GitHub CLI commands."""
 
     @staticmethod
-    def run(args: list[str], check: bool = True, capture: bool = True) -> subprocess.CompletedProcess:
+    def run(
+        args: list[str], check: bool = True, capture: bool = True
+    ) -> subprocess.CompletedProcess[str]:
         """Run a gh command."""
-        cmd = ["gh"] + args
+        cmd = ["gh", *args]
         try:
             result = subprocess.run(
                 cmd,
@@ -93,7 +95,7 @@ class GitHubCLI:
             args.append("-")
 
         result = subprocess.run(
-            ["gh"] + args,
+            ["gh", *args],
             input=json.dumps(data) if data else None,
             capture_output=True,
             text=True,
@@ -129,11 +131,21 @@ class RepositorySetup:
     def print_banner(self) -> None:
         """Print welcome banner."""
         print()
-        print(f"{Colors.CYAN}╔═══════════════════════════════════════════════════════════╗{Colors.NC}")
-        print(f"{Colors.CYAN}║                                                           ║{Colors.NC}")
-        print(f"{Colors.CYAN}║     Python Project Template - Repository Setup            ║{Colors.NC}")
-        print(f"{Colors.CYAN}║                                                           ║{Colors.NC}")
-        print(f"{Colors.CYAN}╚═══════════════════════════════════════════════════════════╝{Colors.NC}")
+        print(
+            f"{Colors.CYAN}╔═══════════════════════════════════════════════════════════╗{Colors.NC}"
+        )
+        print(
+            f"{Colors.CYAN}║                                                           ║{Colors.NC}"
+        )
+        print(
+            f"{Colors.CYAN}║     Python Project Template - Repository Setup            ║{Colors.NC}"
+        )
+        print(
+            f"{Colors.CYAN}║                                                           ║{Colors.NC}"
+        )
+        print(
+            f"{Colors.CYAN}╚═══════════════════════════════════════════════════════════╝{Colors.NC}"
+        )
         print()
 
     def check_requirements(self) -> None:
@@ -225,7 +237,9 @@ class RepositorySetup:
             print("  5. Generate token and run: gh auth login")
             print()
 
-            if not self._prompt_confirm("Do you have the required permissions configured?", default=True):
+            if not self._prompt_confirm(
+                "Do you have the required permissions configured?", default=True
+            ):
                 Logger.error("Please configure your PAT with required permissions first")
                 sys.exit(1)
         else:
@@ -259,15 +273,21 @@ class RepositorySetup:
         self.config["repo_full"] = f"{self.config['repo_owner']}/{self.config['repo_name']}"
 
         # Visibility
-        self.config["visibility"] = "public" if self._prompt_confirm("Make repository public?", default=True) else "private"
+        self.config["visibility"] = (
+            "public" if self._prompt_confirm("Make repository public?", default=True) else "private"
+        )
 
         # Package configuration
         print()
         Logger.info("Package configuration (used for placeholder replacement)")
 
         default_package = self.config["repo_name"].replace("-", "_")
-        self.config["package_name"] = self._prompt_input("Python package name (import name)", default=default_package)
-        self.config["pypi_name"] = self._prompt_input("PyPI package name", default=self.config["repo_name"])
+        self.config["package_name"] = self._prompt_input(
+            "Python package name (import name)", default=default_package
+        )
+        self.config["pypi_name"] = self._prompt_input(
+            "PyPI package name", default=self.config["repo_name"]
+        )
         self.config["description"] = self._prompt_input(
             "Package description",
             default="A Python project based on pyproject-template",
@@ -307,7 +327,9 @@ class RepositorySetup:
     def _prompt_input(self, prompt: str, default: str = "", required: bool = False) -> str:
         """Prompt user for input."""
         if default:
-            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}{default}{Colors.NC}]: ").strip()
+            result = input(
+                f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}{default}{Colors.NC}]: "
+            ).strip()
             return result if result else default
         else:
             while True:
@@ -319,10 +341,18 @@ class RepositorySetup:
     def _prompt_confirm(self, prompt: str, default: bool = False) -> bool:
         """Prompt user for yes/no confirmation."""
         if default:
-            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}Y{Colors.NC}/n]: ").strip().lower()
+            result = (
+                input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}Y{Colors.NC}/n]: ")
+                .strip()
+                .lower()
+            )
             return result in ("", "y", "yes")
         else:
-            result = input(f"{Colors.CYAN}?{Colors.NC} {prompt} [y/{Colors.GREEN}N{Colors.NC}]: ").strip().lower()
+            result = (
+                input(f"{Colors.CYAN}?{Colors.NC} {prompt} [y/{Colors.GREEN}N{Colors.NC}]: ")
+                .strip()
+                .lower()
+            )
             return result in ("y", "yes")
 
     def create_repository(self) -> None:
@@ -371,7 +401,7 @@ class RepositorySetup:
             elif e.stderr and "name already exists" in e.stderr.lower():
                 print(f"{Colors.YELLOW}Solution:{Colors.NC}")
                 print(f"  A repository named '{self.config['repo_name']}' already exists.")
-                print(f"  Choose a different name or delete the existing repository at:")
+                print("  Choose a different name or delete the existing repository at:")
                 print(f"  https://github.com/{self.config['repo_full']}/settings")
                 print()
 
@@ -379,14 +409,17 @@ class RepositorySetup:
 
         # Wait a moment for repo to be fully ready
         import time
+
         time.sleep(2)
 
         # Clone the repository
         Logger.info("Cloning repository...")
         try:
-            GitHubCLI.run(["repo", "clone", self.config["repo_full"], self.config["repo_name"]], capture=False)
+            GitHubCLI.run(
+                ["repo", "clone", self.config["repo_full"], self.config["repo_name"]], capture=False
+            )
             Logger.success("Repository cloned locally")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             Logger.error("Failed to clone repository")
             print(f"  You can try cloning manually: gh repo clone {self.config['repo_full']}")
             sys.exit(1)
@@ -402,10 +435,10 @@ class RepositorySetup:
             # Define replacements
             replacements = {
                 # URLs
-                f"https://github.com/username/package_name": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
+                "https://github.com/username/package_name": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
                 f"https://github.com/username/{self.config['package_name']}": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
-                f"gh username/package_name": f"gh {self.config['repo_owner']}/{self.config['package_name']}",
-                f"username/package_name": f"{self.config['repo_owner']}/{self.config['package_name']}",
+                "gh username/package_name": f"gh {self.config['repo_owner']}/{self.config['package_name']}",
+                "username/package_name": f"{self.config['repo_owner']}/{self.config['package_name']}",
                 "username": self.config["repo_owner"],
                 # Package names
                 "package_name": self.config["package_name"],
@@ -508,6 +541,7 @@ class RepositorySetup:
         except Exception as e:
             Logger.warning(f"Placeholder configuration failed: {e}")
             import traceback
+
             traceback.print_exc()
 
     def setup_development_environment(self) -> None:
@@ -664,6 +698,7 @@ class RepositorySetup:
             Logger.error(f"Development environment setup failed: {e}")
             print()
             import traceback
+
             print(f"{Colors.RED}Full error:{Colors.NC}")
             traceback.print_exc()
             print()
@@ -685,25 +720,76 @@ class RepositorySetup:
             # Read-only fields that should not be copied
             readonly_fields = {
                 # URLs
-                "archive_url", "assignees_url", "blobs_url", "branches_url", "clone_url",
-                "collaborators_url", "comments_url", "commits_url", "compare_url", "contents_url",
-                "contributors_url", "deployments_url", "downloads_url", "events_url", "forks_url",
-                "git_commits_url", "git_refs_url", "git_tags_url", "git_url", "hooks_url",
-                "html_url", "issue_comment_url", "issue_events_url", "issues_url", "keys_url",
-                "labels_url", "languages_url", "merges_url", "milestones_url", "notifications_url",
-                "pulls_url", "releases_url", "ssh_url", "stargazers_url", "statuses_url",
-                "subscribers_url", "subscription_url", "svn_url", "tags_url", "teams_url",
-                "trees_url", "url",
+                "archive_url",
+                "assignees_url",
+                "blobs_url",
+                "branches_url",
+                "clone_url",
+                "collaborators_url",
+                "comments_url",
+                "commits_url",
+                "compare_url",
+                "contents_url",
+                "contributors_url",
+                "deployments_url",
+                "downloads_url",
+                "events_url",
+                "forks_url",
+                "git_commits_url",
+                "git_refs_url",
+                "git_tags_url",
+                "git_url",
+                "hooks_url",
+                "html_url",
+                "issue_comment_url",
+                "issue_events_url",
+                "issues_url",
+                "keys_url",
+                "labels_url",
+                "languages_url",
+                "merges_url",
+                "milestones_url",
+                "notifications_url",
+                "pulls_url",
+                "releases_url",
+                "ssh_url",
+                "stargazers_url",
+                "statuses_url",
+                "subscribers_url",
+                "subscription_url",
+                "svn_url",
+                "tags_url",
+                "teams_url",
+                "trees_url",
+                "url",
                 # IDs and metadata
-                "id", "node_id", "owner", "full_name", "name",
+                "id",
+                "node_id",
+                "owner",
+                "full_name",
+                "name",
                 # Timestamps
-                "created_at", "updated_at", "pushed_at",
+                "created_at",
+                "updated_at",
+                "pushed_at",
                 # Counts and computed values
-                "forks", "forks_count", "open_issues", "open_issues_count", "size",
-                "stargazers_count", "watchers", "watchers_count", "subscribers_count",
+                "forks",
+                "forks_count",
+                "open_issues",
+                "open_issues_count",
+                "size",
+                "stargazers_count",
+                "watchers",
+                "watchers_count",
+                "subscribers_count",
                 "network_count",
                 # Other read-only
-                "fork", "language", "license", "permissions", "disabled", "mirror_url",
+                "fork",
+                "language",
+                "license",
+                "permissions",
+                "disabled",
+                "mirror_url",
                 "default_branch",  # Keep as main
                 "private",  # Set separately via visibility
                 "is_template",  # Don't make new repos templates
@@ -886,7 +972,7 @@ class RepositorySetup:
             }
             GitHubCLI.api(f"repos/{self.config['repo_full']}/pages", method="POST", data=data)
             Logger.success("GitHub Pages enabled")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             Logger.warning("GitHub Pages not enabled (gh-pages branch doesn't exist yet)")
             Logger.info("Pages will be enabled automatically after first docs deployment")
 
@@ -896,7 +982,9 @@ class RepositorySetup:
 
         try:
             # Get CodeQL setup from template
-            template_codeql = GitHubCLI.api(f"repos/{self.TEMPLATE_FULL}/code-scanning/default-setup")
+            template_codeql = GitHubCLI.api(
+                f"repos/{self.TEMPLATE_FULL}/code-scanning/default-setup"
+            )
 
             if template_codeql.get("state") != "configured":
                 Logger.info("CodeQL not configured in template, skipping")
@@ -917,7 +1005,9 @@ class RepositorySetup:
                 method="PATCH",
                 data=codeql_data,
             )
-            Logger.success(f"CodeQL configured with {template_codeql.get('query_suite', 'default')} query suite")
+            Logger.success(
+                f"CodeQL configured with {template_codeql.get('query_suite', 'default')} query suite"
+            )
 
         except subprocess.CalledProcessError as e:
             Logger.warning("CodeQL configuration failed")
@@ -929,11 +1019,19 @@ class RepositorySetup:
     def print_manual_steps(self) -> None:
         """Print manual steps that need to be completed."""
         print()
-        print(f"{Colors.CYAN}╔═══════════════════════════════════════════════════════════╗{Colors.NC}")
-        print(f"{Colors.CYAN}║                  Setup Complete! 🎉                       ║{Colors.NC}")
-        print(f"{Colors.CYAN}╚═══════════════════════════════════════════════════════════╝{Colors.NC}")
+        print(
+            f"{Colors.CYAN}╔═══════════════════════════════════════════════════════════╗{Colors.NC}"
+        )
+        print(
+            f"{Colors.CYAN}║                  Setup Complete! 🎉                       ║{Colors.NC}"
+        )
+        print(
+            f"{Colors.CYAN}╚═══════════════════════════════════════════════════════════╝{Colors.NC}"
+        )
         print()
-        Logger.success(f"Repository created and configured: https://github.com/{self.config['repo_full']}")
+        Logger.success(
+            f"Repository created and configured: https://github.com/{self.config['repo_full']}"
+        )
         print()
 
         Logger.step("Manual steps required:")
@@ -941,10 +1039,14 @@ class RepositorySetup:
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Add PyPI token to repository secrets:")
         print(f"      gh secret set PYPI_TOKEN --repo {self.config['repo_full']}")
         print()
-        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Add TestPyPI token to repository secrets (optional):")
+        print(
+            f"  {Colors.YELLOW}[ ]{Colors.NC} Add TestPyPI token to repository secrets (optional):"
+        )
         print(f"      gh secret set TEST_PYPI_TOKEN --repo {self.config['repo_full']}")
         print()
-        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Add Codecov token to repository secrets (optional):")
+        print(
+            f"  {Colors.YELLOW}[ ]{Colors.NC} Add Codecov token to repository secrets (optional):"
+        )
         print(f"      gh secret set CODECOV_TOKEN --repo {self.config['repo_full']}")
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review and adjust repository settings:")
@@ -959,17 +1061,19 @@ class RepositorySetup:
 
         Logger.step("You're all set!")
         print()
-        repo_path = os.path.join(self.start_dir, self.config['repo_name'])
+        repo_path = os.path.join(self.start_dir, self.config["repo_name"])
         print(f"  {Colors.GREEN}✓{Colors.NC} Repository cloned to: {repo_path}")
         print(f"  {Colors.GREEN}✓{Colors.NC} Dependencies installed")
         print(f"  {Colors.GREEN}✓{Colors.NC} Pre-commit hooks configured")
         print(f"  {Colors.GREEN}✓{Colors.NC} Code formatted and validated")
         print()
-        print(f"  Navigate to your repository and start developing:")
+        print("  Navigate to your repository and start developing:")
         print(f"     cd {self.config['repo_name']}")
         print()
 
-        Logger.info(f"Documentation: https://github.com/{self.config['repo_full']}/blob/main/README.md")
+        Logger.info(
+            f"Documentation: https://github.com/{self.config['repo_full']}/blob/main/README.md"
+        )
         print()
 
     def run(self) -> None:
@@ -1008,6 +1112,7 @@ def main() -> None:
 
         # Show traceback for debugging
         import traceback
+
         print("Full traceback:")
         traceback.print_exc()
         sys.exit(1)
