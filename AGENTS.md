@@ -567,7 +567,7 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
 
 ## Development Workflow
 
-**Rule:** All *code* changes must originate from a GitHub Issue. Documentation updates are exempt from this rule.
+**Rule:** All changes must originate from a GitHub Issue.
 
 ### Issue-Driven Development Flow
 
@@ -590,24 +590,29 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
    - Use `doit commit` for interactive commit message creation with commitizen
 
 4. **Pull Request:** Submit a PR from your branch to `main` (or `develop` if active)
-   - Reference the issue in PR description (e.g., "Closes #42")
+   - Reference the issue in PR description (e.g., "Closes #42" or "Part of #42")
    - PR title must follow conventional commit format
    - Automated checks validate:
      - PR title format
-     - Issue link presence (except docs-only PRs)
+     - Issue link presence
      - PR description completeness
      - Breaking change documentation
 
 5. **PR Merge:** When merging, ensure the merge commit follows the format:
-   - `<type>: <subject> (merges PR #XX, closes #YY)` - when PR has associated issue
-   - `<type>: <subject> (merges PR #XX)` - when PR has no issue (docs-only)
+   - `<type>: <subject> (merges PR #XX, closes #YY)` - when PR completes the issue
+   - `<type>: <subject> (merges PR #XX, part of #YY)` - when PR is part of multi-PR issue
 
 **Examples - Correct Merge Commit Format:**
 ```
 feat: add user authentication (merges PR #18, closes #42)
 fix: handle None values in data processing (merges PR #23, closes #19)
-docs: update installation guide (merges PR #29)
+docs: update installation guide (merges PR #29, closes #25)
 refactor: extract common validation logic (merges PR #31, closes #28)
+
+# Multi-PR issue example:
+feat: add authentication backend (merges PR #18, part of #42)
+feat: add authentication UI (merges PR #22, part of #42)
+feat: add authentication tests (merges PR #24, closes #42)
 ```
 
 **Examples - Incorrect Format:**
@@ -772,11 +777,9 @@ The project uses GitHub YAML issue forms with required fields:
 - Refactoring work
 - Performance improvements
 - Security updates
-
-**Optional for:**
-- Documentation-only changes (can PR directly)
-- Typo fixes in comments
-- Minor README updates
+- Documentation changes
+- Typo fixes
+- README updates
 
 **Before starting work:**
 - Check if an issue already exists
@@ -811,14 +814,14 @@ Same as commit messages: `<type>: <subject>`
 
 **Minimum requirements (enforced by CI):**
 - At least 50 characters
-- Include reference to related issue (except docs-only PRs)
+- Include reference to related issue
 - Describe what changed and why
 - Include testing information
 
 **Complete PR template includes:**
 - **Summary:** 2-3 sentence overview of changes
 - **Changes:** Bullet list of specific changes with file paths
-- **Related Issues:** "Closes #123" or "Fixes #123"
+- **Related Issues:** "Closes #123" (completes issue) or "Part of #123" (multi-PR issue)
 - **Testing:** How changes were tested
 - **Breaking Changes:** Document any breaking changes
 - **Documentation:** List doc updates
@@ -828,7 +831,7 @@ Same as commit messages: `<type>: <subject>`
 All PRs are automatically validated for:
 
 ✅ **PR Title Format** - Must follow conventional commits
-✅ **Issue Link** - Must reference an issue (code changes only)
+✅ **Issue Link** - Must reference an issue
 ✅ **Description Length** - Minimum 50 characters
 ✅ **Breaking Changes** - Detects and requires documentation
 ✅ **Tests** - All tests must pass
@@ -837,12 +840,10 @@ All PRs are automatically validated for:
 ✅ **Type Checking** - Mypy must pass
 ✅ **Format** - Code must be formatted with ruff
 
-**Docs-only PRs are exempt from issue linking requirement.**
-
 ### Code Review Checklist
 
 **Before submitting:**
-- [ ] Created and linked GitHub Issue (for code changes)
+- [ ] Created and linked GitHub Issue
 - [ ] Branch name follows convention (`feat/123-description`)
 - [ ] Self-reviewed code
 - [ ] All CI checks passing locally (`doit check`)
