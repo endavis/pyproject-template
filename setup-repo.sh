@@ -18,7 +18,30 @@
 # Author: Generated from pyproject-template
 # License: MIT
 
-set -euo pipefail
+set -eo pipefail
+
+# Trap to ensure clean exit without killing parent shell
+trap 'exit_handler $?' EXIT
+exit_handler() {
+    local exit_code=$1
+    if [ $exit_code -ne 0 ]; then
+        echo ""
+        log_error "Setup failed with exit code $exit_code"
+        echo ""
+        log_info "For help, run: $0 --help"
+    fi
+}
+
+# Safe exit that doesn't kill parent shell
+safe_exit() {
+    local code=${1:-0}
+    # If running in subshell (piped), don't exit the parent
+    if [ "${BASH_SUBSHELL}" -gt 0 ]; then
+        return $code
+    else
+        exit $code
+    fi
+}
 
 # Colors for output
 RED='\033[0;31m'
@@ -78,7 +101,7 @@ check_requirements() {
     if ! command -v gh &> /dev/null; then
         log_error "GitHub CLI (gh) is not installed"
         echo "  Install from: https://cli.github.com/"
-        exit 1
+        safe_exit 1
     fi
     log_success "GitHub CLI found: $(gh --version | head -n1)"
 
@@ -86,14 +109,17 @@ check_requirements() {
     if ! gh auth status &> /dev/null; then
         log_error "GitHub CLI is not authenticated"
         echo "  Run: gh auth login"
-        exit 1
+        safe_exit 1
     fi
     log_success "GitHub CLI authenticated"
+
+    # Check token type and permissions
+    check_token_permissions
 
     # Check for git
     if ! command -v git &> /dev/null; then
         log_error "Git is not installed"
-        exit 1
+        safe_exit 1
     fi
     log_success "Git found: $(git --version)"
 
@@ -104,6 +130,39 @@ check_requirements() {
     else
         log_success "Python 3 found: $(python3 --version)"
         HAS_PYTHON=true
+    fi
+}
+
+check_token_permissions() {
+    log_info "Checking GitHub token permissions..."
+
+    # Try to determine token type
+    local auth_info
+    auth_info=$(gh auth status 2>&1)
+
+    if echo "$auth_info" | grep -q "github_pat_"; then
+        log_warning "You're using a Personal Access Token (PAT)"
+        echo ""
+        echo "  ${YELLOW}Required permissions for fine-grained PAT:${NC}"
+        echo "  - Repository permissions:"
+        echo "    • Administration: Read and write"
+        echo "    • Contents: Read and write"
+        echo "    • Metadata: Read"
+        echo ""
+        echo "  ${YELLOW}To create/update your PAT:${NC}"
+        echo "  1. Go to: https://github.com/settings/tokens?type=beta"
+        echo "  2. Create new token or edit existing"
+        echo "  3. Select 'All repositories' or specific repos"
+        echo "  4. Add the permissions listed above"
+        echo "  5. Generate token and run: gh auth login"
+        echo ""
+
+        if ! prompt_confirm "Do you have the required permissions configured?" "y"; then
+            log_error "Please configure your PAT with required permissions first"
+            safe_exit 1
+        fi
+    else
+        log_success "Token type appears to be OAuth (recommended)"
     fi
 }
 
@@ -188,26 +247,54 @@ gather_inputs() {
 
     if ! prompt_confirm "Proceed with these settings?" "y"; then
         log_warning "Setup cancelled by user"
-        exit 0
+        safe_exit 0
     fi
 }
 
 create_repository() {
     log_step "Creating repository from template..."
 
-    # Use REST API to create from template (more reliable than gh repo create --template)
+    # Use REST API to create from template
     local create_response
+    local http_code
+
     create_response=$(gh api "repos/$TEMPLATE_FULL/generate" -X POST \
         -f owner="$REPO_OWNER" \
         -f name="$REPO_NAME" \
         -f description="$DESCRIPTION" \
         -F private=$([ "$VISIBILITY" = "private" ] && echo "true" || echo "false") \
         -F include_all_branches=false \
-        2>&1) || {
+        2>&1) && http_code=0 || http_code=$?
+
+    if [ $http_code -ne 0 ]; then
         log_error "Failed to create repository from template"
-        echo "$create_response" | grep -i "error\|message" || echo "$create_response"
-        exit 1
-    }
+        echo ""
+
+        if echo "$create_response" | grep -q "Resource not accessible by personal access token"; then
+            echo "${RED}Permission Error:${NC} Your GitHub token doesn't have the required permissions."
+            echo ""
+            echo "This happens when using a Personal Access Token (PAT) without proper permissions."
+            echo ""
+            echo "${YELLOW}Solution:${NC}"
+            echo ""
+            echo "1. ${CYAN}Re-authenticate with OAuth (recommended):${NC}"
+            echo "   gh auth logout"
+            echo "   gh auth login"
+            echo "   # Choose: GitHub.com → HTTPS → Login with browser"
+            echo ""
+            echo "2. ${CYAN}Or update your fine-grained PAT:${NC}"
+            echo "   https://github.com/settings/tokens?type=beta"
+            echo "   Required permissions:"
+            echo "   - Administration: Read and write"
+            echo "   - Contents: Read and write"
+            echo "   - Metadata: Read"
+            echo ""
+        else
+            echo "$create_response"
+        fi
+
+        safe_exit 1
+    fi
 
     log_success "Repository created: https://github.com/$REPO_FULL"
 
@@ -216,13 +303,13 @@ create_repository() {
 
     # Clone the newly created repository
     log_info "Cloning repository..."
-    if ! gh repo clone "$REPO_FULL" "$REPO_NAME"; then
+    if ! gh repo clone "$REPO_FULL" "$REPO_NAME" 2>/dev/null; then
         log_error "Failed to clone repository"
-        exit 1
+        safe_exit 1
     fi
 
     # Change to repo directory
-    cd "$REPO_NAME" || exit 1
+    cd "$REPO_NAME" || safe_exit 1
     log_success "Repository cloned locally"
 }
 
@@ -460,11 +547,11 @@ main() {
         case $1 in
             -h|--help)
                 show_usage
-                exit 0
+                safe_exit 0
                 ;;
             -v|--version)
                 echo "setup-repo.sh version $VERSION"
-                exit 0
+                safe_exit 0
                 ;;
             --non-interactive)
                 INTERACTIVE=false
@@ -473,7 +560,7 @@ main() {
             *)
                 log_error "Unknown option: $1"
                 show_usage
-                exit 1
+                safe_exit 1
                 ;;
         esac
     done
