@@ -2,6 +2,19 @@
 
 This guide explains how to set up Language Server Protocol (LSP) support for Claude Code, enabling fast code navigation and intelligent code understanding.
 
+## ⚠️ Known Issues
+
+**LSP requests currently hang and do not return responses.** The pyright language server starts successfully but does not respond to LSP protocol requests from Claude Code. This appears to be a bug in the Claude Code LSP integration (released December 2025) or the pyright-lsp plugin.
+
+- ✅ Pyright CLI works perfectly (tested and confirmed)
+- ✅ Configuration is correct and validated
+- ✅ Language server starts successfully
+- ❌ LSP requests hang indefinitely (e.g., `textDocument/definition`)
+
+**Status:** Configuration is ready for when this issue is resolved. For now, use traditional file reading/searching.
+
+If you find that LSP works for you, please report your setup!
+
 ## What is LSP?
 
 LSP (Language Server Protocol) provides Claude with semantic code understanding:
