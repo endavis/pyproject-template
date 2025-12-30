@@ -530,6 +530,14 @@ class RepositorySetup:
                 Logger.warning("Failed to install pre-commit hooks")
                 Logger.info("You can install manually with: uv run pre-commit install")
 
+            # Fix linting issues (including import ordering)
+            Logger.info("Fixing linting issues with ruff...")
+            subprocess.run(
+                ["uv", "run", "ruff", "check", "--fix", "."],
+                capture_output=True,
+                text=True,
+            )
+
             # Format pyproject.toml
             Logger.info("Formatting pyproject.toml...")
             subprocess.run(
