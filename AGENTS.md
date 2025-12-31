@@ -578,6 +578,10 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
      - `feat/42-user-authentication`
      - `fix/123-handle-null-values`
    - Branch naming is enforced by pre-commit hooks
+   - **How to link branch to issue:**
+     - GitHub auto-links branches with issue number in the name
+     - Or use: `gh issue develop <issue-number> --checkout` to create and link branch automatically
+     - Manual linking: Add "Closes #42" or "Part of #42" in PR description
 
 3. **Commit:** Use Conventional Commits format for all commits
    - Format: `<type>: <subject>`
