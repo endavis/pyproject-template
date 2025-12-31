@@ -634,6 +634,26 @@ feat: add authentication tests (merges PR #24, closes #42)
 - **History:** Searchable record of decisions and rationale
 - **Collaboration:** Clear communication about work in progress
 
+### Workflow Edge Cases
+
+**Issue needs to be split during work:**
+- Create new issues for the discovered separate concerns
+- Update original issue to reference the new issues
+- Decide if current PR addresses original issue or one of the new ones
+- Continue work on current branch or create new branches as needed
+
+**Issue is obsolete or duplicate:**
+- Comment on the issue explaining why it's obsolete/duplicate
+- Link to the duplicate issue if applicable
+- Close the issue with appropriate label (duplicate, wontfix, etc.)
+- Delete the branch if no work has been committed
+
+**Work spans multiple sessions:**
+- Update issue with progress comments after each session
+- Document decisions made and approaches tried
+- Push commits regularly to backup work
+- Keep PR description updated with current status
+
 ## Commit Guidelines
 
 ### Commit Message Format
