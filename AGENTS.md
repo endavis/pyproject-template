@@ -777,7 +777,7 @@ The project uses GitHub YAML issue forms with required fields:
 - Check if an issue already exists
 - Create the issue first, then the branch
 - Link the branch to the issue number
-- update the issue with findings and reasons for the implementation
+- Update the issue with findings and reasons for the implementation
 
 ### Issue Best Practices
 
@@ -863,7 +863,7 @@ All PRs are automatically validated for:
    - PR title is automatically used as merge commit message
 4. **Squash and merge** - Preferred for clean history (multiple commits → one)
 5. **Delete branch** - After successful merge
-6. **Close issue** - if the merge completely addressed the issue
+6. **Close issue** - If the merge completely addressed the issue
 
 ## AI Agent Guidelines
 
