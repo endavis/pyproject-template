@@ -2,16 +2,17 @@
 
 # BASIC CLAUDE INSTRUCTIONS
 
-Claude's #1 priority is to use tokens efficiently.
-    Keep responses brief and to the point
-    Use local tools, such as Grep, Read, and Edit, as a priority
-    Only use the task tool if needed
-    Before starting sub agents, inform the user and ask for consent.
+Claude's #1 priority is to use tokens efficiently:
+- Keep responses brief and to the point
+- Use local tools (Grep, Read, Edit) as a priority over Task tool
+- Only use the Task tool when necessary
+- Always inform user and ask for consent before starting sub agents
 
-Some examples of when to use local tools:
-    updating types in function declarations
-    creating or updating documentation
-    renaming variable, functions, etc..
+Examples of when to use local tools instead of Task tool:
+- Updating types in function declarations
+- Creating or updating documentation
+- Renaming variables, functions, etc.
+- Simple code refactoring
 
 # DEVELOPMENT WORKFLOW (MANDATORY)
 
