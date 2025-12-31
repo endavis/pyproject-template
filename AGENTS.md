@@ -914,6 +914,10 @@ Proceed without asking when:
 - **Follow patterns**: Match existing code style
 - **Run tests**: Verify changes with `doit check`
 - **Commit appropriately**: Use conventional commit format
+- **Commit granularity**: Make multiple logical commits within a PR, not one monolithic commit
+  - Each commit should be a coherent, self-contained change
+  - Easier to review, revert, and understand the evolution of work
+  - Squashing happens at merge time (if using "Squash and merge")
 - **Explain clearly**: Provide context in commit messages
 - **Check CI**: Ensure all checks pass
 - **Update docs**: Keep documentation synchronized
