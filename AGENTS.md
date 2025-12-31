@@ -226,7 +226,7 @@ doit licenses      # Check licenses of dependencies (requires security extras)
 doit spell_check   # Check for typos in code and documentation
 ```
 
-### Using New Development Tools
+### Additional Development Tools
 
 **pyproject-fmt - Format pyproject.toml:**
 ```bash
