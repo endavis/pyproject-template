@@ -842,6 +842,27 @@ Same as commit messages: `<type>: <subject>`
 - **Breaking Changes:** Document any breaking changes
 - **Documentation:** List doc updates
 
+### Documentation Requirements
+
+**All PRs must include relevant documentation updates:**
+
+Code changes should be accompanied by corresponding documentation:
+- **Code documentation:** Update docstrings for modified functions/classes
+- **User documentation:** Update README.md, usage guides, or examples for new features
+- **API documentation:** Update docs/api.md for API changes
+- **Developer documentation:** Update AGENTS.md, CONTRIBUTING.md for workflow changes
+- **CHANGELOG.md:** Add entry describing the change (for notable changes)
+
+**When documentation is not required:**
+- Internal refactoring with no behavior change
+- Test-only changes
+- Build/CI configuration changes (unless it affects developer workflow)
+
+**Why this matters:**
+- Outdated documentation is worse than no documentation
+- Documentation is part of the deliverable, not an afterthought
+- Helps reviewers understand intent and impact
+
 ### Automated PR Checks
 
 All PRs are automatically validated for:
