@@ -401,6 +401,10 @@ pip install package-name
 
 ### Creating a Release
 
+**Understanding Tag Destinations:**
+- **Pre-release tags** (e.g., `v1.0.0-alpha.1`, `v1.0.0-beta.2`, `v1.0.0-rc.1`) → TestPyPI only
+- **Stable tags** (e.g., `v1.0.0`, `v2.1.3`) → Both TestPyPI (verification) and PyPI (production)
+
 **Using the automated release tasks (recommended):**
 ```bash
 # Production release (stable v*)
