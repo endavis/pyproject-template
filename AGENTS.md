@@ -20,8 +20,8 @@ This is a modern Python project template using `uv` for package management, `doi
 │   │   ├── testpypi.yml    # Dev releases (prerelease v* tags → TestPyPI)
 │   │   └── release.yml     # Production releases (v* tags → PyPI)
 │   ├── ISSUE_TEMPLATE/     # GitHub issue templates
-│   │   ├── bug_report.md   # Bug report template
-│   │   └── feature_request.md # Feature request template
+│   │   ├── bug_report.yml   # Bug report template
+│   │   └── feature_request.yml # Feature request template
 │   ├── CODEOWNERS          # Code ownership definitions
 │   ├── SECURITY.md         # Security policy
 │   ├── dependabot.yml      # Automated dependency updates
@@ -771,20 +771,13 @@ The project uses GitHub YAML issue forms with required fields:
 
 ### When to Create an Issue
 
-**Always create an issue for:**
-- New features or enhancements
-- Bug fixes
-- Refactoring work
-- Performance improvements
-- Security updates
-- Documentation changes
-- Typo fixes
-- README updates
+**Always create an issue**
 
 **Before starting work:**
 - Check if an issue already exists
 - Create the issue first, then the branch
 - Link the branch to the issue number
+- update the issue with findings and reasons for the implementation
 
 ### Issue Best Practices
 
@@ -870,6 +863,7 @@ All PRs are automatically validated for:
    - PR title is automatically used as merge commit message
 4. **Squash and merge** - Preferred for clean history (multiple commits → one)
 5. **Delete branch** - After successful merge
+6. **Close issue** - if the merge completely addressed the issue
 
 ## AI Agent Guidelines
 
@@ -892,6 +886,7 @@ Proceed without asking when:
 - Following established patterns
 
 ### Best Practices for AI Agents
+- **Before Committing**: Make sure pre-commit hooks are installed
 - **Read before editing**: Always read files first
 - **Follow patterns**: Match existing code style
 - **Run tests**: Verify changes with `doit check`
@@ -900,6 +895,7 @@ Proceed without asking when:
 - **Check CI**: Ensure all checks pass
 - **Update docs**: Keep documentation synchronized
 - **Review guidelines**: See **.github/CONTRIBUTING.md** for detailed development guidelines and standards
+- **Merging**: Do not merge without consent from the user
 
 ## Testing Expectations
 
