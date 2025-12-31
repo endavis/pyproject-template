@@ -116,12 +116,7 @@ This is a modern Python project template using `uv` for package management, `doi
 **Important for AI Agents:** The `version = "0.0.0"` in `pyproject.toml` is a placeholder. The **Single Source of Truth** for the project's version is the Git tag. AI agents should not attempt to manually update the `pyproject.toml` version during regular development. This is handled automatically by the CI/CD release workflow.
 
 ### Cache Management
-All caches stored in `tmp/` and configured via environment variables in `.envrc`:
-- `UV_CACHE_DIR` → `tmp/.uv_cache` (uv package cache)
-- `RUFF_CACHE_DIR` → `tmp/.ruff_cache` (ruff linting cache)
-- `MYPY_CACHE_DIR` → `tmp/.mypy_cache` (mypy type checking cache)
-- `COVERAGE_FILE` → `tmp/.coverage` (coverage data file)
-- `PRE_COMMIT_HOME` → `tmp/.pre-commit` (pre-commit hooks cache)
+All caches stored in `tmp/` and configured via environment variables in `.envrc`. See [Configuration & Environment Variables](#configuration--environment-variables) section for the complete list of cache directories and their environment variables.
 
 ## Configuration & Environment Variables
 
