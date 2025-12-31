@@ -576,11 +576,16 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
    - Auto-labeling helps with project management and triage
 
 2. **Branch:** Create a branch linked to the issue
-   - Format: `issue/<number>-<short-desc>`, `feat/<number>-<desc>`, or `fix/<number>-<desc>`
+   - Format: `<type>/<number>-<description>` where type matches conventional commit types
+   - Allowed types: `issue`, `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `perf`, `hotfix`
+   - Special formats: `release/<version>` (no issue number required)
    - Examples:
      - `issue/42-add-user-auth`
      - `feat/42-user-authentication`
      - `fix/123-handle-null-values`
+     - `docs/41-update-guidelines`
+     - `refactor/55-simplify-parser`
+     - `test/88-add-edge-cases`
    - Branch naming is enforced by pre-commit hooks
    - **How to link branch to issue:**
      - GitHub auto-links branches with issue number in the name
