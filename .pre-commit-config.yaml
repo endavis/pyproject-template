@@ -55,11 +55,17 @@ repos:
         entry: |
           bash -c '
           BRANCH=$(git branch --show-current);
-          if [[ "$BRANCH" != "main" && "$BRANCH" != "develop" && ! "$BRANCH" =~ ^(issue|feat|fix|hotfix)/[0-9]+-[a-z0-9\-]+$ && ! "$BRANCH" =~ ^release/.+ ]]; then
+          if [[ "$BRANCH" != "main" && "$BRANCH" != "develop" && ! "$BRANCH" =~ ^(issue|feat|fix|docs|test|refactor|chore|ci|perf|hotfix)/[0-9]+-[a-z0-9\-]+$ && ! "$BRANCH" =~ ^release/.+ ]]; then
             echo "❌ Branch name must follow convention:";
             echo "   - issue/<num>-<description>";
             echo "   - feat/<num>-<description>";
             echo "   - fix/<num>-<description>";
+            echo "   - docs/<num>-<description>";
+            echo "   - test/<num>-<description>";
+            echo "   - refactor/<num>-<description>";
+            echo "   - chore/<num>-<description>";
+            echo "   - ci/<num>-<description>";
+            echo "   - perf/<num>-<description>";
             echo "   - hotfix/<description>";
             echo "   - release/<version>";
             echo "";
