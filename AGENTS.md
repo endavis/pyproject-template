@@ -20,8 +20,8 @@ This is a modern Python project template using `uv` for package management, `doi
 │   │   ├── testpypi.yml    # Dev releases (prerelease v* tags → TestPyPI)
 │   │   └── release.yml     # Production releases (v* tags → PyPI)
 │   ├── ISSUE_TEMPLATE/     # GitHub issue templates
-│   │   ├── bug_report.md   # Bug report template
-│   │   └── feature_request.md # Feature request template
+│   │   ├── bug_report.yml   # Bug report template
+│   │   └── feature_request.yml # Feature request template
 │   ├── CODEOWNERS          # Code ownership definitions
 │   ├── SECURITY.md         # Security policy
 │   ├── dependabot.yml      # Automated dependency updates
@@ -116,12 +116,7 @@ This is a modern Python project template using `uv` for package management, `doi
 **Important for AI Agents:** The `version = "0.0.0"` in `pyproject.toml` is a placeholder. The **Single Source of Truth** for the project's version is the Git tag. AI agents should not attempt to manually update the `pyproject.toml` version during regular development. This is handled automatically by the CI/CD release workflow.
 
 ### Cache Management
-All caches stored in `tmp/` and configured via environment variables in `.envrc`:
-- `UV_CACHE_DIR` → `tmp/.uv_cache` (uv package cache)
-- `RUFF_CACHE_DIR` → `tmp/.ruff_cache` (ruff linting cache)
-- `MYPY_CACHE_DIR` → `tmp/.mypy_cache` (mypy type checking cache)
-- `COVERAGE_FILE` → `tmp/.coverage` (coverage data file)
-- `PRE_COMMIT_HOME` → `tmp/.pre-commit` (pre-commit hooks cache)
+All caches stored in `tmp/` and configured via environment variables in `.envrc`. See [Configuration & Environment Variables](#configuration--environment-variables) section for the complete list of cache directories and their environment variables.
 
 ## Configuration & Environment Variables
 
@@ -231,7 +226,7 @@ doit licenses      # Check licenses of dependencies (requires security extras)
 doit spell_check   # Check for typos in code and documentation
 ```
 
-### Using New Development Tools
+### Additional Development Tools
 
 **pyproject-fmt - Format pyproject.toml:**
 ```bash
@@ -405,6 +400,10 @@ pip install package-name
 ```
 
 ### Creating a Release
+
+**Understanding Tag Destinations:**
+- **Pre-release tags** (e.g., `v1.0.0-alpha.1`, `v1.0.0-beta.2`, `v1.0.0-rc.1`) → TestPyPI only
+- **Stable tags** (e.g., `v1.0.0`, `v2.1.3`) → Both TestPyPI (verification) and PyPI (production)
 
 **Using the automated release tasks (recommended):**
 ```bash
@@ -583,6 +582,10 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
      - `feat/42-user-authentication`
      - `fix/123-handle-null-values`
    - Branch naming is enforced by pre-commit hooks
+   - **How to link branch to issue:**
+     - GitHub auto-links branches with issue number in the name
+     - Or use: `gh issue develop <issue-number> --checkout` to create and link branch automatically
+     - Manual linking: Add "Closes #42" or "Part of #42" in PR description
 
 3. **Commit:** Use Conventional Commits format for all commits
    - Format: `<type>: <subject>`
@@ -630,6 +633,26 @@ feat: add authentication tests (merges PR #24, closes #42)
 - **Planning:** Better project management and prioritization
 - **History:** Searchable record of decisions and rationale
 - **Collaboration:** Clear communication about work in progress
+
+### Workflow Edge Cases
+
+**Issue needs to be split during work:**
+- Create new issues for the discovered separate concerns
+- Update original issue to reference the new issues
+- Decide if current PR addresses original issue or one of the new ones
+- Continue work on current branch or create new branches as needed
+
+**Issue is obsolete or duplicate:**
+- Comment on the issue explaining why it's obsolete/duplicate
+- Link to the duplicate issue if applicable
+- Close the issue with appropriate label (duplicate, wontfix, etc.)
+- Delete the branch if no work has been committed
+
+**Work spans multiple sessions:**
+- Update issue with progress comments after each session
+- Document decisions made and approaches tried
+- Push commits regularly to backup work
+- Keep PR description updated with current status
 
 ## Commit Guidelines
 
@@ -771,20 +794,13 @@ The project uses GitHub YAML issue forms with required fields:
 
 ### When to Create an Issue
 
-**Always create an issue for:**
-- New features or enhancements
-- Bug fixes
-- Refactoring work
-- Performance improvements
-- Security updates
-- Documentation changes
-- Typo fixes
-- README updates
+**Always create an issue**
 
 **Before starting work:**
 - Check if an issue already exists
 - Create the issue first, then the branch
 - Link the branch to the issue number
+- Update the issue with findings and reasons for the implementation
 
 ### Issue Best Practices
 
@@ -825,6 +841,27 @@ Same as commit messages: `<type>: <subject>`
 - **Testing:** How changes were tested
 - **Breaking Changes:** Document any breaking changes
 - **Documentation:** List doc updates
+
+### Documentation Requirements
+
+**All PRs must include relevant documentation updates:**
+
+Code changes should be accompanied by corresponding documentation:
+- **Code documentation:** Update docstrings for modified functions/classes
+- **User documentation:** Update README.md, usage guides, or examples for new features
+- **API documentation:** Update docs/api.md for API changes
+- **Developer documentation:** Update AGENTS.md, CONTRIBUTING.md for workflow changes
+- **CHANGELOG.md:** Add entry describing the change (for notable changes)
+
+**When documentation is not required:**
+- Internal refactoring with no behavior change
+- Test-only changes
+- Build/CI configuration changes (unless it affects developer workflow)
+
+**Why this matters:**
+- Outdated documentation is worse than no documentation
+- Documentation is part of the deliverable, not an afterthought
+- Helps reviewers understand intent and impact
 
 ### Automated PR Checks
 
@@ -870,6 +907,7 @@ All PRs are automatically validated for:
    - PR title is automatically used as merge commit message
 4. **Squash and merge** - Preferred for clean history (multiple commits → one)
 5. **Delete branch** - After successful merge
+6. **Close issue** - If the merge completely addressed the issue
 
 ## AI Agent Guidelines
 
@@ -892,14 +930,20 @@ Proceed without asking when:
 - Following established patterns
 
 ### Best Practices for AI Agents
+- **Before Committing**: Make sure pre-commit hooks are installed
 - **Read before editing**: Always read files first
 - **Follow patterns**: Match existing code style
 - **Run tests**: Verify changes with `doit check`
 - **Commit appropriately**: Use conventional commit format
+- **Commit granularity**: Make multiple logical commits within a PR, not one monolithic commit
+  - Each commit should be a coherent, self-contained change
+  - Easier to review, revert, and understand the evolution of work
+  - Squashing happens at merge time (if using "Squash and merge")
 - **Explain clearly**: Provide context in commit messages
 - **Check CI**: Ensure all checks pass
 - **Update docs**: Keep documentation synchronized
 - **Review guidelines**: See **.github/CONTRIBUTING.md** for detailed development guidelines and standards
+- **Merging**: Do not merge without consent from the user
 
 ## Testing Expectations
 
