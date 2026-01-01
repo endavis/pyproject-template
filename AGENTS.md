@@ -320,6 +320,23 @@ Update relevant docs with code changes:
 - **Update docs:** Keep documentation synchronized
 - **No merging:** Don't merge without user consent
 
+### Workflow-Specific Guidance
+
+**Issue Creation:**
+- AI agents should create issues when they don't exist (use `gh issue create`)
+- Template selection: bug_report.yml for bugs, feature_request.yml for features, refactor.yml for refactoring
+- Fill all required fields completely
+
+**Commit Process:**
+- Use `doit commit` for interactive commit creation
+- If `doit commit` fails (non-interactive environment), use `git commit -m` with proper format
+- If pre-commit hooks modify files, review changes and commit again with `git commit --amend` or new commit
+- Each commit should be one logical change (e.g., separate: implementation, tests, documentation)
+
+**Releases:**
+- Never run `doit release` or `doit release_dev` without explicit user request
+- Releases are production operations requiring user authorization
+
 ## Project Documentation
 
 **Core docs:** README.md, CHANGELOG.md, AGENTS.md, AI_SETUP.md, LICENSE
