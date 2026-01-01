@@ -338,13 +338,27 @@ Update relevant docs with code changes:
 - Never run `doit release` or `doit release_dev` without explicit user request
 - Releases are production operations requiring user authorization
 
-## Project Documentation
+## Documentation & References
 
-**Core docs:** README.md, CHANGELOG.md, AGENTS.md, AI_SETUP.md, LICENSE
-**Contributing:** .github/CONTRIBUTING.md, CODE_OF_CONDUCT.md, SECURITY.md
-**Tasks:** See `doit list` for all available development tasks
-**User docs:** docs/ directory (index.md, installation.md, usage.md, api.md, extensions.md, migration.md)
-**Examples:** examples/ directory (basic_usage.py, advanced_usage.py, cli_usage.py)
+**AI agents should consult documentation before asking user:**
+
+**Primary documentation location:** All detailed project documentation lives in `/docs`
+
+**Documentation by question type:**
+- Setup/installation questions → `docs/installation.md`, `README.md`
+- Usage patterns and examples → `docs/usage.md`, `examples/`
+- API details and references → `docs/api.md`
+- Optional tools and extensions → `docs/extensions.md`
+- Migration guides → `docs/migration.md`
+- Contributing workflow details → `.github/CONTRIBUTING.md`
+- Available tasks and commands → `doit list`
+- Security policy → `.github/SECURITY.md`
+
+**Documentation structure:**
+- `/docs` - User and developer documentation (installation, usage, API, extensions, migration)
+- `/.github` - Contributing guidelines, security policy, code of conduct
+- `/examples` - Runnable code examples (basic_usage.py, advanced_usage.py, cli_usage.py)
+- Root - README.md, CHANGELOG.md, AGENTS.md, AI_SETUP.md, LICENSE
 
 ## Quick Reference
 
