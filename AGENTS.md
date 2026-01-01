@@ -272,6 +272,26 @@ Update relevant docs with code changes:
 
 ## AI Agent Guidelines
 
+### Token Efficiency
+
+**Maximize value, minimize waste:**
+- **Keep responses brief** - Be concise and to the point
+- **Use local tools first** - Prefer Read, Grep, Edit over spawning sub-agents
+- **Avoid unnecessary exploration** - Don't read files speculatively; read what you need
+- **Batch operations** - Make parallel tool calls when operations are independent
+- **Reference docs** - Link to existing documentation instead of explaining everything
+
+**When to use Task tool (sub-agents):**
+- Complex multi-step workflows requiring planning
+- Open-ended codebase exploration (use Explore agent)
+- Specialized analysis (code review, PR analysis)
+
+**When to use local tools:**
+- Reading specific files
+- Searching for known patterns
+- Editing existing code
+- Simple refactoring
+
 ### Decision Framework: Always / Ask / Never
 
 **✅ ALWAYS (Proceed Autonomously)**
