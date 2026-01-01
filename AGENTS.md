@@ -302,6 +302,8 @@ Update relevant docs with code changes:
 - Breaking changes that impact users
 - Ambiguous or incomplete requirements
 - Significant trade-offs between approaches
+- Expanding scope beyond the original issue
+- Adding new dependencies to the project
 
 ### When to Proceed Autonomously
 - Clear codebase conventions exist
@@ -316,10 +318,12 @@ Update relevant docs with code changes:
 - **Before committing:** Ensure pre-commit hooks installed
 - **Read first:** Always read files before editing
 - **Follow patterns:** Match existing code style
+- **Modular code:** Prefer small, focused files over large monolithic ones. Create new files when they improve clarity and organization
+- **Maintain documentation:** Proactively update docs when code changes. Documentation gets stale quickly - keep it in sync with implementation
 - **Test changes:** Run `doit check`
 - **Commit format:** Use conventional commits
 - **Commit granularity:** Multiple logical commits per PR, not one monolithic commit
-- **Update docs:** Keep documentation synchronized
+- **Stay focused:** Address the issue at hand. Don't expand scope without asking user
 - **No merging:** Don't merge without user consent
 
 ### Workflow-Specific Guidance
@@ -336,6 +340,13 @@ Update relevant docs with code changes:
 - Use `doit pre_commit_run` only to check all files or verify hooks before committing
 - If pre-commit hooks modify files, review changes and commit again with `git commit --amend` or new commit
 - Each commit should be one logical change (e.g., separate: implementation, tests, documentation)
+
+**Dependency Management:**
+- Adding dependencies requires updating `pyproject.toml` under `[project.dependencies]` or `[project.optional-dependencies]`
+- Ask user before adding new dependencies - discuss necessity and alternatives
+- Prefer standard library or existing dependencies when possible
+- After adding dependencies, run `uv sync` to update lockfile
+- Document why new dependencies are needed in PR description
 
 **Releases:**
 - Never run `doit release` or `doit release_dev` without explicit user request
