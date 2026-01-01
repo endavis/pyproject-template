@@ -309,12 +309,9 @@ Update relevant docs with code changes:
 - **Read first:** Always read files before editing
 - **Follow patterns:** Match existing code style
 - **Modular code:** Prefer small, focused files over large monolithic ones. Create new files when they improve clarity and organization
-- **Maintain documentation:** Proactively update docs when code changes. Documentation gets stale quickly - keep it in sync with implementation
 - **Test changes:** Run `doit check`
 - **Commit format:** Use conventional commits
 - **Commit granularity:** Multiple logical commits per PR, not one monolithic commit
-- **Stay focused:** Address the issue at hand. Don't expand scope without asking user
-- **No merging:** Don't merge without user consent
 
 ### Workflow-Specific Guidance
 
