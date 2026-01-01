@@ -152,6 +152,7 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
 
 ### General Principles
 - **Read before editing** - Always read files before modifying
+- **Use existing libraries** - Don't reinvent the wheel. Use mature, well-maintained Python libraries when they fit the use case
 - **Backward compatibility** - Don't break public APIs without major version bump
 - **Early returns** - Prefer over deep nesting
 - **Explicit over implicit** - Make intentions clear
