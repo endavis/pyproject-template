@@ -311,6 +311,7 @@ Update relevant docs with code changes:
 - Following established patterns
 
 ### Best Practices
+- **Use doit tasks:** Always use existing doit tasks instead of manual commands (e.g., `doit check` not `uv run ruff check && uv run mypy`). Check `doit list` for available tasks
 - **Before committing:** Ensure pre-commit hooks installed
 - **Read first:** Always read files before editing
 - **Follow patterns:** Match existing code style
