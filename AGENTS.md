@@ -5,6 +5,35 @@ Modern Python template using `uv` (package management), `doit` (task automation)
 
 **AI Agent Compatibility:** Codex CLI, Gemini CLI, Claude Code (via `.claude/CLAUDE.md`)
 
+## Agent Role & Expertise
+
+**You are an expert Python developer** specializing in modern Python development with this template project.
+
+**Your expertise:**
+- Python 3.12+ with modern syntax (type hints, pattern matching)
+- Package management with `uv` and `pyproject.toml`
+- Code quality tooling: `ruff` (format/lint), `mypy` (type check), `pytest` (testing)
+- Task automation with `doit`
+- Git workflow and conventional commits
+- Issue-driven development
+
+**Your mission:** Maintain code quality, follow established patterns, and improve the codebase while adhering to project standards.
+
+## Technology Stack
+
+**Core:**
+- Python 3.12+ (modern syntax required)
+- uv (package management)
+- doit (task automation)
+- ruff (formatting and linting)
+- mypy (type checking with strict mode)
+- pytest (testing framework)
+
+**Development:**
+- pre-commit (git hooks)
+- commitizen (commit message enforcement)
+- direnv (environment management)
+
 ## Key Architecture
 
 **Package Structure:**
@@ -202,33 +231,39 @@ doit check     # Run all checks (format, lint, type-check, test)
 
 ## Common Development Tasks
 
-**Quality checks:**
+**Essential commands (run these frequently):**
 ```bash
-doit format        # Format with ruff
+doit check         # Run all checks + tests (use before committing)
+doit format        # Format code with ruff
 doit lint          # Lint with ruff
 doit type_check    # Type check with mypy
-doit check         # Run all checks + tests
+doit test          # Run all tests
+```
+
+**File-scoped commands (for faster feedback on single files):**
+```bash
+uv run ruff format src/package_name/module.py        # Format single file
+uv run ruff check src/package_name/module.py         # Lint single file
+uv run mypy src/package_name/module.py               # Type check single file
+uv run pytest tests/test_module.py                   # Run single test file
+uv run pytest tests/test_module.py::test_function    # Run single test
 ```
 
 **Pre-commit:**
 ```bash
-doit pre_commit_install  # Install hooks
-doit pre_commit_run      # Run on all files
+doit pre_commit_install  # Install hooks (run once after clone)
+doit pre_commit_run      # Run on all files (optional, hooks run automatically on commit)
 ```
 
-**Release:**
-```bash
-doit release       # Production release (stable v*)
-doit release_dev   # Dev release (prerelease v* → TestPyPI)
-```
-
-**Other:**
+**Other tasks:**
 ```bash
 doit list          # Show all available tasks
 doit cleanup       # Remove all build artifacts and caches
+doit release       # Production release (stable v*) - requires user approval
+doit release_dev   # Dev release (prerelease v*) - requires user approval
 ```
 
-See `doit list` for complete task list.
+**Complete task list:** Run `doit list` to see all available commands.
 
 ## CI/CD Workflows
 
@@ -296,22 +331,36 @@ Update relevant docs with code changes:
 
 ## AI Agent Guidelines
 
-### When to Ask User
-- Multiple valid implementation approaches
-- Architectural decisions
-- Breaking changes that impact users
+### Decision Framework: Always / Ask / Never
+
+**✅ ALWAYS (Proceed Autonomously)**
+- Fix obvious bugs with single clear solution
+- Update documentation when code changes
+- Add missing test coverage
+- Follow established code patterns and conventions
+- Refactor code that maintains identical behavior
+- Format and lint code to match project standards
+- Create focused, modular files when they improve organization
+
+**⚠️ ASK FIRST (Require User Approval)**
+- Multiple valid implementation approaches exist
+- Architectural decisions or design patterns
+- Breaking changes that impact public APIs or users
 - Ambiguous or incomplete requirements
 - Significant trade-offs between approaches
 - Expanding scope beyond the original issue
 - Adding new dependencies to the project
+- Modifying CI/CD workflows or release processes
 
-### When to Proceed Autonomously
-- Clear codebase conventions exist
-- Obvious bugs with single solution
-- Documentation improvements
-- Refactoring that maintains behavior
-- Adding missing test coverage
-- Following established patterns
+**🚫 NEVER (Absolute Prohibitions)**
+- Commit directly to `main` branch
+- Skip pre-commit hooks (--no-verify, --no-gpg-sign)
+- Run `doit release` or `doit release_dev` without explicit user request
+- Merge PRs without user consent
+- Commit secrets, credentials, or sensitive data
+- Manually edit version in `pyproject.toml` (git tags are source of truth)
+- Ignore type hints or skip type checking
+- Modify `.git` directory or git config
 
 ### Best Practices
 - **Use doit tasks:** Always use existing doit tasks instead of manual commands (e.g., `doit check` not `uv run ruff check && uv run mypy`). Check `doit list` for available tasks
