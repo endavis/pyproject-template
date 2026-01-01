@@ -331,6 +331,8 @@ Update relevant docs with code changes:
 **Commit Process:**
 - Use `doit commit` for interactive commit creation
 - If `doit commit` fails (non-interactive environment), use `git commit -m` with proper format
+- Pre-commit hooks run automatically on `git commit` - no need to run `doit pre_commit_run` first
+- Use `doit pre_commit_run` only to check all files or verify hooks before committing
 - If pre-commit hooks modify files, review changes and commit again with `git commit --amend` or new commit
 - Each commit should be one logical change (e.g., separate: implementation, tests, documentation)
 
