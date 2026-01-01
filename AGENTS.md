@@ -54,83 +54,24 @@ Modern Python template using `uv` (package management), `doit` (task automation)
 
 **Rule:** All changes must originate from a GitHub Issue.
 
-### Workflow Steps
-1. **Issue:** Ensure GitHub Issue exists for the task
-   - Use YAML issue forms (bug_report.yml, feature_request.yml, refactor.yml)
-   - Required fields ensure complete information
+**Quick Reference:**
+1. **Issue** → Ensure issue exists (use YAML issue forms)
+2. **Branch** → `<type>/<number>-<description>` (e.g., `feat/42-user-auth`)
+3. **Commit** → `<type>: <subject>` (use `doit commit`)
+4. **PR** → Title follows commit format, references issue
+5. **Merge** → `<type>: <subject> (merges PR #XX, closes #YY)`
 
-2. **Branch:** Create branch linked to issue
-   - Format: `<type>/<number>-<description>`
-   - Types: `issue`, `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `perf`, `hotfix`
-   - Examples: `feat/42-user-auth`, `fix/123-handle-nulls`
-   - Link: Use `gh issue develop <issue-number> --checkout` or add issue number in branch name
-
-3. **Commit:** Use Conventional Commits format
-   - Format: `<type>: <subject>`
-   - Enforced by pre-commit hooks and CI
-   - Use `doit commit` for interactive commit creation
-
-4. **Pull Request:** Submit PR from branch to `main`
-   - Reference issue: "Closes #42" or "Part of #42"
-   - PR title must follow conventional commit format
-   - PR title becomes merge commit message
-
-5. **Merge:** Format must include PR and issue numbers
-   - `<type>: <subject> (merges PR #XX, closes #YY)` - when PR completes issue
-   - `<type>: <subject> (merges PR #XX, part of #YY)` - when PR is part of multi-PR issue
-
-**Examples - Correct Merge Format:**
-```
-feat: add user authentication (merges PR #18, closes #42)
-fix: handle None values (merges PR #23, closes #19)
-```
-
-**Examples - Incorrect:**
-```
-❌ Merge pull request #18 from user/branch
-❌ feat: Add Feature (capitalized)
-❌ added feature (missing type)
-❌ feat: add feature (missing PR reference)
-```
-
-### Why Issue-Driven Development?
-- **Traceability:** Every change linked to documented need
-- **Context:** Issues capture the "why"
-- **History:** Searchable record of decisions
+**Detailed workflow, examples, and edge cases:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#development-workflow)
 
 ## Commit Guidelines
 
-### Format
-```
-<type>: <subject>
-
-[optional body]
-
-[optional footer]
-```
+**Format:** `<type>: <subject>` (lowercase, imperative mood, concise)
 
 **Types:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`
 
-**Rules:**
-- Subject: lowercase, concise (no period at end)
-- Imperative mood: "add feature" not "added feature"
-- One commit per logical change
-- Clear, descriptive messages
+**Breaking Changes:** Add `BREAKING CHANGE:` in footer, document in PR, update CHANGELOG.md
 
-### Breaking Changes
-**What qualifies:**
-- Changes to public function/method signatures
-- Removal of public APIs
-- CLI command/option changes
-- Configuration format changes
-- Default behavior changes
-- Exception type changes
-
-**How to handle:**
-1. Add `BREAKING CHANGE:` in commit footer with migration info
-2. Document in PR description with before/after examples
-3. Update CHANGELOG.md
-4. Requires major version bump (handled by commitizen)
+**Details:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#commit-guidelines)
 
 ## Code Style & Conventions
 
