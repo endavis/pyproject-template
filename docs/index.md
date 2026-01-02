@@ -46,9 +46,9 @@ print(message)  # Output: Hello, Python!
 
 ### For Contributors
 
-- **[Contributing Guide](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)** - How to contribute
+- **[Contributing Guide](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)** - Development workflow, coding standards, and best practices (**source of truth**)
 - **[Code of Conduct](https://github.com/username/package_name/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
-- **[Development Guide](https://github.com/username/package_name/blob/main/AGENTS.md)** - Development setup and standards
+- **[AI Agent Guide](https://github.com/username/package_name/blob/main/AGENTS.md)** - Quick reference for AI coding assistants
 
 ## Support
 
