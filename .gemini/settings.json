@@ -32,5 +32,8 @@
   "ui": {
     "autoApprove": false,
     "showToolCalls": true
+  },
+  "context": {
+    "files": ["AGENTS.md", "GEMINI.md"]
   }
 }
