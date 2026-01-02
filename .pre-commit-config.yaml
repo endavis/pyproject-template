@@ -75,3 +75,28 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # Prevent direct commits to main branch
+      - id: no-commit-to-main
+        name: Prevent commits to main branch
+        entry: |
+          bash -c '
+          BRANCH=$(git branch --show-current);
+          if [[ "$BRANCH" == "main" ]]; then
+            echo "❌ ERROR: Direct commits to main branch are not allowed!";
+            echo "";
+            echo "The mandatory workflow is: Issue → Branch → Commit → PR → Merge";
+            echo "";
+            echo "Please follow these steps:";
+            echo "  1. Ensure a GitHub issue exists for your change";
+            echo "  2. Create a feature branch: git checkout -b <type>/<issue#>-<description>";
+            echo "  3. Make your changes and commit on the feature branch";
+            echo "  4. Push and create a Pull Request";
+            echo "  5. Merge the PR after review and CI checks pass";
+            echo "";
+            echo "See AGENTS.md and .github/CONTRIBUTING.md for details.";
+            exit 1;
+          fi'
+        language: system
+        pass_filenames: false
+        always_run: true
