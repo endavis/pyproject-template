@@ -14,6 +14,35 @@ Examples of when to use local tools instead of Task tool:
 - Renaming variables, functions, etc.
 - Simple code refactoring
 
+# TODOWRITE USAGE (MANDATORY)
+
+When creating new code (functions, modules, commands, features), Claude MUST use TodoWrite to plan ALL steps:
+
+**Required todo items for any code task:**
+1. Implementation file(s)
+2. Test file(s) - NEVER skip this
+3. Run `doit check` to verify
+4. Manual verification/testing
+
+**Why this is mandatory:**
+- Removes judgment calls about whether to write tests
+- Makes testing systematic, not optional
+- Ensures complete implementation (code + tests + validation)
+- Provides visibility to user about progress
+
+**Examples of when to use TodoWrite:**
+- Creating new Python modules or functions
+- Adding CLI commands or API endpoints
+- Implementing new features or bug fixes
+- Any task involving writing new Python code
+
+**Example todo list for "create new CLI command":**
+- [ ] Create src/package_name/cli.py
+- [ ] Create tests/test_cli.py with comprehensive tests
+- [ ] Update pyproject.toml (if needed)
+- [ ] Run doit check to verify all tests pass
+- [ ] Test command manually
+
 # DEVELOPMENT WORKFLOW (MANDATORY)
 
 Before making ANY changes, Claude MUST:

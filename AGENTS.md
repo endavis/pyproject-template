@@ -60,58 +60,24 @@ Modern Python template using `uv` (package management), `doit` (task automation)
 
 ## Commit Guidelines
 
-**Format:** `<type>: <subject>` (lowercase, imperative mood, concise)
+**Quick Reference:**
+- **Format:** `<type>: <subject>` (lowercase, imperative mood)
+- **Types:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`
+- **Breaking Changes:** Add `BREAKING CHANGE:` in footer
 
-**Types:** `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`
-
-**Breaking Changes:** Add `BREAKING CHANGE:` in footer, document in PR, update CHANGELOG.md
-
-**Details:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#commit-guidelines)
+**Complete format, examples, and breaking change handling:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#commit-guidelines)
 
 ## Code Style & Conventions
 
-### Python Style
-- **Python 3.12+** - Use modern syntax
-- **Type hints required** for all public functions/methods
-  - Modern syntax: `list[str]`, `dict[str, Any]`, `X | None`
-  - Avoid legacy: `typing.List`, `typing.Optional`
+**Quick Reference:**
+- **Python 3.12+** - Modern syntax (type hints: `list[str]`, `dict[str, Any]`, `X | None`)
+- **Type hints required** - All public functions/methods
 - **Line length:** Max 100 characters
-- **Docstrings:** Google-style, required for public APIs
-- **Naming:**
-  - `snake_case`: functions, variables, modules
-  - `PascalCase`: classes
-  - `UPPER_CASE`: constants
+- **Docstrings:** Google-style for public APIs
+- **Naming:** `snake_case` (functions/variables), `PascalCase` (classes), `UPPER_CASE` (constants)
+- **Imports:** Three groups (stdlib, third-party, local) separated by blank lines
 
-### Import Organization
-Three groups separated by blank lines:
-```python
-# Standard library
-import os
-from pathlib import Path
-
-# Third-party
-import click
-
-# Local
-from package_name import __version__
-```
-
-### Docstring Format (Google-style)
-```python
-def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str, Any]:
-    """Process input data and return results.
-
-    Args:
-        data: List of data dictionaries to process
-        validate: Whether to validate data before processing
-
-    Returns:
-        Dictionary containing processed results
-
-    Raises:
-        ValueError: If data validation fails
-    """
-```
+**Detailed style guide, type hints, docstring examples, and import organization:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#coding-standards)
 
 ## Coding Standards
 
@@ -145,25 +111,19 @@ def process_data(data: list[dict[str, Any]], validate: bool = True) -> dict[str,
 
 ## Testing Expectations
 
-### Requirements
+**Requirements:**
 - Maintain ≥80% test coverage (enforced in CI)
-- Tests in `tests/` directory
-- Follow pytest conventions: `test_*.py`, `test_*` functions
+- Tests in `tests/` directory, follow pytest conventions
 - Run `doit check` before committing
 
-### Best Practices
-- Test all public APIs
-- Use fixtures for common setup
-- Parametrize tests for multiple input cases
-- Mock external dependencies
-- Test edge cases and error conditions
-
-### Commands
+**Commands:**
 ```bash
 doit test      # Run all tests
 doit coverage  # Run with coverage report
 doit check     # Run all checks (format, lint, type-check, test)
 ```
+
+**Testing best practices, test structure, and examples:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#testing-guidelines)
 
 ## Common Development Tasks
 
@@ -224,46 +184,27 @@ Use `doit release` or `doit release_dev` (recommended).
 
 ## Pull Request Requirements
 
-### PR Title
-- Must follow conventional commit format: `<type>: <subject>`
-- Becomes the merge commit message
-- Examples: ✅ `feat: add validators`, ❌ `Add validators`
+**PR Title:** Must follow conventional commit format: `<type>: <subject>` (becomes merge commit message)
 
-### PR Description (enforced by CI)
+**PR Description (enforced by CI):**
 - Minimum 50 characters
 - Reference related issue ("Closes #123" or "Part of #123")
 - Describe what changed and why
-- Include testing information
 
-### Automated Checks
-✅ PR title format (conventional commits)
-✅ Issue link present
-✅ Description length ≥50 chars
-✅ Breaking changes documented
-✅ All tests pass
-✅ Coverage ≥80%
-✅ Linting passes
-✅ Type checking passes
-✅ Format check passes
+**Automated Checks:**
+✅ PR title format, issue link, description length
+✅ All tests pass, coverage ≥80%
+✅ Linting, type checking, format check pass
 
-### Documentation Requirements
-Update relevant docs with code changes:
-- **Code docs:** Docstrings for modified functions/classes
-- **User docs:** README.md, usage guides for new features
-- **API docs:** docs/api.md for API changes
-- **Developer docs:** AGENTS.md, CONTRIBUTING.md for workflow changes
-- **CHANGELOG.md:** Entry for notable changes
-
-**Skip docs for:** Internal refactoring, test-only changes, build/CI changes (unless affecting workflow)
-
-### Code Review Checklist
-**Before submitting:**
+**Before Submitting:**
 - [ ] Issue created and linked
 - [ ] Branch name follows convention
 - [ ] `doit check` passes locally
 - [ ] Tests added/updated (≥80% coverage)
-- [ ] Docs updated
+- [ ] Docs updated (if applicable)
 - [ ] Breaking changes documented (if applicable)
+
+**Complete PR process, documentation requirements, and review checklist:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#pull-request-process)
 
 ## AI Agent Guidelines
 
@@ -292,7 +233,8 @@ Update relevant docs with code changes:
 **✅ ALWAYS (Proceed Autonomously)**
 - Fix obvious bugs with single clear solution
 - Update documentation when code changes
-- Add missing test coverage
+- **Write tests when creating new code** (implementation + tests in same session, never defer)
+- Add missing test coverage for existing code
 - Follow established code patterns and conventions
 - Refactor code that maintains identical behavior
 - Format and lint code to match project standards
@@ -317,6 +259,26 @@ Update relevant docs with code changes:
 - Manually edit version in `pyproject.toml` (git tags are source of truth)
 - Ignore type hints or skip type checking
 - Modify `.git` directory or git config
+
+### Creating New Code (Systematic Process)
+
+**When creating new Python code, follow this process:**
+
+1. **Plan all steps** - List implementation + tests + validation (use planning tools if available)
+2. **Create implementation file(s)** - Write the actual code
+3. **Create test file(s)** - NEVER skip; tests are mandatory, not optional
+4. **Run `doit check`** - Verify formatting, linting, type checking, and tests all pass
+5. **Manual verification** - Test the functionality works as expected
+
+**Example: Creating a new CLI command**
+- Step 1: Plan → implementation, tests, config, verification
+- Step 2: Create `src/package_name/cli.py`
+- Step 3: Create `tests/test_cli.py` with comprehensive tests
+- Step 4: Update `pyproject.toml` (if adding entry points)
+- Step 5: Run `doit check` - must pass
+- Step 6: Test command manually (e.g., `package-cli --help`)
+
+**This is systematic, not discretionary.** Tests are created in the same work session as implementation code, never deferred or skipped.
 
 ### Best Practices
 - **Use doit tasks:** Always use existing doit tasks instead of manual commands (e.g., `doit check` not `uv run ruff check && uv run mypy`). Check `doit list` for available tasks
