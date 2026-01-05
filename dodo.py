@@ -194,9 +194,11 @@ def task_format_check() -> dict[str, Any]:
 
 
 def task_type_check() -> dict[str, Any]:
-    """Run mypy type checking."""
+    """Run mypy type checking with strict mode (matches pre-commit hooks)."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mypy src/"],
+        "actions": [
+            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mypy --strict --ignore-missing-imports src/"
+        ],
         "title": title_with_actions,
     }
 
