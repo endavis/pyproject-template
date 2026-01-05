@@ -208,6 +208,10 @@ Use `doit release` or `doit release_dev` (recommended).
 
 ## AI Agent Guidelines
 
+**🚨 HIGH PRIORITY: AI agents must NEVER make assumptions or judgment calls about when rules apply. If the documentation does not explicitly state something, or if you are unsure, you MUST ask the user.**
+
+**🚨 HIGH PRIORITY: "NO EXCEPTIONS" means NO EXCEPTIONS. Do not evaluate whether a change is "small enough," "simple enough," or "obvious enough" to warrant different treatment. Follow the documented process or ask the user.**
+
 ### Token Efficiency
 
 **Maximize value, minimize waste:**
@@ -260,6 +264,29 @@ Use `doit release` or `doit release_dev` (recommended).
 - Ignore type hints or skip type checking
 - Modify `.git` directory or git config
 
+### Examples: Prohibited vs. Correct Reasoning
+
+**Understanding what constitutes an "assumption" or "judgment call":**
+
+**❌ PROHIBITED - These are assumption-based judgment calls:**
+- "This change is small/trivial, so I don't need to follow the full workflow"
+- "This is just a typo fix, so I can commit directly to main"
+- "GitHub will automatically close the issue with 'Closes #XX' syntax, so I don't need to verify"
+- "The user probably wants me to proceed without asking"
+- "This seems obvious, so I'll skip the issue creation step"
+- "It's just documentation, so tests aren't needed"
+- "I'll commit now and create the issue afterward"
+
+**✅ CORRECT - These follow documented rules:**
+- "The workflow says Issue → Branch → Commit → PR → Merge, so I will follow every step regardless of change size"
+- "I'm not sure if I should close the issue manually, so I will ask the user"
+- "The documentation says 'NEVER commit to main' with no exceptions, so I will create a branch"
+- "AGENTS.md says to create tests when writing new code, so I will create them even though this is simple"
+- "I don't see explicit documentation about this case, so I will ask the user before proceeding"
+- "The rule says 'NO EXCEPTIONS' so I will not evaluate if this qualifies as an exception"
+
+**Key principle:** If you find yourself thinking "but this case is different because..." or "this is simple enough to...", you are making a judgment call. STOP and follow the documented process or ASK the user.
+
 ### Creating New Code (Systematic Process)
 
 **When creating new Python code, follow this process:**
@@ -289,6 +316,30 @@ Use `doit release` or `doit release_dev` (recommended).
 - **Test changes:** Run `doit check`
 - **Commit format:** Use conventional commits
 - **Commit granularity:** Multiple logical commits per PR, not one monolithic commit
+
+### Git Operations Checklist
+
+**⚠️ READ THIS BEFORE ANY GIT COMMIT, PUSH, OR BRANCH OPERATION**
+
+Before ANY git commit, push, or branch operation, you MUST verify:
+
+1. **Check current branch:** Am I on `main`?
+   - ✅ If NO → Proceed
+   - ❌ If YES → STOP. Never commit to main. Create a feature branch first.
+
+2. **Verify issue exists:** Does a GitHub issue exist for this work?
+   - ✅ If YES → Note the issue number
+   - ❌ If NO → Create an issue first OR ask the user
+
+3. **Confirm feature branch:** Am I on a properly named feature branch?
+   - ✅ If YES (`<type>/<number>-<description>`) → Proceed
+   - ❌ If NO → STOP and ask the user
+
+4. **State workflow status to user:**
+   - Template: "I'm on branch `[branch-name]`, working on issue #[number], about to [action]"
+   - Example: "I'm on branch `feat/42-add-auth`, working on issue #42, about to commit changes"
+
+**NO EXCEPTIONS. If you're unsure about any step, ASK THE USER.**
 
 ### Workflow-Specific Guidance
 
