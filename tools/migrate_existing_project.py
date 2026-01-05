@@ -60,6 +60,7 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
     ".claude",
     ".codex",
     ".gemini",
+    "tools",
     "tmp/.gitkeep",
 )
 
@@ -202,11 +203,14 @@ def main() -> None:
             print(f"  - {path.relative_to(template_root)}")
 
     print("\nNext steps:")
-    print(" 1) In the target repo, run: python configure.py")
-    print(" 2) Move your source into src/<package_name>/ and fix imports.")
-    print(" 3) Merge dependencies/metadata into the new pyproject.toml.")
-    print(" 4) Regenerate uv.lock (uv lock) and run checks (doit check).")
-    print(" 5) Compare backups above and port any unique content into the new files.")
+    print(" 1) Run: python configure.py")
+    print(" 2) Move your source code into src/<package_name>/ and fix imports")
+    print(" 3) Merge your dependencies into pyproject.toml")
+    print(" 4) Run: uv sync && doit check")
+    print(" 5) Review backed-up files and port any custom content")
+    print("\nFuture updates:")
+    print(" • Run: python tools/check-template-updates.py")
+    print(" • This will show what changed in the template since migration")
     print("\nDone.")
 
 
