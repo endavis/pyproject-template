@@ -54,14 +54,9 @@ Modern Python template using `uv` (package management), `doit` (task automation)
 
 **Rule:** All changes must originate from a GitHub Issue.
 
-**Quick Reference:**
-1. **Issue** → Ensure issue exists (use YAML issue forms)
-2. **Branch** → `<type>/<number>-<description>` (e.g., `feat/42-user-auth`)
-3. **Commit** → `<type>: <subject>` (use `doit commit`)
-4. **PR** → Title follows commit format, references issue
-5. **Merge** → `<type>: <subject> (merges PR #XX, closes #YY)`
+**Workflow:** Issue → Branch → Commit → PR → Merge → Cleanup
 
-**Detailed workflow, examples, and edge cases:** See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#development-workflow)
+**See the complete workflow with all steps and details:** [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#development-workflow)
 
 ## Commit Guidelines
 
@@ -398,6 +393,9 @@ doit pre_commit_install
 4. Commit: `doit commit`
 5. Push and create PR
 6. Wait for CI checks and review
+7. After merge: delete branch, update fork, close issues
+
+See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md#development-workflow) for complete details.
 
 **Important reminders:**
 - Never edit version in `pyproject.toml` (git tags are source of truth)
