@@ -257,6 +257,7 @@ Use `doit release` or `doit release_dev` (recommended).
 **🚫 NEVER (Absolute Prohibitions)**
 - Commit directly to `main` branch
 - Skip pre-commit hooks (--no-verify, --no-gpg-sign)
+- Use bypass flags without explicit user request (--admin, --force, --no-verify, etc.)
 - Run `doit release` or `doit release_dev` without explicit user request
 - Merge PRs without user consent
 - Commit secrets, credentials, or sensitive data
