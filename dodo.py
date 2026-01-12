@@ -48,7 +48,7 @@ def task_install() -> dict[str, Any]:
     }
 
 
-def task_dev() -> dict[str, Any]:
+def task_install_dev() -> dict[str, Any]:
     """Install package with dev dependencies."""
     return {
         "actions": [
