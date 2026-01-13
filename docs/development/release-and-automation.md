@@ -402,7 +402,7 @@ git commit -m "feat!: redesign plugin system
 
 BREAKING CHANGE: Plugin registration API has changed.
 Plugins must now implement the new PluginProtocol interface.
-See docs/migration.md for upgrade instructions."
+See docs/template/migration.md for upgrade instructions."
 ```
 
 ## Environment Configuration

@@ -379,7 +379,7 @@ Before ANY git commit, push, or branch operation, you MUST verify:
 - Usage patterns and examples → `docs/usage.md`, `examples/`
 - API details and references → `docs/api.md`
 - Optional tools and extensions → `docs/extensions.md`
-- Migration guides → `docs/migration.md`
+- Migration guides → `docs/template/migration.md`
 - Contributing workflow details → `.github/CONTRIBUTING.md`
 - Available tasks and commands → `doit list`
 - Security policy → `.github/SECURITY.md`
