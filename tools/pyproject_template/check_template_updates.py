@@ -6,9 +6,9 @@ This script fetches the latest pyproject-template release and shows which files
 differ from the template. User can then manually review and merge changes.
 
 Usage:
-    python tools/check-template-updates.py
-    python tools/check-template-updates.py --template-version v2.2.0
-    python tools/check-template-updates.py --skip-changelog
+    python tools/pyproject_template/check_template_updates.py
+    python tools/pyproject_template/check_template_updates.py --template-version v2.2.0
+    python tools/pyproject_template/check_template_updates.py --skip-changelog
 
 Requirements:
     - Git installed
@@ -27,52 +27,20 @@ import json
 import os
 import shutil
 import subprocess  # nosec B404
-import sys
-import tarfile
 import urllib.request
-import zipfile
 from pathlib import Path
+
+# Import shared utilities
+from tools.pyproject_template.utils import (
+    Colors,
+    Logger,
+    download_and_extract_archive,
+)
 
 # Template repository info
 TEMPLATE_REPO = "endavis/pyproject-template"
 TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 DEFAULT_ARCHIVE_URL = f"{TEMPLATE_URL}/archive/refs/heads/main.zip"
-
-
-# ANSI color codes
-class Colors:
-    RED = "\033[0;31m"
-    GREEN = "\033[0;32m"
-    YELLOW = "\033[1;33m"
-    BLUE = "\033[0;34m"
-    CYAN = "\033[0;36m"
-    BOLD = "\033[1m"
-    NC = "\033[0m"  # No Color
-
-
-class Logger:
-    """Simple logging utility with colored output."""
-
-    @staticmethod
-    def info(msg: str) -> None:
-        print(f"{Colors.BLUE}ℹ{Colors.NC} {msg}")  # noqa: RUF001
-
-    @staticmethod
-    def success(msg: str) -> None:
-        print(f"{Colors.GREEN}✓{Colors.NC} {msg}")
-
-    @staticmethod
-    def warning(msg: str) -> None:
-        print(f"{Colors.YELLOW}⚠{Colors.NC} {msg}")
-
-    @staticmethod
-    def error(msg: str) -> None:
-        print(f"{Colors.RED}✗{Colors.NC} {msg}", file=sys.stderr)
-
-    @staticmethod
-    def header(msg: str) -> None:
-        print(f"\n{Colors.BOLD}{msg}{Colors.NC}")
-        print("━" * 60)
 
 
 def get_latest_release() -> str | None:
@@ -96,50 +64,7 @@ def download_template(target_dir: Path, version: str | None = None) -> Path:
     else:
         archive_url = DEFAULT_ARCHIVE_URL
 
-    Logger.info(f"Downloading template from {archive_url}...")
-
-    # Download archive
-    archive_path = target_dir / "template-archive.zip"
-    try:
-        urllib.request.urlretrieve(archive_url, archive_path)  # nosec B310
-    except Exception as e:
-        Logger.error(f"Failed to download template: {e}")
-        sys.exit(1)
-
-    # Extract archive
-    extract_dir = target_dir / "extracted"
-    if extract_dir.exists():
-        shutil.rmtree(extract_dir)
-    extract_dir.mkdir(parents=True, exist_ok=True)
-
-    Logger.info("Extracting archive...")
-    if zipfile.is_zipfile(archive_path):
-        with zipfile.ZipFile(archive_path, "r") as zf:
-            # Filter out dangerous paths
-            for member in zf.namelist():
-                if member.startswith("/") or ".." in member:
-                    continue
-                zf.extract(member, extract_dir)
-        # GitHub zips have a top-level directory
-        contents = list(extract_dir.iterdir())
-        template_root = contents[0] if contents and contents[0].is_dir() else extract_dir
-    elif tarfile.is_tarfile(archive_path):
-        with tarfile.open(archive_path, "r:*") as tf:
-            safe_members = [
-                m
-                for m in tf.getmembers()
-                if m.name and not (m.name.startswith("/") or ".." in m.name)
-            ]
-            tf.extractall(extract_dir, members=safe_members)  # nosec B202
-        contents = list(extract_dir.iterdir())
-        template_root = contents[0] if contents and contents[0].is_dir() else extract_dir
-    else:
-        Logger.error("Unknown archive format")
-        sys.exit(1)
-
-    # Clean up archive
-    archive_path.unlink()
-
+    template_root = download_and_extract_archive(archive_url, target_dir)
     Logger.success(f"Template extracted to {template_root}")
     return template_root
 

@@ -49,16 +49,11 @@ Key documentation files:
 🚀 **The fastest way to create a new project from this template:**
 
 ```bash
-# Download and run the setup script
-curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/setup-repo.py | python3
-
-# Or download first, then run
-curl -O https://raw.githubusercontent.com/endavis/pyproject-template/main/setup-repo.py
-python3 setup-repo.py
+curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3
 ```
 
 The script will:
-- ✅ Create a new repository from this template
+- ✅ Create a new repository from this template on GitHub
 - ✅ Configure repository settings (merge options, features)
 - ✅ Set up branch protection rules
 - ✅ Replicate labels
@@ -77,7 +72,7 @@ The script will:
 
 ## Using This Template (Manual)
 
-**First time setup:** This is a template repository. After cloning, run the configuration script to customize it for your project:
+**First time setup:** This is a template repository. If you prefer to clone manually:
 
 ```bash
 # Clone the template
@@ -85,7 +80,7 @@ git clone https://github.com/username/package_name.git my-project
 cd my-project
 
 # Run the interactive configuration script
-python3 configure.py
+python3 tools/pyproject_template/configure.py
 ```
 
 The script will prompt you for:
@@ -160,16 +155,16 @@ This project uses automated versioning and releases powered by `commitizen` and 
 
 ### Migrating an Existing Project
 
-See `docs/migration.md` for a step-by-step guide to bring an existing project into this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
+See `docs/template/migration.md` for a step-by-step guide to bring an existing project into this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
 
 For older projects already in-flight, you can copy the helper script from this repo and let it do the initial file swap with backups:
 
 ```bash
 # From the template repo root
-python tools/migrate_existing_project.py --target /path/to/your/project
+python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
 ```
 
-The script backs up anything it overwrites into a timestamped folder in your project, copies template tooling/docs/workflows/editor configs, and prints a summary of what moved. After it runs, follow `docs/migration.md` (run `configure.py`, move your code under `src/<package_name>/`, merge dependencies, regenerate `uv.lock`, and run `doit check`).
+The script backs up anything it overwrites into a timestamped folder in your project, copies template tooling/docs/workflows/editor configs, and prints a summary of what moved. After it runs, follow `docs/template/migration.md` (run `python tools/pyproject_template/configure.py`, move your code under `src/<package_name>/`, merge dependencies, regenerate `uv.lock`, and run `doit check`).
 
 ### Creating a Release
 
