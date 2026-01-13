@@ -736,9 +736,10 @@ chore: apply code formatting
             except subprocess.CalledProcessError as e:
                 # 404 is expected for free/private repos that don't support this
                 if "404" in str(e.stderr):
-                    Logger.info(
-                        "Secret scanning not available for this repository (requires GHAS or public repo)"
-                    )
+                    if self.config.get("visibility") == "public":
+                        Logger.success("Secret scanning enabled (default for public repos)")
+                    else:
+                        Logger.info("Secret scanning not available (requires GHAS or public repo)")
                 else:
                     Logger.warning("Secret scanning configuration failed")
                     if e.stderr:
@@ -755,7 +756,14 @@ chore: apply code formatting
                 Logger.success("Secret scanning push protection enabled")
             except subprocess.CalledProcessError as e:
                 if "404" in str(e.stderr):
-                    Logger.info("Secret scanning push protection not available for this repository")
+                    if self.config.get("visibility") == "public":
+                        Logger.success(
+                            "Secret scanning push protection enabled (default for public repos)"
+                        )
+                    else:
+                        Logger.info(
+                            "Secret scanning push protection not available for this repository"
+                        )
                 else:
                     Logger.warning("Secret scanning push protection configuration failed")
                     if e.stderr:
