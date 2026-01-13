@@ -87,6 +87,8 @@ Modern Python template using `uv`, `doit`, `ruff`, and `mypy`.
 
 ## Critical Reminders
 - **Flow:** Issue -> Branch -> Commit -> PR. NEVER commit to main.
+- **Scope:** Never mix refactoring, features, and docs in one PR. Create separate branches.
+- **Verify:** Check file paths (`ls`) and branch (`git status`) before assuming they exist.
 - **Security:** NEVER bypass security checks (e.g., `--no-verify`, ignoring secrets).
 - **Tooling:** Prefer `doit` tasks over manual commands.
 - **Version:** Source of truth is Git tags. Never edit `pyproject.toml` version.
