@@ -44,7 +44,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **New Feature** (Check for duplicates) | `.github/ISSUE_TEMPLATE/feature_request.yml` | Required fields & structure. |
 | **Refactoring** | `.github/ISSUE_TEMPLATE/refactor.yml` | Success criteria requirements. |
 | **Bug Fix** (Check for duplicates) | `.github/ISSUE_TEMPLATE/bug_report.yml` | Reproduction steps format. |
-| **Opening PR** | `.github/pull_request_template.md` | Checklist items to verify. |
+| **PR Template** | `.github/pull_request_template.md` | Required structure & checklist items. |
 | **Committing** | `.github/CONTRIBUTING.md` (Commit Guidelines) | `<type>: <subject>` format. |
 | **New Dependency** | `.github/CONTRIBUTING.md` (Dependencies) | "Ask First" policy. |
 | **Creating Code** | `.claude/CLAUDE.md` (TodoWrite) | Plan -> Test -> Code loop. |
@@ -109,3 +109,4 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Tests:** Creating code = Creating tests. No exceptions.
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
+- **PRs:** Always use `.github/pull_request_template.md` and complete all sections.
