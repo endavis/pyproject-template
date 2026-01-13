@@ -396,11 +396,6 @@ class RepositorySetup:
                 shutil.move(str(old_package_dir), str(new_package_dir))
                 Logger.success(f"Renamed package directory to src/{self.config['package_name']}")
 
-            # Remove configure.py as it's no longer needed
-            configure_file = Path("configure.py")
-            if configure_file.exists():
-                configure_file.unlink()
-
             Logger.success("Placeholders configured")
 
             # Commit the changes
@@ -959,6 +954,13 @@ chore: apply code formatting
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Invite collaborators (if needed):")
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
+        print()
+
+        Logger.step("Cleanup Recommendations:")
+        print("  You can safely remove the following setup scripts:")
+        print("  - bootstrap.py")
+        print("  - tools/pyproject_template/configure.py")
+        print("  - tools/pyproject_template/setup_repo.py")
         print()
 
         Logger.step("You're all set!")
