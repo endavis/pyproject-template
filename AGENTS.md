@@ -92,6 +92,11 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Testing** | `.github/CONTRIBUTING.md` | Test patterns, coverage rules. |
 | **Security** | `.github/SECURITY.md` | Policy, sensitive data handling. |
 
+## Tooling & Environment
+- **GitHub CLI (`gh`):** Primary tool for issue management, PR creation, and repository interaction.
+- **uv:** Package management and environment control.
+- **doit:** Task automation and project checks.
+
 ## Token Efficiency
 - **Be Concise:** Minimal text output.
 - **Use Local Tools:** Prefer `read_file`, `grep` over sub-agents.
@@ -110,3 +115,4 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
 - **PRs:** Always use `.github/pull_request_template.md` and complete all sections.
+- **Issues:** Manually close linked issues after PR merge (auto-close is disabled).
