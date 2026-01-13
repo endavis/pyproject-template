@@ -23,6 +23,7 @@ Modern Python template using `uv`, `doit`, `ruff`, and `mypy`.
   2. Test Plan (Mandatory)
   3. Validation Plan (`doit check`)
 - **No Shortcuts:** Tests are created *with* the implementation, not after.
+- **Pre-Commit Validation:** Run `doit check` locally *before* staging files to avoid pre-commit hook failures.
 
 ### 3. Pre-Action Checks (Dynamic Context)
 **Do not rely on pre-loaded context.** You MUST read these files *immediately before* acting:
@@ -91,6 +92,8 @@ Modern Python template using `uv`, `doit`, `ruff`, and `mypy`.
 - **Verify:** Check file paths (`ls`) and branch (`git status`) before assuming they exist.
 - **Security:** NEVER bypass security checks (e.g., `--no-verify`, ignoring secrets).
 - **Tooling:** Prefer `doit` tasks over manual commands.
+- **Integrity:** Respect architectural patterns (modularity) over "quick fixes".
+- **Local State:** Protect user config (e.g., `.envrc.local`, settings). Do not revert/delete without backup.
 - **Version:** Source of truth is Git tags. Never edit `pyproject.toml` version.
 - **Tests:** Creating code = Creating tests. No exceptions.
 - **Commits:** One logical change per commit. Use conventional commits.
