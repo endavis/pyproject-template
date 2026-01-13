@@ -25,9 +25,6 @@ classifiers = [
 dependencies = [
     "doit>=0.36.0",
     "rich>=13.0",
-    # Add your runtime dependencies here
-    # "requests>=2.31.0",
-    # "pydantic>=2.7.0",
 ]
 
 [project.optional-dependencies]
@@ -56,8 +53,6 @@ Documentation = "https://github.com/username/package_name/tree/main/docs"
 Issues = "https://github.com/username/package_name/issues"
 
 [project.scripts]
-# Example CLI entry point (optional, remove if not needed)
-# package-cli = "package_name.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/package_name"]
@@ -71,7 +66,6 @@ fallback-version = "0.0.0"
 version-file = "src/package_name/_version.py"
 
 [tool.ruff]
-# cache-dir controlled by RUFF_CACHE_DIR environment variable (set in .envrc)
 line-length = 100
 target-version = "py312"
 extend-exclude = ["**/_version.py"]
@@ -92,8 +86,8 @@ select = [
     "ASYNC", # flake8-async
 ]
 ignore = [
-    "ANN401",  # Dynamically typed expressions (Any) - allow for now, fix incrementally
-    "ANN001",  # Missing type annotation for function argument - fix incrementally
+    "ANN401",  # Dynamically typed expressions (Any)
+    "ANN001",  # Missing type annotation for function argument
     "ANN002",  # Missing type annotation for *args
     "ANN003",  # Missing type annotation for **kwargs
     "ANN101",  # Missing type annotation for self in method
@@ -102,9 +96,11 @@ ignore = [
 ]
 
 [tool.ruff.lint.per-file-ignores]
-"setup-repo.py" = [
-    "E501",    # Line too long - banner boxes and formatted output
-    "RUF001",  # Ambiguous unicode - intentional for better UX
+"bootstrap.py" = ["E501"]
+"tools/pyproject_template/*.py" = [
+    "E501",    # Line too long
+    "RUF001",  # Ambiguous unicode
+    "SIM102",  # Nested if
 ]
 
 [tool.ruff.format]
@@ -113,14 +109,11 @@ indent-style = "space"
 line-ending = "lf"
 
 [tool.mypy]
-# cache_dir controlled by MYPY_CACHE_DIR environment variable (set in .envrc)
 python_version = "3.12"
-# Strict type checking
 disallow_untyped_defs = true
 warn_return_any = true
 warn_unused_configs = true
 warn_unused_ignores = true
-# Additional strict checks
 check_untyped_defs = true
 disallow_any_generics = false
 disallow_incomplete_defs = true
@@ -129,6 +122,8 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
+# Ignore the tools directory for now to avoid the duplicate module issue
+exclude = ["tools/pyproject_template/"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -141,7 +136,6 @@ python_functions = ["test_*"]
 [tool.coverage.run]
 branch = true
 source = ["package_name"]
-# data_file controlled by COVERAGE_FILE environment variable (set in .envrc)
 
 [tool.coverage.report]
 skip_covered = false
@@ -183,9 +177,9 @@ exclude_dirs = [
     ".vscode",
 ]
 skips = [
-    "B101",  # assert_used - asserts are fine in tests
-    "B603",  # subprocess_without_shell_equals_true - we use list args (safe)
-    "B607",  # start_process_with_partial_path - hardcoded commands (git, uv, etc.)
+    "B101",
+    "B603",
+    "B607",
 ]
 
 [tool.codespell]
@@ -199,10 +193,7 @@ tag_format = "v$version"
 version_provider = "scm"
 update_changelog_on_bump = true
 major_version_zero = true
-# Merge pre-release entries into final release in CHANGELOG
 merge_prerelease = true
-# Commit types that trigger version bumps
 bump_pattern = "^(feat|fix|refactor|perf)"
 bump_map = { "feat" = "MINOR", "fix" = "PATCH", "refactor" = "PATCH", "perf" = "PATCH" }
-# BREAKING CHANGE in commit message triggers MAJOR bump
 change_type_order = ["BREAKING CHANGE", "feat", "fix", "refactor", "perf"]

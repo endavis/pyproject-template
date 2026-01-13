@@ -20,8 +20,8 @@ This index provides a structured overview of the available documentation for the
 ## Examples
 - **[Examples & Recipes](examples/README.md)**: Practical examples and common use cases.
 
-## Guides
-- **[Migration Guide](guides/migration.md)**: Guide for migrating from other project structures or updating existing projects.
+## Template
+- **[Migration Guide](template/migration.md)**: Guide for migrating from other project structures or updating existing projects.
 
 ## Project Information
 - **[Main Documentation](index.md)**: Overview and introduction to the template.
@@ -45,7 +45,7 @@ Guides for contributors and developers working on extending or maintaining proje
 ### Examples
 Practical code examples, recipes, and patterns for common scenarios.
 
-### Guides
+### Template
 Step-by-step guides for specific tasks like migration, deployment, or integration.
 
 ## Quick Links
@@ -63,7 +63,7 @@ Step-by-step guides for specific tasks like migration, deployment, or integratio
 ### For Advanced Users
 1. [Extensions](development/extensions.md) - Extend the template
 2. [API Reference](reference/api.md) - Technical details
-3. [Migration Guide](guides/migration.md) - Migrate existing projects
+3. [Migration Guide](template/migration.md) - Migrate existing projects
 
 ---
 

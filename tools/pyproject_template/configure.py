@@ -8,7 +8,6 @@ Optional: skip final confirmation with --yes.
 """
 
 import argparse
-import re
 import shutil
 import sys
 from pathlib import Path
@@ -18,6 +17,17 @@ try:
     import tomllib  # py312+
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
+
+# Import shared utilities
+from tools.pyproject_template.utils import (
+    Logger,
+    prompt,
+    prompt_confirm,
+    update_file,
+    validate_email,
+    validate_package_name,
+    validate_pypi_name,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -33,58 +43,6 @@ def parse_args() -> argparse.Namespace:
         help="Skip confirmation prompt (useful with --auto).",
     )
     return parser.parse_args()
-
-
-def prompt(question: str, default: str = "") -> str:
-    """Prompt user for input with optional default value."""
-    if default:
-        response = input(f"{question} [{default}]: ").strip()
-        return response or default
-    while True:
-        response = input(f"{question}: ").strip()
-        if response:
-            return response
-        print("This field is required. Please enter a value.")
-
-
-def validate_package_name(name: str) -> str:
-    """Validate and convert to valid Python package name."""
-    # Convert to lowercase and replace invalid characters with underscores
-    package_name = re.sub(r"[^a-z0-9_]", "_", name.lower())
-    # Remove leading/trailing underscores
-    package_name = package_name.strip("_")
-    # Ensure it doesn't start with a number
-    if package_name[0].isdigit():
-        package_name = f"_{package_name}"
-    return package_name
-
-
-def validate_pypi_name(name: str) -> str:
-    """Convert to valid PyPI package name (kebab-case)."""
-    # Convert to lowercase and replace invalid characters with hyphens
-    pypi_name = re.sub(r"[^a-z0-9-]", "-", name.lower())
-    # Remove leading/trailing hyphens
-    pypi_name = pypi_name.strip("-")
-    # Collapse multiple hyphens
-    pypi_name = re.sub(r"-+", "-", pypi_name)
-    return pypi_name
-
-
-def validate_email(email: str) -> bool:
-    """Basic email validation."""
-    pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
-    return bool(re.match(pattern, email))
-
-
-def update_file(filepath: Path, replacements: dict[str, str]) -> None:
-    """Update file with string replacements."""
-    if not filepath.exists():
-        return
-
-    content = filepath.read_text()
-    for old, new in replacements.items():
-        content = content.replace(old, new)
-    filepath.write_text(content)
 
 
 def read_pyproject(path: Path) -> dict[str, Any]:
@@ -225,17 +183,19 @@ def require(value: str, label: str) -> str:
 
 def main() -> int:
     """Run the configuration wizard."""
+    # Ensure script is run from project root
+    if not Path("pyproject.toml").exists():
+        Logger.error("Please run this script from the project root directory.")
+        return 1
+
     args = parse_args()
     defaults = load_defaults(Path("pyproject.toml"))
 
-    print("=" * 70)
-    print("Python Project Template Configuration")
-    print("=" * 70)
+    Logger.header("Python Project Template Configuration")
     print("\nThis script will help you set up your new Python project.\n")
 
     # Gather project information
-    print("Project Information")
-    print("-" * 70)
+    Logger.step("Project Information")
 
     if args.auto:
         project_name = require(defaults["project_name"], "[project].name")
@@ -280,7 +240,7 @@ def main() -> int:
             )
             if validate_email(author_email):
                 break
-            print("❌ Invalid email format. Please try again.")
+            Logger.warning("Invalid email format. Please try again.")
 
         github_user = prompt("GitHub username", defaults["github_user"] or "username")
 
@@ -288,17 +248,12 @@ def main() -> int:
     if args.auto:
         enable_dependabot = False
     else:
-        print("\n" + "-" * 70)
-        print("Optional Features")
-        print("-" * 70)
-        enable_dependabot = input(
-            "Enable Dependabot for automatic dependency updates? [y/N]: "
-        ).strip().lower() in ("y", "yes")
+        print()
+        Logger.step("Optional Features")
+        enable_dependabot = prompt_confirm("Enable Dependabot for automatic dependency updates?")
 
     # Confirm configuration
-    print("\n" + "=" * 70)
-    print("Configuration Summary")
-    print("=" * 70)
+    Logger.header("Configuration Summary")
     print(f"Project Name:     {project_name}")
     print(f"Package Name:     {package_name}")
     print(f"PyPI Name:        {pypi_name}")
@@ -306,15 +261,13 @@ def main() -> int:
     print(f"Author:           {author_name} <{author_email}>")
     print(f"GitHub:           {github_user}")
     print(f"Dependabot:       {'Enabled' if enable_dependabot else 'Disabled'}")
-    print("=" * 70)
+    print("━" * 60)
 
-    if not args.yes:
-        confirm = input("\nProceed with configuration? [y/N]: ").strip().lower()
-        if confirm not in ("y", "yes"):
-            print("❌ Configuration cancelled.")
-            return 1
+    if not args.yes and not prompt_confirm("\nProceed with configuration?"):
+        Logger.warning("Configuration cancelled.")
+        return 1
 
-    print("\n🔧 Configuring project...")
+    Logger.step("Configuring project...")
 
     # Define replacements
     # IMPORTANT: Longer/Specific replacements must come before shorter substrings
@@ -419,10 +372,8 @@ def main() -> int:
         print("  ✓ Enabling Dependabot")
         shutil.copy(dependabot_example, dependabot_config)
 
-    print("\n✅ Configuration complete!")
-    print("\n" + "=" * 70)
-    print("Next Steps")
-    print("=" * 70)
+    Logger.success("Configuration complete!")
+    Logger.header("Next Steps")
     print("1. Review the changes: git diff")
     print("2. Initialize git repository: git init")
     print("3. Install dependencies: uv sync --all-extras --dev")
@@ -430,15 +381,15 @@ def main() -> int:
     print("5. Run tests: uv run pytest")
     print("6. Cut a prerelease (if desired): uv run doit release_dev")
     print("7. Start coding!")
-    print("=" * 70)
+    print("━" * 60)
 
     # Self-destruct
     print("\n🗑️  Removing configure.py (self-destruct)...")
     try:
         Path(__file__).unlink()
-        print("  ✓ configure.py removed")
+        Logger.success("configure.py removed")
     except Exception as e:
-        print(f"  ⚠️  Could not remove configure.py: {e}")
+        Logger.warning(f"Could not remove configure.py: {e}")
         print("  → You can safely delete it manually")
 
     return 0
@@ -448,8 +399,8 @@ if __name__ == "__main__":
     try:
         sys.exit(main())
     except KeyboardInterrupt:
-        print("\n\n❌ Configuration cancelled by user.")
+        Logger.warning("Configuration cancelled by user.")
         sys.exit(1)
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        Logger.error(f"Error: {e}")
         sys.exit(1)
