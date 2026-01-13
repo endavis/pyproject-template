@@ -25,7 +25,12 @@ Modern Python template using `uv`, `doit`, `ruff`, and `mypy`.
 - **No Shortcuts:** Tests are created *with* the implementation, not after.
 - **Pre-Commit Validation:** Run `doit check` locally *before* staging files to avoid pre-commit hook failures.
 
-### 3. Pre-Action Checks (Dynamic Context)
+### 3. Error Recovery Protocol
+- **Stop on Error:** If an action fails or you realize a mistake, **STOP**. Do not attempt to "fix it quickly" or revert silently.
+- **Report & Wait:** Report the error/mistake to the user, explain the state, propose a fix, and **WAIT** for confirmation.
+- **No Auto-Reverts:** Do not revert changes unless explicitly instructed or if the change caused a critical system failure blocking further interaction.
+
+### 4. Pre-Action Checks (Dynamic Context)
 **Do not rely on pre-loaded context.** You MUST read these files *immediately before* acting:
 
 | Intent / Action | **MUST READ** Rule Source | Purpose |
@@ -38,7 +43,7 @@ Modern Python template using `uv`, `doit`, `ruff`, and `mypy`.
 | **New Dependency** | `.github/CONTRIBUTING.md` (Dependencies) | "Ask First" policy. |
 | **Creating Code** | `.claude/CLAUDE.md` (TodoWrite) | Plan -> Test -> Code loop. |
 
-### 4. Decision Framework
+### 5. Decision Framework
 
 | Status | Trigger | Action |
 | :--- | :--- | :--- |
