@@ -24,7 +24,10 @@
       "LSTool",
       "GrepTool"
     ],
-    "sandbox": false
+    "sandbox": {
+      "enabled": false,
+      "profile": "permissive-open"
+    }
   },
   "ui": {
     "autoApprove": false,
