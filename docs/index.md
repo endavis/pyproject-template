@@ -11,7 +11,7 @@ Package Name is a modern Python project template with comprehensive tooling for 
 - [Installation Guide](getting-started/installation.md)
 - [User Guide](usage/basics.md)
 - [API Reference](reference/api.md)
-- [Contributing](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)
+- [Contributing](https://github.com/endavis/pyproject-template/blob/main/.github/CONTRIBUTING.md)
 
 ## Features
 
@@ -46,16 +46,16 @@ print(message)  # Output: Hello, Python!
 
 ### For Contributors
 
-- **[Contributing Guide](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)** - Development workflow, coding standards, and best practices (**source of truth**)
-- **[Code of Conduct](https://github.com/username/package_name/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
-- **[AI Agent Guide](https://github.com/username/package_name/blob/main/AGENTS.md)** - Quick reference for AI coding assistants
+- **[Contributing Guide](https://github.com/endavis/pyproject-template/blob/main/.github/CONTRIBUTING.md)** - Development workflow, coding standards, and best practices (**source of truth**)
+- **[Code of Conduct](https://github.com/endavis/pyproject-template/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
+- **[AI Agent Setup](development/AI_SETUP.md)** - Setup guide for AI coding assistants
 
 ## Support
 
-- **Issues:** [GitHub Issues](https://github.com/username/package_name/issues)
-- **Discussions:** [GitHub Discussions](https://github.com/username/package_name/discussions)
-- **Security:** See [SECURITY.md](https://github.com/username/package_name/blob/main/.github/SECURITY.md)
+- **Issues:** [GitHub Issues](https://github.com/endavis/pyproject-template/issues)
+- **Discussions:** [GitHub Discussions](https://github.com/endavis/pyproject-template/discussions)
+- **Security:** See [SECURITY.md](https://github.com/endavis/pyproject-template/blob/main/.github/SECURITY.md)
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://github.com/username/package_name/blob/main/LICENSE) file for details.
+This project is licensed under the MIT License - see the [LICENSE](https://github.com/endavis/pyproject-template/blob/main/LICENSE) file for details.
