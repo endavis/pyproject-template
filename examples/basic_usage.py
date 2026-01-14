@@ -4,7 +4,7 @@
 This example demonstrates the most common usage patterns for the package.
 """
 
-from package_name import __version__, greet
+from package_name import __version__, get_logger, greet, setup_logging
 
 
 def main() -> None:
@@ -45,6 +45,22 @@ def main() -> None:
         print("Operation succeeded!")
     except Exception as e:
         print(f"Caught exception: {e}")
+    print()
+
+    # Example 4: Logging
+    print("Example 4: Basic Logging")
+    print("-" * 40)
+    # Setup simple console logging
+    setup_logging(level="INFO")
+    logger = get_logger(__name__)
+
+    # Log some messages at different levels
+    logger.info("This is an info message - appears in console")
+    logger.warning("This is a warning message")
+    logger.error("This is an error message")
+
+    print("Check the console output above for log messages")
+    print("For structured JSON logging, see examples/advanced_usage.py")
     print()
 
     print("All examples completed!")

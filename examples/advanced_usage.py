@@ -4,17 +4,15 @@
 This example demonstrates advanced features and best practices.
 """
 
-import logging
 from pathlib import Path
 
-from package_name import __version__
+from package_name import __version__, get_logger, setup_logging
 
-# Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-)
-logger = logging.getLogger(__name__)
+# Configure logging with both console and file output
+# Console: simple output (INFO: message)
+# File: structured JSON with ISO8601 timestamps
+setup_logging(level="INFO", log_file="tmp/advanced_example.log")
+logger = get_logger(__name__)
 
 
 class AdvancedExample:

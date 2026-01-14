@@ -333,31 +333,128 @@ Use the feature request template (`.github/ISSUE_TEMPLATE/feature_request.md`):
 
 ## Development Workflow
 
-### Typical Workflow
+**MANDATORY RULE:** All changes must originate from a GitHub Issue.
 
+### Issue-Driven Development
+
+Every code change must be linked to a GitHub Issue. This ensures:
+- **Traceability:** Every change is linked to a documented need
+- **Context:** Issues capture the "why" behind changes
+- **Planning:** Better project management and prioritization
+- **History:** Searchable record of decisions and rationale
+- **Collaboration:** Clear communication about work in progress
+
+### Workflow Steps
+
+#### 1. **Issue:** Ensure GitHub Issue Exists
+
+**Create issue if needed:**
 ```bash
-# 1. Sync with upstream
-git checkout main
-git pull upstream main
-
-# 2. Create feature branch
-git checkout -b feat/my-new-feature
-
-# 3. Make changes
-# ... edit files ...
-
-# 4. Run checks
-doit check
-
-# 5. Commit changes
-git add .
-git commit -m "feat: add my new feature"
-
-# 6. Push to your fork
-git push origin feat/my-new-feature
-
-# 7. Open pull request on GitHub
+gh issue create --title "<type>: <description>" --body "..."
 ```
+
+**Use YAML issue forms:**
+- `bug_report.yml` - For bugs and defects
+- `feature_request.yml` - For new features
+- `refactor.yml` - For code refactoring
+
+**Required fields ensure complete information** - Fill all fields to provide context.
+
+#### 2. **Branch:** Create Branch Linked to Issue
+
+**Branch Format:** `<type>/<number>-<description>`
+
+**Allowed Types:**
+- `issue`, `feat`, `fix`, `docs`, `test`, `refactor`, `chore`, `ci`, `perf`, `hotfix`
+- Special: `release/<version>` (no issue number required)
+
+**Examples:**
+```bash
+feat/42-user-authentication
+fix/123-handle-null-values
+docs/41-update-guidelines
+refactor/55-simplify-parser
+```
+
+**Create and link branch:**
+```bash
+# Option 1: GitHub CLI (auto-links)
+gh issue develop <issue-number> --checkout
+
+# Option 2: Manual (include issue number in name)
+git checkout -b feat/42-add-feature
+```
+
+**Branch naming is enforced by pre-commit hooks.**
+
+#### 3. **Commit:** Use Conventional Commits
+
+**Format:** `<type>: <subject>`
+
+Use `doit commit` for interactive commit creation with commitizen.
+
+**Enforced by:**
+- Pre-commit hooks (locally)
+- CI checks (on PR)
+
+#### 4. **Pull Request:** Submit PR from Branch to `main`
+
+**PR Title:**
+- Must follow conventional commit format: `<type>: <subject>`
+- PR title becomes the merge commit message
+- Examples: ✅ `feat: add validators`, ❌ `Add validators`
+
+**PR Description Requirements (enforced by CI):**
+- Minimum 50 characters
+- Reference related issue: "Closes #42" or "Part of #42"
+- Describe what changed and why
+- Include testing information
+
+#### 5. **Merge:** Format Must Include PR and Issue Numbers
+
+**When PR completes the issue:**
+```
+<type>: <subject> (merges PR #XX, closes #YY)
+```
+
+**When PR is part of multi-PR issue:**
+```
+<type>: <subject> (merges PR #XX, part of #YY)
+```
+
+**Examples - Correct:**
+```
+feat: add user authentication (merges PR #18, closes #42)
+fix: handle None values (merges PR #23, closes #19)
+docs: update installation guide (merges PR #29, closes #25)
+```
+
+**Examples - Incorrect:**
+```
+❌ Merge pull request #18 from user/branch
+❌ feat: Add Feature (capitalized subject)
+❌ added feature (missing type)
+❌ feat: add feature (missing PR reference)
+```
+
+### Edge Cases
+
+**Issue needs to be split during work:**
+- Create new issues for discovered separate concerns
+- Update original issue to reference the new issues
+- Continue work on current branch or create new branches
+
+**Issue is obsolete or duplicate:**
+- Comment explaining why it's obsolete/duplicate
+- Link to the duplicate issue if applicable
+- Close with appropriate label (duplicate, wontfix)
+- Delete branch if no work committed
+
+**Work spans multiple sessions:**
+- Update issue with progress comments
+- Document decisions and approaches tried
+- Push commits regularly
+- Keep PR description updated
 
 ### Keeping Your Fork Updated
 

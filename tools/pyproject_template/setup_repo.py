@@ -8,7 +8,8 @@ configuration, branch protection, and placeholder replacement.
 
 Usage:
     python3 setup-repo.py
-    curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/setup-repo.py | python3
+    curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py \
+        | python3
 
 Requirements:
     - GitHub CLI (gh) installed and authenticated
@@ -19,7 +20,6 @@ Author: Generated from pyproject-template
 License: MIT
 """
 
-import json
 import os
 import shutil
 import subprocess  # nosec B404
@@ -27,94 +27,15 @@ import sys
 from pathlib import Path
 from typing import Any
 
-
-# ANSI color codes
-class Colors:
-    RED = "\033[0;31m"
-    GREEN = "\033[0;32m"
-    YELLOW = "\033[1;33m"
-    BLUE = "\033[0;34m"
-    CYAN = "\033[0;36m"
-    NC = "\033[0m"  # No Color
-
-
-class Logger:
-    """Simple logging utility with colored output."""
-
-    @staticmethod
-    def info(msg: str) -> None:
-        print(f"{Colors.BLUE}ℹ{Colors.NC} {msg}")
-
-    @staticmethod
-    def success(msg: str) -> None:
-        print(f"{Colors.GREEN}✓{Colors.NC} {msg}")
-
-    @staticmethod
-    def warning(msg: str) -> None:
-        print(f"{Colors.YELLOW}⚠{Colors.NC} {msg}")
-
-    @staticmethod
-    def error(msg: str) -> None:
-        print(f"{Colors.RED}✗{Colors.NC} {msg}", file=sys.stderr)
-
-    @staticmethod
-    def step(msg: str) -> None:
-        print(f"\n{Colors.CYAN}▸{Colors.NC} {msg}")
-
-
-class GitHubCLI:
-    """Wrapper for GitHub CLI commands."""
-
-    @staticmethod
-    def run(
-        args: list[str], check: bool = True, capture: bool = True
-    ) -> subprocess.CompletedProcess[str]:
-        """Run a gh command."""
-        cmd = ["gh", *args]
-        try:
-            result = subprocess.run(
-                cmd,
-                check=check,
-                capture_output=capture,
-                text=True,
-            )
-            return result
-        except subprocess.CalledProcessError as e:
-            if capture:
-                Logger.error(f"Command failed: {' '.join(cmd)}")
-                if e.stderr:
-                    print(e.stderr, file=sys.stderr)
-            raise
-
-    @staticmethod
-    def api(endpoint: str, method: str = "GET", data: dict[str, Any] | None = None) -> Any:
-        """Make a GitHub API call."""
-        args = ["api", endpoint, "-X", method]
-        if data:
-            args.append("--input")
-            args.append("-")
-
-        result = subprocess.run(
-            ["gh", *args],
-            input=json.dumps(data) if data else None,
-            capture_output=True,
-            text=True,
-            check=True,
-        )
-
-        if result.stdout:
-            return json.loads(result.stdout)
-        return None
-
-    @staticmethod
-    def is_authenticated() -> bool:
-        """Check if gh is authenticated."""
-        result = subprocess.run(
-            ["gh", "auth", "status"],
-            capture_output=True,
-            text=True,
-        )
-        return result.returncode == 0
+# Import shared utilities
+from tools.pyproject_template.utils import (
+    Colors,
+    GitHubCLI,
+    Logger,
+    prompt,
+    prompt_confirm,
+    update_file,
+)
 
 
 class RepositorySetup:
@@ -237,22 +158,11 @@ class RepositorySetup:
             print("  5. Generate token and run: gh auth login")
             print()
 
-            if not self._prompt_confirm(
-                "Do you have the required permissions configured?", default=True
-            ):
+            if not prompt_confirm("Do you have the required permissions configured?", default=True):
                 Logger.error("Please configure your PAT with required permissions first")
                 sys.exit(1)
         else:
             Logger.success("Token type appears to be OAuth (recommended)")
-
-    def _update_file(self, filepath: Path, replacements: dict[str, str]) -> None:
-        """Update file with string replacements."""
-        if not filepath.exists():
-            return
-        content = filepath.read_text(encoding="utf-8")
-        for old, new in replacements.items():
-            content = content.replace(old, new)
-        filepath.write_text(content, encoding="utf-8")
 
     def gather_inputs(self) -> None:
         """Gather repository configuration from user."""
@@ -260,11 +170,11 @@ class RepositorySetup:
         print()
 
         # Repository name
-        self.config["repo_name"] = self._prompt_input("Repository name", required=True)
+        self.config["repo_name"] = prompt("Repository name")
 
         # Organization (optional)
-        if self._prompt_confirm("Create in an organization?"):
-            self.config["repo_owner"] = self._prompt_input("Organization name", required=True)
+        if prompt_confirm("Create in an organization?"):
+            self.config["repo_owner"] = prompt("Organization name")
         else:
             # Get current user
             user_info = GitHubCLI.api("user")
@@ -274,7 +184,7 @@ class RepositorySetup:
 
         # Visibility
         self.config["visibility"] = (
-            "public" if self._prompt_confirm("Make repository public?", default=True) else "private"
+            "public" if prompt_confirm("Make repository public?", default=True) else "private"
         )
 
         # Package configuration
@@ -282,13 +192,11 @@ class RepositorySetup:
         Logger.info("Package configuration (used for placeholder replacement)")
 
         default_package = self.config["repo_name"].replace("-", "_")
-        self.config["package_name"] = self._prompt_input(
+        self.config["package_name"] = prompt(
             "Python package name (import name)", default=default_package
         )
-        self.config["pypi_name"] = self._prompt_input(
-            "PyPI package name", default=self.config["repo_name"]
-        )
-        self.config["description"] = self._prompt_input(
+        self.config["pypi_name"] = prompt("PyPI package name", default=self.config["repo_name"])
+        self.config["description"] = prompt(
             "Package description",
             default="A Python project based on pyproject-template",
         )
@@ -297,8 +205,8 @@ class RepositorySetup:
         git_name = self._get_git_config("user.name", "")
         git_email = self._get_git_config("user.email", "")
 
-        self.config["author_name"] = self._prompt_input("Author name", default=git_name)
-        self.config["author_email"] = self._prompt_input("Author email", default=git_email)
+        self.config["author_name"] = prompt("Author name", default=git_name)
+        self.config["author_email"] = prompt("Author email", default=git_email)
 
         # Confirmation
         print()
@@ -311,7 +219,7 @@ class RepositorySetup:
         print(f"  Author: {self.config['author_name']} <{self.config['author_email']}>")
         print()
 
-        if not self._prompt_confirm("Proceed with these settings?", default=True):
+        if not prompt_confirm("Proceed with these settings?", default=True):
             Logger.warning("Setup cancelled by user")
             sys.exit(0)
 
@@ -323,37 +231,6 @@ class RepositorySetup:
             text=True,
         )
         return result.stdout.strip() if result.returncode == 0 else default
-
-    def _prompt_input(self, prompt: str, default: str = "", required: bool = False) -> str:
-        """Prompt user for input."""
-        if default:
-            result = input(
-                f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}{default}{Colors.NC}]: "
-            ).strip()
-            return result if result else default
-        else:
-            while True:
-                result = input(f"{Colors.CYAN}?{Colors.NC} {prompt}: ").strip()
-                if result or not required:
-                    return result
-                Logger.warning("This field is required")
-
-    def _prompt_confirm(self, prompt: str, default: bool = False) -> bool:
-        """Prompt user for yes/no confirmation."""
-        if default:
-            result = (
-                input(f"{Colors.CYAN}?{Colors.NC} {prompt} [{Colors.GREEN}Y{Colors.NC}/n]: ")
-                .strip()
-                .lower()
-            )
-            return result in ("", "y", "yes")
-        else:
-            result = (
-                input(f"{Colors.CYAN}?{Colors.NC} {prompt} [y/{Colors.GREEN}N{Colors.NC}]: ")
-                .strip()
-                .lower()
-            )
-            return result in ("y", "yes")
 
     def create_github_repository(self) -> None:
         """Create repository on GitHub from template (without cloning)."""
@@ -475,42 +352,42 @@ class RepositorySetup:
             for file_path in files_to_update:
                 path = Path(file_path)
                 if path.exists():
-                    self._update_file(path, replacements)
+                    update_file(path, replacements)
 
             # Update documentation files
             docs_dir = Path("docs")
             if docs_dir.exists():
                 for doc_file in docs_dir.rglob("*.md"):
-                    self._update_file(doc_file, replacements)
+                    update_file(doc_file, replacements)
 
             # Update test files
             tests_dir = Path("tests")
             if tests_dir.exists():
                 for test_file in tests_dir.rglob("*.py"):
-                    self._update_file(test_file, replacements)
+                    update_file(test_file, replacements)
 
             # Update source files
             src_dir = Path("src")
             if src_dir.exists():
                 for src_file in src_dir.rglob("*.py"):
-                    self._update_file(src_file, replacements)
+                    update_file(src_file, replacements)
 
             # Update issue templates
             issue_templates_dir = Path(".github/ISSUE_TEMPLATE")
             if issue_templates_dir.exists():
                 for template_file in issue_templates_dir.glob("*.md"):
-                    self._update_file(template_file, replacements)
+                    update_file(template_file, replacements)
                 # Also update config.yml if it exists
                 config_file = issue_templates_dir / "config.yml"
                 if config_file.exists():
-                    self._update_file(config_file, replacements)
+                    update_file(config_file, replacements)
 
             # Update example files
             examples_dir = Path("examples")
             if examples_dir.exists():
                 for example_file in examples_dir.rglob("*"):
                     if example_file.is_file():
-                        self._update_file(example_file, replacements)
+                        update_file(example_file, replacements)
 
             # Rename package directory
             old_package_dir = Path("src/package_name")
@@ -519,16 +396,12 @@ class RepositorySetup:
                 shutil.move(str(old_package_dir), str(new_package_dir))
                 Logger.success(f"Renamed package directory to src/{self.config['package_name']}")
 
-            # Remove configure.py as it's no longer needed
-            configure_file = Path("configure.py")
-            if configure_file.exists():
-                configure_file.unlink()
-
             Logger.success("Placeholders configured")
 
             # Commit the changes
             subprocess.run(["git", "add", "."], check=True, capture_output=True)
-            commit_msg = f"""chore: configure project from template
+            commit_msg = f"""
+chore: configure project from template
 
 - Set project name to {self.config['repo_name']}
 - Configure package as {self.config['package_name']}
@@ -536,7 +409,11 @@ class RepositorySetup:
 
 🤖 Generated with setup-repo.py"""
 
-            subprocess.run(["git", "commit", "-m", commit_msg], check=True, capture_output=True)
+            # Use --no-verify to bypass pre-commit hooks (like no-commit-to-main)
+            # This is necessary because we are initializing the repo on main
+            subprocess.run(
+                ["git", "commit", "-m", commit_msg, "--no-verify"], check=True, capture_output=True
+            )
             subprocess.run(["git", "push"], check=True, capture_output=True)
             Logger.success("Changes committed and pushed")
 
@@ -637,7 +514,8 @@ class RepositorySetup:
             if result.stdout.strip():
                 Logger.info("Committing formatting changes...")
                 subprocess.run(["git", "add", "."], check=True, capture_output=True)
-                commit_msg = """chore: apply code formatting
+                commit_msg = """
+chore: apply code formatting
 
 - Fix linting issues with ruff
 - Format pyproject.toml with pyproject-fmt
@@ -645,7 +523,7 @@ class RepositorySetup:
 
 🤖 Generated with setup-repo.py"""
                 commit_result = subprocess.run(
-                    ["git", "commit", "-m", commit_msg],
+                    ["git", "commit", "-m", commit_msg, "--no-verify"],
                     capture_output=True,
                     text=True,
                 )
@@ -851,9 +729,16 @@ class RepositorySetup:
                 )
                 Logger.success("Secret scanning enabled")
             except subprocess.CalledProcessError as e:
-                Logger.warning("Secret scanning configuration failed")
-                if e.stderr:
-                    print(f"  Error: {e.stderr.strip()}")
+                # 404 is expected for free/private repos that don't support this
+                if "404" in str(e.stderr):
+                    if self.config.get("visibility") == "public":
+                        Logger.success("Secret scanning enabled (default for public repos)")
+                    else:
+                        Logger.info("Secret scanning not available (requires GHAS or public repo)")
+                else:
+                    Logger.warning("Secret scanning configuration failed")
+                    if e.stderr:
+                        print(f"  Error: {e.stderr.strip()}")
 
         # Enable secret scanning push protection if template has it
         if security_settings.get("secret_scanning_push_protection", {}).get("status") == "enabled":
@@ -865,9 +750,19 @@ class RepositorySetup:
                 )
                 Logger.success("Secret scanning push protection enabled")
             except subprocess.CalledProcessError as e:
-                Logger.warning("Secret scanning push protection configuration failed")
-                if e.stderr:
-                    print(f"  Error: {e.stderr.strip()}")
+                if "404" in str(e.stderr):
+                    if self.config.get("visibility") == "public":
+                        Logger.success(
+                            "Secret scanning push protection enabled (default for public repos)"
+                        )
+                    else:
+                        Logger.info(
+                            "Secret scanning push protection not available for this repository"
+                        )
+                else:
+                    Logger.warning("Secret scanning push protection configuration failed")
+                    if e.stderr:
+                        print(f"  Error: {e.stderr.strip()}")
 
         # Enable Dependabot security updates if template has it
         if security_settings.get("dependabot_security_updates", {}).get("status") == "enabled":
@@ -1059,6 +954,13 @@ class RepositorySetup:
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Invite collaborators (if needed):")
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
+        print()
+
+        Logger.step("Cleanup Recommendations:")
+        print("  You can safely remove the following setup scripts:")
+        print("  - bootstrap.py")
+        print("  - tools/pyproject_template/configure.py")
+        print("  - tools/pyproject_template/setup_repo.py")
         print()
 
         Logger.step("You're all set!")

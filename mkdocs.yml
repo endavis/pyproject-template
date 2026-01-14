@@ -62,8 +62,8 @@ nav:
       - CI/CD & Testing: development/ci-cd-testing.md
       - Extensions: development/extensions.md
       - Release & Automation: development/release-and-automation.md
-  - Guides:
-      - Migration Guide: guides/migration.md
+  - Template:
+      - Migration Guide: template/migration.md
   - Reference:
       - API Reference: reference/api.md
   - Examples: examples/README.md

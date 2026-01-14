@@ -24,13 +24,13 @@
       "LSTool",
       "GrepTool"
     ],
-    "sandbox": {
-      "enabled": false,
-      "profile": "permissive-open"
-    }
+    "sandbox": false
   },
   "ui": {
     "autoApprove": false,
     "showToolCalls": true
+  },
+  "context": {
+    "files": ["AGENTS.md", "GEMINI.md"]
   }
 }

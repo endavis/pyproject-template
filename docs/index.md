@@ -42,13 +42,13 @@ print(message)  # Output: Hello, Python!
 - **[Installation](getting-started/installation.md)** - How to install the package
 - **[Usage Guide](usage/basics.md)** - How to use the package
 - **[API Reference](reference/api.md)** - Complete API documentation
-- **[Migration Guide](guides/migration.md)** - Move an existing project into this template
+- **[Migration Guide](template/migration.md)** - Move an existing project into this template
 
 ### For Contributors
 
-- **[Contributing Guide](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)** - How to contribute
+- **[Contributing Guide](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md)** - Development workflow, coding standards, and best practices (**source of truth**)
 - **[Code of Conduct](https://github.com/username/package_name/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
-- **[Development Guide](https://github.com/username/package_name/blob/main/AGENTS.md)** - Development setup and standards
+- **[AI Agent Guide](https://github.com/username/package_name/blob/main/AGENTS.md)** - Quick reference for AI coding assistants
 
 ## Support
 

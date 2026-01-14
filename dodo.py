@@ -48,7 +48,7 @@ def task_install() -> dict[str, Any]:
     }
 
 
-def task_dev() -> dict[str, Any]:
+def task_install_dev() -> dict[str, Any]:
     """Install package with dev dependencies."""
     return {
         "actions": [
@@ -194,9 +194,11 @@ def task_format_check() -> dict[str, Any]:
 
 
 def task_type_check() -> dict[str, Any]:
-    """Run mypy type checking."""
+    """Run mypy type checking with strict mode (matches pre-commit hooks)."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mypy src/"],
+        "actions": [
+            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mypy --strict --ignore-missing-imports src/"
+        ],
         "title": title_with_actions,
     }
 
@@ -214,7 +216,7 @@ def task_audit() -> dict[str, Any]:
     """Run security audit with pip-audit (requires security extras)."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pip-audit || "
+            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pip-audit --skip-editable || "
             "echo 'pip-audit not installed. Run: uv sync --extra security'"
         ],
         "title": title_with_actions,
@@ -765,8 +767,8 @@ def _install_direnv() -> None:
 
     print("✓ direnv installed.")
     print("\nIMPORTANT: Add direnv hook to your shell:")
-    print("  Bash: echo 'eval \"$(direnv hook bash)\"' >> ~/.bashrc")
-    print("  Zsh:  echo 'eval \"$(direnv hook zsh)\"' >> ~/.zshrc")
+    print("  Bash: echo 'eval \"$(direnv hook bash)\"'")
+    print("  Zsh:  echo 'eval \"$(direnv hook zsh)\"'")
 
 
 def task_install_direnv() -> dict[str, Any]:

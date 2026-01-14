@@ -2,9 +2,9 @@
 Helper script to apply this template onto an existing repository.
 
 Usage:
-    python tools/migrate_existing_project.py --target /path/to/existing/repo
+    python tools/pyproject_template/migrate_existing_project.py --target /path/to/existing/repo
     # Optional: download the template archive (no local checkout needed)
-    python tools/migrate_existing_project.py --target /path/to/repo --download
+    python tools/pyproject_template/migrate_existing_project.py --target /path/to/repo --download
 
 What it does:
     - Optionally downloads the template (zip/tar) into target/tmp and extracts it
@@ -26,10 +26,10 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import shutil
-import tarfile
-import urllib.request
-import zipfile
 from pathlib import Path
+
+# Import shared utilities
+from tools.pyproject_template.utils import Logger, download_and_extract_archive
 
 DEFAULT_ARCHIVE_URL = "https://github.com/endavis/pyproject-template/archive/refs/heads/main.zip"
 
@@ -38,7 +38,7 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
     # Config and tooling
     "pyproject.toml",
     "dodo.py",
-    "configure.py",
+    "tools/pyproject_template/configure.py",
     ".envrc",
     ".envrc.local.example",
     ".pre-commit-config.yaml",
@@ -60,6 +60,7 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
     ".claude",
     ".codex",
     ".gemini",
+    "tools",
     "tmp/.gitkeep",
 )
 
@@ -106,39 +107,15 @@ def main() -> None:
     if args.download:
         tmp_dir = target_root / "tmp"
         ensure_exists(tmp_dir)
-        archive_path = tmp_dir / "pyproject-template-archive"
         print(f"Downloading template archive from {args.archive_url} ...")
-        urllib.request.urlretrieve(args.archive_url, archive_path)  # nosec B310 - URL is user-provided GitHub archive
 
-        extract_dir = tmp_dir / "pyproject-template-extracted"
-        if extract_dir.exists():
-            shutil.rmtree(extract_dir)
-        ensure_exists(extract_dir)
-
-        if zipfile.is_zipfile(archive_path):
-            with zipfile.ZipFile(archive_path, "r") as zf:
-                # Filter out dangerous paths (path traversal attacks)
-                for member in zf.namelist():
-                    if member.startswith("/") or ".." in member:
-                        continue
-                    zf.extract(member, extract_dir)
-            contents = list(extract_dir.iterdir())
-            template_root = contents[0] if contents else extract_dir
-        elif tarfile.is_tarfile(archive_path):
-            with tarfile.open(archive_path, "r:*") as tf:
-                # Filter out dangerous members (path traversal, absolute paths, devices)
-                safe_members = [
-                    m
-                    for m in tf.getmembers()
-                    if m.name and not (m.name.startswith("/") or ".." in m.name)
-                ]
-                tf.extractall(extract_dir, members=safe_members)  # nosec B202 - members are validated above
-            contents = list(extract_dir.iterdir())
-            template_root = contents[0] if contents else extract_dir
-        else:
-            raise SystemExit("Unknown archive format. Provide zip or tarball.")
+        template_root = download_and_extract_archive(args.archive_url, tmp_dir)
+        Logger.success(f"Template downloaded to {template_root}")
     else:
-        template_root = (args.template or Path(__file__).resolve().parent.parent).resolve()
+        # Default to the root of the repo containing this script
+        # Script is at tools/pyproject_template/migrate_existing_project.py
+        # Root is ../../..
+        template_root = (args.template or Path(__file__).resolve().parent.parent.parent).resolve()
 
     if not template_root.exists():
         raise SystemExit(f"Template path does not exist: {template_root}")
@@ -202,11 +179,14 @@ def main() -> None:
             print(f"  - {path.relative_to(template_root)}")
 
     print("\nNext steps:")
-    print(" 1) In the target repo, run: python configure.py")
-    print(" 2) Move your source into src/<package_name>/ and fix imports.")
-    print(" 3) Merge dependencies/metadata into the new pyproject.toml.")
-    print(" 4) Regenerate uv.lock (uv lock) and run checks (doit check).")
-    print(" 5) Compare backups above and port any unique content into the new files.")
+    print(" 1) Run: python tools/pyproject_template/configure.py")
+    print(" 2) Move your source code into src/<package_name>/ and fix imports")
+    print(" 3) Merge your dependencies into pyproject.toml")
+    print(" 4) Run: uv sync && doit check")
+    print(" 5) Review backed-up files and port any custom content")
+    print("\nFuture updates:")
+    print(" • Run: python tools/pyproject_template/check_template_updates.py")
+    print(" • This will show what changed in the template since migration")
     print("\nDone.")
 
 
