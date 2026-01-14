@@ -49,7 +49,6 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
     "src/package_name",
     # Docs and guides
     "AGENTS.md",
-    "AI_SETUP.md",
     "CHANGELOG.md",
     "docs",
     "examples",

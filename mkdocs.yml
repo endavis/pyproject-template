@@ -62,6 +62,7 @@ nav:
       - CI/CD & Testing: development/ci-cd-testing.md
       - Extensions: development/extensions.md
       - Release & Automation: development/release-and-automation.md
+      - AI Agent Setup: development/AI_SETUP.md
   - Template:
       - Migration Guide: template/migration.md
   - Reference:

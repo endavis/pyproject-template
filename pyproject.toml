@@ -39,6 +39,7 @@ dev = [
     "codespell>=2.2",
     "pyproject-fmt>=2.0",
     "commitizen>=3.0",
+    "pyright>=1.1.0",
 ]
 security = [
     "pip-audit>=2.6",
@@ -197,3 +198,30 @@ merge_prerelease = true
 bump_pattern = "^(feat|fix|refactor|perf)"
 bump_map = { "feat" = "MINOR", "fix" = "PATCH", "refactor" = "PATCH", "perf" = "PATCH" }
 change_type_order = ["BREAKING CHANGE", "feat", "fix", "refactor", "perf"]
+
+[tool.pyright]
+# LSP support for Claude Code - provides fast code navigation and type checking
+include = [
+    "src",
+    "tests",
+    "*.py",           # Root level Python files (dodo.py, setup-repo.py, configure.py)
+    "tools",          # Tools directory (migrate_existing_project.py)
+    ".github",        # Any Python in GitHub workflows/scripts
+]
+exclude = [
+    "**/__pycache__",
+    "**/.venv",
+    "**/tmp",
+    "**/.pytest_cache",
+    "**/.mypy_cache",
+    "**/.ruff_cache",
+    "**/site",        # mkdocs build output
+    "**/.git",
+]
+venvPath = "."
+venv = ".venv"
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+useLibraryCodeForTypes = true
+reportMissingImports = true
+reportMissingTypeStubs = false

@@ -89,6 +89,32 @@ Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`
 - `.claude/claude.md` - Imports AGENTS.md
 - `.claude/settings.local.json` - Command permissions
 
+**LSP Support (Recommended):**
+
+Claude Code supports Language Server Protocol for enhanced code intelligence:
+- Document symbols (functions, classes, variables)
+- Go to definition / find references
+- Hover information and type checking
+- Call hierarchy navigation
+
+**Quick LSP Setup:**
+```bash
+# 1. Install the LSP plugin from marketplace
+/install-plugin @anthropic-ai/claude-code-lsp
+
+# 2. Install development dependencies (includes language server)
+doit install_dev
+
+# 3. Enable LSP tool in .envrc.local
+echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local
+direnv allow
+
+# 4. Start Claude Code
+claude
+```
+
+For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` in the repository root.
+
 ### 4. Other AI Tools
 
 The `AGENTS.md` file serves as general-purpose documentation for any AI coding assistant:
