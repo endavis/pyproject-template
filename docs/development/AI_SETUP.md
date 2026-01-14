@@ -91,26 +91,29 @@ Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`
 
 **LSP Support (Recommended):**
 
-Claude Code supports Language Server Protocol for fast code navigation and type checking. With LSP enabled, Claude can:
-- Jump to definitions in ~50ms (vs ~45s with text search)
-- Find references across the codebase instantly
-- See type information and errors
-- Navigate code semantically rather than textually
+Claude Code supports Language Server Protocol for enhanced code intelligence:
+- Document symbols (functions, classes, variables)
+- Go to definition / find references
+- Hover information and type checking
+- Call hierarchy navigation
 
 **Quick LSP Setup:**
 ```bash
-# 1. Enable LSP tool in .envrc.local
-cp .envrc.local.example .envrc.local
-# Uncomment: export ENABLE_LSP_TOOL=1
+# 1. Install the LSP plugin from marketplace
+/install-plugin @anthropic-ai/claude-code-lsp
 
-# 2. Install Pyright plugin in Claude Code
-/plugin install pyright-lsp@claude-plugins-official
+# 2. Install development dependencies (includes language server)
+doit install_dev
 
-# 3. Install Pyright language server
-pip install pyright
+# 3. Enable LSP tool in .envrc.local
+echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local
+direnv allow
+
+# 4. Start Claude Code
+claude
 ```
 
-For complete setup instructions and troubleshooting, see [.claude/lsp-setup.md](.claude/lsp-setup.md).
+For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` in the repository root.
 
 ### 4. Other AI Tools
 

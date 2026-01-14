@@ -196,7 +196,7 @@ With LSP:
 
 ## Related Documentation
 
-- [AI_SETUP.md](../AI_SETUP.md) - Complete AI development setup
+- [AI_SETUP.md](../docs/development/AI_SETUP.md) - Complete AI development setup
 - [Pyright Documentation](https://microsoft.github.io/pyright/)
 - [Claude Code Plugin Docs](https://code.claude.com/docs/en/discover-plugins)
 
