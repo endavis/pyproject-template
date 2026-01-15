@@ -30,7 +30,7 @@ from tools.pyproject_template.utils import (
 )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Configure the project template.")
     parser.add_argument(
         "--auto",
@@ -42,7 +42,12 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Skip confirmation prompt (useful with --auto).",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be done without making changes.",
+    )
+    return parser.parse_args(argv)
 
 
 def read_pyproject(path: Path) -> dict[str, Any]:
@@ -181,15 +186,30 @@ def require(value: str, label: str) -> str:
     )
 
 
-def main() -> int:
-    """Run the configuration wizard."""
+def run_configure(
+    auto: bool = False,
+    yes: bool = False,
+    dry_run: bool = False,
+    defaults: dict[str, str] | None = None,
+) -> int:
+    """Run the configuration wizard.
+
+    Args:
+        auto: Use values from pyproject.toml without prompts.
+        yes: Skip confirmation prompt.
+        dry_run: Show what would be done without making changes.
+        defaults: Pre-loaded default values (if None, loads from pyproject.toml).
+
+    Returns:
+        Exit code (0 for success, non-zero for error).
+    """
     # Ensure script is run from project root
     if not Path("pyproject.toml").exists():
         Logger.error("Please run this script from the project root directory.")
         return 1
 
-    args = parse_args()
-    defaults = load_defaults(Path("pyproject.toml"))
+    if defaults is None:
+        defaults = load_defaults(Path("pyproject.toml"))
 
     Logger.header("Python Project Template Configuration")
     print("\nThis script will help you set up your new Python project.\n")
@@ -197,7 +217,7 @@ def main() -> int:
     # Gather project information
     Logger.step("Project Information")
 
-    if args.auto:
+    if auto:
         project_name = require(defaults["project_name"], "[project].name")
         package_name = require(defaults["package_name"], "package name")
         pypi_name = require(defaults["pypi_name"], "PyPI name")
@@ -245,7 +265,7 @@ def main() -> int:
         github_user = prompt("GitHub username", defaults["github_user"] or "username")
 
     # Optional features
-    if args.auto:
+    if auto:
         enable_dependabot = False
     else:
         print()
@@ -263,9 +283,14 @@ def main() -> int:
     print(f"Dependabot:       {'Enabled' if enable_dependabot else 'Disabled'}")
     print("━" * 60)
 
-    if not args.yes and not prompt_confirm("\nProceed with configuration?"):
+    if not yes and not prompt_confirm("\nProceed with configuration?"):
         Logger.warning("Configuration cancelled.")
         return 1
+
+    if dry_run:
+        Logger.info("Dry run mode - no changes will be made")
+        Logger.success("Configuration validated successfully (dry run)")
+        return 0
 
     Logger.step("Configuring project...")
 
@@ -393,6 +418,16 @@ def main() -> int:
         print("  → You can safely delete it manually")
 
     return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Main entry point for CLI usage."""
+    args = parse_args(argv)
+    return run_configure(
+        auto=args.auto,
+        yes=args.yes,
+        dry_run=args.dry_run,
+    )
 
 
 if __name__ == "__main__":

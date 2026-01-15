@@ -131,7 +131,7 @@ def compare_files(project_root: Path, template_root: Path) -> list[Path]:
     return sorted(different_files)
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare your project against the latest pyproject-template."
     )
@@ -154,19 +154,39 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Keep downloaded template after comparison (don't clean up)",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be checked without downloading (currently same as normal)",
+    )
+    return parser.parse_args(argv)
 
 
-def main() -> None:
-    args = parse_args()
+def run_check_updates(
+    template_version: str | None = None,
+    skip_changelog: bool = False,
+    keep_template: bool = False,
+    dry_run: bool = False,
+) -> int:
+    """Check for template updates.
 
+    Args:
+        template_version: Specific template version to compare against.
+        skip_changelog: Skip opening CHANGELOG.md in editor.
+        keep_template: Keep downloaded template after comparison.
+        dry_run: Show what would be done without making changes.
+
+    Returns:
+        Exit code (0 for success, non-zero for error).
+    """
     project_root = Path.cwd()
     tmp_dir = project_root / "tmp"
     tmp_dir.mkdir(exist_ok=True)
 
     # Get template version
-    if args.template_version:
-        version = args.template_version
+    version: str | None = None
+    if template_version:
+        version = template_version
         Logger.info(f"Comparing against template version: {version}")
     else:
         version = get_latest_release()
@@ -175,11 +195,15 @@ def main() -> None:
         else:
             Logger.info("Comparing against template main branch")
 
+    if dry_run:
+        Logger.info("Dry run mode - would download and compare template files")
+        return 0
+
     # Download template
     template_dir = download_template(tmp_dir, version)
 
     # Open CHANGELOG.md for review
-    if not args.skip_changelog:
+    if not skip_changelog:
         open_changelog(template_dir)
 
     # Compare files
@@ -220,7 +244,7 @@ def main() -> None:
         print(f"\nOr browse all template files: {template_dir.relative_to(project_root)}/")
 
     # Cleanup
-    if not args.keep_template:
+    if not keep_template:
         print()
         Logger.info("Cleaning up downloaded template...")
         shutil.rmtree(template_dir.parent)
@@ -230,7 +254,21 @@ def main() -> None:
         Logger.info(f"Template kept at: {template_dir.relative_to(project_root)}")
 
     print()
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Main entry point for CLI usage."""
+    args = parse_args(argv)
+    return run_check_updates(
+        template_version=args.template_version,
+        skip_changelog=args.skip_changelog,
+        keep_template=args.keep_template,
+        dry_run=args.dry_run,
+    )
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    sys.exit(main())
