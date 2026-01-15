@@ -146,6 +146,10 @@ def get_recommended_action(
     latest_commit: tuple[str, str] | None,
 ) -> int | None:
     """Determine the recommended action based on context."""
+    # New project (no git, never synced) needs full setup
+    if not context.has_git and not template_state.is_synced():
+        return 4  # Full setup
+
     # Fresh clone needs full setup
     if context.is_fresh_clone:
         return 4  # Full setup
@@ -160,8 +164,8 @@ def get_recommended_action(
         if latest_sha[:12] != template_state.commit[:12]:
             return 1  # Check for updates
 
-    # If never synced, suggest checking updates
-    if not template_state.is_synced():
+    # Existing repo but never synced - suggest checking updates
+    if context.has_git and not template_state.is_synced():
         return 1  # Check for updates
 
     return None  # Up to date
