@@ -40,8 +40,6 @@ dev = [
     "pyproject-fmt>=2.0",
     "commitizen>=3.0",
     "pyright>=1.1.0",
-    "pyyaml>=6.0",
-    "types-pyyaml>=6.0",
 ]
 security = [
     "pip-audit>=2.6",

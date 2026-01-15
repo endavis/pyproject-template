@@ -13,11 +13,9 @@ from pathlib import Path
 from typing import Any
 
 try:
-    import tomllib  # py312+
+    import tomllib  # py311+
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
-
-import yaml
 
 from .utils import Logger, validate_email, validate_package_name
 
@@ -27,7 +25,37 @@ TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 
 # Settings file location
 SETTINGS_DIR = Path(".config/pyproject_template")
-SETTINGS_FILE = SETTINGS_DIR / "settings.yml"
+SETTINGS_FILE = SETTINGS_DIR / "settings.toml"
+
+
+def _toml_escape(value: str) -> str:
+    """Escape a string for TOML."""
+    return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _toml_serialize(data: dict[str, Any]) -> str:
+    """Serialize a simple dict to TOML format.
+
+    Only supports flat tables with string values and nested tables one level deep.
+    """
+    lines: list[str] = []
+
+    for section, values in data.items():
+        if not isinstance(values, dict):
+            continue
+        lines.append(f"[{section}]")
+        for key, value in values.items():
+            if value is None:
+                continue
+            if isinstance(value, str):
+                lines.append(f'{key} = "{_toml_escape(value)}"')
+            elif isinstance(value, bool):
+                lines.append(f"{key} = {str(value).lower()}")
+            elif isinstance(value, int | float):
+                lines.append(f"{key} = {value}")
+        lines.append("")
+
+    return "\n".join(lines)
 
 
 @dataclass
@@ -170,14 +198,14 @@ class SettingsManager:
         self._load_from_git()
 
     def _load_from_settings_file(self) -> None:
-        """Load settings from .config/pyproject_template/settings.yml."""
+        """Load settings from .config/pyproject_template/settings.toml."""
         settings_path = self.root / SETTINGS_FILE
         if not settings_path.exists():
             return
 
         try:
-            with settings_path.open() as f:
-                data = yaml.safe_load(f) or {}
+            with settings_path.open("rb") as f:
+                data = tomllib.load(f)
 
             # Load project settings
             if "project" in data:
@@ -197,7 +225,7 @@ class SettingsManager:
                 self.template_state.commit = tmpl.get("commit")
                 self.template_state.commit_date = tmpl.get("commit_date")
 
-        except (yaml.YAMLError, OSError) as e:
+        except (tomllib.TOMLDecodeError, OSError) as e:
             Logger.warning(f"Failed to read settings file: {e}")
 
     def _load_from_pyproject(self) -> None:
@@ -406,7 +434,7 @@ class SettingsManager:
 
         settings_path = self.root / SETTINGS_FILE
         with settings_path.open("w") as f:
-            yaml.safe_dump(data, f, default_flow_style=False, sort_keys=False)
+            f.write(_toml_serialize(data))
 
         Logger.success(f"Settings saved to {SETTINGS_FILE}")
 

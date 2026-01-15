@@ -162,26 +162,26 @@ Repository = "https://github.com/testuser/test-project"
             assert manager.settings.github_repo == "test-project"
 
     def test_load_from_settings_file(self, tmp_path: Path) -> None:
-        """Test loading settings from settings.yml."""
+        """Test loading settings from settings.toml."""
         settings_dir = tmp_path / ".config" / "pyproject_template"
         settings_dir.mkdir(parents=True)
 
         settings_content = """
-project:
-  name: "My Project"
-  package_name: "my_project"
-  pypi_name: "my-project"
-  description: "A great project"
-  author_name: "Author Name"
-  author_email: "author@example.com"
-  github_user: "authoruser"
-  github_repo: "my-project"
+[project]
+name = "My Project"
+package_name = "my_project"
+pypi_name = "my-project"
+description = "A great project"
+author_name = "Author Name"
+author_email = "author@example.com"
+github_user = "authoruser"
+github_repo = "my-project"
 
-template:
-  commit: "abc123def456"
-  commit_date: "2025-01-15"
+[template]
+commit = "abc123def456"
+commit_date = "2025-01-15"
 """
-        (settings_dir / "settings.yml").write_text(settings_content)
+        (settings_dir / "settings.toml").write_text(settings_content)
         (tmp_path / "pyproject.toml").write_text('[project]\nname = "other"')
 
         with patch("subprocess.run") as mock_run:
@@ -206,7 +206,7 @@ template:
             manager.settings.project_name = "Saved Project"
             manager.save()
 
-            settings_file = tmp_path / ".config" / "pyproject_template" / "settings.yml"
+            settings_file = tmp_path / ".config" / "pyproject_template" / "settings.toml"
             assert settings_file.exists()
             content = settings_file.read_text()
             assert "Saved Project" in content
@@ -225,7 +225,7 @@ template:
             assert manager.template_state.commit_date == "2025-01-20"
 
             # Verify it was saved
-            settings_file = tmp_path / ".config" / "pyproject_template" / "settings.yml"
+            settings_file = tmp_path / ".config" / "pyproject_template" / "settings.toml"
             content = settings_file.read_text()
             assert "newcommit123" in content
 
