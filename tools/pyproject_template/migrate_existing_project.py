@@ -29,7 +29,7 @@ import shutil
 from pathlib import Path
 
 # Import shared utilities
-from tools.pyproject_template.utils import Logger, download_and_extract_archive
+from .utils import Logger, download_and_extract_archive
 
 DEFAULT_ARCHIVE_URL = "https://github.com/endavis/pyproject-template/archive/refs/heads/main.zip"
 

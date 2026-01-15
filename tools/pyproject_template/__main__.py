@@ -23,9 +23,9 @@ import argparse
 import sys
 from pathlib import Path
 
-from tools.pyproject_template.check_template_updates import run_check_updates
-from tools.pyproject_template.configure import load_defaults, run_configure
-from tools.pyproject_template.settings import (
+from .check_template_updates import run_check_updates
+from .configure import load_defaults, run_configure
+from .settings import (
     SETTINGS_FILE,
     PreflightWarning,
     ProjectContext,
@@ -35,7 +35,7 @@ from tools.pyproject_template.settings import (
     get_template_commits_since,
     get_template_latest_commit,
 )
-from tools.pyproject_template.utils import Colors, Logger, prompt
+from .utils import Colors, Logger, prompt
 
 
 def print_banner() -> None:
@@ -332,7 +332,7 @@ def action_repo_settings(manager: SettingsManager, dry_run: bool) -> int:
 
     # Import setup_repo module for repository configuration
     try:
-        from tools.pyproject_template.setup_repo import RepositorySetup
+        from .setup_repo import RepositorySetup
 
         setup = RepositorySetup()
         setup.config = {

@@ -4,20 +4,20 @@ pyproject-template tools package.
 Provides utilities for managing Python projects based on pyproject-template.
 """
 
-from tools.pyproject_template.check_template_updates import (
+from .check_template_updates import (
     compare_files,
     download_template,
     get_latest_release,
     run_check_updates,
 )
-from tools.pyproject_template.configure import (
+from .configure import (
     load_defaults,
     run_configure,
 )
-from tools.pyproject_template.migrate_existing_project import (
+from .migrate_existing_project import (
     run_migrate,
 )
-from tools.pyproject_template.settings import (
+from .settings import (
     ProjectContext,
     ProjectSettings,
     SettingsManager,
@@ -25,7 +25,7 @@ from tools.pyproject_template.settings import (
     get_template_commits_since,
     get_template_latest_commit,
 )
-from tools.pyproject_template.utils import (
+from .utils import (
     Colors,
     GitHubCLI,
     Logger,

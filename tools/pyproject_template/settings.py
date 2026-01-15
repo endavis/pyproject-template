@@ -19,7 +19,7 @@ except ModuleNotFoundError:  # pragma: no cover
 
 import yaml
 
-from tools.pyproject_template.utils import Logger, validate_email, validate_package_name
+from .utils import Logger, validate_email, validate_package_name
 
 # Template repository info
 TEMPLATE_REPO = "endavis/pyproject-template"

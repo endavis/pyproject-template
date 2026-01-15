@@ -19,7 +19,7 @@ except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
 
 # Import shared utilities
-from tools.pyproject_template.utils import (
+from .utils import (
     Logger,
     prompt,
     prompt_confirm,

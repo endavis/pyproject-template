@@ -31,7 +31,7 @@ import urllib.request
 from pathlib import Path
 
 # Import shared utilities
-from tools.pyproject_template.utils import (
+from .utils import (
     Colors,
     Logger,
     download_and_extract_archive,

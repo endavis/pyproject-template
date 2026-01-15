@@ -28,7 +28,7 @@ from pathlib import Path
 from typing import Any
 
 # Import shared utilities
-from tools.pyproject_template.utils import (
+from .utils import (
     Colors,
     GitHubCLI,
     Logger,
