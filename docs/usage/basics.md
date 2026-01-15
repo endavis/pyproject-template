@@ -131,6 +131,35 @@ uv run doit pre_commit_run
 uv run pre-commit run --all-files
 ```
 
+#### GitHub Workflow Tasks
+
+```bash
+# Create GitHub issue (interactive - opens $EDITOR with template)
+uv run doit issue --type=feature    # For new features
+uv run doit issue --type=bug        # For bugs and defects
+uv run doit issue --type=refactor   # For code refactoring
+
+# Create GitHub issue (non-interactive - for scripts/AI)
+uv run doit issue --type=feature --title="Add export" --body-file=issue.md
+uv run doit issue --type=feature --title="Add export" --body="## Problem\n..."
+
+# Create Pull Request (interactive - opens $EDITOR with template)
+uv run doit pr
+
+# Create Pull Request (non-interactive - for scripts/AI)
+uv run doit pr --title="feat: add export" --body-file=pr.md
+uv run doit pr --title="feat: add export" --body="## Description\n..."
+
+# Create draft PR
+uv run doit pr --draft
+```
+
+Features:
+- **Interactive mode**: Opens `$EDITOR` with pre-filled template
+- **Auto-detection**: Extracts issue number from branch name (e.g., `feat/42-add-feature`)
+- **Validation**: Checks required fields before creating issue/PR
+- **Non-interactive mode**: Pass `--body` or `--body-file` for AI agents or scripts
+
 ### Pre-commit Hooks
 
 The project includes pre-commit hooks that run automatically before each commit:
