@@ -348,15 +348,27 @@ Every code change must be linked to a GitHub Issue. This ensures:
 
 #### 1. **Issue:** Ensure GitHub Issue Exists
 
-**Create issue if needed:**
+**Create issue using doit (recommended):**
+```bash
+# Interactive: Opens $EDITOR with template
+doit issue --type=feature    # For new features
+doit issue --type=bug        # For bugs and defects
+doit issue --type=refactor   # For code refactoring
+
+# Non-interactive: For AI agents or scripts
+doit issue --type=feature --title="Add export" --body-file=issue.md
+doit issue --type=feature --title="Add export" --body="## Problem\n..."
+```
+
+**Or use gh CLI directly:**
 ```bash
 gh issue create --title "<type>: <description>" --body "..."
 ```
 
-**Use YAML issue forms:**
-- `bug_report.yml` - For bugs and defects
-- `feature_request.yml` - For new features
-- `refactor.yml` - For code refactoring
+**Issue types map to title prefixes:**
+- `feature` → `feat: <title>`
+- `bug` → `fix: <title>`
+- `refactor` → `refactor: <title>`
 
 **Required fields ensure complete information** - Fill all fields to provide context.
 
@@ -398,6 +410,24 @@ Use `doit commit` for interactive commit creation with commitizen.
 - CI checks (on PR)
 
 #### 4. **Pull Request:** Submit PR from Branch to `main`
+
+**Create PR using doit (recommended):**
+```bash
+# Interactive: Opens $EDITOR with template
+doit pr
+
+# Non-interactive: For AI agents or scripts
+doit pr --title="feat: add export" --body-file=pr.md
+doit pr --title="feat: add export" --body="## Description\n..."
+
+# Create as draft
+doit pr --draft
+```
+
+Features:
+- Auto-detects issue number from branch name (e.g., `feat/42-description` → `Closes #42`)
+- Pre-fills the PR template with detected issue
+- Validates required fields before creating
 
 **PR Title:**
 - Must follow conventional commit format: `<type>: <subject>`

@@ -103,7 +103,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **No Speculation:** Don't read files you don't need.
 
 ## Critical Reminders
-- **Flow:** Issue -> Branch -> Commit -> PR. NEVER commit to main.
+- **Flow:** Issue (`doit issue`) -> Branch -> Commit -> PR (`doit pr`). NEVER commit to main.
 - **Scope:** Never mix refactoring, features, and docs in one PR. Create separate branches.
 - **Verify:** Check file paths (`ls`) and branch (`git status`) before assuming they exist.
 - **Security:** NEVER bypass security checks (e.g., `--no-verify`, ignoring secrets).
@@ -114,5 +114,16 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Tests:** Creating code = Creating tests. No exceptions.
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
-- **PRs:** Always use `.github/pull_request_template.md` and complete all sections.
-- **Issues:** Manually close linked issues after PR merge (auto-close is disabled).
+- **PRs:** Use `doit pr` to create PRs with proper template format.
+- **Issues:** Use `doit issue --type=<type>` to create issues. Manually close after PR merge.
+
+## Workflow Commands (for AI agents)
+```bash
+# Create issue (non-interactive)
+doit issue --type=feature --title="Add feature" --body="## Problem\n..."
+doit issue --type=bug --title="Fix bug" --body-file=issue.md
+
+# Create PR (non-interactive)
+doit pr --title="feat: add feature" --body="## Description\n..."
+doit pr --title="fix: bug fix" --body-file=pr.md
+```
