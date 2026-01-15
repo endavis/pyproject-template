@@ -115,13 +115,15 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
 - **PRs:** Use `doit pr` to create PRs with proper template format.
-- **Issues:** Use `doit issue --type=<type>` to create issues. Manually close after PR merge.
+- **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge.
 
 ## Workflow Commands (for AI agents)
 ```bash
-# Create issue (non-interactive)
+# Create issue (non-interactive) - types: feature, bug, refactor, doc, chore
 doit issue --type=feature --title="Add feature" --body="## Problem\n..."
 doit issue --type=bug --title="Fix bug" --body-file=issue.md
+doit issue --type=doc --title="Add guide" --body="## Description\n..."
+doit issue --type=chore --title="Update CI" --body="## Description\n..."
 
 # Create PR (non-interactive)
 doit pr --title="feat: add feature" --body="## Description\n..."

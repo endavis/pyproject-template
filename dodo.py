@@ -999,6 +999,66 @@ Describe the refactoring approach and what the code will look like after.
 Performance impact, breaking change considerations, migration steps.
 """
 
+ISSUE_TEMPLATE_DOC = """\
+# Lines starting with # are comments and will be ignored.
+# Fill in the sections below, save, and exit.
+# Delete the placeholder text and add your content.
+
+## Documentation Type
+<!-- Required: What kind of documentation change? -->
+New guide / Update existing / Fix incorrect info / Add examples / API docs
+
+## Description
+<!-- Required: What documentation is needed? -->
+Describe the documentation that is missing or needs improvement.
+
+## Suggested Location
+<!-- Optional: Where should this documentation live? Delete section if not needed. -->
+- docs/getting-started/
+- docs/examples/
+- README.md
+
+## Success Criteria
+<!-- Optional: How will we know the documentation is complete? Delete section if not needed. -->
+- [ ] Topic is fully explained
+- [ ] Code examples included
+- [ ] Added to navigation/index
+
+## Additional Context
+<!-- Optional: Any other relevant information. Delete section if not needed. -->
+Links to related documentation, examples from other projects.
+"""
+
+ISSUE_TEMPLATE_CHORE = """\
+# Lines starting with # are comments and will be ignored.
+# Fill in the sections below, save, and exit.
+# Delete the placeholder text and add your content.
+
+## Chore Type
+<!-- Required: What kind of maintenance task? -->
+CI/CD / Dependencies / Tooling / Cleanup / Configuration
+
+## Description
+<!-- Required: What needs to be done and why? -->
+Describe the maintenance task.
+
+## Proposed Changes
+<!-- Optional: What specific changes need to be made? Delete section if not needed. -->
+- Update file X
+- Modify configuration Y
+- Add/remove dependency Z
+
+## Success Criteria
+<!-- Optional: How will we know this task is complete? Delete section if not needed. -->
+- [ ] CI passes
+- [ ] No breaking changes
+- [ ] Documentation updated if needed
+
+## Additional Context
+<!-- Optional: Any other relevant information. Delete section if not needed. -->
+Related issues, urgency, dependencies on other tasks.
+"""
+
 PR_TEMPLATE = """\
 # Lines starting with # are comments and will be ignored.
 # Fill in the sections below, save, and exit.
@@ -1154,7 +1214,7 @@ def _validate_issue_content(sections: dict[str, str], issue_type: str, console: 
 
     Args:
         sections: Parsed markdown sections
-        issue_type: Type of issue (feature, bug, refactor)
+        issue_type: Type of issue (feature, bug, refactor, doc, chore)
         console: Rich console for output
 
     Returns:
@@ -1164,6 +1224,8 @@ def _validate_issue_content(sections: dict[str, str], issue_type: str, console: 
         "feature": ["Problem", "Proposed Solution"],
         "bug": ["Bug Description", "Steps to Reproduce", "Expected vs Actual Behavior"],
         "refactor": ["Current Code Issue", "Proposed Improvement"],
+        "doc": ["Documentation Type", "Description"],
+        "chore": ["Chore Type", "Description"],
     }
 
     missing = []
@@ -1224,7 +1286,8 @@ def _read_body_file(file_path: str, console: "Console") -> str | None:
 def task_issue() -> dict[str, Any]:
     """Create a GitHub issue using the appropriate template.
 
-    Supports three issue types: feature, bug, refactor.
+    Supports five issue types: feature, bug, refactor, doc, chore.
+    Labels are automatically applied based on the issue type.
 
     Three modes:
     1. Interactive (default): Opens $EDITOR with template
@@ -1233,8 +1296,8 @@ def task_issue() -> dict[str, Any]:
 
     Examples:
         Interactive:  doit issue --type=feature
-        From file:    doit issue --type=feature --title="Add export" --body-file=issue.md
-        Direct:       doit issue --type=feature --title="Add export" --body="## Problem\\n..."
+        From file:    doit issue --type=doc --title="Add guide" --body-file=issue.md
+        Direct:       doit issue --type=chore --title="Update CI" --body="## Description\\n..."
     """
 
     def create_issue(
@@ -1254,19 +1317,21 @@ def task_issue() -> dict[str, Any]:
         console.print()
 
         # Validate type
-        valid_types = ["feature", "bug", "refactor"]
+        valid_types = ["feature", "bug", "refactor", "doc", "chore"]
         if type not in valid_types:
             console.print(f"[red]Invalid type: {type}. Must be one of: {valid_types}[/red]")
             sys.exit(1)
 
-        # Map type to title prefix and template
+        # Map type to labels and template
         type_config = {
-            "feature": {"prefix": "feat", "template": ISSUE_TEMPLATE_FEATURE},
-            "bug": {"prefix": "fix", "template": ISSUE_TEMPLATE_BUG},
-            "refactor": {"prefix": "refactor", "template": ISSUE_TEMPLATE_REFACTOR},
+            "feature": {"labels": "enhancement,needs-triage", "template": ISSUE_TEMPLATE_FEATURE},
+            "bug": {"labels": "bug,needs-triage", "template": ISSUE_TEMPLATE_BUG},
+            "refactor": {"labels": "refactor,needs-triage", "template": ISSUE_TEMPLATE_REFACTOR},
+            "doc": {"labels": "documentation,needs-triage", "template": ISSUE_TEMPLATE_DOC},
+            "chore": {"labels": "chore,needs-triage", "template": ISSUE_TEMPLATE_CHORE},
         }
         config = type_config[type]
-        prefix = config["prefix"]
+        labels = config["labels"]
 
         # Determine body content
         if body_file:
@@ -1296,19 +1361,27 @@ def task_issue() -> dict[str, Any]:
 
         # Get title if not provided
         if not title:
-            console.print(f"[cyan]Issue title (without '{prefix}: ' prefix):[/cyan]")
+            console.print("[cyan]Issue title:[/cyan]")
             title = input("> ").strip()
             if not title:
                 console.print("[red]Title is required.[/red]")
                 sys.exit(1)
 
-        full_title = f"{prefix}: {title}"
-
         # Create the issue
         console.print("\n[cyan]Creating issue...[/cyan]")
         try:
             result = subprocess.run(
-                ["gh", "issue", "create", "--title", full_title, "--body", body_content],
+                [
+                    "gh",
+                    "issue",
+                    "create",
+                    "--title",
+                    title,
+                    "--body",
+                    body_content,
+                    "--label",
+                    labels,
+                ],
                 capture_output=True,
                 text=True,
                 check=True,
@@ -1334,7 +1407,7 @@ def task_issue() -> dict[str, Any]:
                 "short": "t",
                 "long": "type",
                 "default": "feature",
-                "help": "Issue type: feature, bug, refactor",
+                "help": "Issue type: feature, bug, refactor, doc, chore",
             },
             {"name": "title", "long": "title", "default": None, "help": "Issue title"},
             {"name": "body", "long": "body", "default": None, "help": "Issue body (markdown)"},

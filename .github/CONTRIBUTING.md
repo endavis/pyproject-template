@@ -228,11 +228,13 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
+- `style`: Formatting, whitespace (no code change)
 - `test`: Adding or updating tests
 - `refactor`: Code refactoring
 - `perf`: Performance improvements
 - `chore`: Maintenance tasks (deps, tooling)
 - `ci`: CI/CD changes
+- `revert`: Reverting previous commits
 
 ### Examples
 
@@ -354,21 +356,25 @@ Every code change must be linked to a GitHub Issue. This ensures:
 doit issue --type=feature    # For new features
 doit issue --type=bug        # For bugs and defects
 doit issue --type=refactor   # For code refactoring
+doit issue --type=doc        # For documentation
+doit issue --type=chore      # For maintenance tasks
 
 # Non-interactive: For AI agents or scripts
 doit issue --type=feature --title="Add export" --body-file=issue.md
-doit issue --type=feature --title="Add export" --body="## Problem\n..."
+doit issue --type=doc --title="Add guide" --body="## Description\n..."
 ```
 
 **Or use gh CLI directly:**
 ```bash
-gh issue create --title "<type>: <description>" --body "..."
+gh issue create --title "<description>" --label "enhancement" --body "..."
 ```
 
-**Issue types map to title prefixes:**
-- `feature` → `feat: <title>`
-- `bug` → `fix: <title>`
-- `refactor` → `refactor: <title>`
+**Issue types auto-apply labels:**
+- `feature` → `enhancement, needs-triage`
+- `bug` → `bug, needs-triage`
+- `refactor` → `refactor, needs-triage`
+- `doc` → `documentation, needs-triage`
+- `chore` → `chore, needs-triage`
 
 **Required fields ensure complete information** - Fill all fields to provide context.
 

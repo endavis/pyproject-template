@@ -1,6 +1,5 @@
 name: 🔧 Refactor Request
 description: Propose code refactoring or improvement
-title: "refactor: "
 labels: ["refactor", "needs-triage"]
 body:
   - type: markdown
