@@ -398,8 +398,35 @@ def action_full_setup(manager: SettingsManager, dry_run: bool) -> int:
     return 0 if all(r == 0 for r in results) else 1
 
 
+def prompt_initial_settings(manager: SettingsManager) -> None:
+    """Prompt for settings if none are configured."""
+    if manager.settings.is_configured():
+        return
+
+    print_banner()
+    print_section("Initial Setup")
+    print("No project settings found. Let's set them up.\n")
+
+    settings = manager.settings
+
+    settings.project_name = prompt("Project name", settings.project_name) or settings.project_name
+    settings.package_name = prompt("Package name", settings.package_name) or settings.package_name
+    settings.pypi_name = prompt("PyPI name", settings.pypi_name) or settings.pypi_name
+    settings.description = prompt("Description", settings.description) or settings.description
+    settings.author_name = prompt("Author name", settings.author_name) or settings.author_name
+    settings.author_email = prompt("Author email", settings.author_email) or settings.author_email
+    settings.github_user = prompt("GitHub user", settings.github_user) or settings.github_user
+    settings.github_repo = prompt("GitHub repo", settings.github_repo) or settings.github_repo
+
+    manager.save()
+    print()
+
+
 def interactive_menu(manager: SettingsManager, dry_run: bool = False) -> int:
     """Run the interactive menu loop."""
+    # Prompt for initial settings if not configured
+    prompt_initial_settings(manager)
+
     while True:
         print_banner()
 

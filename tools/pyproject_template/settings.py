@@ -363,14 +363,7 @@ class SettingsManager:
                 )
             )
 
-        # Check for .git directory
-        if not self.context.has_git:
-            self.warnings.append(
-                PreflightWarning(
-                    message="Not a git repository",
-                    suggestion="Run: git init",
-                )
-            )
+        # Note: We don't warn about missing .git - that's expected for new projects
 
         # Check for placeholder values
         placeholders = self.settings.has_placeholder_values()
