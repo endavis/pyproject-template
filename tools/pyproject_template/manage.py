@@ -31,7 +31,6 @@ if str(_script_dir) not in sys.path:
 from check_template_updates import run_check_updates  # noqa: E402
 from configure import load_defaults, run_configure  # noqa: E402
 from settings import (  # noqa: E402
-    SETTINGS_FILE,
     PreflightWarning,
     ProjectContext,
     ProjectSettings,
@@ -419,9 +418,9 @@ def prompt_initial_settings(manager: SettingsManager) -> None:
     # Default github_repo to project_name
     settings.github_repo = settings.project_name
 
-    manager.save()
-    # Refresh warnings now that settings are configured
-    manager._run_preflight_checks()
+    # Don't save yet - settings are saved after setup completes in the correct directory
+    # Clear warnings since we just collected settings
+    manager.warnings = []
     print()
 
 
@@ -522,10 +521,6 @@ def main(argv: list[str] | None = None) -> int:
 
     # Initialize settings manager
     manager = SettingsManager(root=Path.cwd())
-
-    # Save settings on first run to create the settings file
-    if not (manager.root / SETTINGS_FILE).exists():
-        manager.save()
 
     # Handle quick action commands
     if args.command:
