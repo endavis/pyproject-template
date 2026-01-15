@@ -70,6 +70,8 @@ The script will:
 - Codecov token (optional, for coverage reports)
 - Collaborators/team access
 
+📖 See [New Project Setup](docs/template/new-project.md) for detailed instructions.
+
 ## Using This Template (Manual)
 
 **First time setup:** This is a template repository. If you prefer to clone manually:
@@ -95,7 +97,7 @@ It will automatically:
 - Update all template placeholders
 - Self-destruct after completion
 
-See the [Installation Guide](docs/installation.md) for detailed setup instructions.
+📖 See [New Project Setup](docs/template/new-project.md) for detailed instructions and post-setup steps.
 
 ## Development Setup
 
@@ -155,16 +157,27 @@ This project uses automated versioning and releases powered by `commitizen` and 
 
 ### Migrating an Existing Project
 
-See `docs/template/migration.md` for a step-by-step guide to bring an existing project into this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
-
-For older projects already in-flight, you can copy the helper script from this repo and let it do the initial file swap with backups:
+Bring your existing Python project into this template:
 
 ```bash
-# From the template repo root
 python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
 ```
 
-The script backs up anything it overwrites into a timestamped folder in your project, copies template tooling/docs/workflows/editor configs, and prints a summary of what moved. After it runs, follow `docs/template/migration.md` (run `python tools/pyproject_template/configure.py`, move your code under `src/<package_name>/`, merge dependencies, regenerate `uv.lock`, and run `doit check`).
+The script backs up existing files, copies template tooling/workflows/configs, and prints a summary. After running, complete the migration by configuring placeholders, moving your code, and merging dependencies.
+
+📖 See [Migration Guide](docs/template/migration.md) for the complete step-by-step checklist.
+
+### Keeping Up to Date
+
+Already using this template? Stay in sync with improvements:
+
+```bash
+python tools/pyproject_template/check_template_updates.py
+```
+
+This compares your project against the latest template and shows what's changed.
+
+📖 See [Keeping Up to Date](docs/template/updates.md) for the update workflow.
 
 ### Creating a Release
 

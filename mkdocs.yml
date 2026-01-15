@@ -65,7 +65,11 @@ nav:
       - AI Agent Setup: development/AI_SETUP.md
       - AI Command Blocking: development/ai/command-blocking.md
   - Template:
+      - Overview: template/index.md
+      - New Project Setup: template/new-project.md
       - Migration Guide: template/migration.md
+      - Keeping Up to Date: template/updates.md
+      - Tools Reference: template/tools-reference.md
   - Reference:
       - API Reference: reference/api.md
   - Examples: examples/README.md
