@@ -123,8 +123,6 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
-# Ignore the tools directory for now to avoid the duplicate module issue
-exclude = ["tools/pyproject_template/"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"
