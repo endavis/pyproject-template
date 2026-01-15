@@ -420,6 +420,8 @@ def prompt_initial_settings(manager: SettingsManager) -> None:
     settings.github_repo = settings.project_name
 
     manager.save()
+    # Refresh warnings now that settings are configured
+    manager._run_preflight_checks()
     print()
 
 
