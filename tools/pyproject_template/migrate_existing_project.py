@@ -26,10 +26,16 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import shutil
+import sys
 from pathlib import Path
 
+# Support running as script or as module
+_script_dir = Path(__file__).parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
 # Import shared utilities
-from .utils import Logger, download_and_extract_archive
+from utils import Logger, download_and_extract_archive  # noqa: E402
 
 DEFAULT_ARCHIVE_URL = "https://github.com/endavis/pyproject-template/archive/refs/heads/main.zip"
 

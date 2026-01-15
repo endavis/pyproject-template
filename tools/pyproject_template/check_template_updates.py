@@ -27,11 +27,17 @@ import json
 import os
 import shutil
 import subprocess  # nosec B404
+import sys
 import urllib.request
 from pathlib import Path
 
+# Support running as script or as module
+_script_dir = Path(__file__).parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
 # Import shared utilities
-from .utils import (
+from utils import (  # noqa: E402
     Colors,
     Logger,
     download_and_extract_archive,
@@ -64,7 +70,7 @@ def download_template(target_dir: Path, version: str | None = None) -> Path:
     else:
         archive_url = DEFAULT_ARCHIVE_URL
 
-    template_root = download_and_extract_archive(archive_url, target_dir)
+    template_root = Path(download_and_extract_archive(archive_url, target_dir))
     Logger.success(f"Template extracted to {template_root}")
     return template_root
 

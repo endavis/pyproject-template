@@ -317,11 +317,11 @@ class TestGetTemplateCommitsSince:
 
 
 class TestMainModule:
-    """Tests for the __main__ module."""
+    """Tests for the manage module."""
 
     def test_parse_args_no_args(self) -> None:
         """Test parsing with no arguments."""
-        from tools.pyproject_template.__main__ import parse_args
+        from tools.pyproject_template.manage import parse_args
 
         args = parse_args([])
         assert args.command is None
@@ -330,7 +330,7 @@ class TestMainModule:
 
     def test_parse_args_with_command(self) -> None:
         """Test parsing with command."""
-        from tools.pyproject_template.__main__ import parse_args
+        from tools.pyproject_template.manage import parse_args
 
         args = parse_args(["update"])
         assert args.command == "update"
@@ -346,7 +346,7 @@ class TestMainModule:
 
     def test_parse_args_with_flags(self) -> None:
         """Test parsing with flags."""
-        from tools.pyproject_template.__main__ import parse_args
+        from tools.pyproject_template.manage import parse_args
 
         args = parse_args(["--yes", "--dry-run"])
         assert args.yes is True
@@ -357,14 +357,14 @@ class TestMainModule:
 
     def test_parse_args_update_only(self) -> None:
         """Test parsing --update-only flag."""
-        from tools.pyproject_template.__main__ import parse_args
+        from tools.pyproject_template.manage import parse_args
 
         args = parse_args(["--update-only"])
         assert args.update_only is True
 
     def test_get_recommended_action_fresh_clone(self) -> None:
         """Test recommended action for fresh clone."""
-        from tools.pyproject_template.__main__ import get_recommended_action
+        from tools.pyproject_template.manage import get_recommended_action
 
         context = ProjectContext(has_git=True, has_pyproject=False)
         settings = ProjectSettings()
@@ -375,7 +375,7 @@ class TestMainModule:
 
     def test_get_recommended_action_placeholder_values(self) -> None:
         """Test recommended action when placeholders exist."""
-        from tools.pyproject_template.__main__ import get_recommended_action
+        from tools.pyproject_template.manage import get_recommended_action
 
         context = ProjectContext(has_git=True, has_pyproject=True)
         settings = ProjectSettings(
@@ -389,7 +389,7 @@ class TestMainModule:
 
     def test_get_recommended_action_outdated_template(self) -> None:
         """Test recommended action when template is outdated."""
-        from tools.pyproject_template.__main__ import get_recommended_action
+        from tools.pyproject_template.manage import get_recommended_action
 
         context = ProjectContext(has_git=True, has_pyproject=True)
         settings = ProjectSettings(
@@ -411,7 +411,7 @@ class TestMainModule:
 
     def test_get_recommended_action_up_to_date(self) -> None:
         """Test recommended action when everything is up to date."""
-        from tools.pyproject_template.__main__ import get_recommended_action
+        from tools.pyproject_template.manage import get_recommended_action
 
         context = ProjectContext(has_git=True, has_pyproject=True)
         settings = ProjectSettings(

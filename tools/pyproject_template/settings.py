@@ -7,6 +7,7 @@ Handles reading settings from multiple sources and tracking template sync state.
 from __future__ import annotations
 
 import subprocess  # nosec B404
+import sys
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
@@ -17,7 +18,12 @@ try:
 except ModuleNotFoundError:  # pragma: no cover
     import tomli as tomllib  # type: ignore[no-redef]
 
-from .utils import Logger, validate_email, validate_package_name
+# Support running as script or as module
+_script_dir = Path(__file__).parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
+from utils import Logger, validate_email, validate_package_name  # noqa: E402
 
 # Template repository info
 TEMPLATE_REPO = "endavis/pyproject-template"

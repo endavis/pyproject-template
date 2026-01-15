@@ -4,17 +4,17 @@ Unified template management script with menu-driven interface.
 
 Usage:
     # Interactive (default)
-    python -m tools.pyproject_template
+    python manage.py
 
     # Quick actions
-    python -m tools.pyproject_template update      # Check for template updates
-    python -m tools.pyproject_template configure   # Re-run configuration
-    python -m tools.pyproject_template repo        # Update repository settings
-    python -m tools.pyproject_template full        # Full setup (all of the above)
+    python manage.py update      # Check for template updates
+    python manage.py configure   # Re-run configuration
+    python manage.py repo        # Update repository settings
+    python manage.py full        # Full setup (all of the above)
 
     # Non-interactive
-    python -m tools.pyproject_template --yes --update-only
-    python -m tools.pyproject_template --dry-run
+    python manage.py --yes --update-only
+    python manage.py --dry-run
 """
 
 from __future__ import annotations
@@ -23,9 +23,14 @@ import argparse
 import sys
 from pathlib import Path
 
-from .check_template_updates import run_check_updates
-from .configure import load_defaults, run_configure
-from .settings import (
+# Support running as script or as module
+_script_dir = Path(__file__).parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
+from check_template_updates import run_check_updates  # noqa: E402
+from configure import load_defaults, run_configure  # noqa: E402
+from settings import (  # noqa: E402
     SETTINGS_FILE,
     PreflightWarning,
     ProjectContext,
@@ -35,7 +40,7 @@ from .settings import (
     get_template_commits_since,
     get_template_latest_commit,
 )
-from .utils import Colors, Logger, prompt
+from utils import Colors, Logger, prompt  # noqa: E402
 
 
 def print_banner() -> None:
@@ -285,7 +290,7 @@ def action_check_updates(manager: SettingsManager, dry_run: bool) -> int:
             commit_sha, commit_date = latest
             manager.update_template_state(commit_sha, commit_date)
 
-    return result
+    return int(result)
 
 
 def action_configure(manager: SettingsManager, dry_run: bool) -> int:
@@ -309,11 +314,13 @@ def action_configure(manager: SettingsManager, dry_run: bool) -> int:
         if not defaults.get(key):
             defaults[key] = value
 
-    return run_configure(
-        auto=False,
-        yes=False,
-        dry_run=dry_run,
-        defaults=defaults,
+    return int(
+        run_configure(
+            auto=False,
+            yes=False,
+            dry_run=dry_run,
+            defaults=defaults,
+        )
     )
 
 
@@ -332,7 +339,7 @@ def action_repo_settings(manager: SettingsManager, dry_run: bool) -> int:
 
     # Import setup_repo module for repository configuration
     try:
-        from .setup_repo import RepositorySetup
+        from setup_repo import RepositorySetup
 
         setup = RepositorySetup()
         setup.config = {

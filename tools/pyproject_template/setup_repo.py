@@ -27,8 +27,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
+# Support running as script or as module
+_script_dir = Path(__file__).parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
 # Import shared utilities
-from .utils import (
+from utils import (  # noqa: E402
     Colors,
     GitHubCLI,
     Logger,
