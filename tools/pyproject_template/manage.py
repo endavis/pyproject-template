@@ -416,7 +416,8 @@ def prompt_initial_settings(manager: SettingsManager) -> None:
     settings.author_name = prompt("Author name", settings.author_name) or settings.author_name
     settings.author_email = prompt("Author email", settings.author_email) or settings.author_email
     settings.github_user = prompt("GitHub user", settings.github_user) or settings.github_user
-    settings.github_repo = prompt("GitHub repo", settings.github_repo) or settings.github_repo
+    # Default github_repo to project_name
+    settings.github_repo = settings.project_name
 
     manager.save()
     print()
