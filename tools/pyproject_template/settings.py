@@ -12,6 +12,7 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
 
 try:
     import tomllib  # py311+
@@ -37,6 +38,18 @@ SETTINGS_FILE = SETTINGS_DIR / "settings.toml"
 def _toml_escape(value: str) -> str:
     """Escape a string for TOML."""
     return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _is_github_url(url: str) -> bool:
+    """Check if URL is from github.com using proper URL parsing.
+
+    This prevents URL manipulation attacks like 'https://evil.com/github.com/...'
+    """
+    try:
+        parsed = urlparse(url)
+        return parsed.netloc == "github.com" or parsed.netloc.endswith(".github.com")
+    except Exception:
+        return False
 
 
 def _toml_serialize(data: dict[str, Any]) -> str:
@@ -271,7 +284,7 @@ class SettingsManager:
             # Get GitHub user from repository URL
             if not self.settings.github_user:
                 repo_url = project.get("urls", {}).get("Repository", "")
-                if repo_url and "github.com" in repo_url:
+                if repo_url and _is_github_url(repo_url):
                     parts = repo_url.rstrip("/").split("/")
                     if len(parts) >= 2:
                         self.settings.github_user = parts[-2]
@@ -314,8 +327,10 @@ class SettingsManager:
                 # Handle git@github.com:user/repo.git or https://github.com/user/repo
                 if url.endswith(".git"):
                     url = url[:-4]
-                if "github.com" in url:
+                # Normalize SSH format to HTTPS for proper URL parsing
+                if url.startswith("git@github.com:"):
                     url = url.replace("git@github.com:", "https://github.com/")
+                if _is_github_url(url):
                     parts = url.rstrip("/").split("/")
                     if len(parts) >= 2:
                         self.settings.github_user = parts[-2]
