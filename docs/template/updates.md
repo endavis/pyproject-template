@@ -2,6 +2,12 @@
 
 Stay in sync with improvements to the pyproject-template.
 
+> **Tip:** The easiest way to check for updates is through the [Template Manager](manage.md):
+> ```bash
+> python tools/pyproject_template/manage.py
+> ```
+> Select option **[3] Check for template updates** to compare your project against the latest template, then **[5] Mark as synced** after applying changes.
+
 ## When to Update
 
 Consider checking for template updates when:

@@ -2,6 +2,12 @@
 
 Create a new Python project from this template using either the automated or manual approach.
 
+> **Tip:** For an interactive experience, use the [Template Manager](manage.md):
+> ```bash
+> python tools/pyproject_template/manage.py
+> ```
+> Select option **[1] Create new project from template** to be guided through the process.
+
 ## Automated Setup (Recommended)
 
 The fastest way to create a new project:

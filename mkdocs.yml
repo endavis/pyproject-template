@@ -66,6 +66,7 @@ nav:
       - AI Command Blocking: development/ai/command-blocking.md
   - Template:
       - Overview: template/index.md
+      - Template Manager: template/manage.md
       - New Project Setup: template/new-project.md
       - Migration Guide: template/migration.md
       - Keeping Up to Date: template/updates.md

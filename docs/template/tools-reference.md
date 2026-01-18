@@ -2,6 +2,8 @@
 
 Complete reference for all template tools in `tools/pyproject_template/`.
 
+> **Note:** For most use cases, the **[Template Manager](manage.md)** (`manage.py`) provides a unified, interactive interface to all these tools. Use this reference for advanced usage, scripting, or understanding the underlying CLI options.
+
 ## bootstrap.py
 
 Remote bootstrap script for one-command setup.

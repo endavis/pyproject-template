@@ -2,6 +2,16 @@
 
 This section covers how to use the pyproject-template for your Python projects.
 
+## Quick Start: Template Manager
+
+The easiest way to work with the template is through the unified **[Template Manager](manage.md)**:
+
+```bash
+python tools/pyproject_template/manage.py
+```
+
+This interactive menu provides access to all template operations - creating projects, configuring, checking for updates, and more.
+
 ## Choose Your Path
 
 ### Starting Fresh?
@@ -31,13 +41,14 @@ All template tools are located in `tools/pyproject_template/`:
 
 | Tool | Purpose |
 |------|---------|
+| **`manage.py`** | **Unified interface for all operations (recommended)** |
 | `bootstrap.py` | Remote setup script (curl and run) |
 | `setup_repo.py` | Full repository setup orchestration |
 | `configure.py` | Replace placeholders with your project info |
 | `migrate_existing_project.py` | Copy template files to existing project |
 | `check_template_updates.py` | Compare project against latest template |
 
-See the **[Tools Reference](tools-reference.md)** for detailed CLI documentation.
+See the **[Template Manager](manage.md)** for the recommended interactive interface, or the **[Tools Reference](tools-reference.md)** for detailed CLI documentation of individual tools.
 
 ## What the Template Provides
 
