@@ -3,9 +3,73 @@
 #
 # This configuration whitelists common development commands for Python projects
 # using uv, doit, git, and GitHub CLI.
+#
+# SECURITY: Dangerous commands are blocked below. See AGENTS.md for rules.
 
 # Default approval policy
 default_policy = "untrusted"  # Prompt before running untrusted commands
+
+# =============================================================================
+# BLOCKED COMMANDS - These bypass security controls
+# =============================================================================
+
+# Block --admin flag (bypasses branch protection)
+[[approval_policy]]
+type = "command"
+pattern = "--admin"
+action = "deny"
+reason = "BLOCKED: --admin bypasses branch protection rules. See AGENTS.md."
+
+# Block --force flag (can cause data loss)
+[[approval_policy]]
+type = "command"
+pattern = "--force\\b"
+action = "deny"
+reason = "BLOCKED: --force can cause data loss. See AGENTS.md."
+
+# Block --no-verify flag (skips pre-commit hooks)
+[[approval_policy]]
+type = "command"
+pattern = "--no-verify"
+action = "deny"
+reason = "BLOCKED: --no-verify skips security hooks. See AGENTS.md."
+
+# Block force push variants
+[[approval_policy]]
+type = "command"
+pattern = "git\\s+push.*-f\\b"
+action = "deny"
+reason = "BLOCKED: Force push can overwrite remote history. See AGENTS.md."
+
+[[approval_policy]]
+type = "command"
+pattern = "--force-with-lease"
+action = "deny"
+reason = "BLOCKED: Force push variant. See AGENTS.md."
+
+# Block git reset --hard (can lose uncommitted changes)
+[[approval_policy]]
+type = "command"
+pattern = "git\\s+reset\\s+--hard"
+action = "deny"
+reason = "BLOCKED: Hard reset can lose uncommitted changes. See AGENTS.md."
+
+# Block destructive rm commands
+[[approval_policy]]
+type = "command"
+pattern = "rm\\s+-rf\\s+/"
+action = "deny"
+reason = "BLOCKED: Destructive command - removes filesystem. See AGENTS.md."
+
+[[approval_policy]]
+type = "command"
+pattern = "rm\\s+-rf\\s+~"
+action = "deny"
+reason = "BLOCKED: Destructive command - removes home directory. See AGENTS.md."
+
+# =============================================================================
+# ALLOWED COMMANDS - Standard development tools
+# =============================================================================
 
 # Whitelist standard development tools
 [[approval_policy]]
