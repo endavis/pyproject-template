@@ -436,11 +436,6 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except KeyboardInterrupt:
-        Logger.warning("Configuration cancelled by user.")
-        sys.exit(1)
-    except Exception as e:
-        Logger.error(f"Error: {e}")
-        sys.exit(1)
+    print("This script should not be run directly.")
+    print("Please use: python manage.py")
+    sys.exit(1)

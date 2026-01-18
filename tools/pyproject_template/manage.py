@@ -7,13 +7,14 @@ Usage:
     python manage.py
 
     # Quick actions
-    python manage.py update      # Check for template updates
+    python manage.py create      # Create new project from template
     python manage.py configure   # Re-run configuration
+    python manage.py check       # Check for template updates
     python manage.py repo        # Update repository settings
-    python manage.py full        # Full setup (all of the above)
+    python manage.py sync        # Mark as synced to latest template
 
     # Non-interactive
-    python manage.py --yes --update-only
+    python manage.py --yes       # Run recommended action non-interactively
     python manage.py --dry-run
 """
 
@@ -39,7 +40,7 @@ from settings import (  # noqa: E402
     get_template_commits_since,
     get_template_latest_commit,
 )
-from utils import Colors, Logger, prompt  # noqa: E402
+from utils import Colors, Logger, prompt, validate_package_name  # noqa: E402
 
 
 def print_banner() -> None:
@@ -146,27 +147,28 @@ def get_recommended_action(
     latest_commit: tuple[str, str] | None,
 ) -> int | None:
     """Determine the recommended action based on context."""
-    # New project (no git, never synced) needs full setup
-    if not context.has_git and not template_state.is_synced():
-        return 4  # Full setup
+    # No git repo - need to create new project
+    if not context.has_git:
+        return 1  # Create new project
 
-    # Fresh clone needs full setup
-    if context.is_fresh_clone:
-        return 4  # Full setup
-
-    # Placeholder values need configuration
+    # Has git but placeholder values - need to configure
     if settings.has_placeholder_values():
-        return 2  # Re-run configuration
+        return 2  # Configure project
+
+    # Template already downloaded and reviewed - recommend marking as synced
+    template_commit_file = Path("tmp/extracted/pyproject-template-main/.template_commit")
+    if template_commit_file.exists():
+        return 5  # Mark as synced
 
     # Existing repo with outdated template
     if template_state.is_synced() and template_state.commit and latest_commit:
         latest_sha, _ = latest_commit
         if latest_sha[:12] != template_state.commit[:12]:
-            return 1  # Check for updates
+            return 3  # Check for updates
 
     # Existing repo but never synced - suggest checking updates
     if context.has_git and not template_state.is_synced():
-        return 1  # Check for updates
+        return 3  # Check for updates
 
     return None  # Up to date
 
@@ -177,10 +179,11 @@ def print_menu(recommended: int | None, dry_run: bool) -> None:
     print()
 
     options = [
-        (1, "Check for template updates"),
-        (2, "Re-run configuration"),
-        (3, "Update repository settings"),
-        (4, "Full setup (all of the above)"),
+        (1, "Create new project from template"),
+        (2, "Configure project"),
+        (3, "Check for template updates"),
+        (4, "Update repository settings"),
+        (5, "Mark as synced to latest template"),
     ]
 
     for num, label in options:
@@ -199,20 +202,25 @@ def print_menu(recommended: int | None, dry_run: bool) -> None:
 def print_help() -> None:
     """Print help text for menu options."""
     print()
-    print(f"  {Colors.BOLD}[1] Check for template updates{Colors.NC}")
+    print(f"  {Colors.BOLD}[1] Create new project from template{Colors.NC}")
+    print("      Create a new GitHub repo from the template, clone it,")
+    print("      and run configuration (requires gh CLI authenticated)")
+    print()
+    print(f"  {Colors.BOLD}[2] Configure project{Colors.NC}")
+    print("      Update placeholders in all files (project name, author,")
+    print("      etc.) - run this after cloning the template")
+    print()
+    print(f"  {Colors.BOLD}[3] Check for template updates{Colors.NC}")
     print("      Compare your project against the latest template and")
     print("      selectively merge improvements (workflows, configs, etc.)")
     print()
-    print(f"  {Colors.BOLD}[2] Re-run configuration{Colors.NC}")
-    print("      Update placeholders in all files (useful if you changed")
-    print("      project name, author, etc.)")
-    print()
-    print(f"  {Colors.BOLD}[3] Update repository settings{Colors.NC}")
+    print(f"  {Colors.BOLD}[4] Update repository settings{Colors.NC}")
     print("      Configure GitHub repo settings, branch protection, labels")
     print("      (requires gh CLI authenticated)")
     print()
-    print(f"  {Colors.BOLD}[4] Full setup{Colors.NC}")
-    print("      Run all of the above in sequence")
+    print(f"  {Colors.BOLD}[5] Mark as synced to latest template{Colors.NC}")
+    print("      After manually reviewing and applying template updates,")
+    print("      mark your project as synced to the latest template commit")
     print()
     input("Press enter to return to menu...")
 
@@ -264,34 +272,157 @@ def edit_settings(manager: SettingsManager) -> None:
 def run_action(action: int, manager: SettingsManager, dry_run: bool) -> int:
     """Run the selected action."""
     if action == 1:
-        return action_check_updates(manager, dry_run)
+        return action_create_project(manager, dry_run)
     elif action == 2:
         return action_configure(manager, dry_run)
     elif action == 3:
-        return action_repo_settings(manager, dry_run)
+        return action_check_updates(manager, dry_run)
     elif action == 4:
-        return action_full_setup(manager, dry_run)
+        return action_repo_settings(manager, dry_run)
+    elif action == 5:
+        return action_mark_synced(manager, dry_run)
     else:
         Logger.error(f"Unknown action: {action}")
         return 1
 
 
+def action_create_project(manager: SettingsManager, dry_run: bool) -> int:
+    """Create a new project from the template."""
+    Logger.header("Creating New Project from Template")
+
+    settings = manager.settings
+
+    if dry_run:
+        Logger.info("Dry run: Would create new project")
+        Logger.info(f"  - Create GitHub repo: {settings.github_user}/{settings.github_repo}")
+        Logger.info("  - Clone from template")
+        Logger.info("  - Run configuration")
+        Logger.info("  - Save settings")
+        return 0
+
+    try:
+        from setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        # Set config from manager settings (skip gather_inputs)
+        setup.config = {
+            "repo_owner": settings.github_user,
+            "repo_name": settings.github_repo,
+            "repo_full": f"{settings.github_user}/{settings.github_repo}",
+            "description": settings.description,
+            "package_name": settings.package_name,
+            "pypi_name": settings.pypi_name,
+            "author_name": settings.author_name,
+            "author_email": settings.author_email,
+            "visibility": "public",  # Default to public
+        }
+
+        # Run individual setup steps (skip gather_inputs since we have config)
+        setup.print_banner()
+        setup.check_requirements()
+
+        # Show configuration summary
+        Logger.step("Configuration summary:")
+        print(f"  Repository: {setup.config['repo_full']}")
+        print(f"  Visibility: {setup.config['visibility']}")
+        print(f"  Package name: {setup.config['package_name']}")
+        print(f"  PyPI name: {setup.config['pypi_name']}")
+        print(f"  Description: {setup.config['description']}")
+        print(f"  Author: {setup.config['author_name']} <{setup.config['author_email']}>")
+        print()
+
+        # Create GitHub repo (no branch protection yet)
+        setup.create_github_repository()
+        setup.configure_repository_settings()
+
+        # Clone and configure locally BEFORE branch protection
+        setup.clone_repository()
+        setup.configure_placeholders()
+        setup.setup_development_environment()
+
+        # Save and commit template state BEFORE branch protection rules
+        project_dir = Path.cwd()
+        latest = get_template_latest_commit()
+        if latest:
+            import subprocess  # nosec B404 - subprocess is required for git operations
+
+            new_manager = SettingsManager(root=project_dir)
+            new_manager.template_state.commit = latest[0]
+            new_manager.template_state.commit_date = latest[1]
+            new_manager.save()
+
+            # Commit the settings file (use --no-verify to bypass pre-commit
+            # hook that blocks commits to main - this is automated setup)
+            subprocess.run(
+                ["git", "add", ".config/pyproject_template/settings.toml"],
+                cwd=project_dir,
+                check=True,
+            )
+            subprocess.run(
+                [
+                    "git",
+                    "commit",
+                    "--no-verify",
+                    "-m",
+                    "chore: add template sync state",
+                ],
+                cwd=project_dir,
+                check=True,
+            )
+            subprocess.run(["git", "push"], cwd=project_dir, check=True)
+
+        # Now configure branch protection and other GitHub settings
+        setup.configure_branch_protection()
+        setup.replicate_labels()
+        setup.enable_github_pages()
+        setup.configure_codeql()
+
+        setup.print_manual_steps()
+
+        Logger.success(f"Project created at {project_dir}")
+
+        return 0
+
+    except Exception as e:
+        Logger.error(f"Failed to create project: {e}")
+        return 1
+
+
 def action_check_updates(manager: SettingsManager, dry_run: bool) -> int:
-    """Check for template updates."""
+    """Check for template updates (comparison only, does not modify files)."""
     Logger.header("Checking for Template Updates")
 
     result = run_check_updates(
         skip_changelog=True,
-        keep_template=False,
+        keep_template=True,  # Keep template so user can run diff commands
         dry_run=dry_run,
     )
 
-    if result == 0 and not dry_run:
-        # Update template state with latest commit
-        latest = get_template_latest_commit()
-        if latest:
-            commit_sha, commit_date = latest
-            manager.update_template_state(commit_sha, commit_date)
+    # Show commit history link if we have a sync point (after the review section)
+    latest = get_template_latest_commit()
+    if manager.template_state.commit and latest:
+        if latest[0] != manager.template_state.commit:
+            old_commit = manager.template_state.commit
+            new_commit = latest[0]
+            print()
+            Logger.info("View template commit history since last sync:")
+            print(
+                f"  https://github.com/endavis/pyproject-template/compare/"
+                f"{old_commit}...{new_commit}"
+            )
+
+    # Save commit info to template directory for later sync
+    if latest and not dry_run:
+        template_dir = Path("tmp/extracted/pyproject-template-main")
+        if template_dir.exists():
+            commit_file = template_dir / ".template_commit"
+            commit_file.write_text(f"{latest[0]}\n{latest[1]}\n")
+            print()
+            Logger.info("After reviewing changes, use option [5] to mark as synced.")
+
+    # Note: This only shows differences, it doesn't update files.
+    # Template state is NOT updated here - only when user runs "Mark as synced".
 
     return int(result)
 
@@ -371,34 +502,109 @@ def action_repo_settings(manager: SettingsManager, dry_run: bool) -> int:
         return 1
 
 
-def action_full_setup(manager: SettingsManager, dry_run: bool) -> int:
-    """Run full setup (all actions in sequence)."""
-    Logger.header("Running Full Setup")
+def action_mark_synced(manager: SettingsManager, dry_run: bool) -> int:
+    """Mark project as synced to reviewed template commit."""
+    import shutil
+    import subprocess  # nosec B404 - subprocess is required for git operations
 
-    results = []
+    Logger.header("Mark as Synced to Template")
 
-    # 1. Check for updates
-    Logger.step("Step 1/3: Checking for template updates")
-    results.append(action_check_updates(manager, dry_run))
+    # Check for downloaded template with commit info
+    template_dir = Path("tmp/extracted/pyproject-template-main")
+    commit_file = template_dir / ".template_commit"
 
-    # 2. Configure
-    Logger.step("Step 2/3: Running configuration")
-    results.append(action_configure(manager, dry_run))
+    if not commit_file.exists():
+        Logger.error("No reviewed template found.")
+        Logger.info("Run option [3] 'Check for template updates' first to review changes.")
+        return 1
 
-    # 3. Repository settings
-    Logger.step("Step 3/3: Updating repository settings")
-    results.append(action_repo_settings(manager, dry_run))
+    # Read commit info from the reviewed template
+    lines = commit_file.read_text().strip().split("\n")
+    if len(lines) < 2:
+        Logger.error("Invalid commit file format")
+        return 1
 
-    # Summary
+    new_commit, new_date = lines[0], lines[1]
+    current_commit = manager.template_state.commit
+
+    if current_commit == new_commit:
+        Logger.success(f"Already synced to this commit ({new_commit})")
+        # Clean up template directory
+        if template_dir.exists():
+            shutil.rmtree(template_dir.parent)
+            Logger.info("Cleaned up template directory")
+        return 0
+
+    print(f"Current sync point:  {current_commit or 'Not set'}")
+    print(f"Reviewed template:   {new_commit} ({new_date})")
     print()
-    print_section("Completed Actions")
-    actions = ["Check for template updates", "Run configuration", "Update repository settings"]
-    for action_name, result in zip(actions, results, strict=False):
-        status = f"{Colors.GREEN}v{Colors.NC}" if result == 0 else f"{Colors.RED}x{Colors.NC}"
-        print(f"  {status} {action_name}")
-    print()
 
-    return 0 if all(r == 0 for r in results) else 1
+    if dry_run:
+        Logger.info(f"Dry run: Would mark as synced to {new_commit}")
+        return 0
+
+    # Confirm with user
+    confirm = prompt(f"Mark as synced to {new_commit}?", "Y")
+    if confirm.lower() not in ("y", "yes", ""):
+        Logger.warning("Cancelled")
+        return 0
+
+    # Update template state
+    manager.update_template_state(new_commit, new_date)
+
+    # Commit the settings file if there are changes
+    settings_file = ".config/pyproject_template/settings.toml"
+    try:
+        subprocess.run(["git", "add", settings_file], check=True)
+
+        # Check if there are staged changes to commit
+        result = subprocess.run(
+            ["git", "diff", "--cached", "--quiet"],
+            capture_output=True,
+        )
+        if result.returncode != 0:
+            # There are changes to commit
+            subprocess.run(
+                [
+                    "git",
+                    "commit",
+                    "--no-verify",
+                    "-m",
+                    f"chore: sync template state to {new_commit}",
+                ],
+                check=True,
+            )
+            subprocess.run(["git", "push"], check=True)
+            Logger.success(f"Marked as synced to {new_commit}")
+        else:
+            # Settings file exists but wasn't committed (maybe already staged)
+            Logger.success(f"Marked as synced to {new_commit}")
+            print()
+            print(f"{Colors.BOLD}{Colors.YELLOW}*** IMPORTANT ***{Colors.NC}")
+            print(f"{Colors.BOLD}Don't forget to commit the settings file:{Colors.NC}")
+            print()
+            print("  # 1. Create an issue")
+            print("  doit issue --type=chore --title='Sync template state'")
+            print()
+            print("  # 2. Create branch, commit, and push")
+            print("  git checkout -b chore/<issue#>-sync-template-state")
+            print(f"  git add {settings_file}")
+            print(f"  git commit -m 'chore: sync template state to {new_commit[:12]}'")
+            print("  git push -u origin HEAD")
+            print()
+            print("  # 3. Create PR and merge")
+            print("  doit pr --title='chore: sync template state'")
+            print()
+    except subprocess.CalledProcessError as e:
+        Logger.error(f"Failed to commit: {e}")
+        return 1
+
+    # Clean up template directory
+    if template_dir.exists():
+        shutil.rmtree(template_dir.parent)
+        Logger.info("Cleaned up template directory")
+
+    return 0
 
 
 def prompt_initial_settings(manager: SettingsManager) -> None:
@@ -413,8 +619,30 @@ def prompt_initial_settings(manager: SettingsManager) -> None:
     settings = manager.settings
 
     settings.project_name = prompt("Project name", settings.project_name) or settings.project_name
-    settings.package_name = prompt("Package name", settings.package_name) or settings.package_name
-    settings.pypi_name = prompt("PyPI name", settings.pypi_name) or settings.pypi_name
+
+    # Auto-derive package_name (lowercase, underscores) and pypi_name (lowercase, hyphens)
+    default_package = validate_package_name(settings.project_name)
+    default_pypi = settings.project_name.lower().replace("_", "-")
+
+    # Let user confirm/override package name with PEP 8 validation
+    while True:
+        package_input = prompt("Package name (PEP 8: lowercase, underscores only)", default_package)
+        if not package_input:
+            package_input = default_package
+
+        # Validate PEP 8 compliance
+        valid_name = validate_package_name(package_input)
+        if package_input == valid_name:
+            settings.package_name = package_input
+            break
+        else:
+            Logger.warning(
+                f"'{package_input}' is not PEP 8 compliant. " f"Suggested: '{valid_name}'"
+            )
+            # Offer the corrected version as new default
+            default_package = valid_name
+
+    settings.pypi_name = default_pypi
     settings.description = prompt("Description", settings.description) or settings.description
     settings.author_name = prompt("Author name", settings.author_name) or settings.author_name
     settings.author_email = prompt("Author email", settings.author_email) or settings.author_email
@@ -471,7 +699,7 @@ def interactive_menu(manager: SettingsManager, dry_run: bool = False) -> int:
         elif choice == "d":
             dry_run = not dry_run
             Logger.info(f"Dry run mode: {'enabled' if dry_run else 'disabled'}")
-        elif choice in ("1", "2", "3", "4"):
+        elif choice in ("1", "2", "3", "4", "5"):
             action = int(choice)
             result = run_action(action, manager, dry_run)
             if result == 0:
@@ -479,6 +707,8 @@ def interactive_menu(manager: SettingsManager, dry_run: bool = False) -> int:
             else:
                 Logger.error("Action failed")
             input("\nPress enter to return to menu...")
+            # Refresh manager to detect new context (e.g., after creating project)
+            manager = SettingsManager(root=Path.cwd())
         else:
             Logger.warning(f"Unknown option: {choice}")
 
@@ -493,10 +723,11 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     # Subcommands for quick actions
     subparsers = parser.add_subparsers(dest="command", help="Quick action commands")
 
-    subparsers.add_parser("update", help="Check for template updates")
+    subparsers.add_parser("create", help="Create new project from template")
     subparsers.add_parser("configure", help="Re-run configuration")
+    subparsers.add_parser("check", help="Check for template updates")
     subparsers.add_parser("repo", help="Update repository settings")
-    subparsers.add_parser("full", help="Full setup (all of the above)")
+    subparsers.add_parser("sync", help="Mark as synced to latest template")
 
     # Global options
     parser.add_argument(
@@ -529,10 +760,11 @@ def main(argv: list[str] | None = None) -> int:
     # Handle quick action commands
     if args.command:
         command_map = {
-            "update": 1,
+            "create": 1,
             "configure": 2,
-            "repo": 3,
-            "full": 4,
+            "check": 3,
+            "repo": 4,
+            "sync": 5,
         }
         action = command_map.get(args.command)
         if action:
@@ -552,8 +784,15 @@ def main(argv: list[str] | None = None) -> int:
             Logger.error("Cannot run non-interactively without configured settings.")
             return 1
 
-        # Run full setup non-interactively
-        return action_full_setup(manager, args.dry_run)
+        # Run recommended action non-interactively
+        latest_commit = get_template_latest_commit()
+        recommended = get_recommended_action(
+            manager.context, manager.settings, manager.template_state, latest_commit
+        )
+        if recommended:
+            return run_action(recommended, manager, args.dry_run)
+        Logger.success("Project is up to date, no action needed.")
+        return 0
 
     # Interactive mode
     return interactive_menu(manager, args.dry_run)

@@ -196,20 +196,22 @@ commit_date = "2025-01-15"
             assert manager.template_state.commit_date == "2025-01-15"
 
     def test_save_creates_settings_file(self, tmp_path: Path) -> None:
-        """Test that save creates the settings file."""
+        """Test that save creates the settings file with template state."""
         (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
 
             manager = SettingsManager(root=tmp_path)
-            manager.settings.project_name = "Saved Project"
+            # save() only saves when there's template state
+            manager.template_state.commit = "abc123"
+            manager.template_state.commit_date = "2025-01-17"
             manager.save()
 
             settings_file = tmp_path / ".config" / "pyproject_template" / "settings.toml"
             assert settings_file.exists()
             content = settings_file.read_text()
-            assert "Saved Project" in content
+            assert "abc123" in content
 
     def test_update_template_state(self, tmp_path: Path) -> None:
         """Test updating template state."""
@@ -254,7 +256,7 @@ class TestGetTemplateLatestCommit:
 
             assert result is not None
             commit_sha, commit_date = result
-            assert commit_sha == "abc123def456"  # Should be truncated to 12 chars
+            assert commit_sha == "abc123def456789"  # Full SHA for GitHub compare
             assert commit_date == "2025-01-15"
 
     def test_returns_none_on_error(self) -> None:
@@ -332,17 +334,17 @@ class TestMainModule:
         """Test parsing with command."""
         from tools.pyproject_template.manage import parse_args
 
-        args = parse_args(["update"])
-        assert args.command == "update"
+        args = parse_args(["create"])
+        assert args.command == "create"
 
         args = parse_args(["configure"])
         assert args.command == "configure"
 
+        args = parse_args(["check"])
+        assert args.command == "check"
+
         args = parse_args(["repo"])
         assert args.command == "repo"
-
-        args = parse_args(["full"])
-        assert args.command == "full"
 
     def test_parse_args_with_flags(self) -> None:
         """Test parsing with flags."""
@@ -371,7 +373,7 @@ class TestMainModule:
         template_state = TemplateState()
 
         result = get_recommended_action(context, settings, template_state, None)
-        assert result == 4  # Full setup
+        assert result == 2  # Configure project (has placeholders)
 
     def test_get_recommended_action_placeholder_values(self) -> None:
         """Test recommended action when placeholders exist."""
@@ -407,7 +409,7 @@ class TestMainModule:
         result = get_recommended_action(
             context, settings, template_state, ("newcommit456", "2025-01-15")
         )
-        assert result == 1  # Check for updates
+        assert result == 3  # Check for template updates
 
     def test_get_recommended_action_up_to_date(self) -> None:
         """Test recommended action when everything is up to date."""

@@ -14,10 +14,13 @@ Use this checklist to bring an existing Python project into the template. The fl
     - **Hidden Configs:** `.github/workflows/*`, `.vscode/`, `.devcontainer/`, `.claude/`, `.codex/`, `.gemini/`, `tmp/.gitkeep`.
 - **Keep your code:** You’ll move it in step 4.
 
-### 3) Run the Configurator
-- From the template root: `python tools/pyproject_template/configure.py`.
+### 3) Run the Template Manager
+- From the template root: `python tools/pyproject_template/manage.py`.
+- Select **[2] Configure project** to run the configurator.
 - Provide project name, package name (import), PyPI name, author, GitHub user, description.
-- **What it does:** Rewrites placeholders (badges/links/docs/workflows), renames `src/package_name → src/<your_package>`, and removes itself.
+- **What it does:** Rewrites placeholders (badges/links/docs/workflows), renames `src/package_name → src/<your_package>`.
+
+See [Template Management](manage.md) for full documentation on the management script.
 
 ### 4) Move Your Code
 - Move your existing package source into the newly renamed `src/<your_package>/`.

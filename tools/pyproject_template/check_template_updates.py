@@ -114,6 +114,15 @@ def compare_files(project_root: Path, template_root: Path) -> list[Path]:
         "site",  # mkdocs build output
     }
 
+    # Detect user's actual package name (directory under src/ that isn't package_name)
+    actual_package_name: str | None = None
+    src_dir = project_root / "src"
+    if src_dir.exists():
+        for item in src_dir.iterdir():
+            if item.is_dir() and item.name != "package_name" and not item.name.startswith("."):
+                actual_package_name = item.name
+                break
+
     different_files: list[Path] = []
 
     # Walk through template files
@@ -128,8 +137,16 @@ def compare_files(project_root: Path, template_root: Path) -> list[Path]:
         if any(rel_path.match(pattern) for pattern in skip_patterns):
             continue
 
+        # Map src/package_name/* to src/{actual_package_name}/*
+        mapped_path = rel_path
+        if actual_package_name and len(rel_path.parts) >= 2:
+            if rel_path.parts[0] == "src" and rel_path.parts[1] == "package_name":
+                # Replace package_name with actual package name
+                new_parts = ("src", actual_package_name) + rel_path.parts[2:]
+                mapped_path = Path(*new_parts)
+
         # Compare with project file
-        project_file = project_root / rel_path
+        project_file = project_root / mapped_path
 
         if not project_file.exists() or not filecmp.cmp(template_file, project_file, shallow=False):
             different_files.append(rel_path)
@@ -216,6 +233,15 @@ def run_check_updates(
     Logger.header("Comparing your project to template")
     different_files = compare_files(project_root, template_dir)
 
+    # Detect user's actual package name for display mapping
+    actual_package_name: str | None = None
+    src_dir = project_root / "src"
+    if src_dir.exists():
+        for item in src_dir.iterdir():
+            if item.is_dir() and item.name != "package_name" and not item.name.startswith("."):
+                actual_package_name = item.name
+                break
+
     if not different_files:
         Logger.success("Your project matches the template perfectly!")
         print("\nNo differences found.")
@@ -225,7 +251,14 @@ def run_check_updates(
         print("━" * 60)
 
         for file_path in different_files:
-            project_file = project_root / file_path
+            # Map src/package_name/* to src/{actual_package_name}/* for checking
+            mapped_path = file_path
+            if actual_package_name and len(file_path.parts) >= 2:
+                if file_path.parts[0] == "src" and file_path.parts[1] == "package_name":
+                    new_parts = ("src", actual_package_name) + file_path.parts[2:]
+                    mapped_path = Path(*new_parts)
+
+            project_file = project_root / mapped_path
             if project_file.exists():
                 print(f"  {file_path}")
             else:
@@ -277,4 +310,6 @@ def main(argv: list[str] | None = None) -> int:
 if __name__ == "__main__":
     import sys
 
-    sys.exit(main())
+    print("This script should not be run directly.")
+    print("Please use: python manage.py")
+    sys.exit(1)

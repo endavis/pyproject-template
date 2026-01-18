@@ -408,28 +408,20 @@ class SettingsManager:
             return False
 
     def save(self) -> None:
-        """Save current settings to .config/pyproject_template/settings.yml."""
+        """Save template state to .config/pyproject_template/settings.toml."""
+        # Only save if we have template state to save
+        if not self.template_state.commit:
+            return
+
         settings_dir = self.root / SETTINGS_DIR
         settings_dir.mkdir(parents=True, exist_ok=True)
 
         data: dict[str, Any] = {
-            "project": {
-                "name": self.settings.project_name,
-                "package_name": self.settings.package_name,
-                "pypi_name": self.settings.pypi_name,
-                "description": self.settings.description,
-                "author_name": self.settings.author_name,
-                "author_email": self.settings.author_email,
-                "github_user": self.settings.github_user,
-                "github_repo": self.settings.github_repo,
-            },
-        }
-
-        if self.template_state.commit:
-            data["template"] = {
+            "template": {
                 "commit": self.template_state.commit,
                 "commit_date": self.template_state.commit_date,
-            }
+            },
+        }
 
         settings_path = self.root / SETTINGS_FILE
         with settings_path.open("w") as f:
@@ -459,7 +451,7 @@ def get_template_latest_commit() -> tuple[str, str] | None:
         req.add_header("Accept", "application/vnd.github.v3+json")
         with urllib.request.urlopen(req, timeout=10) as response:  # nosec B310
             data = json.loads(response.read())
-            commit_sha = data.get("sha", "")[:12]  # Short SHA
+            commit_sha = data.get("sha", "")  # Full SHA for GitHub compare
             commit_date = data.get("commit", {}).get("committer", {}).get("date", "")
             if commit_date:
                 # Parse and format the date

@@ -21,6 +21,7 @@ This index provides a structured overview of the available documentation for the
 - **[Examples & Recipes](examples/README.md)**: Practical examples and common use cases.
 
 ## Template
+- **[Template Management](template/manage.md)**: Unified interface for creating projects, checking for updates, and syncing with the template.
 - **[Migration Guide](template/migration.md)**: Guide for migrating from other project structures or updating existing projects.
 
 ## Project Information
@@ -63,7 +64,8 @@ Step-by-step guides for specific tasks like migration, deployment, or integratio
 ### For Advanced Users
 1. [Extensions](development/extensions.md) - Extend the template
 2. [API Reference](reference/api.md) - Technical details
-3. [Migration Guide](template/migration.md) - Migrate existing projects
+3. [Template Management](template/manage.md) - Manage template sync
+4. [Migration Guide](template/migration.md) - Migrate existing projects
 
 ---
 

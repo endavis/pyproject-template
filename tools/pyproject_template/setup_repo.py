@@ -1042,4 +1042,6 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    print("This script should not be run directly.")
+    print("Please use: python manage.py")
+    sys.exit(1)
