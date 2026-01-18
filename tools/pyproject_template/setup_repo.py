@@ -40,6 +40,7 @@ from utils import (  # noqa: E402
     prompt,
     prompt_confirm,
     update_file,
+    update_test_files,
 )
 
 
@@ -366,15 +367,9 @@ class RepositorySetup:
                     update_file(doc_file, replacements)
 
             # Update test files (limited replacements to preserve test data)
-            # Only replace import-related patterns, not string placeholder values
-            # which are used as test fixtures for placeholder detection tests
-            test_replacements = {
-                "package_name": self.config["package_name"],
-            }
             tests_dir = Path("tests")
             if tests_dir.exists():
-                for test_file in tests_dir.rglob("*.py"):
-                    update_file(test_file, test_replacements)
+                update_test_files(tests_dir, self.config["package_name"])
 
             # Update source files
             src_dir = Path("src")

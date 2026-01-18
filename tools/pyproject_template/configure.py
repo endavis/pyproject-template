@@ -29,6 +29,7 @@ from utils import (  # noqa: E402
     prompt,
     prompt_confirm,
     update_file,
+    update_test_files,
     validate_email,
     validate_package_name,
     validate_pypi_name,
@@ -389,16 +390,10 @@ def run_configure(
             update_file(py_file, replacements)
 
     # Update test files (limited replacements to preserve test data)
-    # Only replace import-related patterns, not string placeholder values
-    # which are used as test fixtures for placeholder detection tests
-    test_replacements = {
-        "package_name": package_name,  # For imports: from package_name import
-    }
     test_dir = Path("tests")
     if test_dir.exists():
         print("  ✓ Updating test files")
-        for py_file in test_dir.rglob("*.py"):
-            update_file(py_file, test_replacements)
+        update_test_files(test_dir, package_name)
 
     # Enable Dependabot if requested
     dependabot_example = Path(".github/dependabot.yml.example")

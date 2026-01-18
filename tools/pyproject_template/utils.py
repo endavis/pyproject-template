@@ -134,6 +134,29 @@ def update_file(filepath: Path, replacements: dict[str, str]) -> None:
         pass  # Skip binary files
 
 
+def update_test_files(test_dir: Path, package_name: str) -> None:
+    """Update test files with limited replacements.
+
+    Only replaces package_name for imports (from package_name import),
+    preserving placeholder string values used as test fixtures for
+    placeholder detection tests.
+
+    Args:
+        test_dir: Path to the tests directory
+        package_name: The actual package name to use in imports
+    """
+    if not test_dir.exists():
+        return
+
+    # Limited replacements - only for imports, not string values
+    test_replacements = {
+        "package_name": package_name,
+    }
+
+    for py_file in test_dir.rglob("*.py"):
+        update_file(py_file, test_replacements)
+
+
 def download_and_extract_archive(url: str, target_dir: Path) -> Path:
     """Download and extract a zip/tar archive from a URL."""
     archive_path = target_dir / "archive.tmp"
