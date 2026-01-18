@@ -67,6 +67,19 @@ pattern = "rm\\s+-rf\\s+~"
 action = "deny"
 reason = "BLOCKED: Destructive command - removes home directory. See AGENTS.md."
 
+# Block direct gh issue/pr create - use doit wrappers instead
+[[approval_policy]]
+type = "command"
+pattern = "gh\\s+issue\\s+create"
+action = "deny"
+reason = "BLOCKED: Use 'doit issue --type=<type>' instead of 'gh issue create'. See AGENTS.md."
+
+[[approval_policy]]
+type = "command"
+pattern = "gh\\s+pr\\s+create"
+action = "deny"
+reason = "BLOCKED: Use 'doit pr' instead of 'gh pr create'. See AGENTS.md."
+
 # =============================================================================
 # ALLOWED COMMANDS - Standard development tools
 # =============================================================================
