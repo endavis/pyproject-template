@@ -756,6 +756,35 @@ def task_release_pr(increment: str = "") -> dict[str, Any]:
             console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
+        # Governance validation
+        console.print("\n[bold cyan]Running governance validations...[/bold cyan]")
+
+        # Validate merge commit format (blocking)
+        if not validate_merge_commits(console):
+            console.print("\n[bold red]❌ Merge commit validation failed![/bold red]")
+            console.print("[yellow]Please ensure all merge commits follow the format:[/yellow]")
+            console.print("[yellow]  <type>: <subject> (merges PR #XX, closes #YY)[/yellow]")
+            sys.exit(1)
+
+        # Validate issue links (warning only)
+        validate_issue_links(console)
+
+        console.print("[bold green]✓ Governance validations complete.[/bold green]")
+
+        # Run all checks
+        console.print("\n[cyan]Running all pre-release checks...[/cyan]")
+        try:
+            subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
+            console.print("[green]✓ All checks passed.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print(
+                "[bold red]❌ Pre-release checks failed! "
+                "Please fix issues before releasing.[/bold red]"
+            )
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
         # Get next version using commitizen
         console.print("\n[cyan]Determining next version...[/cyan]")
         try:
