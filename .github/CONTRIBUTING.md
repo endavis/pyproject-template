@@ -363,10 +363,18 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 
 ### Production Release Workflow (PyPI)
 
-When ready for official release:
+There are two ways to release: **direct** (requires bypass permissions) or **PR-based** (works with branch protection).
+
+#### Option A: Direct Release (requires bypass permissions)
 
 ```bash
+# Auto-detect version bump from commits
 doit release
+
+# Force a specific version bump
+doit release --increment=major    # 1.0.0 → 2.0.0
+doit release --increment=minor    # 1.0.0 → 1.1.0
+doit release --increment=patch    # 1.0.0 → 1.0.1
 ```
 
 **What `doit release` does:**
@@ -382,6 +390,37 @@ doit release
 9. Creates git tag and pushes to GitHub
 10. **Triggers:** `.github/workflows/release.yml`
 11. **Publishes to:** TestPyPI first, then PyPI
+
+> **Note:** This method pushes directly to `main` and requires bypass permissions. See [Setting Up Release Permissions](#setting-up-release-permissions).
+
+#### Option B: PR-Based Release (works with branch protection)
+
+```bash
+# Step 1: Create release PR (auto-detect version)
+doit release_pr
+
+# Or force a specific version bump
+doit release_pr --increment=major
+
+# Step 2: After PR is merged, create the tag
+doit release_tag
+```
+
+**What `doit release_pr` does:**
+
+1. Verifies you're on the `main` branch
+2. Determines next version using commitizen (`cz bump --get-next`)
+3. Creates a `release/vX.Y.Z` branch
+4. Updates CHANGELOG.md
+5. Commits and pushes the branch
+6. Creates a pull request
+
+**What `doit release_tag` does:**
+
+1. Finds the most recently merged release PR
+2. Extracts the version from the PR title
+3. Creates a git tag on `main`
+4. Pushes the tag (triggers release workflow)
 
 ### Workflow Triggers
 
@@ -499,23 +538,15 @@ In your repo **Settings** → **Secrets and variables** → **Actions**:
 
 #### Alternative: Release via Pull Request
 
-If you prefer not to bypass branch protection, you can separate the release into two steps:
+If you prefer not to configure bypass permissions, use the PR-based release workflow described in [Option B: PR-Based Release](#option-b-pr-based-release-works-with-branch-protection):
 
-1. **Update changelog via PR:**
-   ```bash
-   git checkout -b release/v1.2.3
-   cz changelog --incremental
-   git add CHANGELOG.md && git commit -m "chore: update changelog for v1.2.3"
-   git push -u origin release/v1.2.3
-   # Create and merge PR
-   ```
+```bash
+# Step 1: Create release PR
+doit release_pr
 
-2. **Tag after merge:**
-   ```bash
-   git checkout main && git pull
-   git tag v1.2.3
-   git push origin v1.2.3  # Triggers release workflow
-   ```
+# Step 2: After PR is merged, create the tag
+doit release_tag
+```
 
 ### Release Checklist
 

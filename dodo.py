@@ -535,8 +535,12 @@ def task_release_dev(type: str = "alpha") -> dict[str, Any]:
     }
 
 
-def task_release() -> dict[str, Any]:
-    """Automate release: bump version, update CHANGELOG, and push to GitHub (triggers CI/CD)."""
+def task_release(increment: str = "") -> dict[str, Any]:
+    """Automate release: bump version, update CHANGELOG, and push to GitHub (triggers CI/CD).
+
+    Args:
+        increment (str): Force version increment type (MAJOR, MINOR, PATCH). Auto-detects if empty.
+    """
 
     def automated_release() -> None:
         console = Console()
@@ -620,8 +624,12 @@ def task_release() -> dict[str, Any]:
             # Use cz bump --changelog --merge-prerelease to update version,
             # changelog, commit, and tag. This consolidates pre-release changes
             # into the final release entry
+            bump_cmd = ["uv", "run", "cz", "bump", "--changelog", "--merge-prerelease"]
+            if increment:
+                bump_cmd.extend(["--increment", increment.upper()])
+                console.print(f"[dim]Forcing {increment.upper()} version bump[/dim]")
             result = subprocess.run(
-                ["uv", "run", "cz", "bump", "--changelog", "--merge-prerelease"],
+                bump_cmd,
                 env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
                 check=True,
                 capture_output=True,
@@ -681,6 +689,390 @@ def task_release() -> dict[str, Any]:
 
     return {
         "actions": [automated_release],
+        "params": [
+            {
+                "name": "increment",
+                "short": "i",
+                "long": "increment",
+                "default": "",
+                "help": "Force increment (MAJOR, MINOR, PATCH). Auto-detects if empty.",
+            }
+        ],
+        "title": title_with_actions,
+    }
+
+
+def task_release_pr(increment: str = "") -> dict[str, Any]:
+    """Create a release PR with changelog updates (PR-based workflow).
+
+    This task creates a release branch, updates the changelog, and opens a PR.
+    After the PR is merged, use `doit release_tag` to tag the release.
+
+    Args:
+        increment (str): Force version increment type (MAJOR, MINOR, PATCH). Auto-detects if empty.
+    """
+
+    def create_release_pr() -> None:
+        console = Console()
+        console.print("=" * 70)
+        console.print("[bold green]Starting PR-based release process...[/bold green]")
+        console.print("=" * 70)
+        console.print()
+
+        # Check if on main branch
+        current_branch = subprocess.run(
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        if current_branch != "main":
+            console.print(
+                f"[bold red]❌ Error: Must be on main branch "
+                f"(currently on {current_branch})[/bold red]"
+            )
+            sys.exit(1)
+
+        # Check for uncommitted changes
+        status = subprocess.run(
+            ["git", "status", "-s"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        if status:
+            console.print("[bold red]❌ Error: Uncommitted changes detected.[/bold red]")
+            console.print(status)
+            sys.exit(1)
+
+        # Pull latest changes
+        console.print("\n[cyan]Pulling latest changes...[/cyan]")
+        try:
+            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+            console.print("[green]✓ Git pull successful.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Get next version using commitizen
+        console.print("\n[cyan]Determining next version...[/cyan]")
+        try:
+            get_next_cmd = ["uv", "run", "cz", "bump", "--get-next"]
+            if increment:
+                get_next_cmd.extend(["--increment", increment.upper()])
+                console.print(f"[dim]Forcing {increment.upper()} version bump[/dim]")
+            result = subprocess.run(
+                get_next_cmd,
+                env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            next_version = result.stdout.strip()
+            console.print(f"[green]✓ Next version: {next_version}[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to determine next version.[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Create release branch
+        branch_name = f"release/v{next_version}"
+        console.print(f"\n[cyan]Creating branch {branch_name}...[/cyan]")
+        try:
+            subprocess.run(
+                ["git", "checkout", "-b", branch_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print(f"[green]✓ Created branch {branch_name}[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print(f"[bold red]❌ Failed to create branch {branch_name}.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Update changelog
+        console.print("\n[cyan]Updating CHANGELOG.md...[/cyan]")
+        try:
+            changelog_cmd = ["uv", "run", "cz", "changelog", "--incremental"]
+            subprocess.run(
+                changelog_cmd,
+                env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print("[green]✓ CHANGELOG.md updated.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to update changelog.[/bold red]")
+            console.print(f"[red]Stdout: {e.stdout}[/red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            # Cleanup: go back to main
+            subprocess.run(["git", "checkout", "main"], capture_output=True)
+            subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
+            sys.exit(1)
+
+        # Commit changelog
+        console.print("\n[cyan]Committing changelog...[/cyan]")
+        try:
+            subprocess.run(
+                ["git", "add", "CHANGELOG.md"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            subprocess.run(
+                ["git", "commit", "-m", f"chore: update changelog for v{next_version}"],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print("[green]✓ Changelog committed.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to commit changelog.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            # Cleanup
+            subprocess.run(["git", "checkout", "main"], capture_output=True)
+            subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
+            sys.exit(1)
+
+        # Push branch
+        console.print(f"\n[cyan]Pushing branch {branch_name}...[/cyan]")
+        try:
+            subprocess.run(
+                ["git", "push", "-u", "origin", branch_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print("[green]✓ Branch pushed.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to push branch.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Create PR using doit pr
+        console.print("\n[cyan]Creating pull request...[/cyan]")
+        try:
+            pr_title = f"release: v{next_version}"
+            pr_body = f"""## Description
+Release v{next_version}
+
+## Type of Change
+- [ ] Bug fix (non-breaking change which fixes an issue)
+- [ ] New feature (non-breaking change which adds functionality)
+- [ ] Breaking change (would cause existing functionality to not work as expected)
+- [ ] Documentation update
+- [x] Release
+
+## Changes Made
+- Updated CHANGELOG.md for v{next_version}
+
+## Testing
+- [ ] All existing tests pass
+
+## Checklist
+- [x] My changes generate no new warnings
+
+## Additional Notes
+After this PR is merged, run `doit release_tag` to create the version tag
+and trigger the release workflow.
+"""
+            # Use gh CLI directly since we're in a non-interactive context
+            subprocess.run(
+                [
+                    "gh",
+                    "pr",
+                    "create",
+                    "--title",
+                    pr_title,
+                    "--body",
+                    pr_body,
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print("[green]✓ Pull request created.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to create PR.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        console.print("\n" + "=" * 70)
+        console.print(f"[bold green]✓ Release PR for v{next_version} created![/bold green]")
+        console.print("=" * 70)
+        console.print("\nNext steps:")
+        console.print("1. Review and merge the PR.")
+        console.print("2. After merge, run: doit release_tag")
+
+    return {
+        "actions": [create_release_pr],
+        "params": [
+            {
+                "name": "increment",
+                "short": "i",
+                "long": "increment",
+                "default": "",
+                "help": "Force increment (MAJOR, MINOR, PATCH). Auto-detects if empty.",
+            }
+        ],
+        "title": title_with_actions,
+    }
+
+
+def task_release_tag() -> dict[str, Any]:
+    """Tag the release after a release PR is merged.
+
+    This task finds the most recently merged release PR, extracts the version,
+    creates a git tag, and pushes it to trigger the release workflow.
+    """
+
+    def create_release_tag() -> None:
+        console = Console()
+        console.print("=" * 70)
+        console.print("[bold green]Creating release tag...[/bold green]")
+        console.print("=" * 70)
+        console.print()
+
+        # Check if on main branch
+        current_branch = subprocess.run(
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            check=True,
+        ).stdout.strip()
+        if current_branch != "main":
+            console.print(
+                f"[bold red]❌ Error: Must be on main branch "
+                f"(currently on {current_branch})[/bold red]"
+            )
+            sys.exit(1)
+
+        # Pull latest changes
+        console.print("\n[cyan]Pulling latest changes...[/cyan]")
+        try:
+            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+            console.print("[green]✓ Git pull successful.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Find the most recently merged release PR
+        console.print("\n[cyan]Finding merged release PR...[/cyan]")
+        try:
+            result = subprocess.run(
+                [
+                    "gh",
+                    "pr",
+                    "list",
+                    "--state",
+                    "merged",
+                    "--search",
+                    "release: v in:title",
+                    "--limit",
+                    "1",
+                    "--json",
+                    "title,mergedAt,headRefName",
+                ],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            import json
+
+            prs = json.loads(result.stdout)
+            if not prs:
+                console.print("[bold red]❌ No merged release PR found.[/bold red]")
+                console.print(
+                    "[yellow]Ensure a release PR with title 'release: vX.Y.Z' was merged.[/yellow]"
+                )
+                sys.exit(1)
+
+            pr = prs[0]
+            pr_title = pr["title"]
+            branch_name = pr["headRefName"]
+
+            # Extract version from PR title (format: "release: vX.Y.Z")
+            version_match = re.search(r"release:\s*v?(\d+\.\d+\.\d+)", pr_title)
+            if not version_match:
+                # Try extracting from branch name (format: "release/vX.Y.Z")
+                version_match = re.search(r"release/v?(\d+\.\d+\.\d+)", branch_name)
+
+            if not version_match:
+                console.print("[bold red]❌ Could not extract version from PR.[/bold red]")
+                console.print(f"[yellow]PR title: {pr_title}[/yellow]")
+                console.print(f"[yellow]Branch: {branch_name}[/yellow]")
+                sys.exit(1)
+
+            version = version_match.group(1)
+            tag_name = f"v{version}"
+            console.print(f"[green]✓ Found release PR: {pr_title}[/green]")
+            console.print(f"[green]✓ Version to tag: {tag_name}[/green]")
+
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to find release PR.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Check if tag already exists
+        existing_tags = subprocess.run(
+            ["git", "tag", "-l", tag_name],
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+        if existing_tags:
+            console.print(f"[bold red]❌ Tag {tag_name} already exists.[/bold red]")
+            sys.exit(1)
+
+        # Create tag
+        console.print(f"\n[cyan]Creating tag {tag_name}...[/cyan]")
+        try:
+            subprocess.run(
+                ["git", "tag", tag_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print(f"[green]✓ Tag {tag_name} created.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to create tag.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # Push tag
+        console.print(f"\n[cyan]Pushing tag {tag_name}...[/cyan]")
+        try:
+            subprocess.run(
+                ["git", "push", "origin", tag_name],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print(f"[green]✓ Tag {tag_name} pushed.[/green]")
+        except subprocess.CalledProcessError as e:
+            console.print("[bold red]❌ Failed to push tag.[/bold red]")
+            console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        console.print("\n" + "=" * 70)
+        console.print(f"[bold green]✓ Release {tag_name} tagged![/bold green]")
+        console.print("=" * 70)
+        console.print("\nNext steps:")
+        console.print("1. Monitor GitHub Actions for build and publish.")
+        console.print(
+            "2. Check TestPyPI: [link=https://test.pypi.org/project/package-name/]https://test.pypi.org/project/package-name/[/link]"
+        )
+        console.print(
+            "3. Check PyPI: [link=https://pypi.org/project/package-name/]https://pypi.org/project/package-name/[/link]"
+        )
+
+    return {
+        "actions": [create_release_tag],
         "title": title_with_actions,
     }
 
@@ -752,7 +1144,7 @@ def _install_direnv() -> None:
 
     if system == "linux":
         bin_url = (
-            f"https://github.com/direnv/direnv/releases/download/" f"v{version}/direnv.linux-amd64"
+            f"https://github.com/direnv/direnv/releases/download/v{version}/direnv.linux-amd64"
         )
         bin_path = os.path.join(install_dir, "direnv")
         print(f"Downloading {bin_url}...")
@@ -1489,8 +1881,7 @@ def task_pr() -> dict[str, Any]:
                 template = template.replace("#ISSUE_NUMBER", f"#{detected_issue}")
 
             console.print(
-                "[dim]Opening editor with PR template. "
-                "Fill in the sections, save, and exit.[/dim]"
+                "[dim]Opening editor with PR template. Fill in the sections, save, and exit.[/dim]"
             )
             body_content = _open_editor_with_template(template)
             if body_content is None:
