@@ -26,10 +26,16 @@ from __future__ import annotations
 import argparse
 import datetime as dt
 import shutil
+import sys
 from pathlib import Path
 
+# Support running as script or as module
+_script_dir = Path(__file__).parent
+if str(_script_dir) not in sys.path:
+    sys.path.insert(0, str(_script_dir))
+
 # Import shared utilities
-from tools.pyproject_template.utils import Logger, download_and_extract_archive
+from utils import Logger, download_and_extract_archive  # noqa: E402
 
 DEFAULT_ARCHIVE_URL = "https://github.com/endavis/pyproject-template/archive/refs/heads/main.zip"
 
@@ -64,7 +70,7 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
 )
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Copy pyproject-template scaffolding into an existing repo with backups.",
     )
@@ -92,42 +98,70 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_ARCHIVE_URL,
         help=f"URL to template archive (zip/tarball). Default: {DEFAULT_ARCHIVE_URL}",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would be copied without making changes.",
+    )
+    return parser.parse_args(argv)
 
 
 def ensure_exists(path: Path) -> None:
     path.mkdir(parents=True, exist_ok=True)
 
 
-def main() -> None:
-    args = parse_args()
-    target_root = args.target.resolve()
+def run_migrate(
+    target: Path,
+    template: Path | None = None,
+    download: bool = False,
+    archive_url: str = DEFAULT_ARCHIVE_URL,
+    dry_run: bool = False,
+) -> int:
+    """Migrate an existing project to use pyproject-template.
 
-    if args.download:
-        tmp_dir = target_root / "tmp"
-        ensure_exists(tmp_dir)
-        print(f"Downloading template archive from {args.archive_url} ...")
+    Args:
+        target: Path to the existing repository to update.
+        template: Path to the pyproject-template root.
+        download: Download the template archive instead of using local checkout.
+        archive_url: URL to template archive.
+        dry_run: Show what would be done without making changes.
 
-        template_root = download_and_extract_archive(args.archive_url, tmp_dir)
-        Logger.success(f"Template downloaded to {template_root}")
+    Returns:
+        Exit code (0 for success, non-zero for error).
+    """
+    target_root = target.resolve()
+
+    if download:
+        if dry_run:
+            Logger.info(f"Dry run: Would download template from {archive_url}")
+            template_root = Path(__file__).resolve().parent.parent.parent
+        else:
+            tmp_dir = target_root / "tmp"
+            ensure_exists(tmp_dir)
+            print(f"Downloading template archive from {archive_url} ...")
+
+            template_root = download_and_extract_archive(archive_url, tmp_dir)
+            Logger.success(f"Template downloaded to {template_root}")
     else:
         # Default to the root of the repo containing this script
         # Script is at tools/pyproject_template/migrate_existing_project.py
         # Root is ../../..
-        template_root = (args.template or Path(__file__).resolve().parent.parent.parent).resolve()
+        template_root = (template or Path(__file__).resolve().parent.parent.parent).resolve()
 
     if not template_root.exists():
-        raise SystemExit(f"Template path does not exist: {template_root}")
+        Logger.error(f"Template path does not exist: {template_root}")
+        return 1
     if not target_root.exists():
-        raise SystemExit(f"Target path does not exist: {target_root}")
+        Logger.error(f"Target path does not exist: {target_root}")
+        return 1
 
     timestamp = dt.datetime.now().strftime("%Y%m%d-%H%M%S")
     backup_root = target_root / "tmp" / f"template-migration-backup-{timestamp}"
-    ensure_exists(backup_root)
 
     backed_up: list[tuple[Path, Path]] = []
     copied: list[Path] = []
     skipped: list[Path] = []
+    would_backup: list[Path] = []
 
     for rel in TEMPLATE_REL_PATHS:
         src = template_root / rel
@@ -138,33 +172,46 @@ def main() -> None:
             continue
 
         if dst.exists():
-            backup_path = backup_root / rel
-            ensure_exists(backup_path.parent)
-            shutil.move(str(dst), str(backup_path))
-            backed_up.append((dst, backup_path))
+            if dry_run:
+                would_backup.append(dst)
+            else:
+                backup_path = backup_root / rel
+                ensure_exists(backup_path.parent)
+                shutil.move(str(dst), str(backup_path))
+                backed_up.append((dst, backup_path))
 
-        if src.is_dir():
-            shutil.copytree(src, dst)
+        if dry_run:
+            copied.append(dst)
         else:
-            ensure_exists(dst.parent)
-            shutil.copy2(src, dst)
-        copied.append(dst)
+            if src.is_dir():
+                shutil.copytree(src, dst)
+            else:
+                ensure_exists(dst.parent)
+                shutil.copy2(src, dst)
+            copied.append(dst)
 
     print("\n=== Template Migration Helper ===")
     print(f"Template: {template_root}")
     print(f"Target  : {target_root}")
-    print(f"Backup  : {backup_root}")
+    if dry_run:
+        print("Mode    : DRY RUN (no changes made)")
+    else:
+        print(f"Backup  : {backup_root}")
     print()
 
     if copied:
-        print("Copied:")
+        print("Would copy:" if dry_run else "Copied:")
         for path in copied:
             print(f"  - {path.relative_to(target_root)}")
     else:
         print("Copied: (none)")
 
     print()
-    if backed_up:
+    if dry_run and would_backup:
+        print("Would back up existing items before overwrite:")
+        for path in would_backup:
+            print(f"  - {path.relative_to(target_root)}")
+    elif backed_up:
         print("Backed up existing items before overwrite:")
         for original, backup in backed_up:
             print(f"  - {original.relative_to(target_root)} -> {backup.relative_to(target_root)}")
@@ -177,17 +224,38 @@ def main() -> None:
         for path in skipped:
             print(f"  - {path.relative_to(template_root)}")
 
-    print("\nNext steps:")
-    print(" 1) Run: python tools/pyproject_template/configure.py")
-    print(" 2) Move your source code into src/<package_name>/ and fix imports")
-    print(" 3) Merge your dependencies into pyproject.toml")
-    print(" 4) Run: uv sync && doit check")
-    print(" 5) Review backed-up files and port any custom content")
-    print("\nFuture updates:")
-    print(" • Run: python tools/pyproject_template/check_template_updates.py")
-    print(" • This will show what changed in the template since migration")
-    print("\nDone.")
+    if dry_run:
+        print("\nDry run complete - no changes were made.")
+    else:
+        print("\nNext steps:")
+        print(" 1) Run: python tools/pyproject_template/configure.py")
+        print(" 2) Move your source code into src/<package_name>/ and fix imports")
+        print(" 3) Merge your dependencies into pyproject.toml")
+        print(" 4) Run: uv sync && doit check")
+        print(" 5) Review backed-up files and port any custom content")
+        print("\nFuture updates:")
+        print(" • Run: python tools/pyproject_template/check_template_updates.py")
+        print(" • This will show what changed in the template since migration")
+        print("\nDone.")
+
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Main entry point for CLI usage."""
+    args = parse_args(argv)
+    return run_migrate(
+        target=args.target,
+        template=args.template,
+        download=args.download,
+        archive_url=args.archive_url,
+        dry_run=args.dry_run,
+    )
 
 
 if __name__ == "__main__":
-    main()
+    import sys
+
+    print("This script should not be run directly.")
+    print("Please use: python manage.py")
+    sys.exit(1)
