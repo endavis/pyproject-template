@@ -40,6 +40,7 @@ from utils import (  # noqa: E402
     prompt,
     prompt_confirm,
     update_file,
+    update_test_files,
 )
 
 
@@ -365,11 +366,10 @@ class RepositorySetup:
                 for doc_file in docs_dir.rglob("*.md"):
                     update_file(doc_file, replacements)
 
-            # Update test files
+            # Update test files (limited replacements to preserve test data)
             tests_dir = Path("tests")
             if tests_dir.exists():
-                for test_file in tests_dir.rglob("*.py"):
-                    update_file(test_file, replacements)
+                update_test_files(tests_dir, self.config["package_name"])
 
             # Update source files
             src_dir = Path("src")

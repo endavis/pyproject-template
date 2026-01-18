@@ -29,6 +29,7 @@ from utils import (  # noqa: E402
     prompt,
     prompt_confirm,
     update_file,
+    update_test_files,
     validate_email,
     validate_package_name,
     validate_pypi_name,
@@ -388,12 +389,11 @@ def run_configure(
         for py_file in new_package_dir.rglob("*.py"):
             update_file(py_file, replacements)
 
-    # Update test files
+    # Update test files (limited replacements to preserve test data)
     test_dir = Path("tests")
     if test_dir.exists():
         print("  ✓ Updating test files")
-        for py_file in test_dir.rglob("*.py"):
-            update_file(py_file, replacements)
+        update_test_files(test_dir, package_name)
 
     # Enable Dependabot if requested
     dependabot_example = Path(".github/dependabot.yml.example")

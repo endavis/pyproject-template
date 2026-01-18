@@ -111,8 +111,10 @@ def validate_email(email: str) -> bool:
 def update_file(filepath: Path, replacements: dict[str, str]) -> None:
     """Update file with string replacements.
 
-    Special handling for 'package_name': only replaces when NOT followed by '='
-    to preserve Python keyword argument syntax (e.g., package_name="value").
+    Special handling for 'package_name': only replaces when NOT followed by
+    optional whitespace and '=' to preserve:
+    - Python keyword arguments: package_name="value"
+    - TOML keys: package_name = "value"
     """
     if not filepath.exists():
         return
@@ -120,14 +122,39 @@ def update_file(filepath: Path, replacements: dict[str, str]) -> None:
         content = filepath.read_text(encoding="utf-8")
         for old, new in replacements.items():
             if old == "package_name":
-                # Use regex to replace 'package_name' only when NOT followed by '='
-                # This preserves keyword argument syntax like package_name="value"
-                content = re.sub(r"package_name(?!=)", new, content)
+                # Use regex to replace 'package_name' only when NOT followed by
+                # optional whitespace and '='. This preserves:
+                # - Python kwargs: package_name="value"
+                # - TOML keys: package_name = "value"
+                content = re.sub(r"package_name(?!\s*=)", new, content)
             else:
                 content = content.replace(old, new)
         filepath.write_text(content, encoding="utf-8")
     except UnicodeDecodeError:
         pass  # Skip binary files
+
+
+def update_test_files(test_dir: Path, package_name: str) -> None:
+    """Update test files with limited replacements.
+
+    Only replaces package_name for imports (from package_name import),
+    preserving placeholder string values used as test fixtures for
+    placeholder detection tests.
+
+    Args:
+        test_dir: Path to the tests directory
+        package_name: The actual package name to use in imports
+    """
+    if not test_dir.exists():
+        return
+
+    # Limited replacements - only for imports, not string values
+    test_replacements = {
+        "package_name": package_name,
+    }
+
+    for py_file in test_dir.rglob("*.py"):
+        update_file(py_file, test_replacements)
 
 
 def download_and_extract_archive(url: str, target_dir: Path) -> Path:
