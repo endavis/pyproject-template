@@ -365,11 +365,16 @@ class RepositorySetup:
                 for doc_file in docs_dir.rglob("*.md"):
                     update_file(doc_file, replacements)
 
-            # Update test files
+            # Update test files (limited replacements to preserve test data)
+            # Only replace import-related patterns, not string placeholder values
+            # which are used as test fixtures for placeholder detection tests
+            test_replacements = {
+                "package_name": self.config["package_name"],
+            }
             tests_dir = Path("tests")
             if tests_dir.exists():
                 for test_file in tests_dir.rglob("*.py"):
-                    update_file(test_file, replacements)
+                    update_file(test_file, test_replacements)
 
             # Update source files
             src_dir = Path("src")

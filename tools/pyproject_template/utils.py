@@ -111,8 +111,10 @@ def validate_email(email: str) -> bool:
 def update_file(filepath: Path, replacements: dict[str, str]) -> None:
     """Update file with string replacements.
 
-    Special handling for 'package_name': only replaces when NOT followed by '='
-    to preserve Python keyword argument syntax (e.g., package_name="value").
+    Special handling for 'package_name': only replaces when NOT followed by
+    optional whitespace and '=' to preserve:
+    - Python keyword arguments: package_name="value"
+    - TOML keys: package_name = "value"
     """
     if not filepath.exists():
         return
@@ -120,9 +122,11 @@ def update_file(filepath: Path, replacements: dict[str, str]) -> None:
         content = filepath.read_text(encoding="utf-8")
         for old, new in replacements.items():
             if old == "package_name":
-                # Use regex to replace 'package_name' only when NOT followed by '='
-                # This preserves keyword argument syntax like package_name="value"
-                content = re.sub(r"package_name(?!=)", new, content)
+                # Use regex to replace 'package_name' only when NOT followed by
+                # optional whitespace and '='. This preserves:
+                # - Python kwargs: package_name="value"
+                # - TOML keys: package_name = "value"
+                content = re.sub(r"package_name(?!\s*=)", new, content)
             else:
                 content = content.replace(old, new)
         filepath.write_text(content, encoding="utf-8")
