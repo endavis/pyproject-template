@@ -42,7 +42,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **NEVER Bypass:** Do not use `--admin`, `--force`, `--no-verify`, or similar flags to override blocks.
 - **Report & Wait:** Explain what's blocked and ask the user how to proceed.
 
-> **Note:** Dangerous commands are also blocked at the tool level by hooks in `tools/hooks/ai/`. See the [AI Command Blocking](tools/hooks/ai/README.md) documentation.
+> **Note:** Dangerous commands are also blocked at the tool level by hooks in `tools/hooks/ai/`. See the [AI Command Blocking](docs/development/ai/command-blocking.md) documentation.
 
 ### 5. Pre-Action Checks (Dynamic Context)
 **Do not rely on pre-loaded context.** You MUST read these files *immediately before* acting:

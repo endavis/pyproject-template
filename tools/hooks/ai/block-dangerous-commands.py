@@ -11,6 +11,8 @@ patterns as standalone tokens (not embedded in quoted argument values).
 Exit codes:
   0 - Allow command
   2 - Block command (shows stderr to Claude)
+
+For full documentation, see: docs/development/ai/command-blocking.md
 """
 
 import json

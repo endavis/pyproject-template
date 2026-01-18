@@ -1,6 +1,6 @@
 # AI CLI Hooks
 
-This directory contains hooks for AI coding assistants (Claude Code, Gemini CLI).
+The `tools/hooks/ai/` directory contains hooks for AI coding assistants (Claude Code, Gemini CLI).
 
 ## Block Dangerous Commands
 
@@ -47,8 +47,8 @@ EOF
 
 | File | Description |
 |------|-------------|
-| `block-dangerous-commands.py` | The hook script (shared by Claude and Gemini) |
-| `test_hook.py` | Test suite to verify hook behavior |
+| [`block-dangerous-commands.py`](../../../tools/hooks/ai/block-dangerous-commands.py) | The hook script (shared by Claude and Gemini) |
+| [`test_hook.py`](../../../tools/hooks/ai/test_hook.py) | Test suite to verify hook behavior |
 
 ### Configuration
 
@@ -143,7 +143,7 @@ Results: 14 passed, 0 failed
 
 ### Adding New Patterns
 
-Edit `block-dangerous-commands.py`:
+Edit `tools/hooks/ai/block-dangerous-commands.py`:
 
 ```python
 # Add a new flag
@@ -164,4 +164,4 @@ Then run the test suite to verify.
 ## Related
 
 - [AGENTS.md](../../../AGENTS.md) - AI agent rules including "When Blocked Protocol"
-- [AI Agent Setup](../../../docs/development/AI_SETUP.md) - Setting up AI coding assistants
+- [AI Agent Setup](../AI_SETUP.md) - Setting up AI coding assistants
