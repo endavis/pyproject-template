@@ -1,6 +1,16 @@
-## Migrating an Existing Project to This Template
+# Migration Guide
 
-Use this checklist to bring an existing Python project into the template. The flow assumes hatch-vcs for versioning, commitizen for tagging/changelog, uv for deps, and doit for tasks.
+Bring your existing Python project into the pyproject-template.
+
+> **Automated Option:** Use `migrate_existing_project.py` to copy template files automatically:
+> ```bash
+> python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
+> ```
+> See [Tools Reference](tools-reference.md#migrate_existing_projectpy) for details.
+
+## Manual Migration Checklist
+
+Use this checklist for a manual migration. The flow assumes hatch-vcs for versioning, commitizen for tagging/changelog, uv for deps, and doit for tasks.
 
 ### 1) Inventory & Prep
 - Note current package import name, supported Python versions, dependencies (runtime/dev/extras), scripts/entry points, CI/release setup.
@@ -65,3 +75,7 @@ See [Template Management](manage.md) for full documentation on the management sc
 - Remove old CI configs/Makefiles you no longer need.
 - `direnv allow` to load `.envrc`.
 - Commit and push. Monitor CI actions to ensure the migration was successful.
+
+## Staying Updated
+
+After migration, use [Keeping Up to Date](updates.md) to stay in sync with template improvements.
