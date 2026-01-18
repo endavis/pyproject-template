@@ -41,6 +41,12 @@ DANGEROUS_SEQUENCES = [
 # Force push flags
 FORCE_PUSH_FLAGS = {"--force", "-f", "--force-with-lease"}
 
+# Blocked workflow commands - use doit wrappers instead
+BLOCKED_WORKFLOW_COMMANDS = {
+    ("gh", "issue", "create"): "Use 'doit issue --type=<type>' instead of 'gh issue create'",
+    ("gh", "pr", "create"): "Use 'doit pr' instead of 'gh pr create'",
+}
+
 
 def tokenize(command: str) -> list[str]:
     """
@@ -194,6 +200,21 @@ def get_current_branch() -> str | None:
     return None
 
 
+def check_blocked_workflow_commands(tokens: list[str]) -> tuple[bool, str]:
+    """
+    Check if command uses blocked workflow commands.
+
+    These commands should use doit wrappers instead of direct gh commands.
+    """
+    tokens_lower = [t.lower() for t in tokens]
+
+    for cmd_tuple, reason in BLOCKED_WORKFLOW_COMMANDS.items():
+        cmd_len = len(cmd_tuple)
+        if len(tokens_lower) >= cmd_len and tuple(tokens_lower[:cmd_len]) == cmd_tuple:
+            return True, reason
+    return False, ""
+
+
 def check_merge_to_protected(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if command is a merge that would create a merge commit on a protected branch.
@@ -260,6 +281,11 @@ def check_command(command: str) -> tuple[bool, str]:
 
     # Check for merge commits on protected branches
     is_dangerous, reason = check_merge_to_protected(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for blocked workflow commands
+    is_dangerous, reason = check_blocked_workflow_commands(tokens)
     if is_dangerous:
         return True, reason
 
