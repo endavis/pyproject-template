@@ -390,6 +390,133 @@ doit release
 | `testpypi.yml` | Tag matching `v*-[a-zA-Z]*` (e.g., `v1.0.0-alpha0`) | TestPyPI only |
 | `release.yml` | Tag matching `v[0-9]+.[0-9]+.[0-9]+` (e.g., `v1.0.0`) | TestPyPI → PyPI |
 
+### Setting Up Release Permissions
+
+The release commands (`doit release`, `doit release_dev`) commit directly to `main` and push tags. If your repository has branch protection rules requiring pull requests, you'll need to configure a bypass for automated releases.
+
+#### Organization Repositories: GitHub App (Recommended)
+
+Create a dedicated GitHub App that can bypass branch protection:
+
+**1. Create the GitHub App:**
+
+1. Go to **GitHub Settings** → **Developer Settings** → **GitHub Apps**
+2. Click **New GitHub App**
+3. Fill in:
+   - **Name:** `<your-org>-release-bot` (must be globally unique)
+   - **Homepage URL:** Your repository URL
+   - **Webhook:** Uncheck "Active" (not needed)
+4. Set **Repository Permissions:**
+   - **Contents:** Read and write (to push commits/tags)
+   - **Metadata:** Read-only (required)
+5. Click **Create GitHub App**
+6. Note the **App ID** displayed on the app page
+7. Scroll down → **Generate a private key** → saves a `.pem` file
+
+**2. Install the App:**
+
+1. On the App page, click **Install App** (left sidebar)
+2. Select your organization
+3. Choose **Only select repositories** → select your repo
+4. Click **Install**
+
+**3. Add to Ruleset Bypass:**
+
+1. Go to **Repo Settings** → **Rules** → **Rulesets** → select your main branch ruleset
+2. Under **Bypass list**, click **Add bypass**
+3. Select your release app from the list
+4. Save the ruleset
+
+**4. Store Secrets:**
+
+In your repo **Settings** → **Secrets and variables** → **Actions**:
+
+- Add **Secret:** `RELEASE_APP_PRIVATE_KEY` = contents of the `.pem` file
+- Add **Variable:** `RELEASE_APP_ID` = the App ID from step 1
+
+**5. Update Workflows (if using CI-based releases):**
+
+```yaml
+- name: Generate release token
+  id: app-token
+  uses: actions/create-github-app-token@v1
+  with:
+    app-id: ${{ vars.RELEASE_APP_ID }}
+    private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
+- name: Checkout with token
+  uses: actions/checkout@v4
+  with:
+    token: ${{ steps.app-token.outputs.token }}
+    fetch-depth: 0
+```
+
+#### Personal Repositories: Personal Access Token (PAT)
+
+For personal (non-organization) repositories, use a fine-grained PAT:
+
+**1. Create a Fine-Grained PAT:**
+
+1. Go to **GitHub Settings** → **Developer Settings** → **Personal access tokens** → **Fine-grained tokens**
+2. Click **Generate new token**
+3. Fill in:
+   - **Name:** `release-token`
+   - **Expiration:** Set appropriate expiration
+   - **Repository access:** Select your repository
+4. Set **Repository Permissions:**
+   - **Contents:** Read and write
+   - **Metadata:** Read-only
+5. Click **Generate token** and copy it immediately
+
+**2. Configure Git to Use the Token:**
+
+For local releases, configure git to use the token:
+
+```bash
+# Option 1: Use credential helper (recommended)
+git config --global credential.helper store
+# Then git will prompt for credentials on first push
+
+# Option 2: Include token in remote URL (less secure)
+git remote set-url origin https://<token>@github.com/username/repo.git
+```
+
+**3. Store as Secret (for CI-based releases):**
+
+In your repo **Settings** → **Secrets and variables** → **Actions**:
+
+- Add **Secret:** `RELEASE_PAT` = your PAT
+
+**4. Update Workflows:**
+
+```yaml
+- name: Checkout with PAT
+  uses: actions/checkout@v4
+  with:
+    token: ${{ secrets.RELEASE_PAT }}
+    fetch-depth: 0
+```
+
+#### Alternative: Release via Pull Request
+
+If you prefer not to bypass branch protection, you can separate the release into two steps:
+
+1. **Update changelog via PR:**
+   ```bash
+   git checkout -b release/v1.2.3
+   cz changelog --incremental
+   git add CHANGELOG.md && git commit -m "chore: update changelog for v1.2.3"
+   git push -u origin release/v1.2.3
+   # Create and merge PR
+   ```
+
+2. **Tag after merge:**
+   ```bash
+   git checkout main && git pull
+   git tag v1.2.3
+   git push origin v1.2.3  # Triggers release workflow
+   ```
+
 ### Release Checklist
 
 Before running a release:
