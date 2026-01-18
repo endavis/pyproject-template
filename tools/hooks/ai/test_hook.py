@@ -4,17 +4,17 @@ Test suite for the dangerous command blocking hook.
 
 Run this after making changes to the lexer or patterns to verify behavior.
 
-Usage:
-    python3 .claude/hooks/test_hook.py
-    python3 .gemini/hooks/test_hook.py
+Usage (from any directory):
+    python3 /path/to/project/tools/hooks/ai/test_hook.py
 """
 
-import subprocess
+import subprocess  # nosec B404 - needed to run hook for testing
 import sys
 from pathlib import Path
 
 # Find the hook to test (same directory as this test file)
-HOOK_PATH = Path(__file__).parent / "block-dangerous-commands.py"
+# Use resolve() to get absolute path so it works from any directory
+HOOK_PATH = (Path(__file__).parent / "block-dangerous-commands.py").resolve()
 
 # Test cases: (command, expected_result, description)
 # expected_result: 'ALLOW' or 'BLOCK'
