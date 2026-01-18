@@ -51,13 +51,38 @@ EOF
         "ALLOW",
         "heredoc with markdown",
     ),
-    # === SHOULD BLOCK - Actual dangerous commands ===
+    # === SHOULD ALLOW - Force push to feature branches ===
+    ("git push --force origin feat/my-feature", "ALLOW", "force push feature branch"),
+    ("git push -f origin fix/bugfix", "ALLOW", "-f push feature branch"),
+    ("git push --force-with-lease origin dev", "ALLOW", "force-with-lease feature"),
+    # === SHOULD BLOCK - Always dangerous flags ===
     ("gh pr merge --admin", "BLOCK", "actual --admin flag"),
-    ("git push --force", "BLOCK", "actual --force flag"),
-    ("git push --force-with-lease", "BLOCK", "--force-with-lease"),
     ("git commit --no-verify", "BLOCK", "actual --no-verify"),
     ("git reset --hard HEAD", "BLOCK", "git reset --hard"),
-    ("git push -f origin main", "BLOCK", "force push with -f"),
+    # === SHOULD BLOCK - Force push to protected branches ===
+    ("git push --force origin main", "BLOCK", "force push to main"),
+    ("git push --force origin master", "BLOCK", "force push to master"),
+    ("git push -f origin main", "BLOCK", "force push -f to main"),
+    ("git push --force-with-lease origin main", "BLOCK", "force-with-lease to main"),
+    ("git push --force", "BLOCK", "force push no branch"),
+    ("git push -f", "BLOCK", "-f push no branch"),
+    ("git push --force origin", "BLOCK", "force push origin only"),
+    # === SHOULD BLOCK - Delete protected branches ===
+    ("git push origin --delete main", "BLOCK", "delete remote main"),
+    ("git push origin :main", "BLOCK", "delete main colon syntax"),
+    ("git branch -D main", "BLOCK", "force delete local main"),
+    ("git branch -d master", "BLOCK", "delete local master"),
+    # === SHOULD ALLOW - Delete feature branches ===
+    ("git push origin --delete feat/old-feature", "ALLOW", "delete remote feature"),
+    ("git branch -D feat/old-feature", "ALLOW", "delete local feature"),
+    # === SHOULD ALLOW - Merge with --ff-only (always safe) ===
+    ("git merge --ff-only some-branch", "ALLOW", "merge --ff-only"),
+    ("git merge --ff-only origin/main", "ALLOW", "merge --ff-only origin"),
+    # === SHOULD ALLOW - Merge on feature branch (not protected) ===
+    # Note: These tests assume we're NOT on main/master. If run on a protected
+    # branch, these would be BLOCK instead. The hook checks current branch.
+    ("git merge some-branch", "ALLOW", "merge on feature branch"),
+    ("git merge origin/main", "ALLOW", "merge origin/main on feat"),
 ]
 
 

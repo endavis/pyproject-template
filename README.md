@@ -322,6 +322,34 @@ Hooks include:
 - Trailing whitespace removal
 - Private key detection
 
+## AI Agent Support
+
+This project includes configuration for AI coding assistants (Claude Code, Gemini CLI, Codex).
+
+### Requirements
+
+> **Important:** [GitHub CLI (`gh`)](https://cli.github.com/) is **required** for AI-assisted workflows.
+>
+> Many `doit` tasks use `gh` for issue creation, PR management, and repository operations.
+> Install and authenticate before using AI agents:
+> ```bash
+> # Install (macOS)
+> brew install gh
+>
+> # Install (Linux) - see https://github.com/cli/cli/blob/trunk/docs/install_linux.md
+>
+> # Authenticate
+> gh auth login
+> ```
+
+### Features
+
+- **AGENTS.md** - Instructions and protocols for AI agents
+- **Dangerous command blocking** - Hooks prevent destructive operations (force push to main, branch deletion, etc.)
+- **Workflow automation** - `doit issue` and `doit pr` for GitHub operations
+
+See [AI Agent Setup](docs/development/AI_SETUP.md) and [AI Command Blocking](docs/development/ai/command-blocking.md) for details.
+
 ## Contributing
 
 1. Fork the repository

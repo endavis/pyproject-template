@@ -17,25 +17,29 @@ For full documentation, see: docs/development/ai/command-blocking.md
 
 import json
 import shlex
+import subprocess  # nosec B404 - needed for git branch detection
 import sys
+
+# Protected branches - operations on these require extra scrutiny
+PROTECTED_BRANCHES = {"main", "master"}
 
 # Dangerous flags that must appear as exact standalone tokens
 DANGEROUS_FLAGS = {
     "--admin": "Bypasses branch protection rules",
-    "--force": "Force operation - can cause data loss",
     "--no-verify": "Skips pre-commit/pre-push hooks",
-    "--force-with-lease": "Force push variant",
     "--hard": "Hard reset - can lose uncommitted changes",
 }
 
 # Dangerous token sequences (checked in order)
 # Format: (token_sequence, description)
 DANGEROUS_SEQUENCES = [
-    (["git", "push", "-f"], "Force push - can overwrite remote history"),
     (["rm", "-rf", "/"], "Destructive: removes root filesystem"),
     (["rm", "-rf", "~"], "Destructive: removes home directory"),
     (["sudo", "rm"], "Privileged deletion"),
 ]
+
+# Force push flags
+FORCE_PUSH_FLAGS = {"--force", "-f", "--force-with-lease"}
 
 
 def tokenize(command: str) -> list[str]:
@@ -90,6 +94,134 @@ def check_dangerous_sequences(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
+def check_force_push_to_protected(tokens: list[str]) -> tuple[bool, str]:
+    """
+    Check if command is a force push to a protected branch.
+
+    Allows force push to feature branches but blocks force push to main/master.
+    If no branch is specified, blocks by default (safer).
+    """
+    tokens_lower = [t.lower() for t in tokens]
+
+    # Must be a git push command
+    if "git" not in tokens_lower or "push" not in tokens_lower:
+        return False, ""
+
+    # Check if any force flag is present
+    has_force_flag = any(flag in tokens for flag in FORCE_PUSH_FLAGS)
+    if not has_force_flag:
+        return False, ""
+
+    # Find the push index to look for branch/remote after it
+    try:
+        push_idx = tokens_lower.index("push")
+    except ValueError:
+        return False, ""
+
+    # Look for protected branch name in tokens after 'push'
+    # Skip flags (tokens starting with -)
+    after_push = [t for t in tokens[push_idx + 1 :] if not t.startswith("-")]
+
+    # Check if any token after push is a protected branch
+    for token in after_push:
+        # Handle origin/main format
+        branch = token.split("/")[-1] if "/" in token else token
+
+        if branch.lower() in PROTECTED_BRANCHES:
+            return True, f"Force push to protected branch '{branch}'"
+
+    # If no branch specified, block by default (could push to current branch = main)
+    if not after_push or (len(after_push) == 1 and after_push[0] == "origin"):
+        return True, "Force push without explicit branch (could affect protected branch)"
+
+    return False, ""
+
+
+def check_delete_protected_branch(tokens: list[str]) -> tuple[bool, str]:
+    """
+    Check if command deletes a protected branch (local or remote).
+
+    Catches:
+    - git push origin --delete main
+    - git push origin :main
+    - git branch -D main
+    - git branch -d main
+    """
+    tokens_lower = [t.lower() for t in tokens]
+
+    # Check for remote branch deletion: git push origin --delete main
+    if "git" in tokens_lower and "push" in tokens_lower and "--delete" in tokens_lower:
+        for token in tokens:
+            if token.lower() in PROTECTED_BRANCHES:
+                return True, f"Deleting protected remote branch '{token}'"
+
+    # Check for remote branch deletion with colon syntax: git push origin :main
+    if "git" in tokens_lower and "push" in tokens_lower:
+        for token in tokens:
+            if token.startswith(":") and token[1:].lower() in PROTECTED_BRANCHES:
+                return True, f"Deleting protected remote branch '{token[1:]}'"
+
+    # Check for local branch deletion: git branch -D main or git branch -d main
+    if (
+        "git" in tokens_lower
+        and "branch" in tokens_lower
+        and ("-d" in tokens_lower or "-D" in tokens)
+    ):
+        for token in tokens:
+            if token.lower() in PROTECTED_BRANCHES:
+                return True, f"Deleting protected local branch '{token}'"
+
+    return False, ""
+
+
+def get_current_branch() -> str | None:
+    """
+    Get the current git branch name.
+
+    Returns None if not in a git repository or in detached HEAD state.
+    """
+    try:
+        result = subprocess.run(  # nosec B603 B607 - trusted git command
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            timeout=5,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip() or None
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        pass
+    return None
+
+
+def check_merge_to_protected(tokens: list[str]) -> tuple[bool, str]:
+    """
+    Check if command is a merge that would create a merge commit on a protected branch.
+
+    Protected branches often require linear history (no merge commits).
+    Blocks `git merge` on protected branches unless --ff-only is specified.
+    """
+    tokens_lower = [t.lower() for t in tokens]
+
+    # Must be a git merge command
+    if "git" not in tokens_lower or "merge" not in tokens_lower:
+        return False, ""
+
+    # Allow if --ff-only is specified (fast-forward only, no merge commit)
+    if "--ff-only" in tokens_lower:
+        return False, ""
+
+    # Check if we're on a protected branch
+    current_branch = get_current_branch()
+    if current_branch and current_branch.lower() in PROTECTED_BRANCHES:
+        return True, (
+            f"Merge on protected branch '{current_branch}' would create merge commit. "
+            f"Use --ff-only for fast-forward merge, or merge via PR"
+        )
+
+    return False, ""
+
+
 def check_command(command: str) -> tuple[bool, str]:
     """
     Check if command contains dangerous patterns.
@@ -97,6 +229,9 @@ def check_command(command: str) -> tuple[bool, str]:
     Uses shlex to tokenize, then checks for:
     1. Dangerous flags as standalone tokens
     2. Dangerous token sequences
+    3. Force push to protected branches
+    4. Deletion of protected branches
+    5. Merge commits on protected branches
 
     Returns:
         (is_dangerous, reason)
@@ -110,6 +245,21 @@ def check_command(command: str) -> tuple[bool, str]:
 
     # Check for dangerous sequences
     is_dangerous, reason = check_dangerous_sequences(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for force push to protected branches
+    is_dangerous, reason = check_force_push_to_protected(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for deletion of protected branches
+    is_dangerous, reason = check_delete_protected_branch(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for merge commits on protected branches
+    is_dangerous, reason = check_merge_to_protected(tokens)
     if is_dangerous:
         return True, reason
 
