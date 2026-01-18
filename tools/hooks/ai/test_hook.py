@@ -12,6 +12,11 @@ import subprocess  # nosec B404 - needed to run hook for testing
 import sys
 from pathlib import Path
 
+# ANSI color codes
+RED = "\033[91m"
+GREEN = "\033[92m"
+RESET = "\033[0m"
+
 # Find the hook to test (same directory as this test file)
 # Use resolve() to get absolute path so it works from any directory
 HOOK_PATH = (Path(__file__).parent / "block-dangerous-commands.py").resolve()
@@ -67,16 +72,17 @@ def run_test(cmd: str, expected: str, desc: str) -> bool:
     actual = "BLOCK" if result.returncode == 2 else "ALLOW"
     passed = actual == expected
     mark = "+" if passed else "X"
+    color = GREEN if passed else RED
 
     # Truncate command for display
     cmd_display = cmd.replace("\n", "\\n")
     if len(cmd_display) > 50:
         cmd_display = cmd_display[:47] + "..."
 
-    print(f"{mark} {actual:5} (expected {expected:5}) | {desc:25} | {cmd_display}")
+    print(f"{color}{mark} {actual:5} (expected {expected:5}) | {desc:25} | {cmd_display}{RESET}")
 
     if not passed:
-        print(f'  stderr: {result.stderr[:200] if result.stderr else "(none)"}')
+        print(f'{RED}  stderr: {result.stderr[:200] if result.stderr else "(none)"}{RESET}')
 
     return passed
 
@@ -96,7 +102,8 @@ def main() -> int:
             failed += 1
 
     print("=" * 80)
-    print(f"\nResults: {passed} passed, {failed} failed")
+    result_color = GREEN if failed == 0 else RED
+    print(f"\n{result_color}Results: {passed} passed, {failed} failed{RESET}")
 
     return 0 if failed == 0 else 1
 
