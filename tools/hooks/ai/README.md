@@ -1,8 +1,10 @@
-# AI CLI Dangerous Command Blocking
+# AI CLI Hooks
 
-This directory contains hooks that block dangerous commands for AI coding assistants (Claude Code, Gemini CLI, Codex CLI).
+This directory contains hooks for AI coding assistants (Claude Code, Gemini CLI).
 
-## Purpose
+## Block Dangerous Commands
+
+### Purpose
 
 AI agents can sometimes attempt dangerous operations like:
 
@@ -14,7 +16,7 @@ AI agents can sometimes attempt dangerous operations like:
 
 These hooks intercept commands before execution and block dangerous patterns, even if the agent doesn't follow the rules in `AGENTS.md`.
 
-## How It Works
+### How It Works
 
 The hook uses Python's `shlex` module to properly parse shell quoting:
 
@@ -23,7 +25,7 @@ The hook uses Python's `shlex` module to properly parse shell quoting:
 3. **Check** for dangerous token sequences (e.g., `rm -rf ~`)
 4. **Block** (exit code 2) or **Allow** (exit code 0)
 
-### Key Feature: Quote-Aware Parsing
+#### Key Feature: Quote-Aware Parsing
 
 The hook correctly distinguishes between:
 
@@ -41,16 +43,16 @@ EOF
 )"
 ```
 
-## Files
+### Files
 
 | File | Description |
 |------|-------------|
 | `block-dangerous-commands.py` | The hook script (shared by Claude and Gemini) |
 | `test_hook.py` | Test suite to verify hook behavior |
 
-## Configuration
+### Configuration
 
-### Claude Code
+#### Claude Code
 
 `.claude/settings.json`:
 ```json
@@ -71,7 +73,7 @@ EOF
 }
 ```
 
-### Gemini CLI
+#### Gemini CLI
 
 `.gemini/settings.json`:
 ```json
@@ -92,11 +94,11 @@ EOF
 }
 ```
 
-### Codex CLI
+#### Codex CLI
 
 Codex uses approval policies instead of hooks. See `.codex/config.toml` for deny rules.
 
-## Testing
+### Testing
 
 Run the test suite after making changes:
 
@@ -118,9 +120,9 @@ Testing hook: /path/to/block-dangerous-commands.py
 Results: 14 passed, 0 failed
 ```
 
-## Blocked Patterns
+### Blocked Patterns
 
-### Dangerous Flags (exact token match)
+#### Dangerous Flags (exact token match)
 
 | Flag | Reason |
 |------|--------|
@@ -130,7 +132,7 @@ Results: 14 passed, 0 failed
 | `--force-with-lease` | Force push variant |
 | `--hard` | Hard reset - can lose uncommitted changes |
 
-### Dangerous Sequences (consecutive tokens)
+#### Dangerous Sequences (consecutive tokens)
 
 | Sequence | Reason |
 |----------|--------|
@@ -139,7 +141,7 @@ Results: 14 passed, 0 failed
 | `rm -rf ~` | Destructive: removes home directory |
 | `sudo rm` | Privileged deletion |
 
-## Adding New Patterns
+### Adding New Patterns
 
 Edit `block-dangerous-commands.py`:
 
