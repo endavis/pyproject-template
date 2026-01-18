@@ -63,6 +63,7 @@ nav:
       - Extensions: development/extensions.md
       - Release & Automation: development/release-and-automation.md
       - AI Agent Setup: development/AI_SETUP.md
+      - AI Command Blocking: ../tools/hooks/ai/README.md
   - Template:
       - Migration Guide: template/migration.md
   - Reference:
