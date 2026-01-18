@@ -12,6 +12,7 @@ Thank you for your interest in contributing to this project! We welcome contribu
 - [Testing Guidelines](#testing-guidelines)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
+- [Release Process](#release-process)
 - [Reporting Bugs](#reporting-bugs)
 - [Requesting Features](#requesting-features)
 
@@ -304,6 +305,127 @@ Fill out the PR template (`.github/pull_request_template.md`):
 - Delete your branch
 - Update your fork with the latest changes
 - Close any related issues
+
+## Release Process
+
+This section documents how to publish releases to TestPyPI and PyPI.
+
+> **Note:** Releases can only be performed by maintainers with push access to the repository and appropriate PyPI/TestPyPI permissions.
+
+### How Versioning Works
+
+This project uses **semantic versioning** derived automatically from git tags via [hatch-vcs](https://github.com/ofek/hatch-vcs):
+
+- **No manual version editing** - Version is determined by git tags
+- **Tag format:** `v<major>.<minor>.<patch>` (e.g., `v1.2.3`)
+- **Pre-release format:** `v<version>-<type><n>` (e.g., `v1.2.3-alpha0`, `v1.2.3-beta1`, `v1.2.3-rc0`)
+
+Version bumping is handled by [commitizen](https://commitizen-tools.github.io/commitizen/) based on conventional commit history:
+
+| Commit Type | Version Bump |
+|-------------|--------------|
+| `fix:` | Patch (1.0.0 → 1.0.1) |
+| `feat:` | Minor (1.0.0 → 1.1.0) |
+| `BREAKING CHANGE:` | Major (1.0.0 → 2.0.0) |
+
+### Pre-Release Workflow (TestPyPI)
+
+Use pre-releases to test packages before official release:
+
+```bash
+# Create alpha release (default)
+doit release_dev
+
+# Create beta release
+doit release_dev --type=beta
+
+# Create release candidate
+doit release_dev --type=rc
+```
+
+**What `doit release_dev` does:**
+
+1. Verifies you're on the `main` branch
+2. Checks for uncommitted changes
+3. Pulls latest changes from remote
+4. Runs all checks (`doit check`)
+5. Bumps version with commitizen (e.g., `1.0.0` → `1.0.1-alpha0`)
+6. Updates CHANGELOG.md
+7. Creates git tag and pushes to GitHub
+8. **Triggers:** `.github/workflows/testpypi.yml`
+9. **Publishes to:** [TestPyPI](https://test.pypi.org/)
+
+**Testing from TestPyPI:**
+
+```bash
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ package-name
+```
+
+### Production Release Workflow (PyPI)
+
+When ready for official release:
+
+```bash
+doit release
+```
+
+**What `doit release` does:**
+
+1. Verifies you're on the `main` branch
+2. Checks for uncommitted changes
+3. Pulls latest changes from remote
+4. Validates merge commit format (governance check)
+5. Validates issue links in commits
+6. Runs all checks (`doit check`)
+7. Bumps version with commitizen (merges pre-releases into final version)
+8. Updates CHANGELOG.md (consolidates pre-release entries)
+9. Creates git tag and pushes to GitHub
+10. **Triggers:** `.github/workflows/release.yml`
+11. **Publishes to:** TestPyPI first, then PyPI
+
+### Workflow Triggers
+
+| Workflow | Trigger | Destination |
+|----------|---------|-------------|
+| `testpypi.yml` | Tag matching `v*-[a-zA-Z]*` (e.g., `v1.0.0-alpha0`) | TestPyPI only |
+| `release.yml` | Tag matching `v[0-9]+.[0-9]+.[0-9]+` (e.g., `v1.0.0`) | TestPyPI → PyPI |
+
+### Release Checklist
+
+Before running a release:
+
+- [ ] All CI checks pass on `main`
+- [ ] CHANGELOG.md is up to date (or will be auto-generated)
+- [ ] No uncommitted changes
+- [ ] You have push access to the repository
+- [ ] PyPI/TestPyPI environments are configured in GitHub
+
+### Typical Release Cycle
+
+1. **Development:** Features merged to `main` via PRs
+2. **Alpha testing:** `doit release_dev --type=alpha` → Test on TestPyPI
+3. **Beta testing:** `doit release_dev --type=beta` → Wider testing
+4. **Release candidate:** `doit release_dev --type=rc` → Final testing
+5. **Production:** `doit release` → Publish to PyPI
+
+### Troubleshooting
+
+**"Uncommitted changes detected"**
+- Commit or stash your changes before releasing
+
+**"Not on main branch"**
+- Switch to main: `git checkout main && git pull`
+
+**"Pre-release checks failed"**
+- Run `doit check` and fix any issues before retrying
+
+**"commitizen bump failed"**
+- Ensure commits follow conventional format
+- Check that there are commits since the last tag
+
+**PyPI publish fails**
+- Verify GitHub environment secrets are configured
+- Check that the version doesn't already exist on PyPI
 
 ## Reporting Bugs
 
