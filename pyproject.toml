@@ -123,6 +123,8 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
+# Ignore directories with duplicate module names or standalone scripts
+exclude = ["tools/pyproject_template/", ".claude/", ".gemini/", ".codex/"]
 
 [tool.pytest.ini_options]
 minversion = "8.0"

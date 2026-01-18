@@ -1,4 +1,17 @@
 {
+  "hooks": {
+    "BeforeTool": [
+      {
+        "matcher": "run_shell_command",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $GEMINI_PROJECT_DIR/tools/hooks/ai/block-dangerous-commands.py"
+          }
+        ]
+      }
+    ]
+  },
   "tools": {
     "allowed": [
       "run_shell_command(git)",
