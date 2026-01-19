@@ -43,6 +43,14 @@ def task_type_check() -> dict[str, Any]:
     }
 
 
+def task_deadcode() -> dict[str, Any]:
+    """Detect dead code with vulture (uses pyproject.toml configuration)."""
+    return {
+        "actions": ["uv run vulture"],
+        "title": title_with_actions,
+    }
+
+
 def task_check() -> dict[str, Any]:
     """Run all checks (format, lint, type check, security, spelling, test)."""
     return {
