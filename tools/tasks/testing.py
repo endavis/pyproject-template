@@ -1,0 +1,25 @@
+"""Testing-related doit tasks."""
+
+from typing import Any
+
+from doit.tools import title_with_actions
+
+
+def task_test() -> dict[str, Any]:
+    """Run pytest with parallel execution."""
+    return {
+        "actions": ["uv run pytest -n auto -v"],
+        "title": title_with_actions,
+    }
+
+
+def task_coverage() -> dict[str, Any]:
+    """Run pytest with coverage (note: parallel execution disabled for accurate coverage)."""
+    return {
+        "actions": [
+            "uv run pytest "
+            "--cov=package_name --cov-report=term-missing "
+            "--cov-report=html:tmp/htmlcov --cov-report=xml:tmp/coverage.xml -v"
+        ],
+        "title": title_with_actions,
+    }
