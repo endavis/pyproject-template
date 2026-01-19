@@ -11,210 +11,10 @@ from doit.tools import title_with_actions
 from rich.console import Console
 from rich.panel import Panel
 
+from tools.tasks.templates import get_issue_template, get_pr_template, get_required_sections
+
 if TYPE_CHECKING:
     from rich.console import Console as ConsoleType
-
-# Issue templates for editor mode
-ISSUE_TEMPLATE_FEATURE = """\
-# Lines starting with # are comments and will be ignored.
-# Fill in the sections below, save, and exit.
-# Delete the placeholder text and add your content.
-
-## Problem
-<!-- Required: What problem does this feature solve? -->
-Describe the problem or limitation you're experiencing.
-
-## Proposed Solution
-<!-- Required: How do you envision this feature working? -->
-Clear description of what you want to happen.
-
-## Success Criteria
-<!-- Optional: How will we know this is complete? Delete section if not needed. -->
-- [ ] Feature implements X functionality
-- [ ] Tests added and passing
-- [ ] Documentation updated
-
-## Additional Context
-<!-- Optional: Links, examples, screenshots. Delete section if not needed. -->
-Any other relevant information.
-"""
-
-ISSUE_TEMPLATE_BUG = """\
-# Lines starting with # are comments and will be ignored.
-# Fill in the sections below, save, and exit.
-# Delete the placeholder text and add your content.
-
-## Bug Description
-<!-- Required: A clear description of the bug -->
-Describe the bug and its impact.
-
-## Steps to Reproduce
-<!-- Required: Step-by-step instructions -->
-1. Run command `...`
-2. With input `...`
-3. Observe error `...`
-
-## Expected vs Actual Behavior
-<!-- Required: What should happen vs what actually happens -->
-**Expected:** The function should return a valid result
-**Actual:** The function raises an error
-
-## Environment
-<!-- Optional: System information. Delete section if not needed. -->
-- Python: 3.12
-- OS: Ubuntu 22.04
-- Package version: 1.0.0
-
-## Error Output
-<!-- Optional: Paste error messages or stack traces. Delete section if not needed. -->
-```
-Paste error output here
-```
-
-## Additional Context
-<!-- Optional: Any other relevant information. Delete section if not needed. -->
-Screenshots, related issues, workarounds attempted.
-"""
-
-ISSUE_TEMPLATE_REFACTOR = """\
-# Lines starting with # are comments and will be ignored.
-# Fill in the sections below, save, and exit.
-# Delete the placeholder text and add your content.
-
-## Current Code Issue
-<!-- Required: Describe the code that needs refactoring -->
-Describe what code currently exists, where it's located, and what problems it causes.
-
-## Proposed Improvement
-<!-- Required: How you propose to refactor the code -->
-Describe the refactoring approach and what the code will look like after.
-
-## Success Criteria
-<!-- Optional: How will we know the refactoring is successful? Delete section if not needed. -->
-- [ ] Code duplication eliminated
-- [ ] All existing tests still pass
-- [ ] New tests added for refactored code
-
-## Additional Context
-<!-- Optional: Any other relevant information. Delete section if not needed. -->
-Performance impact, breaking change considerations, migration steps.
-"""
-
-ISSUE_TEMPLATE_DOC = """\
-# Lines starting with # are comments and will be ignored.
-# Fill in the sections below, save, and exit.
-# Delete the placeholder text and add your content.
-
-## Documentation Type
-<!-- Required: What kind of documentation change? -->
-New guide / Update existing / Fix incorrect info / Add examples / API docs
-
-## Description
-<!-- Required: What documentation is needed? -->
-Describe the documentation that is missing or needs improvement.
-
-## Suggested Location
-<!-- Optional: Where should this documentation live? Delete section if not needed. -->
-- docs/getting-started/
-- docs/examples/
-- README.md
-
-## Success Criteria
-<!-- Optional: How will we know the documentation is complete? Delete section if not needed. -->
-- [ ] Topic is fully explained
-- [ ] Code examples included
-- [ ] Added to navigation/index
-
-## Additional Context
-<!-- Optional: Any other relevant information. Delete section if not needed. -->
-Links to related documentation, examples from other projects.
-"""
-
-ISSUE_TEMPLATE_CHORE = """\
-# Lines starting with # are comments and will be ignored.
-# Fill in the sections below, save, and exit.
-# Delete the placeholder text and add your content.
-
-## Chore Type
-<!-- Required: What kind of maintenance task? -->
-CI/CD / Dependencies / Tooling / Cleanup / Configuration
-
-## Description
-<!-- Required: What needs to be done and why? -->
-Describe the maintenance task.
-
-## Proposed Changes
-<!-- Optional: What specific changes need to be made? Delete section if not needed. -->
-- Update file X
-- Modify configuration Y
-- Add/remove dependency Z
-
-## Success Criteria
-<!-- Optional: How will we know this task is complete? Delete section if not needed. -->
-- [ ] CI passes
-- [ ] No breaking changes
-- [ ] Documentation updated if needed
-
-## Additional Context
-<!-- Optional: Any other relevant information. Delete section if not needed. -->
-Related issues, urgency, dependencies on other tasks.
-"""
-
-PR_TEMPLATE = """\
-# Lines starting with # are comments and will be ignored.
-# Fill in the sections below, save, and exit.
-# Delete the placeholder text and add your content.
-# Mark checkboxes with [x] where applicable.
-
-## Description
-<!-- Required: What does this PR do? -->
-Provide a clear description of your changes.
-
-## Related Issue
-<!-- Link to the issue this PR addresses -->
-Closes #ISSUE_NUMBER
-
-## Type of Change
-<!-- Mark ONE with [x] -->
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (would cause existing functionality to not work as expected)
-- [ ] Documentation update
-- [ ] Code refactoring
-- [ ] Performance improvement
-- [ ] Test improvement
-
-## Changes Made
-<!-- List the main changes -->
-- Change 1
-- Change 2
-- Change 3
-
-## Testing
-<!-- Mark with [x] what applies -->
-- [ ] All existing tests pass
-- [ ] Added new tests for new functionality
-- [ ] Manually tested the changes
-
-## Checklist
-<!-- Mark with [x] what you've done -->
-- [ ] My code follows the code style of this project (ran `doit format`)
-- [ ] I have run linting checks (`doit lint`)
-- [ ] I have run type checking (`doit type_check`)
-- [ ] I have added tests that prove my fix is effective or that my feature works
-- [ ] All new and existing tests pass (`doit test`)
-- [ ] I have updated the documentation accordingly
-- [ ] I have updated the CHANGELOG.md
-- [ ] My changes generate no new warnings
-
-## Screenshots (if applicable)
-<!-- Add screenshots or delete this section -->
-N/A
-
-## Additional Notes
-<!-- Any other information or delete this section -->
-N/A
-"""
 
 
 def _get_editor() -> str:
@@ -321,13 +121,8 @@ def _validate_issue_content(
     Returns:
         True if valid, False otherwise
     """
-    required: dict[str, list[str]] = {
-        "feature": ["Problem", "Proposed Solution"],
-        "bug": ["Bug Description", "Steps to Reproduce", "Expected vs Actual Behavior"],
-        "refactor": ["Current Code Issue", "Proposed Improvement"],
-        "doc": ["Documentation Type", "Description"],
-        "chore": ["Chore Type", "Description"],
-    }
+    # Get required sections dynamically from templates
+    required_sections = get_required_sections(issue_type)
 
     missing = []
     placeholder_patterns = [
@@ -338,7 +133,7 @@ def _validate_issue_content(
         "delete section if not needed",
     ]
 
-    for section_name in required.get(issue_type, []):
+    for section_name in required_sections:
         content = sections.get(section_name, "").strip()
         if not content:
             missing.append(section_name)
@@ -417,22 +212,17 @@ def task_issue() -> dict[str, Any]:
         )
         console.print()
 
-        # Validate type
-        valid_types = ["feature", "bug", "refactor", "doc", "chore"]
-        if type not in valid_types:
-            console.print(f"[red]Invalid type: {type}. Must be one of: {valid_types}[/red]")
+        # Get template (validates type and retrieves labels/template dynamically)
+        try:
+            issue_template = get_issue_template(type)
+        except ValueError as e:
+            console.print(f"[red]{e}[/red]")
+            sys.exit(1)
+        except FileNotFoundError as e:
+            console.print(f"[red]Template error: {e}[/red]")
             sys.exit(1)
 
-        # Map type to labels and template
-        type_config = {
-            "feature": {"labels": "enhancement,needs-triage", "template": ISSUE_TEMPLATE_FEATURE},
-            "bug": {"labels": "bug,needs-triage", "template": ISSUE_TEMPLATE_BUG},
-            "refactor": {"labels": "refactor,needs-triage", "template": ISSUE_TEMPLATE_REFACTOR},
-            "doc": {"labels": "documentation,needs-triage", "template": ISSUE_TEMPLATE_DOC},
-            "chore": {"labels": "chore,needs-triage", "template": ISSUE_TEMPLATE_CHORE},
-        }
-        config = type_config[type]
-        labels = config["labels"]
+        labels = issue_template.labels
 
         # Determine body content
         if body_file:
@@ -449,7 +239,7 @@ def task_issue() -> dict[str, Any]:
                 f"[dim]Opening editor with {type} template. "
                 "Fill in the sections, save, and exit.[/dim]"
             )
-            body_content = _open_editor_with_template(config["template"])
+            body_content = _open_editor_with_template(issue_template.editor_template)
             if body_content is None:
                 console.print("[yellow]Aborted.[/yellow]")
                 sys.exit(0)
@@ -585,10 +375,16 @@ def task_pr() -> dict[str, Any]:
             body_content = body
         else:
             # Mode 1: Interactive editor
+            # Get PR template dynamically from .github/
+            try:
+                template = get_pr_template()
+            except FileNotFoundError as e:
+                console.print(f"[red]Template error: {e}[/red]")
+                sys.exit(1)
+
             # Pre-fill issue number if detected
-            template = PR_TEMPLATE
             if detected_issue:
-                template = template.replace("#ISSUE_NUMBER", f"#{detected_issue}")
+                template = template.replace("#(issue)", f"#{detected_issue}")
 
             console.print(
                 "[dim]Opening editor with PR template. Fill in the sections, save, and exit.[/dim]"
@@ -601,7 +397,7 @@ def task_pr() -> dict[str, Any]:
         # Validate PR has description
         sections = _parse_markdown_sections(body_content)
         description = sections.get("Description", "").strip()
-        if not description or description == "Provide a clear description of your changes.":
+        if not description:
             console.print("[red]Description is required.[/red]")
             sys.exit(1)
 
