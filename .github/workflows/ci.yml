@@ -1,22 +1,42 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
     branches: [main]
+    types: [opened, synchronize, reopened, labeled]
   workflow_call:
 
 jobs:
-  test:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Set matrix based on label
+        id: set-matrix
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready-to-merge') }}" == "true" ]]; then
+            echo 'Full matrix: all Python versions × all OSes'
+            echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"],"python-version":["3.12","3.13"]}' >> $GITHUB_OUTPUT
+          else
+            echo 'Minimal matrix: Python 3.12 × all OSes'
+            echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"],"python-version":["3.12"]}' >> $GITHUB_OUTPUT
+          fi
+
+  test:
+    needs: setup
+    runs-on: ${{ matrix.os }}
     strategy:
-      matrix:
-        python-version: ["3.12", "3.13"]
+      fail-fast: false
+      matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     env:
-      UV_CACHE_DIR: /tmp/uv-cache
+      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
 
     steps:
+      - name: Configure git line endings (Windows)
+        if: runner.os == 'Windows'
+        run: git config --global core.autocrlf false
+
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
@@ -30,7 +50,7 @@ jobs:
       - name: Cache uv dependencies
         uses: actions/cache@v5
         with:
-          path: /tmp/uv-cache
+          path: ${{ env.UV_CACHE_DIR }}
           key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
           restore-keys: |
             ${{ runner.os }}-uv-
@@ -48,7 +68,7 @@ jobs:
         run: uv run pytest --cov=package_name --cov-report=xml:tmp/coverage.xml --cov-report=term -v
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.12'
+        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v5
         with:
           file: ./tmp/coverage.xml
