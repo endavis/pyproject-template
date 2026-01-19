@@ -11,12 +11,6 @@ import argparse
 import shutil
 import sys
 from pathlib import Path
-from typing import Any
-
-try:
-    import tomllib  # py312+
-except ModuleNotFoundError:  # pragma: no cover
-    import tomli as tomllib  # type: ignore[no-redef]
 
 # Support running as script or as module
 _script_dir = Path(__file__).parent
@@ -26,6 +20,10 @@ if str(_script_dir) not in sys.path:
 # Import shared utilities
 from utils import (  # noqa: E402
     Logger,
+    get_first_author,
+    get_git_config,
+    load_toml_file,
+    parse_github_url,
     prompt,
     prompt_confirm,
     update_file,
@@ -56,13 +54,6 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
-def read_pyproject(path: Path) -> dict[str, Any]:
-    if not path.exists():
-        return {}
-    with path.open("rb") as f:
-        return tomllib.load(f)
-
-
 def find_backup_pyproject() -> Path | None:
     """Find the most recent backup pyproject.toml from migration helper (in tmp/)."""
     candidates = []
@@ -76,46 +67,18 @@ def find_backup_pyproject() -> Path | None:
     return candidates[0]
 
 
-def guess_github_user(pyproject_data: dict[str, Any]) -> str:
-    repo_url = pyproject_data.get("project", {}).get("urls", {}).get("Repository")
-    if repo_url and isinstance(repo_url, str):
-        parts = repo_url.rstrip("/").split("/")
-        if len(parts) >= 2:
-            user: str = parts[-2]
-            return user
+def guess_github_user(pyproject_data: dict) -> str:
+    """Get GitHub user from pyproject data or git remote."""
+    # First try from pyproject.toml repository URL
+    repo_url = pyproject_data.get("project", {}).get("urls", {}).get("Repository", "")
+    github_user, _ = parse_github_url(repo_url)
+    if github_user:
+        return github_user
 
     # Fallback: try git remote origin
-    try:
-        import subprocess  # nosec B404 - subprocess is required for git operations
-
-        url = (
-            subprocess.check_output(
-                ["git", "config", "--get", "remote.origin.url"], stderr=subprocess.DEVNULL
-            )
-            .decode()
-            .strip()
-        )
-        if url.endswith(".git"):
-            url = url[:-4]
-        # handle git@github.com:org/repo or https://github.com/org/repo
-        if "github.com" in url:
-            url = url.replace("git@github.com:", "https://github.com/")
-            parts = url.rstrip("/").split("/")
-            if len(parts) >= 2:
-                github_user: str = parts[-2]
-                return github_user
-    except Exception:  # nosec B110 - intentionally silent fallback for git operations
-        pass
-
-    return ""
-
-
-def first_author(pyproject_data: dict[str, Any]) -> tuple[str, str]:
-    authors = pyproject_data.get("project", {}).get("authors", [])
-    if not authors:
-        return "", ""
-    author = authors[0]
-    return author.get("name", ""), author.get("email", "")
+    remote_url = get_git_config("remote.origin.url")
+    github_user, _ = parse_github_url(remote_url)
+    return github_user
 
 
 def read_readme_title(readme_path: Path) -> str:
@@ -128,19 +91,19 @@ def read_readme_title(readme_path: Path) -> str:
 
 
 def load_defaults(pyproject_path: Path) -> dict[str, str]:
-    data = read_pyproject(pyproject_path)
+    data = load_toml_file(pyproject_path)
     project = data.get("project", {})
     project_name = project.get("name", "")
     package_name = validate_package_name(project_name) if project_name else ""
     pypi_name = validate_pypi_name(project_name) if project_name else ""
     description = project.get("description") or read_readme_title(Path("README.md"))
-    author_name, author_email = first_author(data)
+    author_name, author_email = get_first_author(data)
     github_user = guess_github_user(data)
 
     # If current pyproject still has template placeholders, try backup for real values
     backup_pyproject = find_backup_pyproject()
     if backup_pyproject:
-        backup_data = read_pyproject(backup_pyproject)
+        backup_data = load_toml_file(backup_pyproject)
         b_project = backup_data.get("project", {})
 
         def not_placeholder(val: str, placeholders: set[str]) -> bool:
@@ -158,7 +121,7 @@ def load_defaults(pyproject_path: Path) -> dict[str, str]:
         else:
             description = b_project.get("description", description)
 
-        b_author_name, b_author_email = first_author(backup_data)
+        b_author_name, b_author_email = get_first_author(backup_data)
         if not_placeholder(author_name, {"Your Name", ""}):
             pass
         else:
