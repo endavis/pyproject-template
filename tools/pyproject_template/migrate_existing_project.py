@@ -35,9 +35,9 @@ if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
 # Import shared utilities
-from utils import Logger, download_and_extract_archive  # noqa: E402
+from utils import TEMPLATE_URL, Logger, download_and_extract_archive  # noqa: E402
 
-DEFAULT_ARCHIVE_URL = "https://github.com/endavis/pyproject-template/archive/refs/heads/main.zip"
+DEFAULT_ARCHIVE_URL = f"{TEMPLATE_URL}/archive/refs/heads/main.zip"
 
 
 TEMPLATE_REL_PATHS: tuple[str, ...] = (

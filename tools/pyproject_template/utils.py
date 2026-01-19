@@ -12,6 +12,16 @@ import urllib.request
 import zipfile
 from pathlib import Path
 from typing import Any
+from urllib.parse import urlparse
+
+try:
+    import tomllib  # py311+
+except ModuleNotFoundError:  # pragma: no cover
+    import tomli as tomllib  # type: ignore[no-redef]
+
+# Template repository info
+TEMPLATE_REPO = "endavis/pyproject-template"
+TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 
 
 # ANSI color codes
@@ -106,6 +116,135 @@ def validate_email(email: str) -> bool:
     """Basic email validation."""
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email))
+
+
+def command_exists(command: str) -> bool:
+    """Check if a command exists in PATH.
+
+    Args:
+        command: The command name to check for.
+
+    Returns:
+        True if the command exists and is executable, False otherwise.
+    """
+    try:
+        result = subprocess.run(
+            ["which", command],
+            capture_output=True,
+        )
+        return result.returncode == 0
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+
+def get_git_config(key: str, default: str = "") -> str:
+    """Get a git configuration value.
+
+    Args:
+        key: The git config key to retrieve (e.g., "user.name", "user.email").
+        default: Default value to return if the key is not found.
+
+    Returns:
+        The config value if found, otherwise the default value.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "config", key],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip() if result.returncode == 0 else default
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return default
+
+
+def is_github_url(url: str) -> bool:
+    """Check if URL is from github.com using proper URL parsing.
+
+    This prevents URL manipulation attacks like 'https://evil.com/github.com/...'
+
+    Args:
+        url: The URL to check.
+
+    Returns:
+        True if the URL is from github.com, False otherwise.
+    """
+    try:
+        parsed = urlparse(url)
+        return parsed.netloc == "github.com" or parsed.netloc.endswith(".github.com")
+    except Exception:
+        return False
+
+
+def parse_github_url(url: str) -> tuple[str, str]:
+    """Parse a GitHub URL and extract owner and repository name.
+
+    Handles both formats:
+    - https://github.com/owner/repo
+    - git@github.com:owner/repo.git
+
+    Args:
+        url: The GitHub URL to parse.
+
+    Returns:
+        Tuple of (owner, repo) or ("", "") if parsing fails.
+    """
+    if not url:
+        return "", ""
+
+    # Remove .git suffix if present
+    if url.endswith(".git"):
+        url = url[:-4]
+
+    # Normalize SSH format to HTTPS for parsing
+    if url.startswith("git@github.com:"):
+        url = url.replace("git@github.com:", "https://github.com/")
+
+    # Validate it's a GitHub URL
+    if not is_github_url(url):
+        return "", ""
+
+    # Extract owner and repo from path
+    parts = url.rstrip("/").split("/")
+    if len(parts) >= 2:
+        return parts[-2], parts[-1]
+
+    return "", ""
+
+
+def load_toml_file(path: Path) -> dict[str, Any]:
+    """Load and parse a TOML file.
+
+    Args:
+        path: Path to the TOML file.
+
+    Returns:
+        Parsed TOML data as a dictionary, or empty dict if file doesn't exist
+        or parsing fails.
+    """
+    if not path.exists():
+        return {}
+    try:
+        with path.open("rb") as f:
+            return tomllib.load(f)
+    except (tomllib.TOMLDecodeError, OSError):
+        return {}
+
+
+def get_first_author(pyproject_data: dict[str, Any]) -> tuple[str, str]:
+    """Extract the first author's name and email from pyproject.toml data.
+
+    Args:
+        pyproject_data: Parsed pyproject.toml data.
+
+    Returns:
+        Tuple of (name, email) or ("", "") if no author found.
+    """
+    authors = pyproject_data.get("project", {}).get("authors", [])
+    if not authors:
+        return "", ""
+    author = authors[0]
+    return author.get("name", ""), author.get("email", "")
 
 
 def update_file(filepath: Path, replacements: dict[str, str]) -> None:

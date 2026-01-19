@@ -12,7 +12,6 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Any
-from urllib.parse import urlparse
 
 try:
     import tomllib  # py311+
@@ -24,11 +23,16 @@ _script_dir = Path(__file__).parent
 if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
-from utils import Logger, validate_email, validate_package_name  # noqa: E402
-
-# Template repository info
-TEMPLATE_REPO = "endavis/pyproject-template"
-TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
+from utils import (  # noqa: E402
+    TEMPLATE_REPO,
+    Logger,
+    command_exists,
+    get_first_author,
+    get_git_config,
+    parse_github_url,
+    validate_email,
+    validate_package_name,
+)
 
 # Settings file location
 SETTINGS_DIR = Path(".config/pyproject_template")
@@ -38,18 +42,6 @@ SETTINGS_FILE = SETTINGS_DIR / "settings.toml"
 def _toml_escape(value: str) -> str:
     """Escape a string for TOML."""
     return value.replace("\\", "\\\\").replace('"', '\\"')
-
-
-def _is_github_url(url: str) -> bool:
-    """Check if URL is from github.com using proper URL parsing.
-
-    This prevents URL manipulation attacks like 'https://evil.com/github.com/...'
-    """
-    try:
-        parsed = urlparse(url)
-        return parsed.netloc == "github.com" or parsed.netloc.endswith(".github.com")
-    except Exception:
-        return False
 
 
 def _toml_serialize(data: dict[str, Any]) -> str:
@@ -273,23 +265,20 @@ class SettingsManager:
                 self.settings.description = project.get("description", "")
 
             # Get author info
-            authors = project.get("authors", [])
-            if authors:
-                author = authors[0]
-                if not self.settings.author_name:
-                    self.settings.author_name = author.get("name", "")
-                if not self.settings.author_email:
-                    self.settings.author_email = author.get("email", "")
+            author_name, author_email = get_first_author(data)
+            if not self.settings.author_name:
+                self.settings.author_name = author_name
+            if not self.settings.author_email:
+                self.settings.author_email = author_email
 
             # Get GitHub user from repository URL
             if not self.settings.github_user:
                 repo_url = project.get("urls", {}).get("Repository", "")
-                if repo_url and _is_github_url(repo_url):
-                    parts = repo_url.rstrip("/").split("/")
-                    if len(parts) >= 2:
-                        self.settings.github_user = parts[-2]
-                        if not self.settings.github_repo:
-                            self.settings.github_repo = parts[-1]
+                github_user, github_repo = parse_github_url(repo_url)
+                if github_user:
+                    self.settings.github_user = github_user
+                    if not self.settings.github_repo:
+                        self.settings.github_repo = github_repo
 
         except (tomllib.TOMLDecodeError, OSError) as e:
             Logger.warning(f"Failed to read pyproject.toml: {e}")
@@ -299,53 +288,27 @@ class SettingsManager:
         if not self.context.has_git:
             return
 
-        try:
-            # Get author info from git config
-            if not self.settings.author_name:
-                result = subprocess.run(
-                    ["git", "config", "user.name"],
-                    capture_output=True,
-                    text=True,
-                    cwd=self.root,
-                )
-                if result.returncode == 0:
-                    self.settings.author_name = result.stdout.strip()
+        # Get author info from git config
+        if not self.settings.author_name:
+            self.settings.author_name = get_git_config("user.name")
 
-            if not self.settings.author_email:
-                result = subprocess.run(
-                    ["git", "config", "user.email"],
-                    capture_output=True,
-                    text=True,
-                    cwd=self.root,
-                )
-                if result.returncode == 0:
-                    self.settings.author_email = result.stdout.strip()
+        if not self.settings.author_email:
+            self.settings.author_email = get_git_config("user.email")
 
-            # Get GitHub user/repo from remote URL
-            if self.context.has_git_remote and not self.settings.github_user:
-                url = self.context.git_remote_url
-                # Handle git@github.com:user/repo.git or https://github.com/user/repo
-                if url.endswith(".git"):
-                    url = url[:-4]
-                # Normalize SSH format to HTTPS for proper URL parsing
-                if url.startswith("git@github.com:"):
-                    url = url.replace("git@github.com:", "https://github.com/")
-                if _is_github_url(url):
-                    parts = url.rstrip("/").split("/")
-                    if len(parts) >= 2:
-                        self.settings.github_user = parts[-2]
-                        if not self.settings.github_repo:
-                            self.settings.github_repo = parts[-1]
-
-        except (subprocess.SubprocessError, FileNotFoundError):
-            pass
+        # Get GitHub user/repo from remote URL
+        if self.context.has_git_remote and not self.settings.github_user:
+            github_user, github_repo = parse_github_url(self.context.git_remote_url)
+            if github_user:
+                self.settings.github_user = github_user
+                if not self.settings.github_repo:
+                    self.settings.github_repo = github_repo
 
     def _run_preflight_checks(self) -> None:
         """Run preflight checks and collect warnings."""
         self.warnings = []
 
         # Check for GitHub CLI
-        if not self._command_exists("gh"):
+        if not command_exists("gh"):
             self.warnings.append(
                 PreflightWarning(
                     message="GitHub CLI (gh) not installed",
@@ -361,7 +324,7 @@ class SettingsManager:
             )
 
         # Check for git
-        if not self._command_exists("git"):
+        if not command_exists("git"):
             self.warnings.append(
                 PreflightWarning(
                     message="Git not installed",
@@ -370,7 +333,7 @@ class SettingsManager:
             )
 
         # Check for uv
-        if not self._command_exists("uv"):
+        if not command_exists("uv"):
             self.warnings.append(
                 PreflightWarning(
                     message="uv not installed",
@@ -398,17 +361,6 @@ class SettingsManager:
                     suggestion="Update email in settings",
                 )
             )
-
-    def _command_exists(self, command: str) -> bool:
-        """Check if a command exists in PATH."""
-        try:
-            result = subprocess.run(
-                ["which", command],
-                capture_output=True,
-            )
-            return result.returncode == 0
-        except (subprocess.SubprocessError, FileNotFoundError):
-            return False
 
     def _gh_authenticated(self) -> bool:
         """Check if GitHub CLI is authenticated."""

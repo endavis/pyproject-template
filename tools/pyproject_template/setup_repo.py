@@ -34,9 +34,12 @@ if str(_script_dir) not in sys.path:
 
 # Import shared utilities
 from utils import (  # noqa: E402
+    TEMPLATE_REPO,
     Colors,
     GitHubCLI,
     Logger,
+    command_exists,
+    get_git_config,
     prompt,
     prompt_confirm,
     update_file,
@@ -47,9 +50,8 @@ from utils import (  # noqa: E402
 class RepositorySetup:
     """Main class for repository setup orchestration."""
 
-    TEMPLATE_OWNER = "endavis"
-    TEMPLATE_REPO = "pyproject-template"
-    TEMPLATE_FULL = f"{TEMPLATE_OWNER}/{TEMPLATE_REPO}"
+    # Use TEMPLATE_REPO from utils.py as the single source of truth
+    TEMPLATE_FULL = TEMPLATE_REPO
 
     def __init__(self) -> None:
         self.config: dict[str, Any] = {}
@@ -80,7 +82,7 @@ class RepositorySetup:
         Logger.step("Checking requirements...")
 
         # Check for gh CLI
-        if not self._command_exists("gh"):
+        if not command_exists("gh"):
             Logger.error("GitHub CLI (gh) is not installed")
             print("  Install from: https://cli.github.com/")
             sys.exit(1)
@@ -103,7 +105,7 @@ class RepositorySetup:
         self._check_token_permissions()
 
         # Check for git
-        if not self._command_exists("git"):
+        if not command_exists("git"):
             Logger.error("Git is not installed")
             print("  Install from: https://git-scm.com/downloads")
             sys.exit(1)
@@ -116,7 +118,7 @@ class RepositorySetup:
         Logger.success(f"Git found: {git_version}")
 
         # Check for uv
-        if not self._command_exists("uv"):
+        if not command_exists("uv"):
             Logger.error("uv is not installed")
             print("  Install from: https://docs.astral.sh/uv/getting-started/installation/")
             sys.exit(1)
@@ -127,14 +129,6 @@ class RepositorySetup:
             text=True,
         ).stdout.strip()
         Logger.success(f"uv found: {uv_version}")
-
-    def _command_exists(self, command: str) -> bool:
-        """Check if a command exists in PATH."""
-        result = subprocess.run(
-            ["which", command],
-            capture_output=True,
-        )
-        return result.returncode == 0
 
     def _check_token_permissions(self) -> None:
         """Check GitHub token type and permissions."""
@@ -208,8 +202,8 @@ class RepositorySetup:
         )
 
         # Get git config for defaults
-        git_name = self._get_git_config("user.name", "")
-        git_email = self._get_git_config("user.email", "")
+        git_name = get_git_config("user.name", "")
+        git_email = get_git_config("user.email", "")
 
         self.config["author_name"] = prompt("Author name", default=git_name)
         self.config["author_email"] = prompt("Author email", default=git_email)
@@ -228,15 +222,6 @@ class RepositorySetup:
         if not prompt_confirm("Proceed with these settings?", default=True):
             Logger.warning("Setup cancelled by user")
             sys.exit(0)
-
-    def _get_git_config(self, key: str, default: str) -> str:
-        """Get git configuration value."""
-        result = subprocess.run(
-            ["git", "config", key],
-            capture_output=True,
-            text=True,
-        )
-        return result.stdout.strip() if result.returncode == 0 else default
 
     def create_github_repository(self) -> None:
         """Create repository on GitHub from template (without cloning)."""
