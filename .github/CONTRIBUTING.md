@@ -269,7 +269,7 @@ Update calling code to use `await`.
    doit check
    ```
 
-2. **Update CHANGELOG.md** (for notable changes)
+2. **Use conventional commit messages** - Your commit messages (`feat:`, `fix:`, etc.) automatically become changelog entries during release. See [Commit Guidelines](#commit-guidelines).
 
 3. **Update documentation** (if needed)
 
