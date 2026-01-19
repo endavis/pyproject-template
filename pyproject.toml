@@ -43,6 +43,7 @@ dev = [
     "pyyaml>=6.0",
     "types-pyyaml>=6.0",
     "vulture>=2.11",
+    "radon>=6.0",
 ]
 security = [
     "pip-audit>=2.6",

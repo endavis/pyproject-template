@@ -55,10 +55,12 @@ from tools.tasks.maintenance import (  # noqa: F401
 # Code quality tasks
 from tools.tasks.quality import (  # noqa: F401
     task_check,
+    task_complexity,
     task_deadcode,
     task_format,
     task_format_check,
     task_lint,
+    task_maintainability,
     task_type_check,
 )
 
