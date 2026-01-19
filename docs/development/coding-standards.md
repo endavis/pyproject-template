@@ -477,6 +477,95 @@ Vulture may report false positives for code that's used dynamically. Common exam
 - Document why code is kept if it appears unused but is needed
 - Keep the confidence threshold at 80+ to avoid noise
 
+## Code Complexity Metrics
+
+### Overview
+
+This template uses [radon](https://radon.readthedocs.io/) to analyze code complexity. Complex code is harder to understand, test, and maintain.
+
+### Running Complexity Analysis
+
+```bash
+# Analyze cyclomatic complexity (A-F grades)
+doit complexity
+
+# Analyze maintainability index (A-F grades)
+doit maintainability
+```
+
+### Metrics Explained
+
+#### Cyclomatic Complexity (CC)
+
+Measures the number of independent paths through a function. Lower is better.
+
+| Grade | CC Score | Risk Level |
+|-------|----------|------------|
+| A | 1-5 | Low - simple, easy to test |
+| B | 6-10 | Low - slightly complex |
+| C | 11-20 | Moderate - more difficult to test |
+| D | 21-30 | High - difficult to test |
+| E | 31-40 | Very high - untestable |
+| F | 41+ | Extremely high - error-prone |
+
+**Target:** Keep all functions at grade B or better (CC ≤ 10).
+
+#### Maintainability Index (MI)
+
+A composite score based on cyclomatic complexity, lines of code, and Halstead volume. Higher is better.
+
+| Grade | MI Score | Meaning |
+|-------|----------|---------|
+| A | 20-100 | Highly maintainable |
+| B | 10-19 | Moderately maintainable |
+| C | 0-9 | Difficult to maintain |
+
+**Target:** Keep all modules at grade A (MI ≥ 20).
+
+### Reducing Complexity
+
+If a function has high complexity:
+
+1. **Extract helper functions** - Break large functions into smaller, focused ones
+2. **Use early returns** - Reduce nesting with guard clauses
+3. **Simplify conditionals** - Use lookup tables instead of long if-else chains
+4. **Apply design patterns** - Strategy pattern can replace complex switches
+
+**Example - Before (CC=8):**
+```python
+def process(data, mode):
+    if mode == "a":
+        if data.valid:
+            return handle_a(data)
+        else:
+            return error_a()
+    elif mode == "b":
+        if data.valid:
+            return handle_b(data)
+        else:
+            return error_b()
+    # ... more branches
+```
+
+**Example - After (CC=2):**
+```python
+HANDLERS = {"a": handle_a, "b": handle_b}
+ERRORS = {"a": error_a, "b": error_b}
+
+def process(data, mode):
+    handler = HANDLERS.get(mode)
+    if not handler:
+        raise ValueError(f"Unknown mode: {mode}")
+    return handler(data) if data.valid else ERRORS[mode]()
+```
+
+### Best Practices
+
+- Run `doit complexity` before submitting PRs
+- Refactor functions with CC > 10
+- Document exceptions where high complexity is justified
+- Use maintainability index to identify modules needing attention
+
 ## Related Documentation
 
 - [Release Automation](release-and-automation.md)

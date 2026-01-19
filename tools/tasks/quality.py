@@ -51,6 +51,22 @@ def task_deadcode() -> dict[str, Any]:
     }
 
 
+def task_complexity() -> dict[str, Any]:
+    """Analyze cyclomatic complexity with radon (A-F grades, A is best)."""
+    return {
+        "actions": ["uv run radon cc src/ -a -s"],
+        "title": title_with_actions,
+    }
+
+
+def task_maintainability() -> dict[str, Any]:
+    """Analyze maintainability index with radon (A-F grades, A is best)."""
+    return {
+        "actions": ["uv run radon mi src/ -s"],
+        "title": title_with_actions,
+    }
+
+
 def task_check() -> dict[str, Any]:
     """Run all checks (format, lint, type check, security, spelling, test)."""
     return {
