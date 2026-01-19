@@ -13,6 +13,10 @@ import zipfile
 from pathlib import Path
 from typing import Any
 
+# Template repository info
+TEMPLATE_REPO = "endavis/pyproject-template"
+TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
+
 
 # ANSI color codes
 class Colors:
@@ -106,6 +110,46 @@ def validate_email(email: str) -> bool:
     """Basic email validation."""
     pattern = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
     return bool(re.match(pattern, email))
+
+
+def command_exists(command: str) -> bool:
+    """Check if a command exists in PATH.
+
+    Args:
+        command: The command name to check for.
+
+    Returns:
+        True if the command exists and is executable, False otherwise.
+    """
+    try:
+        result = subprocess.run(
+            ["which", command],
+            capture_output=True,
+        )
+        return result.returncode == 0
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return False
+
+
+def get_git_config(key: str, default: str = "") -> str:
+    """Get a git configuration value.
+
+    Args:
+        key: The git config key to retrieve (e.g., "user.name", "user.email").
+        default: Default value to return if the key is not found.
+
+    Returns:
+        The config value if found, otherwise the default value.
+    """
+    try:
+        result = subprocess.run(
+            ["git", "config", key],
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip() if result.returncode == 0 else default
+    except (subprocess.SubprocessError, FileNotFoundError):
+        return default
 
 
 def update_file(filepath: Path, replacements: dict[str, str]) -> None:

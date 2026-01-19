@@ -38,14 +38,14 @@ if str(_script_dir) not in sys.path:
 
 # Import shared utilities
 from utils import (  # noqa: E402
+    TEMPLATE_REPO,
+    TEMPLATE_URL,
     Colors,
     Logger,
     download_and_extract_archive,
 )
 
-# Template repository info
-TEMPLATE_REPO = "endavis/pyproject-template"
-TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
+# Default archive URL derived from template constants
 DEFAULT_ARCHIVE_URL = f"{TEMPLATE_URL}/archive/refs/heads/main.zip"
 
 
