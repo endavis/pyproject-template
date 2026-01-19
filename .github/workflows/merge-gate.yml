@@ -1,21 +1,78 @@
 name: Merge Gate
 
 on:
-  pull_request:
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
     branches: [main]
-    types: [opened, labeled, unlabeled, synchronize, reopened]
 
 jobs:
-  require-label:
+  require-label-and-ci:
+    # Only run if CI succeeded
+    if: github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
+      pull-requests: read
+      actions: read
     runs-on: ubuntu-latest
     steps:
+      - name: Get PR number from workflow run
+        id: get-pr
+        uses: actions/github-script@v8
+        with:
+          script: |
+            // Get the PR associated with this workflow run
+            const run = context.payload.workflow_run;
+
+            // workflow_run provides the head_sha, find the PR with that SHA
+            const prs = await github.rest.pulls.list({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              head: `${context.repo.owner}:${run.head_branch}`,
+              state: 'open'
+            });
+
+            if (prs.data.length === 0) {
+              console.log('No open PR found for this workflow run - might be a push to main');
+              core.setOutput('has_pr', 'false');
+              return;
+            }
+
+            const pr = prs.data[0];
+            core.setOutput('has_pr', 'true');
+            core.setOutput('pr_number', pr.number);
+            console.log(`Found PR #${pr.number}`);
+
       - name: Check for ready-to-merge label
+        if: steps.get-pr.outputs.has_pr == 'true'
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const prNumber = ${{ steps.get-pr.outputs.pr_number }};
+
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: prNumber
+            });
+
+            const hasLabel = pr.data.labels.some(l => l.name === 'ready-to-merge');
+
+            if (!hasLabel) {
+              core.setFailed(
+                `PR #${prNumber} requires 'ready-to-merge' label before merging.\n` +
+                'Add the label when the PR is reviewed and ready to merge.'
+              );
+            } else {
+              console.log(`✓ PR #${prNumber} has 'ready-to-merge' label and CI passed`);
+            }
+
+  ci-failed:
+    # Report failure if CI failed
+    if: github.event.workflow_run.conclusion == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+      - name: CI failed
         run: |
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready-to-merge') }}" != "true" ]]; then
-            echo "::error::PR requires 'ready-to-merge' label before merging"
-            echo "Add the label when the PR is reviewed and ready to merge."
-            exit 1
-          fi
-          echo "ready-to-merge label present"
+          echo "::error::CI workflow failed - merge blocked"
+          exit 1
