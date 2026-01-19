@@ -38,17 +38,11 @@ jobs:
       - name: Install dependencies
         run: uv sync --all-extras --dev
 
-      - name: Run format check
-        run: uv run ruff format --check src/ tests/
+      - name: Run code quality checks (format, lint, type check, security, spelling)
+        run: uv run doit format_check lint type_check security spell_check
 
-      - name: Run linting
-        run: uv run ruff check src/ tests/
-
-      - name: Run type checking
-        run: uv run mypy src/
-
-      - name: Run security audit
-        run: uv run --extra security pip-audit
+      - name: Run dependency audit
+        run: uv run pip-audit
 
       - name: Run tests with coverage
         run: uv run pytest --cov=package_name --cov-report=xml:tmp/coverage.xml --cov-report=term -v
