@@ -23,6 +23,31 @@ except ModuleNotFoundError:  # pragma: no cover
 TEMPLATE_REPO = "endavis/pyproject-template"
 TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 
+# Files to update during placeholder replacement (single source of truth)
+# Used by both configure.py and setup_repo.py
+FILES_TO_UPDATE: tuple[str, ...] = (
+    "pyproject.toml",
+    "README.md",
+    "LICENSE",
+    "dodo.py",
+    "mkdocs.yml",
+    "AGENTS.md",
+    "CHANGELOG.md",
+    ".github/workflows/ci.yml",
+    ".github/workflows/release.yml",
+    ".github/workflows/testpypi.yml",
+    ".github/workflows/breaking-change-detection.yml",
+    ".github/CONTRIBUTING.md",
+    ".github/SECURITY.md",
+    ".github/CODE_OF_CONDUCT.md",
+    ".github/CODEOWNERS",
+    ".github/pull_request_template.md",
+    ".claude/CLAUDE.md",
+    ".claude/lsp-setup.md",
+    ".envrc",
+    ".pre-commit-config.yaml",
+)
+
 
 # ANSI color codes
 class Colors:

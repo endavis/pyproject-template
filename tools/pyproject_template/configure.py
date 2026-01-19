@@ -19,6 +19,7 @@ if str(_script_dir) not in sys.path:
 
 # Import shared utilities
 from utils import (  # noqa: E402
+    FILES_TO_UPDATE,
     Logger,
     get_first_author,
     get_git_config,
@@ -300,27 +301,8 @@ def run_configure(
         # variables (e.g. in extensions.md)
     }
 
-    # Update files
-    files_to_update = [
-        "pyproject.toml",
-        "README.md",
-        "LICENSE",
-        "dodo.py",
-        "mkdocs.yml",
-        "AGENTS.md",
-        "CHANGELOG.md",
-        ".github/workflows/ci.yml",
-        ".github/workflows/release.yml",
-        ".github/workflows/testpypi.yml",
-        ".github/CONTRIBUTING.md",
-        ".github/SECURITY.md",
-        ".github/CODE_OF_CONDUCT.md",
-        ".github/CODEOWNERS",
-        ".github/pull_request_template.md",
-        ".envrc",
-    ]
-
-    for file_path in files_to_update:
+    # Update files (using shared constant from utils.py)
+    for file_path in FILES_TO_UPDATE:
         path = Path(file_path)
         if path.exists():
             print(f"  ✓ Updating {file_path}")
