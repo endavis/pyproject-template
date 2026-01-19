@@ -42,6 +42,7 @@ dev = [
     "pyright>=1.1.0",
     "pyyaml>=6.0",
     "types-pyyaml>=6.0",
+    "vulture>=2.11",
 ]
 security = [
     "pip-audit>=2.6",
@@ -188,6 +189,32 @@ skips = [
 [tool.codespell]
 skip = "tmp,.venv,.git,*.lock,*.pyc,__pycache__"
 ignore-words-list = "crate"
+
+[tool.vulture]
+min_confidence = 80
+paths = ["src", "tests"]
+exclude = [
+    "*/tests/*",      # Test fixtures often appear unused
+    "*/__pycache__/*",
+]
+# Common false positives in Python projects
+ignore_names = [
+    "test_*",         # Pytest test functions
+    "fixture_*",      # Pytest fixtures
+    "*_fixture",      # Pytest fixtures
+    "setUp",          # unittest methods
+    "tearDown",       # unittest methods
+    "setUpClass",     # unittest methods
+    "tearDownClass",  # unittest methods
+]
+ignore_decorators = [
+    "@pytest.fixture",
+    "@pytest.mark.*",
+    "@click.command",
+    "@click.option",
+    "@click.group",
+    "@abstractmethod",
+]
 
 [tool.commitizen]
 name = "cz_conventional_commits"

@@ -398,6 +398,85 @@ class UserManager:
         return 42
 ```
 
+## Dead Code Detection
+
+### Overview
+
+This template uses [vulture](https://github.com/jendrikseipp/vulture) to detect unused code. Dead code accumulates over time and wastes maintenance effort.
+
+### Running Dead Code Analysis
+
+```bash
+# Run dead code detection
+doit deadcode
+```
+
+### What Vulture Detects
+
+- Unused functions and methods
+- Unused variables and attributes
+- Unused imports
+- Unused classes
+- Unreachable code
+
+### Configuration
+
+Vulture is configured in `pyproject.toml` under `[tool.vulture]`:
+
+```toml
+[tool.vulture]
+min_confidence = 80          # Only report high-confidence findings
+paths = ["src", "tests"]     # Directories to scan
+ignore_names = ["test_*"]    # Patterns to ignore
+ignore_decorators = ["@pytest.fixture"]  # Decorators to ignore
+```
+
+### Handling False Positives
+
+Vulture may report false positives for code that's used dynamically. Common examples:
+
+| Pattern | Why It's a False Positive |
+|---------|--------------------------|
+| Pytest fixtures | Used by name injection |
+| Click/Typer commands | Called via decorators |
+| `__all__` exports | Used for public API |
+| Abstract methods | Implemented in subclasses |
+| Logging formatters | Called by logging framework |
+
+**To handle false positives:**
+
+1. **Add to `ignore_names`** in `pyproject.toml`:
+   ```toml
+   ignore_names = [
+       "my_special_function",
+       "fixture_*",
+   ]
+   ```
+
+2. **Add to `ignore_decorators`**:
+   ```toml
+   ignore_decorators = [
+       "@my_framework.command",
+   ]
+   ```
+
+3. **Use a whitelist file** (for complex cases):
+   ```bash
+   # Generate whitelist from current findings
+   uv run vulture src/ --make-whitelist > vulture_whitelist.py
+
+   # Edit the whitelist to keep only intentional items
+   # Then run with whitelist
+   uv run vulture src/ vulture_whitelist.py
+   ```
+
+### Best Practices
+
+- Run `doit deadcode` periodically during development
+- Remove genuinely unused code promptly
+- Document why code is kept if it appears unused but is needed
+- Keep the confidence threshold at 80+ to avoid noise
+
 ## Related Documentation
 
 - [Release Automation](release-and-automation.md)

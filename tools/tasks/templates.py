@@ -9,7 +9,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any, NamedTuple
 
-import yaml  # type: ignore[import-untyped]
+import yaml
 
 
 class IssueTemplate(NamedTuple):
