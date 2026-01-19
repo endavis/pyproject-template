@@ -317,10 +317,22 @@ This repository uses a **merge gate** workflow to prevent premature merges:
 
 **Important:**
 - The `ready-to-merge` label should only be added after:
-  - All CI checks have passed
-  - Code review is complete
+  - All CI checks have passed (including full OS matrix)
+  - Code review is complete and approved
   - All feedback has been addressed
 - Adding the label prematurely doesn't bypass CI - the merge gate waits for CI completion
+- The label works alongside GitHub's approval requirement - both must be satisfied
+
+**With approval workflows enabled:**
+
+If your repository requires PR approvals (branch protection → "Require approvals"), the merge flow becomes:
+
+1. CI checks pass
+2. Reviewer approves the PR
+3. Add `ready-to-merge` label (final "ship it" signal)
+4. Merge allowed
+
+The label and approval are independent checks - both must pass. The label serves as an explicit final confirmation after review and CI are complete.
 
 ### After Merge
 

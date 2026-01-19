@@ -472,6 +472,29 @@ This ensures PRs cannot be merged until:
 - The `ready-to-merge` label is present
 - All other required CI checks pass
 
+### Interaction with Approval Workflows
+
+The merge gate works alongside GitHub's approval requirement. If you have both enabled:
+
+| Check | Type | Purpose |
+|-------|------|---------|
+| Approvals | GitHub built-in | Ensures code review is complete |
+| CI checks | GitHub Actions | Ensures tests/lint/type-check pass |
+| Merge gate | Custom workflow | Ensures explicit "ready" signal via label |
+
+**Recommended merge flow with approvals:**
+
+```
+PR opened → CI runs → Review/Approval → CI passes → Add label → Merge
+```
+
+All checks are independent - they don't interfere with each other. Branch protection waits for ALL required checks to pass before allowing merge.
+
+**Why use both?**
+- Approvals ensure human review happened
+- CI ensures code quality
+- The label provides a final checkpoint, preventing accidental merges while CI is still running on the full matrix
+
 ## Troubleshooting
 
 ### Coverage Below Threshold
