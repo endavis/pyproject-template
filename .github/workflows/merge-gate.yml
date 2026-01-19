@@ -1,79 +1,82 @@
 name: Merge Gate
 
 on:
-  workflow_run:
-    workflows: ["CI"]
-    types: [completed]
+  pull_request:
     branches: [main]
+    types: [opened, labeled, unlabeled, synchronize, reopened]
 
 jobs:
   require-label:
-    # Only run if CI succeeded
-    if: github.event.workflow_run.conclusion == 'success'
     permissions:
       contents: read
-      pull-requests: read
+      checks: read
       actions: read
     runs-on: ubuntu-latest
     steps:
-      - name: Get PR number from workflow run
-        id: get-pr
-        uses: actions/github-script@v8
-        with:
-          script: |
-            // Get the PR associated with this workflow run
-            const run = context.payload.workflow_run;
-
-            // workflow_run provides the head_sha, find the PR with that SHA
-            const prs = await github.rest.pulls.list({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              head: `${context.repo.owner}:${run.head_branch}`,
-              state: 'open'
-            });
-
-            if (prs.data.length === 0) {
-              console.log('No open PR found for this workflow run - might be a push to main');
-              core.setOutput('has_pr', 'false');
-              return;
-            }
-
-            const pr = prs.data[0];
-            core.setOutput('has_pr', 'true');
-            core.setOutput('pr_number', pr.number);
-            console.log(`Found PR #${pr.number}`);
-
       - name: Check for ready-to-merge label
-        if: steps.get-pr.outputs.has_pr == 'true'
+        id: check-label
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready-to-merge') }}" != "true" ]]; then
+            echo "::error::PR requires 'ready-to-merge' label before merging"
+            echo "Add the label when the PR is reviewed and ready to merge."
+            exit 1
+          fi
+          echo "✓ ready-to-merge label present"
+
+      - name: Wait for CI to complete
         uses: actions/github-script@v8
         with:
           script: |
-            const prNumber = ${{ steps.get-pr.outputs.pr_number }};
+            const sha = context.payload.pull_request.head.sha;
+            const maxAttempts = 30;  // 5 minutes max wait
+            const delaySeconds = 10;
 
-            const pr = await github.rest.pulls.get({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              pull_number: prNumber
-            });
+            for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+              console.log(`Checking CI status (attempt ${attempt}/${maxAttempts})...`);
 
-            const hasLabel = pr.data.labels.some(l => l.name === 'ready-to-merge');
+              // Get check runs for this commit
+              const checks = await github.rest.checks.listForRef({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                ref: sha
+              });
 
-            if (!hasLabel) {
-              core.setFailed(
-                `PR #${prNumber} requires 'ready-to-merge' label before merging.\n` +
-                'Add the label when the PR is reviewed and ready to merge.'
+              // Find CI workflow runs (the "test" job from ci.yml)
+              const ciRuns = checks.data.check_runs.filter(run =>
+                run.name.includes('test') && run.app.slug === 'github-actions'
               );
-            } else {
-              console.log(`✓ PR #${prNumber} has 'ready-to-merge' label and CI passed`);
+
+              if (ciRuns.length === 0) {
+                console.log('No CI runs found yet, waiting...');
+                await new Promise(r => setTimeout(r, delaySeconds * 1000));
+                continue;
+              }
+
+              // Check if any are still in progress
+              const inProgress = ciRuns.some(run =>
+                run.status === 'queued' || run.status === 'in_progress'
+              );
+
+              if (inProgress) {
+                console.log('CI still running, waiting...');
+                await new Promise(r => setTimeout(r, delaySeconds * 1000));
+                continue;
+              }
+
+              // All complete - check if all passed
+              const allPassed = ciRuns.every(run => run.conclusion === 'success');
+
+              if (allPassed) {
+                console.log(`✓ All ${ciRuns.length} CI jobs passed`);
+                return;
+              } else {
+                const failed = ciRuns.filter(r => r.conclusion !== 'success');
+                core.setFailed(
+                  `CI failed: ${failed.map(r => r.name).join(', ')}\n` +
+                  'Fix CI issues before merging.'
+                );
+                return;
+              }
             }
 
-  ci-failed:
-    # Report failure if CI failed
-    if: github.event.workflow_run.conclusion == 'failure'
-    permissions: {}
-    runs-on: ubuntu-latest
-    steps:
-      - name: CI failed
-        run: |
-          echo "::error::CI workflow failed - merge blocked"
-          exit 1
+            core.setFailed('Timed out waiting for CI to complete');
