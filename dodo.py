@@ -20,7 +20,9 @@ DOIT_CONFIG = {
 }
 
 # Use direnv-managed UV_CACHE_DIR if available, otherwise use tmp/
+# Set in os.environ so subprocesses inherit it (cross-platform compatible)
 UV_CACHE_DIR = os.environ.get("UV_CACHE_DIR", "tmp/.uv_cache")
+os.environ["UV_CACHE_DIR"] = UV_CACHE_DIR
 
 
 def success_message() -> None:
@@ -42,7 +44,7 @@ def task_install() -> dict[str, Any]:
     """Install package with dependencies."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv sync",
+            "uv sync",
         ],
         "title": title_with_actions,
     }
@@ -52,7 +54,7 @@ def task_install_dev() -> dict[str, Any]:
     """Install package with dev dependencies."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv sync --all-extras --dev",
+            "uv sync --all-extras --dev",
         ],
         "title": title_with_actions,
     }
@@ -149,7 +151,7 @@ def task_cleanup() -> dict[str, Any]:
 def task_test() -> dict[str, Any]:
     """Run pytest with parallel execution."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pytest -n auto -v"],
+        "actions": ["uv run pytest -n auto -v"],
         "title": title_with_actions,
     }
 
@@ -158,7 +160,7 @@ def task_coverage() -> dict[str, Any]:
     """Run pytest with coverage (note: parallel execution disabled for accurate coverage)."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pytest "
+            "uv run pytest "
             "--cov=package_name --cov-report=term-missing "
             "--cov-report=html:tmp/htmlcov --cov-report=xml:tmp/coverage.xml -v"
         ],
@@ -169,7 +171,7 @@ def task_coverage() -> dict[str, Any]:
 def task_lint() -> dict[str, Any]:
     """Run ruff linting."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run ruff check src/ tests/"],
+        "actions": ["uv run ruff check src/ tests/"],
         "title": title_with_actions,
     }
 
@@ -178,8 +180,8 @@ def task_format() -> dict[str, Any]:
     """Format code with ruff."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run ruff format src/ tests/",
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run ruff check --fix src/ tests/",
+            "uv run ruff format src/ tests/",
+            "uv run ruff check --fix src/ tests/",
         ],
         "title": title_with_actions,
     }
@@ -188,14 +190,14 @@ def task_format() -> dict[str, Any]:
 def task_format_check() -> dict[str, Any]:
     """Check code formatting without modifying files."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run ruff format --check src/ tests/"],
+        "actions": ["uv run ruff format --check src/ tests/"],
         "title": title_with_actions,
     }
 
 
 def task_type_check() -> dict[str, Any]:
     """Run mypy type checking (uses pyproject.toml configuration)."""
-    cmd = f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mypy src/"
+    cmd = "uv run mypy src/"
     return {
         "actions": [cmd],
         "title": title_with_actions,
@@ -215,7 +217,7 @@ def task_audit() -> dict[str, Any]:
     """Run security audit with pip-audit (requires security extras)."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pip-audit --skip-editable || "
+            "uv run pip-audit --skip-editable || "
             "echo 'pip-audit not installed. Run: uv sync --extra security'"
         ],
         "title": title_with_actions,
@@ -226,7 +228,7 @@ def task_security() -> dict[str, Any]:
     """Run security checks with bandit (requires security extras)."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run bandit -c pyproject.toml -r src/ || "
+            "uv run bandit -c pyproject.toml -r src/ || "
             "echo 'bandit not installed. Run: uv sync --extra security'"
         ],
         "title": title_with_actions,
@@ -236,7 +238,7 @@ def task_security() -> dict[str, Any]:
 def task_spell_check() -> dict[str, Any]:
     """Check spelling in code and documentation."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run codespell src/ tests/ docs/ README.md"],
+        "actions": ["uv run codespell src/ tests/ docs/ README.md"],
         "title": title_with_actions,
     }
 
@@ -244,7 +246,7 @@ def task_spell_check() -> dict[str, Any]:
 def task_fmt_pyproject() -> dict[str, Any]:
     """Format pyproject.toml with pyproject-fmt."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pyproject-fmt pyproject.toml"],
+        "actions": ["uv run pyproject-fmt pyproject.toml"],
         "title": title_with_actions,
     }
 
@@ -253,7 +255,7 @@ def task_licenses() -> dict[str, Any]:
     """Check licenses of dependencies (requires security extras)."""
     return {
         "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pip-licenses --format=markdown --order=license || "
+            "uv run pip-licenses --format=markdown --order=license || "
             "echo 'pip-licenses not installed. Run: uv sync --extra security'"
         ],
         "title": title_with_actions,
@@ -263,10 +265,7 @@ def task_licenses() -> dict[str, Any]:
 def task_commit() -> dict[str, Any]:
     """Interactive commit with commitizen (ensures conventional commit format)."""
     return {
-        "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz commit || "
-            "echo 'commitizen not installed. Run: uv sync'"
-        ],
+        "actions": ["uv run cz commit || " "echo 'commitizen not installed. Run: uv sync'"],
         "title": title_with_actions,
     }
 
@@ -274,10 +273,7 @@ def task_commit() -> dict[str, Any]:
 def task_bump() -> dict[str, Any]:
     """Bump version automatically based on conventional commits."""
     return {
-        "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz bump || "
-            "echo 'commitizen not installed. Run: uv sync'"
-        ],
+        "actions": ["uv run cz bump || " "echo 'commitizen not installed. Run: uv sync'"],
         "title": title_with_actions,
     }
 
@@ -285,10 +281,7 @@ def task_bump() -> dict[str, Any]:
 def task_changelog() -> dict[str, Any]:
     """Generate CHANGELOG from conventional commits."""
     return {
-        "actions": [
-            f"UV_CACHE_DIR={UV_CACHE_DIR} uv run cz changelog || "
-            "echo 'commitizen not installed. Run: uv sync'"
-        ],
+        "actions": ["uv run cz changelog || " "echo 'commitizen not installed. Run: uv sync'"],
         "title": title_with_actions,
     }
 
@@ -296,7 +289,7 @@ def task_changelog() -> dict[str, Any]:
 def task_pre_commit_install() -> dict[str, Any]:
     """Install pre-commit hooks."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pre-commit install"],
+        "actions": ["uv run pre-commit install"],
         "title": title_with_actions,
     }
 
@@ -304,7 +297,7 @@ def task_pre_commit_install() -> dict[str, Any]:
 def task_pre_commit_run() -> dict[str, Any]:
     """Run pre-commit on all files."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run pre-commit run --all-files"],
+        "actions": ["uv run pre-commit run --all-files"],
         "title": title_with_actions,
     }
 
@@ -315,7 +308,7 @@ def task_pre_commit_run() -> dict[str, Any]:
 def task_docs_serve() -> dict[str, Any]:
     """Serve documentation locally with live reload."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mkdocs serve"],
+        "actions": ["uv run mkdocs serve"],
         "title": title_with_actions,
     }
 
@@ -323,7 +316,7 @@ def task_docs_serve() -> dict[str, Any]:
 def task_docs_build() -> dict[str, Any]:
     """Build documentation site."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mkdocs build"],
+        "actions": ["uv run mkdocs build"],
         "title": title_with_actions,
     }
 
@@ -331,7 +324,7 @@ def task_docs_build() -> dict[str, Any]:
 def task_docs_deploy() -> dict[str, Any]:
     """Deploy documentation to GitHub Pages."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv run mkdocs gh-deploy --force"],
+        "actions": ["uv run mkdocs gh-deploy --force"],
         "title": title_with_actions,
     }
 
@@ -1112,7 +1105,7 @@ def task_release_tag() -> dict[str, Any]:
 def task_build() -> dict[str, Any]:
     """Build package."""
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv build"],
+        "actions": ["uv build"],
         "title": title_with_actions,
     }
 
@@ -1124,10 +1117,10 @@ def task_publish() -> dict[str, Any]:
         token = os.environ.get("PYPI_TOKEN")
         if not token:
             raise RuntimeError("PYPI_TOKEN environment variable must be set.")
-        return f"UV_CACHE_DIR={UV_CACHE_DIR} uv publish --token '{token}'"
+        return "uv publish --token '{token}'"
 
     return {
-        "actions": [f"UV_CACHE_DIR={UV_CACHE_DIR} uv build", CmdAction(publish_cmd)],
+        "actions": ["uv build", CmdAction(publish_cmd)],
         "title": title_with_actions,
     }
 
