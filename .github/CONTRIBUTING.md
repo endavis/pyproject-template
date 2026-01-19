@@ -50,10 +50,8 @@ direnv allow
 # Optional: Create .envrc.local for personal settings
 cp .envrc.local.example .envrc.local
 
-# Create virtual environment and install dependencies
-uv venv
-source .venv/bin/activate  # Or let direnv handle this
-uv pip install -e ".[dev]"
+# Install dependencies (creates venv automatically)
+uv sync --all-extras
 
 # Install pre-commit hooks
 doit pre_commit_install
@@ -587,7 +585,7 @@ Before running a release:
 
 ## Reporting Bugs
 
-Use the bug report template (`.github/ISSUE_TEMPLATE/bug_report.md`):
+Use the bug report template (`.github/ISSUE_TEMPLATE/bug_report.yml`):
 
 1. Go to **Issues** → **New Issue** → **Bug Report**
 2. Fill out all sections:
@@ -601,7 +599,7 @@ Use the bug report template (`.github/ISSUE_TEMPLATE/bug_report.md`):
 
 ## Requesting Features
 
-Use the feature request template (`.github/ISSUE_TEMPLATE/feature_request.md`):
+Use the feature request template (`.github/ISSUE_TEMPLATE/feature_request.yml`):
 
 1. Go to **Issues** → **New Issue** → **Feature Request**
 2. Fill out all sections:
