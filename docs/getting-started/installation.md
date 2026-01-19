@@ -44,7 +44,24 @@ uv sync --all-extras --dev
 uv run pre-commit install
 ```
 
-### 4. Start Developing
+### 4. Enable Shell Completions (Optional)
+
+Enable tab completion for `doit` commands:
+
+```bash
+# Generate completion scripts
+doit completions
+
+# For Bash: Add to ~/.bashrc
+echo 'source /path/to/project/completions/doit.bash' >> ~/.bashrc
+
+# For Zsh: Add to ~/.zshrc
+echo 'source /path/to/project/completions/doit.zsh' >> ~/.zshrc
+```
+
+**Note:** If you use `direnv`, completions are automatically sourced when you enter the project directory.
+
+### 5. Start Developing
 
 You're ready to go! See the [Usage Guide](../usage/basics.md) for development workflows.
 

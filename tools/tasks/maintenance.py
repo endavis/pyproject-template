@@ -175,3 +175,59 @@ def task_fmt_pyproject() -> dict[str, Any]:
         "actions": ["uv run pyproject-fmt pyproject.toml"],
         "title": title_with_actions,
     }
+
+
+def task_completions() -> dict[str, Any]:
+    """Generate shell completion scripts for doit tasks."""
+
+    def generate_completions() -> None:
+        console = Console()
+        console.print()
+        console.print(
+            Panel.fit("[bold cyan]Generating Shell Completions[/bold cyan]", border_style="cyan")
+        )
+        console.print()
+
+        # Ensure completions directory exists
+        os.makedirs("completions", exist_ok=True)
+
+        # Generate bash completion
+        console.print("[cyan]Generating bash completion...[/cyan]")
+        bash_result = subprocess.run(
+            ["doit", "tabcompletion", "--shell", "bash"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        with open("completions/doit.bash", "w") as f:
+            f.write(bash_result.stdout)
+        console.print("  [dim]Created completions/doit.bash[/dim]")
+
+        # Generate zsh completion
+        console.print("[cyan]Generating zsh completion...[/cyan]")
+        zsh_result = subprocess.run(
+            ["doit", "tabcompletion", "--shell", "zsh"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        with open("completions/doit.zsh", "w") as f:
+            f.write(zsh_result.stdout)
+        console.print("  [dim]Created completions/doit.zsh[/dim]")
+
+        console.print()
+        console.print(
+            Panel.fit(
+                "[bold green]✓ Completions generated![/bold green]\n\n"
+                "[dim]To enable, add to your shell config:[/dim]\n"
+                "  Bash: source completions/doit.bash\n"
+                "  Zsh:  source completions/doit.zsh",
+                border_style="green",
+                padding=(1, 2),
+            )
+        )
+
+    return {
+        "actions": [generate_completions],
+        "title": title_with_actions,
+    }

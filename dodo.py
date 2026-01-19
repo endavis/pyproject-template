@@ -46,6 +46,7 @@ from tools.tasks.install import (  # noqa: F401
 # Maintenance tasks
 from tools.tasks.maintenance import (  # noqa: F401
     task_cleanup,
+    task_completions,
     task_fmt_pyproject,
     task_update_deps,
 )
