@@ -634,6 +634,50 @@ class TestConfigureModule:
         finally:
             os.chdir(old_cwd)
 
+    def test_run_configure_removes_tool_tests_directory(self, tmp_path: Path) -> None:
+        """Test that tests/pyproject_template/ is removed during configure."""
+        from tools.pyproject_template.configure import run_configure
+
+        # Create minimal project structure
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "src" / "test_pkg").mkdir(parents=True)
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+
+        # Create tool tests directory that should be removed
+        tool_tests_dir = tmp_path / "tests" / "pyproject_template"
+        tool_tests_dir.mkdir(parents=True)
+        (tool_tests_dir / "__init__.py").write_text("")
+        (tool_tests_dir / "test_utils.py").write_text("# test file")
+
+        import os
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Mock Path.unlink to prevent configure.py self-destruct
+            with patch.object(Path, "unlink"):
+                result = run_configure(
+                    auto=True,
+                    yes=True,
+                    defaults={
+                        "project_name": "Test Project",
+                        "package_name": "test_pkg",
+                        "pypi_name": "test-pkg",
+                        "description": "A test project",
+                        "author_name": "Test Author",
+                        "author_email": "test@example.com",
+                        "github_user": "testuser",
+                    },
+                )
+            assert result == 0
+
+            # Verify tool tests directory was removed
+            assert not tool_tests_dir.exists()
+            # But tests directory itself should still exist
+            assert (tmp_path / "tests").exists()
+        finally:
+            os.chdir(old_cwd)
+
 
 class TestCheckUpdatesModule:
     """Tests for the check_template_updates module refactoring."""

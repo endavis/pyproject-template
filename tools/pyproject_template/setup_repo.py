@@ -356,6 +356,12 @@ class RepositorySetup:
             if tests_dir.exists():
                 update_test_files(tests_dir, self.config["package_name"])
 
+            # Remove template tool tests (they're only for the template itself)
+            tool_tests_dir = Path("tests/pyproject_template")
+            if tool_tests_dir.exists():
+                shutil.rmtree(tool_tests_dir)
+                Logger.info("Removed template tool tests (tests/pyproject_template/)")
+
             # Update source files
             src_dir = Path("src")
             if src_dir.exists():
