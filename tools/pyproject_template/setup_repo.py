@@ -34,6 +34,7 @@ if str(_script_dir) not in sys.path:
 
 # Import shared utilities
 from utils import (  # noqa: E402
+    FILES_TO_UPDATE,
     TEMPLATE_REPO,
     Colors,
     GitHubCLI,
@@ -320,27 +321,8 @@ class RepositorySetup:
                 "your.email@example.com": self.config["author_email"],
             }
 
-            # Update main configuration files
-            files_to_update = [
-                "pyproject.toml",
-                "README.md",
-                "LICENSE",
-                "dodo.py",
-                "mkdocs.yml",
-                "AGENTS.md",
-                "CHANGELOG.md",
-                ".github/workflows/ci.yml",
-                ".github/workflows/release.yml",
-                ".github/workflows/testpypi.yml",
-                ".github/CONTRIBUTING.md",
-                ".github/SECURITY.md",
-                ".github/CODEOWNERS",
-                ".github/pull_request_template.md",
-                ".envrc",
-                ".pre-commit-config.yaml",
-            ]
-
-            for file_path in files_to_update:
+            # Update main configuration files (using shared constant from utils.py)
+            for file_path in FILES_TO_UPDATE:
                 path = Path(file_path)
                 if path.exists():
                     update_file(path, replacements)

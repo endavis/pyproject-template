@@ -9,6 +9,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tools.pyproject_template.utils import (
+    FILES_TO_UPDATE,
     Colors,
     GitHubCLI,
     Logger,
@@ -441,3 +442,69 @@ class TestGitHubCLI:
         """Test is_authenticated returns False when gh not installed."""
         with patch("subprocess.run", side_effect=FileNotFoundError):
             assert GitHubCLI.is_authenticated() is False
+
+
+class TestFilesToUpdate:
+    """Tests for FILES_TO_UPDATE constant."""
+
+    def test_is_tuple(self) -> None:
+        """Test that FILES_TO_UPDATE is a tuple (immutable)."""
+        assert isinstance(FILES_TO_UPDATE, tuple)
+
+    def test_contains_core_files(self) -> None:
+        """Test that essential files are included."""
+        core_files = [
+            "pyproject.toml",
+            "README.md",
+            "LICENSE",
+            "dodo.py",
+            "mkdocs.yml",
+            "AGENTS.md",
+        ]
+        for f in core_files:
+            assert f in FILES_TO_UPDATE, f"Missing core file: {f}"
+
+    def test_contains_github_workflows(self) -> None:
+        """Test that GitHub workflow files are included."""
+        workflow_files = [
+            ".github/workflows/ci.yml",
+            ".github/workflows/release.yml",
+            ".github/workflows/testpypi.yml",
+            ".github/workflows/breaking-change-detection.yml",
+        ]
+        for f in workflow_files:
+            assert f in FILES_TO_UPDATE, f"Missing workflow: {f}"
+
+    def test_contains_github_files(self) -> None:
+        """Test that GitHub config files are included."""
+        github_files = [
+            ".github/CONTRIBUTING.md",
+            ".github/SECURITY.md",
+            ".github/CODE_OF_CONDUCT.md",
+            ".github/CODEOWNERS",
+            ".github/pull_request_template.md",
+        ]
+        for f in github_files:
+            assert f in FILES_TO_UPDATE, f"Missing GitHub file: {f}"
+
+    def test_contains_claude_files(self) -> None:
+        """Test that Claude config files are included."""
+        claude_files = [
+            ".claude/CLAUDE.md",
+            ".claude/lsp-setup.md",
+        ]
+        for f in claude_files:
+            assert f in FILES_TO_UPDATE, f"Missing Claude file: {f}"
+
+    def test_contains_config_files(self) -> None:
+        """Test that config files are included."""
+        config_files = [
+            ".envrc",
+            ".pre-commit-config.yaml",
+        ]
+        for f in config_files:
+            assert f in FILES_TO_UPDATE, f"Missing config file: {f}"
+
+    def test_no_duplicates(self) -> None:
+        """Test that there are no duplicate entries."""
+        assert len(FILES_TO_UPDATE) == len(set(FILES_TO_UPDATE))
