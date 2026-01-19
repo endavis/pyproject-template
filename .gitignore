@@ -45,7 +45,6 @@ htmlcov/
 dmypy.json
 
 # IDEs
-.vscode/
 .idea/
 *.swp
 *.swo
