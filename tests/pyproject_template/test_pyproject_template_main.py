@@ -628,7 +628,7 @@ class TestConfigureModule:
             # Verify mkdocs.yml placeholders were replaced
             content = mkdocs_yml.read_text()
             assert "username.github.io" not in content
-            assert "myuser.github.io" in content
+            assert "https://myuser.github.io/test_pkg" in content
             assert "username/package_name" not in content
             assert "myuser/test_pkg" in content
         finally:
