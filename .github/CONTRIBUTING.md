@@ -302,7 +302,7 @@ Fill out the PR template (`.github/pull_request_template.md`):
 
 - Delete your branch
 - Update your fork with the latest changes
-- Close any related issues
+- Close any related issues with comment "Fixed in PR #XXX"
 
 ## Release Process
 
