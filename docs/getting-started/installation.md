@@ -49,17 +49,29 @@ uv run pre-commit install
 Enable tab completion for `doit` commands:
 
 ```bash
-# Generate completion scripts
-doit completions
-
-# For Bash: Add to ~/.bashrc
-echo 'source /path/to/project/completions/doit.bash' >> ~/.bashrc
-
-# For Zsh: Add to ~/.zshrc
-echo 'source /path/to/project/completions/doit.zsh' >> ~/.zshrc
+# Generate and install completions to your shell config
+doit completions_install
 ```
 
-**Note:** If you use `direnv`, completions are automatically sourced when you enter the project directory.
+This will:
+- Generate completion scripts in `completions/`
+- Add source lines to `~/.bashrc` (Bash) and/or `~/.zshrc` (Zsh)
+
+After installation, reload your shell:
+```bash
+source ~/.bashrc   # For Bash
+source ~/.zshrc    # For Zsh
+```
+
+**Manual installation** (if you prefer):
+```bash
+# Generate completion scripts only
+doit completions
+
+# Then manually add to your shell config:
+# Bash: source /path/to/project/completions/doit.bash
+# Zsh:  source /path/to/project/completions/doit.zsh
+```
 
 ### 5. Start Developing
 

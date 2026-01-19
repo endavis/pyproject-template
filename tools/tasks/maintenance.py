@@ -231,3 +231,96 @@ def task_completions() -> dict[str, Any]:
         "actions": [generate_completions],
         "title": title_with_actions,
     }
+
+
+def task_completions_install() -> dict[str, Any]:
+    """Install doit completions to your shell config (~/.bashrc or ~/.zshrc)."""
+
+    def install_completions() -> None:
+        console = Console()
+        console.print()
+        console.print(
+            Panel.fit("[bold cyan]Installing Shell Completions[/bold cyan]", border_style="cyan")
+        )
+        console.print()
+
+        # Get absolute path to completions
+        project_dir = os.path.abspath(os.getcwd())
+        bash_completion = os.path.join(project_dir, "completions", "doit.bash")
+        zsh_completion = os.path.join(project_dir, "completions", "doit.zsh")
+
+        # Check if completions exist
+        if not os.path.exists(bash_completion) or not os.path.exists(zsh_completion):
+            console.print("[yellow]Completions not found. Generating...[/yellow]")
+            subprocess.run(["doit", "completions"], check=True)
+            console.print()
+
+        # Source line to add (with unique marker for identification)
+        project_name = os.path.basename(project_dir)
+        bash_source_line = (
+            f"\n# Doit completions for {project_name}\n"
+            f'if [ -f "{bash_completion}" ]; then source "{bash_completion}"; fi\n'
+        )
+        zsh_source_line = (
+            f"\n# Doit completions for {project_name}\n"
+            f'if [ -f "{zsh_completion}" ]; then source "{zsh_completion}"; fi\n'
+        )
+
+        home = os.path.expanduser("~")
+        installed = []
+
+        # Install bash completion
+        bashrc = os.path.join(home, ".bashrc")
+        if os.path.exists(bashrc):
+            with open(bashrc) as f:
+                content = f.read()
+            if bash_completion not in content:
+                with open(bashrc, "a") as f:
+                    f.write(bash_source_line)
+                installed.append(("Bash", bashrc))
+                console.print(f"[green]✓ Added to {bashrc}[/green]")
+            else:
+                console.print(f"[dim]Already in {bashrc}[/dim]")
+
+        # Install zsh completion
+        zshrc = os.path.join(home, ".zshrc")
+        if os.path.exists(zshrc):
+            with open(zshrc) as f:
+                content = f.read()
+            if zsh_completion not in content:
+                with open(zshrc, "a") as f:
+                    f.write(zsh_source_line)
+                installed.append(("Zsh", zshrc))
+                console.print(f"[green]✓ Added to {zshrc}[/green]")
+            else:
+                console.print(f"[dim]Already in {zshrc}[/dim]")
+
+        console.print()
+        if installed:
+            shells = ", ".join(s[0] for s in installed)
+            console.print(
+                Panel.fit(
+                    f"[bold green]✓ Completions installed for {shells}![/bold green]\n\n"
+                    "[dim]Reload your shell or run:[/dim]\n"
+                    "  source ~/.bashrc  (for Bash)\n"
+                    "  source ~/.zshrc   (for Zsh)",
+                    border_style="green",
+                    padding=(1, 2),
+                )
+            )
+        else:
+            console.print(
+                Panel.fit(
+                    "[yellow]No shell config files found or already installed.[/yellow]\n\n"
+                    "[dim]Manually add to your shell config:[/dim]\n"
+                    f'  source "{bash_completion}"  (Bash)\n'
+                    f'  source "{zsh_completion}"   (Zsh)',
+                    border_style="yellow",
+                    padding=(1, 2),
+                )
+            )
+
+    return {
+        "actions": [install_completions],
+        "title": title_with_actions,
+    }
