@@ -71,7 +71,7 @@ def _parse_yaml_template(template_path: Path) -> dict[str, Any]:
     Returns:
         Parsed YAML content as dict
     """
-    with open(template_path) as f:
+    with open(template_path, encoding="utf-8") as f:
         result: dict[str, Any] = yaml.safe_load(f)
         return result
 
@@ -201,7 +201,7 @@ def get_pr_template() -> str:
     if not template_file.exists():
         raise FileNotFoundError(f"PR template not found: {template_file}")
 
-    content = template_file.read_text()
+    content = template_file.read_text(encoding="utf-8")
 
     # Add editor instructions at the top
     header = """\
