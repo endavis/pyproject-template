@@ -70,6 +70,7 @@ jobs:
   ci-failed:
     # Report failure if CI failed
     if: github.event.workflow_run.conclusion == 'failure'
+    permissions: {}
     runs-on: ubuntu-latest
     steps:
       - name: CI failed
