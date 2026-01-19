@@ -67,11 +67,14 @@ def find_backup_pyproject() -> Path | None:
     return candidates[0]
 
 
-def guess_github_user(pyproject_data: dict) -> str:
+def guess_github_user(pyproject_data: dict[str, object]) -> str:
     """Get GitHub user from pyproject data or git remote."""
     # First try from pyproject.toml repository URL
-    repo_url = pyproject_data.get("project", {}).get("urls", {}).get("Repository", "")
-    github_user, _ = parse_github_url(repo_url)
+    project = pyproject_data.get("project", {})
+    urls = project.get("urls", {}) if isinstance(project, dict) else {}
+    repo_url = urls.get("Repository", "") if isinstance(urls, dict) else ""
+    github_user: str
+    github_user, _ = parse_github_url(str(repo_url))
     if github_user:
         return github_user
 
@@ -273,9 +276,13 @@ def run_configure(
         "https://codecov.io/gh/username/package_name/branch/main/graph/badge.svg": f"https://codecov.io/gh/{github_user}/{package_name}/branch/main/graph/badge.svg",
         "https://github.com/username/package_name/actions/workflows/ci.yml/badge.svg": f"https://github.com/{github_user}/{package_name}/actions/workflows/ci.yml/badge.svg",
         "https://github.com/username": f"https://github.com/{github_user}",
+        # GitHub Pages URL (mkdocs.yml)
+        "https://username.github.io/package_name": f"https://{github_user}.github.io/{package_name}",
         # Files and Paths
         "package-name.svg": f"{pypi_name}.svg",
         "package-name/": f"{pypi_name}/",
+        # Repo name pattern (mkdocs.yml) - must come before general package_name
+        "username/package_name": f"{github_user}/{package_name}",
         # General Placeholders (Substrings)
         "package_name": package_name,
         "package-name": pypi_name,
@@ -283,6 +290,12 @@ def run_configure(
         "A short description of your package": description,
         "Your Name": author_name,
         "your.email@example.com": author_email,
+        # GitHub template placeholders (for issue templates, etc.)
+        "{owner}": github_user,
+        "{repo}": package_name,
+        # Contact email placeholders
+        "security@example.com": author_email,
+        "[INSERT CONTACT EMAIL]": author_email,
         # Note: "username" is NOT replaced globally to avoid breaking code
         # variables (e.g. in extensions.md)
     }
@@ -301,6 +314,7 @@ def run_configure(
         ".github/workflows/testpypi.yml",
         ".github/CONTRIBUTING.md",
         ".github/SECURITY.md",
+        ".github/CODE_OF_CONDUCT.md",
         ".github/CODEOWNERS",
         ".github/pull_request_template.md",
         ".envrc",
@@ -323,8 +337,9 @@ def run_configure(
     issue_template_dir = Path(".github/ISSUE_TEMPLATE")
     if issue_template_dir.exists():
         print("  ✓ Updating issue templates")
-        for md_file in issue_template_dir.rglob("*.md"):
-            update_file(md_file, replacements)
+        for template_file in issue_template_dir.rglob("*"):
+            if template_file.suffix in {".md", ".yml", ".yaml"}:
+                update_file(template_file, replacements)
 
     # Update examples directory
     examples_dir = Path("examples")

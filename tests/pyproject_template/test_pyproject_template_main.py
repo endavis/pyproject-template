@@ -452,6 +452,188 @@ class TestConfigureModule:
         args = parse_args(["--dry-run"])
         assert args.dry_run is True
 
+    def test_run_configure_replaces_owner_repo_placeholders(self, tmp_path: Path) -> None:
+        """Test that {owner} and {repo} placeholders are replaced."""
+        from tools.pyproject_template.configure import run_configure
+
+        # Create minimal project structure
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "src" / "test_pkg").mkdir(parents=True)
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+
+        # Create issue template with {owner}/{repo} placeholders
+        issue_template_dir = tmp_path / ".github" / "ISSUE_TEMPLATE"
+        issue_template_dir.mkdir(parents=True)
+        config_yml = issue_template_dir / "config.yml"
+        config_yml.write_text(
+            "contact_links:\n  - url: https://github.com/{owner}/{repo}/discussions\n"
+        )
+
+        import os
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Mock Path.unlink to prevent configure.py self-destruct
+            with patch.object(Path, "unlink"):
+                result = run_configure(
+                    auto=True,
+                    yes=True,
+                    defaults={
+                        "project_name": "Test Project",
+                        "package_name": "test_pkg",
+                        "pypi_name": "test-pkg",
+                        "description": "A test project",
+                        "author_name": "Test Author",
+                        "author_email": "test@example.com",
+                        "github_user": "testuser",
+                    },
+                )
+            assert result == 0
+
+            # Verify {owner} and {repo} were replaced
+            content = config_yml.read_text()
+            assert "{owner}" not in content
+            assert "{repo}" not in content
+            assert "testuser" in content
+            assert "test_pkg" in content
+        finally:
+            os.chdir(old_cwd)
+
+    def test_run_configure_replaces_security_email(self, tmp_path: Path) -> None:
+        """Test that security@example.com placeholder is replaced."""
+        from tools.pyproject_template.configure import run_configure
+
+        # Create minimal project structure
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "src" / "test_pkg").mkdir(parents=True)
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+
+        # Create SECURITY.md with placeholder email
+        github_dir = tmp_path / ".github"
+        github_dir.mkdir(parents=True)
+        security_md = github_dir / "SECURITY.md"
+        security_md.write_text("Contact: security@example.com\n")
+
+        import os
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Mock Path.unlink to prevent configure.py self-destruct
+            with patch.object(Path, "unlink"):
+                result = run_configure(
+                    auto=True,
+                    yes=True,
+                    defaults={
+                        "project_name": "Test Project",
+                        "package_name": "test_pkg",
+                        "pypi_name": "test-pkg",
+                        "description": "A test project",
+                        "author_name": "Test Author",
+                        "author_email": "author@myproject.com",
+                        "github_user": "testuser",
+                    },
+                )
+            assert result == 0
+
+            # Verify security@example.com was replaced
+            content = security_md.read_text()
+            assert "security@example.com" not in content
+            assert "author@myproject.com" in content
+        finally:
+            os.chdir(old_cwd)
+
+    def test_run_configure_replaces_insert_contact_email(self, tmp_path: Path) -> None:
+        """Test that [INSERT CONTACT EMAIL] placeholder is replaced."""
+        from tools.pyproject_template.configure import run_configure
+
+        # Create minimal project structure
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "src" / "test_pkg").mkdir(parents=True)
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+
+        # Create CODE_OF_CONDUCT.md with placeholder
+        github_dir = tmp_path / ".github"
+        github_dir.mkdir(parents=True)
+        coc_md = github_dir / "CODE_OF_CONDUCT.md"
+        coc_md.write_text("Report issues to [INSERT CONTACT EMAIL].\n")
+
+        import os
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Mock Path.unlink to prevent configure.py self-destruct
+            with patch.object(Path, "unlink"):
+                result = run_configure(
+                    auto=True,
+                    yes=True,
+                    defaults={
+                        "project_name": "Test Project",
+                        "package_name": "test_pkg",
+                        "pypi_name": "test-pkg",
+                        "description": "A test project",
+                        "author_name": "Test Author",
+                        "author_email": "contact@myproject.com",
+                        "github_user": "testuser",
+                    },
+                )
+            assert result == 0
+
+            # Verify [INSERT CONTACT EMAIL] was replaced
+            content = coc_md.read_text()
+            assert "[INSERT CONTACT EMAIL]" not in content
+            assert "contact@myproject.com" in content
+        finally:
+            os.chdir(old_cwd)
+
+    def test_run_configure_replaces_mkdocs_placeholders(self, tmp_path: Path) -> None:
+        """Test that mkdocs.yml placeholders (GitHub Pages URL, repo_name) are replaced."""
+        from tools.pyproject_template.configure import run_configure
+
+        # Create minimal project structure
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "src" / "test_pkg").mkdir(parents=True)
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+
+        # Create mkdocs.yml with placeholders
+        mkdocs_yml = tmp_path / "mkdocs.yml"
+        mkdocs_yml.write_text(
+            "site_url: https://username.github.io/package_name\nrepo_name: username/package_name\n"
+        )
+
+        import os
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            # Mock Path.unlink to prevent configure.py self-destruct
+            with patch.object(Path, "unlink"):
+                result = run_configure(
+                    auto=True,
+                    yes=True,
+                    defaults={
+                        "project_name": "Test Project",
+                        "package_name": "test_pkg",
+                        "pypi_name": "test-pkg",
+                        "description": "A test project",
+                        "author_name": "Test Author",
+                        "author_email": "test@example.com",
+                        "github_user": "myuser",
+                    },
+                )
+            assert result == 0
+
+            # Verify mkdocs.yml placeholders were replaced
+            content = mkdocs_yml.read_text()
+            assert "username.github.io" not in content
+            assert "https://myuser.github.io/test_pkg" in content
+            assert "username/package_name" not in content
+            assert "myuser/test_pkg" in content
+        finally:
+            os.chdir(old_cwd)
+
 
 class TestCheckUpdatesModule:
     """Tests for the check_template_updates module refactoring."""
