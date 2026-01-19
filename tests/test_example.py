@@ -42,7 +42,7 @@ class TestExampleClass:
         assert message == "Hello, python!"
 
 
-@pytest.mark.parametrize(  # type: ignore[misc]
+@pytest.mark.parametrize(
     "name,expected",
     [
         ("Alice", "Hello, Alice!"),

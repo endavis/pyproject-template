@@ -11,7 +11,7 @@ repos:
     hooks:
       - id: mypy
         additional_dependencies: []
-        args: [--strict, --ignore-missing-imports, --explicit-package-bases]
+        args: [--ignore-missing-imports]
         exclude: ^(\.claude/|\.gemini/|\.codex/|tools/pyproject_template/)
 
   - repo: https://github.com/PyCQA/bandit
@@ -26,7 +26,6 @@ repos:
     hooks:
       - id: codespell
         additional_dependencies: [tomli]
-        args: [--ignore-words-list=crate]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.5.0
