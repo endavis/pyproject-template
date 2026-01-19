@@ -414,10 +414,63 @@ tox
 tox -e py313
 ```
 
-## Related Documentation
+## Merge Gate Workflow
 
-- [Coding Standards](coding-standards.md)
-- [Release Automation](release-and-automation.md)
+The repository uses a merge gate to ensure PRs are only merged after all CI checks pass.
+
+### How It Works
+
+The merge gate is implemented in `.github/workflows/merge-gate.yml`:
+
+```yaml
+name: Merge Gate
+
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, labeled, unlabeled, synchronize, reopened]
+
+jobs:
+  require-label:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for ready-to-merge label
+        run: |
+          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'ready-to-merge') }}" != "true" ]]; then
+            echo "::error::PR requires 'ready-to-merge' label before merging"
+            exit 1
+          fi
+```
+
+### The `ready-to-merge` Label
+
+This label serves as an explicit signal that a PR is ready for merge:
+
+**When to add the label:**
+- All CI checks have passed (including full OS matrix)
+- Code review is complete and approved
+- All review feedback has been addressed
+
+**Adding the label:**
+```bash
+# Via GitHub CLI
+gh pr edit <PR-NUMBER> --add-label "ready-to-merge"
+
+# Or via GitHub web UI: PR page → Labels → ready-to-merge
+```
+
+### Branch Protection Integration
+
+Configure branch protection rules to require the merge gate:
+
+1. Go to **Settings** → **Branches** → **Branch protection rules**
+2. Select or create rule for `main`
+3. Enable **Require status checks to pass before merging**
+4. Add `require-label` to required status checks
+
+This ensures PRs cannot be merged until:
+- The `ready-to-merge` label is present
+- All other required CI checks pass
 
 ## Troubleshooting
 
@@ -463,6 +516,11 @@ tox -e py313
 - Run tests manually before pushing
 - Consider running only fast unit tests in pre-commit
 - Move integration tests to CI only
+
+## Related Documentation
+
+- [Coding Standards](coding-standards.md)
+- [Release Automation](release-and-automation.md)
 
 ---
 

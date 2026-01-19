@@ -296,7 +296,31 @@ Fill out the PR template (`.github/pull_request_template.md`):
 1. **Automated checks** - CI must pass (tests, lint, type-check)
 2. **Code review** - At least one maintainer approval required
 3. **Address feedback** - Respond to review comments
-4. **Merge** - Maintainer will merge when approved
+4. **Add `ready-to-merge` label** - When PR is approved and CI passes (see below)
+5. **Merge** - Maintainer will merge when approved
+
+### Merge Gate and `ready-to-merge` Label
+
+This repository uses a **merge gate** workflow to prevent premature merges:
+
+**Why this exists:**
+- Ensures full CI matrix (all OS/Python versions) completes before merge
+- Prevents merging while tests are still running
+- Provides explicit "ready" signal after review
+
+**How it works:**
+1. Open a PR - initial CI checks run
+2. Get code review and address feedback
+3. Wait for **all** CI checks to pass (including full OS matrix)
+4. Add the `ready-to-merge` label to signal the PR is ready
+5. The merge gate check passes, allowing merge
+
+**Important:**
+- The `ready-to-merge` label should only be added after:
+  - All CI checks have passed
+  - Code review is complete
+  - All feedback has been addressed
+- Adding the label prematurely doesn't bypass CI - the merge gate waits for CI completion
 
 ### After Merge
 
