@@ -48,6 +48,14 @@ BLOCKED_WORKFLOW_COMMANDS = {
     ("gh", "pr", "merge"): "Use 'doit pr_merge' instead of 'gh pr merge'",
 }
 
+# Governance labels that require human approval - AI should never add these
+GOVERNANCE_LABELS = {
+    "ready-to-merge": (
+        "The 'ready-to-merge' label is a governance control requiring human approval. "
+        "Add this label manually via 'gh pr edit --add-label ready-to-merge' or the GitHub web UI."
+    ),
+}
+
 
 def tokenize(command: str) -> list[str]:
     """
@@ -216,6 +224,34 @@ def check_blocked_workflow_commands(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
+def check_governance_labels(tokens: list[str]) -> tuple[bool, str]:
+    """
+    Check if command attempts to add a governance label.
+
+    Governance labels (like 'ready-to-merge') require human approval and
+    should never be added by AI agents.
+    """
+    tokens_lower = [t.lower() for t in tokens]
+
+    # Check for: gh pr edit --add-label <governance-label>
+    # or: gh issue edit --add-label <governance-label>
+    if "gh" not in tokens_lower:
+        return False, ""
+
+    if "edit" not in tokens_lower:
+        return False, ""
+
+    if "--add-label" not in tokens_lower:
+        return False, ""
+
+    # Check if any governance label is being added
+    for label, reason in GOVERNANCE_LABELS.items():
+        if label.lower() in tokens_lower:
+            return True, reason
+
+    return False, ""
+
+
 def check_merge_to_protected(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if command is a merge that would create a merge commit on a protected branch.
@@ -254,6 +290,8 @@ def check_command(command: str) -> tuple[bool, str]:
     3. Force push to protected branches
     4. Deletion of protected branches
     5. Merge commits on protected branches
+    6. Blocked workflow commands
+    7. Governance labels
 
     Returns:
         (is_dangerous, reason)
@@ -287,6 +325,11 @@ def check_command(command: str) -> tuple[bool, str]:
 
     # Check for blocked workflow commands
     is_dangerous, reason = check_blocked_workflow_commands(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for governance labels
+    is_dangerous, reason = check_governance_labels(tokens)
     if is_dangerous:
         return True, reason
 

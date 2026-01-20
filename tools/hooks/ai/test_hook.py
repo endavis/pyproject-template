@@ -91,6 +91,13 @@ EOF
     ("gh pr merge 123", "BLOCK", "gh pr merge"),
     ("gh pr merge --squash", "BLOCK", "gh pr merge squash"),
     ("gh pr merge 123 --squash --delete-branch", "BLOCK", "gh pr merge full"),
+    # === SHOULD BLOCK - Governance labels ===
+    ("gh pr edit 123 --add-label ready-to-merge", "BLOCK", "add ready-to-merge"),
+    ("gh pr edit --add-label ready-to-merge", "BLOCK", "add ready-to-merge no PR"),
+    ("gh issue edit 45 --add-label ready-to-merge", "BLOCK", "issue ready-to-merge"),
+    # === SHOULD ALLOW - Other labels ===
+    ("gh pr edit 123 --add-label bug", "ALLOW", "add bug label"),
+    ("gh pr edit 123 --add-label enhancement", "ALLOW", "add enhancement label"),
     # === SHOULD ALLOW - Other gh commands ===
     ("gh issue list", "ALLOW", "gh issue list"),
     ("gh pr list", "ALLOW", "gh pr list"),
