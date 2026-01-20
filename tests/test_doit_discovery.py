@@ -36,9 +36,8 @@ class TestDiscoverTasks:
 
         for name in discovered:
             # Should only have task_* or DOIT_CONFIG
-            assert (
-                name.startswith("task_") or name == "DOIT_CONFIG"
-            ), f"Unexpected item discovered: {name}"
+            is_valid = name.startswith("task_") or name == "DOIT_CONFIG"
+            assert is_valid, f"Unexpected item discovered: {name}"
 
     def test_discovered_tasks_return_valid_doit_format(self) -> None:
         """Test that discovered tasks return valid doit task dicts."""
