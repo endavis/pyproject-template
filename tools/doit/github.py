@@ -481,52 +481,68 @@ def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any
         return None
 
 
-def _extract_linked_issues(body: str) -> list[str]:
-    """Extract linked issue numbers from PR body.
+def _extract_linked_issues(body: str) -> dict[str, list[str]]:
+    """Extract linked issue numbers from PR body with relationship type.
 
     Looks for patterns like:
-    - Closes #123
-    - Fixes #456
-    - Resolves #789
-    - Part of #101
+    - Closes #123, Fixes #456, Resolves #789 → "closes"
+    - Part of #101 → "part_of"
 
     Args:
         body: PR body text
 
     Returns:
-        List of issue numbers (as strings)
+        Dict with "closes" and "part_of" keys, each containing list of issue numbers
     """
-    # Pattern matches: Closes/Fixes/Resolves/Part of #123
-    pattern = r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?|part\s+of)\s+#(\d+)"
-    matches = re.findall(pattern, body, re.IGNORECASE)
-    # Return unique issues in order found
+    result: dict[str, list[str]] = {"closes": [], "part_of": []}
     seen: set[str] = set()
-    unique: list[str] = []
-    for m in matches:
-        if m not in seen:
-            seen.add(m)
-            unique.append(m)
-    return unique
+
+    # Pattern for closes/fixes/resolves
+    closes_pattern = r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)"
+    for match in re.finditer(closes_pattern, body, re.IGNORECASE):
+        issue = match.group(1)
+        if issue not in seen:
+            seen.add(issue)
+            result["closes"].append(issue)
+
+    # Pattern for part of
+    part_of_pattern = r"part\s+of\s+#(\d+)"
+    for match in re.finditer(part_of_pattern, body, re.IGNORECASE):
+        issue = match.group(1)
+        if issue not in seen:
+            seen.add(issue)
+            result["part_of"].append(issue)
+
+    return result
 
 
-def _format_merge_subject(title: str, pr_number: int, issues: list[str]) -> str:
+def _format_merge_subject(title: str, pr_number: int, issues: dict[str, list[str]]) -> str:
     """Format the merge commit subject line.
 
     Args:
         title: PR title (should be in conventional commit format)
         pr_number: PR number
-        issues: List of linked issue numbers
+        issues: Dict with "closes" and "part_of" keys containing issue numbers
 
     Returns:
         Formatted subject: "<type>: <subject> (merges PR #XX, closes #YY)"
+        or: "<type>: <subject> (merges PR #XX, part of #YY)"
     """
-    # Build the suffix
-    if issues:
-        issue_refs = ", ".join(f"#{i}" for i in issues)
-        suffix = f"(merges PR #{pr_number}, closes {issue_refs})"
-    else:
-        suffix = f"(merges PR #{pr_number})"
+    closes = issues.get("closes", [])
+    part_of = issues.get("part_of", [])
 
+    # Build the suffix parts
+    parts = [f"merges PR #{pr_number}"]
+
+    if closes:
+        issue_refs = ", ".join(f"#{i}" for i in closes)
+        parts.append(f"closes {issue_refs}")
+
+    if part_of:
+        issue_refs = ", ".join(f"#{i}" for i in part_of)
+        parts.append(f"part of {issue_refs}")
+
+    suffix = f"({', '.join(parts)})"
     return f"{title} {suffix}"
 
 
@@ -581,8 +597,10 @@ def task_pr_merge() -> dict[str, Any]:
 
         # Extract linked issues
         issues = _extract_linked_issues(pr_body)
-        if issues:
-            console.print(f"[dim]Linked issues: {', '.join(f'#{i}' for i in issues)}[/dim]")
+        has_issues = issues["closes"] or issues["part_of"]
+        if has_issues:
+            all_issues = issues["closes"] + issues["part_of"]
+            console.print(f"[dim]Linked issues: {', '.join(f'#{i}' for i in all_issues)}[/dim]")
         else:
             console.print("[yellow]Warning: No linked issues found in PR body.[/yellow]")
 
