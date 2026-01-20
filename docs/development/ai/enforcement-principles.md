@@ -233,11 +233,14 @@ Does the rule apply to ALL contributors (humans + AI)?
 ```
 
 **Principles**:
-1. **Prefer universal enforcement**: GitHub settings > pre-commit > AI hooks
-2. **Prefer shared enforcement**: One hook for multiple agents is better than separate configs
-3. **Block by default**: Allowlists are safer than denylists
-4. **Fail closed**: If enforcement fails, block the action rather than allow it
-5. **Test enforcement**: Run `tools/hooks/ai/test_hook.py` after AI hook changes
+
+| # | Principle | Description |
+|---|-----------|-------------|
+| 1 | Prefer universal enforcement | GitHub settings > pre-commit > AI hooks |
+| 2 | Prefer shared enforcement | One hook for multiple agents is better than separate configs |
+| 3 | Block by default | Allowlists are safer than denylists |
+| 4 | Fail closed | If enforcement fails, block the action rather than allow it |
+| 5 | Test enforcement | Run `tools/hooks/ai/test_hook.py` after AI hook changes |
 
 ## Block and Redirect Pattern
 
