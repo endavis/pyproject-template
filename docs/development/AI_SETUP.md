@@ -185,7 +185,9 @@ reason = "Description of command"
 
 ## Security Considerations
 
-All configuration files are set up with security in mind:
+All configuration files are set up with security in mind.
+
+> **Note**: This template enforces security rules in code and settings, not just instructions. See [AI Enforcement Principles](ai/enforcement-principles.md) for details.
 
 **Whitelisted Operations:**
 - Read-only file operations

@@ -186,5 +186,6 @@ Then run the test suite to verify.
 
 ## Related
 
+- [AI Enforcement Principles](enforcement-principles.md) - Why and how we enforce rules in code
 - [AGENTS.md](../../../AGENTS.md) - AI agent rules including "When Blocked Protocol"
 - [AI Agent Setup](../AI_SETUP.md) - Setting up AI coding assistants
