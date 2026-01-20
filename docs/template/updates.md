@@ -1,3 +1,13 @@
+---
+title: Keeping Up to Date
+description: Stay in sync with improvements to the pyproject-template
+audience:
+  - users
+tags:
+  - template
+  - updates
+---
+
 # Keeping Up to Date
 
 Stay in sync with improvements to the pyproject-template.

@@ -1,3 +1,15 @@
+---
+title: Release Automation & Security
+description: Automated versioning, release management, and security tooling
+audience:
+  - contributors
+  - maintainers
+tags:
+  - release
+  - security
+  - automation
+---
+
 # Release Automation & Security
 
 This guide covers automated versioning, release management, governance validation, and security tooling available in this Python project template.

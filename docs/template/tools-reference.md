@@ -1,3 +1,15 @@
+---
+title: Template Tools Reference
+description: Complete reference for all template tools in tools/pyproject_template/
+audience:
+  - users
+  - contributors
+tags:
+  - template
+  - reference
+  - tooling
+---
+
 # Template Tools Reference
 
 Complete reference for all template tools in `tools/pyproject_template/`.

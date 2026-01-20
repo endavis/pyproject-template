@@ -35,3 +35,12 @@ def task_spell_check() -> dict[str, Any]:
         "actions": ["uv run codespell src/ tests/ docs/ README.md"],
         "title": title_with_actions,
     }
+
+
+def task_docs_toc() -> dict[str, Any]:
+    """Generate documentation table of contents from frontmatter."""
+    return {
+        "actions": ["uv run python tools/generate_doc_toc.py"],
+        "title": title_with_actions,
+        "verbosity": 2,
+    }

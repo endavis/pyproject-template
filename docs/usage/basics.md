@@ -1,3 +1,13 @@
+---
+title: Usage Guide
+description: Package usage and development workflows
+audience:
+  - users
+tags:
+  - usage
+  - getting-started
+---
+
 # Usage Guide
 
 This guide covers both package usage and development workflows.

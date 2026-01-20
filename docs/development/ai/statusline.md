@@ -1,3 +1,15 @@
+---
+title: Claude Code Statusline
+description: Custom statusline showing git branch, Python version, and project info
+audience:
+  - contributors
+  - ai-agents
+tags:
+  - ai
+  - claude
+  - configuration
+---
+
 # Claude Code Statusline
 
 The template includes a custom statusline for Claude Code sessions that provides useful context at a glance.

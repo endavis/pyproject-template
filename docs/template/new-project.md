@@ -1,3 +1,14 @@
+---
+title: New Project Setup
+description: Create a new Python project from this template
+audience:
+  - users
+tags:
+  - template
+  - getting-started
+  - setup
+---
+
 # New Project Setup
 
 Create a new Python project from this template using either the automated or manual approach.

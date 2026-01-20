@@ -1,3 +1,14 @@
+---
+title: Python Project Coding Standards
+description: Guidelines for exceptions, typing, structure, testing, and documentation
+audience:
+  - contributors
+tags:
+  - coding-standards
+  - python
+  - best-practices
+---
+
 # Python Project Coding Standards
 
 ## Overview

@@ -1,3 +1,15 @@
+---
+title: AI Agent Setup Guide
+description: Configure Claude, Gemini, and Codex for this project
+audience:
+  - contributors
+  - ai-agents
+tags:
+  - ai
+  - setup
+  - configuration
+---
+
 # AI Agent Setup Guide
 
 This template includes pre-configured settings for multiple AI coding assistants.

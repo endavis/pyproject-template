@@ -76,6 +76,14 @@ repos:
         pass_filenames: false
         always_run: true
 
+      # Generate documentation TOC from frontmatter
+      - id: generate-doc-toc
+        name: Generate documentation TOC
+        entry: doit docs_toc
+        language: system
+        pass_filenames: false
+        files: ^docs/.*\.md$
+
       # Prevent direct commits to main branch
       - id: no-commit-to-main
         name: Prevent commits to main branch

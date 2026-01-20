@@ -1,92 +1,96 @@
-# Python Project Template Documentation
+# All Documents
 
-This index provides a structured overview of the available documentation for the Python project template.
+Complete index of all documentation, organized by audience and as a full alphabetical list.
 
-## Getting Started
-- **[Installation Guide](getting-started/installation.md)**: Step-by-step instructions for installing and setting up your Python project.
+> These lists are auto-generated from document frontmatter.
+> Run `python tools/generate_doc_toc.py` to update.
 
-## Usage
-- **[Basic Usage](usage/basics.md)**: Introduction to using the project template and core features.
+## By Audience
 
-## Reference
-- **[API Reference](reference/api.md)**: Comprehensive API documentation.
-
-## Development
-- **[Extensions & Plugin System](development/extensions.md)**: Guide to extending the template with custom plugins and doit tasks.
-- **[Coding Standards](development/coding-standards.md)**: Style guides and standards for writing consistent, maintainable code.
-- **[CI/CD Testing](development/ci-cd-testing.md)**: Strategies and setup for continuous integration and testing.
-- **[Release Automation & Security](development/release-and-automation.md)**: Automated versioning, release management, governance validation, and security tooling.
-
-## Examples
-- **[Examples & Recipes](examples/README.md)**: Practical examples and common use cases.
-
-## Template
-- **[Template Management](template/manage.md)**: Unified interface for creating projects, checking for updates, and syncing with the template.
-- **[Migration Guide](template/migration.md)**: Guide for migrating from other project structures or updating existing projects.
-
-## Project Information
-- **[Main Documentation](index.md)**: Overview and introduction to the template.
-
----
-
-## Documentation Sections Explained
-
-### Getting Started
-Essential guides for new users to get up and running quickly with the template.
-
-### Usage
-Day-to-day usage documentation covering common tasks and workflows.
-
-### Reference
-Technical reference documentation for APIs, configuration options, and advanced features.
-
-### Development
-Guides for contributors and developers working on extending or maintaining projects built with this template.
-
-### Examples
-Practical code examples, recipes, and patterns for common scenarios.
-
-### Template
-Step-by-step guides for specific tasks like migration, deployment, or integration.
-
-## Quick Links
-
-### For New Users
-1. [Installation Guide](getting-started/installation.md) - Start here
-2. [Basic Usage](usage/basics.md) - Learn the fundamentals
-3. [Examples](examples/README.md) - See it in action
+### For Users
+<!-- BEGIN:audience=users -->
+- [API Reference](reference/api.md) - Complete API documentation for Package Name
+- [Examples](examples/README.md) - Example scripts demonstrating how to use the package
+- [Installation Guide](getting-started/installation.md) - How to install and set up your project
+- [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
+- [Migration Guide](template/migration.md) - Migrate existing Python projects to use this template
+- [New Project Setup](template/new-project.md) - Create a new Python project from this template
+- [Package Name Documentation](index.md) - Welcome and overview of the project
+- [Template Management](template/manage.md) - Unified interface for creating projects, checking updates, and syncing
+- [Template Tools Reference](template/tools-reference.md) - Complete reference for all template tools in tools/pyproject_template/
+- [Usage Guide](usage/basics.md) - Package usage and development workflows
+- [Using This Template](template/index.md) - Overview of using pyproject-template for your Python projects
+<!-- END:audience=users -->
 
 ### For Contributors
-1. [Coding Standards](development/coding-standards.md) - Follow these guidelines
-2. [CI/CD Testing](development/ci-cd-testing.md) - Understand the test pipeline
-3. [Release Automation](development/release-and-automation.md) - Learn the release process
+<!-- BEGIN:audience=contributors -->
+- [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
+- [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
+- [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
+- [API Reference](reference/api.md) - Complete API documentation for Package Name
+- [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
+- [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+- [Installation Guide](getting-started/installation.md) - How to install and set up your project
+- [Optional Extensions](development/extensions.md) - Additional tools and extensions for testing, security, and more
+- [Package Name Documentation](index.md) - Welcome and overview of the project
+- [Python Project Coding Standards](development/coding-standards.md) - Guidelines for exceptions, typing, structure, testing, and documentation
+- [Release Automation & Security](development/release-and-automation.md) - Automated versioning, release management, and security tooling
+- [Template Tools Reference](template/tools-reference.md) - Complete reference for all template tools in tools/pyproject_template/
+<!-- END:audience=contributors -->
 
-### For Advanced Users
-1. [Extensions](development/extensions.md) - Extend the template
-2. [API Reference](reference/api.md) - Technical details
-3. [Template Management](template/manage.md) - Manage template sync
-4. [Migration Guide](template/migration.md) - Migrate existing projects
+### For AI Agents
+<!-- BEGIN:audience=ai-agents -->
+- [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
+- [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
+- [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
+- [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+<!-- END:audience=ai-agents -->
+
+## Complete Index
+<!-- BEGIN:all -->
+- [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
+- [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
+- [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
+- [API Reference](reference/api.md) - Complete API documentation for Package Name
+- [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
+- [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+- [Examples](examples/README.md) - Example scripts demonstrating how to use the package
+- [Installation Guide](getting-started/installation.md) - How to install and set up your project
+- [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
+- [Migration Guide](template/migration.md) - Migrate existing Python projects to use this template
+- [New Project Setup](template/new-project.md) - Create a new Python project from this template
+- [Optional Extensions](development/extensions.md) - Additional tools and extensions for testing, security, and more
+- [Package Name Documentation](index.md) - Welcome and overview of the project
+- [Python Project Coding Standards](development/coding-standards.md) - Guidelines for exceptions, typing, structure, testing, and documentation
+- [Release Automation & Security](development/release-and-automation.md) - Automated versioning, release management, and security tooling
+- [Template Management](template/manage.md) - Unified interface for creating projects, checking updates, and syncing
+- [Template Tools Reference](template/tools-reference.md) - Complete reference for all template tools in tools/pyproject_template/
+- [Usage Guide](usage/basics.md) - Package usage and development workflows
+- [Using This Template](template/index.md) - Overview of using pyproject-template for your Python projects
+<!-- END:all -->
 
 ---
 
 ## Contributing to Documentation
 
 When adding new documentation:
-1. Place files in the appropriate category directory
-2. Update this TABLE_OF_CONTENTS.md with a link to your new documentation
-3. Follow the documentation template format
-4. Include practical examples where applicable
-5. Link to related documentation
 
-## Documentation Standards
+1. Add frontmatter with `title`, `description`, `audience`, and `tags`:
+   ```yaml
+   ---
+   title: My New Guide
+   description: Short description for the index
+   audience:
+     - users
+     - contributors
+   tags:
+     - setup
+     - getting-started
+   ---
+   ```
 
-- Use clear, concise language
-- Include code examples
-- Add troubleshooting sections
-- Link to related documentation
-- Keep line length ≤100 characters
-- Use Markdown formatting consistently
+2. Place the file in the appropriate directory
 
----
+3. Run `python tools/generate_doc_toc.py` to update this index
 
-Last updated: 2025-12-29
+4. The pre-commit hook will also run automatically on commit

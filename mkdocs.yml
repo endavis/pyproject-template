@@ -52,7 +52,6 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Documentation Index: TABLE_OF_CONTENTS.md
   - Getting Started:
       - Installation: getting-started/installation.md
   - Usage:
@@ -74,6 +73,7 @@ nav:
   - Reference:
       - API Reference: reference/api.md
   - Examples: examples/README.md
+  - All Documents: TABLE_OF_CONTENTS.md
 
 extra:
   social:

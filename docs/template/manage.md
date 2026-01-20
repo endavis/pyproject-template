@@ -1,3 +1,13 @@
+---
+title: Template Management
+description: Unified interface for creating projects, checking updates, and syncing
+audience:
+  - users
+tags:
+  - template
+  - tooling
+---
+
 # Template Management
 
 The `manage.py` script provides a unified interface for all template operations. It auto-detects your project context and recommends appropriate actions.

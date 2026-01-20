@@ -1,3 +1,14 @@
+---
+title: Optional Extensions
+description: Additional tools and extensions for testing, security, and more
+audience:
+  - contributors
+tags:
+  - extensions
+  - tooling
+  - configuration
+---
+
 # Optional Extensions
 
 This guide covers optional tools and extensions that you can add to your project based on your specific needs.
