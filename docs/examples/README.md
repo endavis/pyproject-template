@@ -1,3 +1,13 @@
+---
+title: Examples
+description: Example scripts demonstrating how to use the package
+audience:
+  - users
+tags:
+  - examples
+  - getting-started
+---
+
 # Examples
 
 This directory contains example scripts demonstrating how to use the package.

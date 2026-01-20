@@ -1,3 +1,13 @@
+---
+title: Migration Guide
+description: Migrate existing Python projects to use this template
+audience:
+  - users
+tags:
+  - template
+  - migration
+---
+
 # Migration Guide
 
 Bring your existing Python project into the pyproject-template.

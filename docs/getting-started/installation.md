@@ -1,3 +1,14 @@
+---
+title: Installation Guide
+description: How to install and set up your project
+audience:
+  - users
+  - contributors
+tags:
+  - getting-started
+  - setup
+---
+
 # Installation Guide
 
 ## For Template Users

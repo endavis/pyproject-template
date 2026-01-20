@@ -1,3 +1,14 @@
+---
+title: CI/CD Testing Guide
+description: GitHub Actions pipelines for testing, linting, and coverage
+audience:
+  - contributors
+tags:
+  - ci-cd
+  - testing
+  - github-actions
+---
+
 # CI/CD Testing Guide
 
 ## Overview

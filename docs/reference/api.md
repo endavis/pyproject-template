@@ -1,3 +1,14 @@
+---
+title: API Reference
+description: Complete API documentation for Package Name
+audience:
+  - users
+  - contributors
+tags:
+  - reference
+  - api
+---
+
 # API Reference
 
 Complete API documentation for Package Name.

@@ -1,3 +1,14 @@
+---
+title: Package Name Documentation
+description: Welcome and overview of the project
+audience:
+  - users
+  - contributors
+tags:
+  - overview
+  - getting-started
+---
+
 # Package Name Documentation
 
 Welcome to the documentation for Package Name!

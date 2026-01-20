@@ -18,6 +18,7 @@ from tools.tasks.docs import (  # noqa: F401
     task_docs_build,
     task_docs_deploy,
     task_docs_serve,
+    task_docs_toc,
     task_spell_check,
 )
 

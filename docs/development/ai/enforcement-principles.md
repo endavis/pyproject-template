@@ -1,3 +1,15 @@
+---
+title: AI Enforcement Principles
+description: How we enforce AI agent behavior in code and settings
+audience:
+  - contributors
+  - ai-agents
+tags:
+  - ai
+  - enforcement
+  - hooks
+---
+
 # AI Enforcement Principles
 
 ## Core Principle

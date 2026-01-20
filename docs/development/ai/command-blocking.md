@@ -1,3 +1,15 @@
+---
+title: AI Command Blocking
+description: Hooks that block dangerous commands from AI agents
+audience:
+  - contributors
+  - ai-agents
+tags:
+  - ai
+  - security
+  - hooks
+---
+
 # AI CLI Hooks
 
 The `tools/hooks/ai/` directory contains hooks for AI coding assistants (Claude Code, Gemini CLI).

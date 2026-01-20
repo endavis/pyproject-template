@@ -1,3 +1,13 @@
+---
+title: Using This Template
+description: Overview of using pyproject-template for your Python projects
+audience:
+  - users
+tags:
+  - template
+  - getting-started
+---
+
 # Using This Template
 
 This section covers how to use the pyproject-template for your Python projects.
