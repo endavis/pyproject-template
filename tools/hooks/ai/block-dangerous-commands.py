@@ -45,6 +45,7 @@ FORCE_PUSH_FLAGS = {"--force", "-f", "--force-with-lease"}
 BLOCKED_WORKFLOW_COMMANDS = {
     ("gh", "issue", "create"): "Use 'doit issue --type=<type>' instead of 'gh issue create'",
     ("gh", "pr", "create"): "Use 'doit pr' instead of 'gh pr create'",
+    ("gh", "pr", "merge"): "Use 'doit pr_merge' instead of 'gh pr merge'",
 }
 
 

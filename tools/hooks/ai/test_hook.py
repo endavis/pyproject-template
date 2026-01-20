@@ -83,17 +83,21 @@ EOF
     # branch, these would be BLOCK instead. The hook checks current branch.
     ("git merge some-branch", "ALLOW", "merge on feature branch"),
     ("git merge origin/main", "ALLOW", "merge origin/main on feat"),
-    # === SHOULD BLOCK - Direct gh issue/pr create (use doit wrappers) ===
+    # === SHOULD BLOCK - Direct gh issue/pr create/merge (use doit wrappers) ===
     ("gh issue create --title 'test'", "BLOCK", "gh issue create"),
     ("gh pr create --title 'test'", "BLOCK", "gh pr create"),
     ('gh issue create --title "test" --body "body"', "BLOCK", "gh issue create full"),
     ("gh pr create --fill", "BLOCK", "gh pr create fill"),
+    ("gh pr merge 123", "BLOCK", "gh pr merge"),
+    ("gh pr merge --squash", "BLOCK", "gh pr merge squash"),
+    ("gh pr merge 123 --squash --delete-branch", "BLOCK", "gh pr merge full"),
     # === SHOULD ALLOW - Other gh commands ===
     ("gh issue list", "ALLOW", "gh issue list"),
     ("gh pr list", "ALLOW", "gh pr list"),
     ("gh issue view 123", "ALLOW", "gh issue view"),
     ("gh pr view 456", "ALLOW", "gh pr view"),
     ("gh issue close 123", "ALLOW", "gh issue close"),
+    ("gh pr close 123", "ALLOW", "gh pr close"),
 ]
 
 

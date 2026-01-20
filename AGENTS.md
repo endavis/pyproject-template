@@ -114,7 +114,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **No Speculation:** Don't read files you don't need.
 
 ## Critical Reminders
-- **Flow:** Issue (`doit issue`) -> Branch -> Commit -> PR (`doit pr`). NEVER commit to main.
+- **Flow:** Issue (`doit issue`) -> Branch -> Commit -> PR (`doit pr`) -> Merge (`doit pr_merge`). NEVER commit to main.
 - **Scope:** Never mix refactoring, features, and docs in one PR. Create separate branches.
 - **Verify:** Check file paths (`ls`) and branch (`git status`) before assuming they exist.
 - **Security:** NEVER bypass security checks (e.g., `--no-verify`, ignoring secrets).
@@ -125,7 +125,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Tests:** Creating code = Creating tests. No exceptions.
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
-- **PRs:** Use `doit pr` to create PRs with proper template format.
+- **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format.
 - **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Fixed in PR #XXX".
 
 ## Workflow Commands (for AI agents)
@@ -139,4 +139,8 @@ doit issue --type=chore --title="Update CI" --body="## Description\n..."
 # Create PR (non-interactive)
 doit pr --title="feat: add feature" --body="## Description\n..."
 doit pr --title="fix: bug fix" --body-file=pr.md
+
+# Merge PR (enforces commit format)
+doit pr_merge                    # Merge PR for current branch
+doit pr_merge --pr=123           # Merge specific PR
 ```

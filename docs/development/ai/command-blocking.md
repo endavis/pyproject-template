@@ -173,6 +173,16 @@ Force push, delete, and merge operations are only blocked when targeting protect
 | `git merge --ff-only branch` (on main) | ALLOWED (fast-forward only) |
 | `git merge branch` (on feature) | ALLOWED |
 
+#### Blocked Workflow Commands
+
+These commands should use `doit` wrappers instead to ensure proper formatting and validation:
+
+| Command | Use Instead | Reason |
+|---------|-------------|--------|
+| `gh issue create` | `doit issue --type=<type>` | Ensures proper template and labels |
+| `gh pr create` | `doit pr` | Ensures proper template format |
+| `gh pr merge` | `doit pr_merge` | Enforces merge commit format: `<type>: <subject> (merges PR #XX, closes #YY)` |
+
 ### Adding New Patterns
 
 Edit `tools/hooks/ai/block-dangerous-commands.py`:

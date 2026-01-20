@@ -787,6 +787,27 @@ docs: update installation guide (merges PR #29, closes #25)
 ❌ feat: add feature (missing PR reference)
 ```
 
+**Using `doit pr_merge`:**
+
+The `doit pr_merge` task enforces this format automatically:
+
+```bash
+# Merge PR for current branch
+doit pr_merge
+
+# Merge specific PR
+doit pr_merge --pr=123
+
+# Keep branch after merge (default deletes it)
+doit pr_merge --delete-branch=false
+```
+
+The task:
+- Fetches PR title, number, and linked issues from GitHub
+- Validates PR title follows conventional commit format
+- Constructs the merge commit subject automatically
+- Uses squash merge with the formatted subject
+
 ### Edge Cases
 
 **Issue needs to be split during work:**
