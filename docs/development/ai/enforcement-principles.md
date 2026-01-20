@@ -227,6 +227,30 @@ Does the rule apply to ALL contributors (humans + AI)?
 4. **Fail closed**: If enforcement fails, block the action rather than allow it
 5. **Test enforcement**: Run `tools/hooks/ai/test_hook.py` after AI hook changes
 
+## Block and Redirect Pattern
+
+When blocking a command, provide an approved alternative when possible. This project uses `doit` wrappers that enforce rules the raw commands don't:
+
+| Blocked Command | Alternative | What the Alternative Enforces |
+|-----------------|-------------|-------------------------------|
+| `gh issue create` | `doit issue --type=<type>` | Issue template format, required sections, auto-labeling |
+| `gh pr create` | `doit pr` | PR template format, proper description structure |
+| `doit release` | User runs manually | Human approval for releases |
+| `uv add` | User runs manually | Human approval for new dependencies |
+
+**Why wrappers instead of just blocking?**
+
+1. **Enforces structure**: `doit issue` validates required sections, `doit pr` ensures proper format
+2. **Reduces friction**: Agents can still complete tasks, just through compliant paths
+3. **Consistent output**: All issues/PRs follow the same template regardless of who creates them
+4. **Audit trail**: Wrapper can add metadata, logging, or additional checks
+
+**When to use "user runs manually" instead of a wrapper:**
+
+- High-consequence operations (releases, dependency changes)
+- Operations that should be rare and deliberate
+- When human judgment is required that can't be encoded in a wrapper
+
 ## TODO: Potential Future Enforcement
 
 The following AGENTS.md rules are currently instruction-only and could benefit from automated enforcement:
