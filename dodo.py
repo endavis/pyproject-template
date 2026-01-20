@@ -35,6 +35,7 @@ from tools.doit.git import (  # noqa: F401
 from tools.doit.github import (  # noqa: F401
     task_issue,
     task_pr,
+    task_pr_merge,
 )
 
 # Installation tasks
