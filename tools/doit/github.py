@@ -11,7 +11,7 @@ from doit.tools import title_with_actions
 from rich.console import Console
 from rich.panel import Panel
 
-from tools.tasks.templates import get_issue_template, get_pr_template, get_required_sections
+from tools.doit.templates import get_issue_template, get_pr_template, get_required_sections
 
 if TYPE_CHECKING:
     from rich.console import Console as ConsoleType

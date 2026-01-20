@@ -8,7 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
-from tools.tasks.templates import (
+from tools.doit.templates import (
     FIELD_ID_TO_SECTION,
     ISSUE_TYPE_TO_FILE,
     IssueTemplate,
@@ -197,7 +197,7 @@ class TestGetPrTemplate:
     def test_missing_template_raises_error(self) -> None:
         """Should raise FileNotFoundError if template doesn't exist."""
         clear_template_cache()
-        with patch("tools.tasks.templates._get_github_dir") as mock_dir:
+        with patch("tools.doit.templates._get_github_dir") as mock_dir:
             mock_dir.return_value = Path("/nonexistent")
             with pytest.raises(FileNotFoundError):
                 get_pr_template()
