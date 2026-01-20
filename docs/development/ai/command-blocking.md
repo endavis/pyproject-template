@@ -183,6 +183,14 @@ These commands should use `doit` wrappers instead to ensure proper formatting an
 | `gh pr create` | `doit pr` | Ensures proper template format |
 | `gh pr merge` | `doit pr_merge` | Enforces merge commit format: `<type>: <subject> (merges PR #XX, closes #YY)` |
 
+#### Governance Labels
+
+Some labels are governance controls that require human approval. AI agents are blocked from adding these labels:
+
+| Label | Reason |
+|-------|--------|
+| `ready-to-merge` | Signals human approval that PR is ready for merge. Add manually via `gh pr edit --add-label ready-to-merge` or GitHub web UI. |
+
 ### Adding New Patterns
 
 Edit `tools/hooks/ai/block-dangerous-commands.py`:
