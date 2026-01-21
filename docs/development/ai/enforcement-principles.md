@@ -190,6 +190,7 @@ These patterns are blocked across all AI agents. Claude and Gemini use the share
 |------|------|--------|
 | No commits to `main` | `no-commit-to-main` | Blocks commit with guidance message |
 | Branch naming convention | `check-branch-name` | Requires `<type>/<issue#>-<description>` format |
+| No local config files | `no-local-config` | Blocks `*.local` and `*.local.*` files (allows `*.local.example`) |
 | Conventional commits | `conventional-pre-commit` | Requires `<type>: <subject>` format |
 | Code formatting | `ruff-format` | Auto-fixes formatting issues |
 | Linting | `ruff` | Auto-fixes linting issues |
@@ -279,7 +280,6 @@ The following AGENTS.md rules are currently instruction-only and could benefit f
 | Rule | Current State | Potential Enforcement |
 |------|---------------|----------------------|
 | "Never edit `pyproject.toml` version" | Instruction only | Pre-commit hook to block changes to `dynamic =` line (see issue #163). Build process catches invalid static+dynamic via PEP 621. |
-| "Protect user config (`.envrc.local`, `settings.local.json`)" | Instruction only | Pre-commit hook to block commits containing files with `.local` or `.local.` in name (excluding `.local.example`). Matches `*.local`, `*.local.*` as distinct segments, not substrings (see issue #165). |
 
 ### Low Priority / Difficult to Automate
 
