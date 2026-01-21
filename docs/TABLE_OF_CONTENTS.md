@@ -10,6 +10,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 ### For Users
 <!-- BEGIN:audience=users -->
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
+- [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
@@ -30,6 +31,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+- [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Optional Extensions](development/extensions.md) - Additional tools and extensions for testing, security, and more
 - [Package Name Documentation](index.md) - Welcome and overview of the project
@@ -69,6 +71,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Architecture Decision Records](decisions/README.md)
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+- [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
