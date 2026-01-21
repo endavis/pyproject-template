@@ -42,6 +42,14 @@ from settings import (  # noqa: E402
 )
 from utils import Colors, Logger, prompt, validate_package_name  # noqa: E402
 
+# Import cleanup utilities (optional - may not exist if already cleaned)
+try:
+    from cleanup import CleanupMode, cleanup_template_files, prompt_cleanup
+except ImportError:
+    CleanupMode = None  # type: ignore[misc,assignment]
+    cleanup_template_files = None  # type: ignore[assignment]
+    prompt_cleanup = None  # type: ignore[assignment]
+
 
 def print_banner() -> None:
     """Print the welcome banner."""
@@ -184,6 +192,7 @@ def print_menu(recommended: int | None, dry_run: bool) -> None:
         (3, "Check for template updates"),
         (4, "Update repository settings"),
         (5, "Mark as synced to latest template"),
+        (6, "Clean up template files"),
     ]
 
     for num, label in options:
@@ -221,6 +230,11 @@ def print_help() -> None:
     print(f"  {Colors.BOLD}[5] Mark as synced to latest template{Colors.NC}")
     print("      After manually reviewing and applying template updates,")
     print("      mark your project as synced to the latest template commit")
+    print()
+    print(f"  {Colors.BOLD}[6] Clean up template files{Colors.NC}")
+    print("      Remove template-specific files no longer needed:")
+    print("      - Setup only: Remove bootstrap.py, setup_repo.py, etc.")
+    print("      - All: Remove all template tools (no future update checking)")
     print()
     input("Press enter to return to menu...")
 
@@ -281,6 +295,8 @@ def run_action(action: int, manager: SettingsManager, dry_run: bool) -> int:
         return action_repo_settings(manager, dry_run)
     elif action == 5:
         return action_mark_synced(manager, dry_run)
+    elif action == 6:
+        return action_template_cleanup(manager, dry_run)
     else:
         Logger.error(f"Unknown action: {action}")
         return 1
@@ -471,31 +487,23 @@ def action_repo_settings(manager: SettingsManager, dry_run: bool) -> int:
         Logger.info("  - CodeQL code scanning")
         return 0
 
-    # Import setup_repo module for repository configuration
+    # Import repo_settings module for repository configuration
     try:
-        from setup_repo import RepositorySetup
+        from repo_settings import update_all_repo_settings
 
-        setup = RepositorySetup()
-        setup.config = {
-            "repo_owner": manager.settings.github_user,
-            "repo_name": manager.settings.github_repo,
-            "repo_full": f"{manager.settings.github_user}/{manager.settings.github_repo}",
-            "description": manager.settings.description,
-            "package_name": manager.settings.package_name,
-            "pypi_name": manager.settings.pypi_name,
-            "author_name": manager.settings.author_name,
-            "author_email": manager.settings.author_email,
-        }
+        repo_full = f"{manager.settings.github_user}/{manager.settings.github_repo}"
 
-        # Run individual configuration steps
-        setup.configure_repository_settings()
-        setup.configure_branch_protection()
-        setup.replicate_labels()
-        setup.enable_github_pages()
-        setup.configure_codeql()
+        success = update_all_repo_settings(
+            repo_full=repo_full,
+            description=manager.settings.description or "",
+        )
 
-        Logger.success("Repository settings updated")
-        return 0
+        if success:
+            Logger.success("Repository settings updated")
+            return 0
+        else:
+            Logger.warning("Some repository settings may not have been updated")
+            return 0  # Partial success is still success
 
     except Exception as e:
         Logger.error(f"Failed to update repository settings: {e}")
@@ -607,6 +615,51 @@ def action_mark_synced(manager: SettingsManager, dry_run: bool) -> int:
     return 0
 
 
+def action_template_cleanup(manager: SettingsManager, dry_run: bool) -> int:
+    """Clean up template-specific files."""
+    Logger.header("Template File Cleanup")
+
+    if prompt_cleanup is None or cleanup_template_files is None:
+        Logger.error("Cleanup module not available (may have been removed already)")
+        return 1
+
+    if dry_run:
+        Logger.info("Dry run: Would prompt for cleanup mode and show files to delete")
+        return 0
+
+    # Prompt user for cleanup mode
+    mode = prompt_cleanup()
+    if mode is None:
+        Logger.info("Keeping all template files")
+        return 0
+
+    # Perform cleanup
+    result = cleanup_template_files(mode, dry_run=False)
+
+    if result.failed:
+        Logger.warning("Some files could not be deleted")
+        return 1
+
+    Logger.success("Template cleanup complete")
+    return 0
+
+
+def offer_cleanup_prompt() -> None:
+    """Offer to clean up template files after successful setup.
+
+    This is called after "Create new project" or "Configure project" completes.
+    """
+    if prompt_cleanup is None or cleanup_template_files is None:
+        return  # Cleanup module not available
+
+    print()
+    response = prompt("Would you like to clean up template-specific files? (y/N)", "n")
+    if response.lower() in ("y", "yes"):
+        mode = prompt_cleanup()
+        if mode is not None:
+            cleanup_template_files(mode, dry_run=False)
+
+
 def prompt_initial_settings(manager: SettingsManager) -> None:
     """Prompt for settings if none are configured."""
     if manager.settings.is_configured():
@@ -636,9 +689,7 @@ def prompt_initial_settings(manager: SettingsManager) -> None:
             settings.package_name = package_input
             break
         else:
-            Logger.warning(
-                f"'{package_input}' is not PEP 8 compliant. " f"Suggested: '{valid_name}'"
-            )
+            Logger.warning(f"'{package_input}' is not PEP 8 compliant. Suggested: '{valid_name}'")
             # Offer the corrected version as new default
             default_package = valid_name
 
@@ -699,11 +750,14 @@ def interactive_menu(manager: SettingsManager, dry_run: bool = False) -> int:
         elif choice == "d":
             dry_run = not dry_run
             Logger.info(f"Dry run mode: {'enabled' if dry_run else 'disabled'}")
-        elif choice in ("1", "2", "3", "4", "5"):
+        elif choice in ("1", "2", "3", "4", "5", "6"):
             action = int(choice)
             result = run_action(action, manager, dry_run)
             if result == 0:
                 Logger.success("Action completed successfully")
+                # Offer cleanup after successful create/configure (but not for cleanup itself)
+                if action in (1, 2) and not dry_run:
+                    offer_cleanup_prompt()
             else:
                 Logger.error("Action failed")
             input("\nPress enter to return to menu...")
