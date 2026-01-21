@@ -62,6 +62,32 @@ Example of using the command-line interface (if available).
 - Options and arguments
 - Output formatting
 
+### api/ (FastAPI Application)
+
+Complete REST API example demonstrating FastAPI best practices.
+
+**What it covers:**
+- Application factory pattern
+- Router organization
+- Pydantic validation
+- Dependency injection
+- Error handling
+- OpenAPI documentation
+
+See the [API Development Guide](api.md) for detailed documentation.
+
+**Running the API example:**
+
+```bash
+# Install FastAPI dependencies
+uv add fastapi uvicorn[standard]
+
+# Run the server
+uvicorn examples.api.main:app --reload
+
+# Visit http://localhost:8000/docs for Swagger UI
+```
+
 ## Contributing Examples
 
 Have an interesting use case? We'd love to add it!
