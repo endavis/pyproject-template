@@ -14,19 +14,47 @@ jobs:
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
     steps:
-      - name: Set matrix based on label
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/python-versions.json
+          sparse-checkout-cone-mode: false
+
+      - name: Set matrix based on config and label
         id: set-matrix
         run: |
-          if [[ "${{ contains(github.event.pull_request.labels.*.name, 'full-matrix') }}" == "true" ]]; then
-            echo 'Full matrix: all supported Python versions × all OSes'
-            echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"],"python-version":["3.12","3.13","3.14"]}' >> $GITHUB_OUTPUT
+          # Read config
+          oldest=$(jq -r '.oldest' .github/python-versions.json)
+          newest=$(jq -r '.newest' .github/python-versions.json)
+
+          oldest_minor=${oldest#3.}
+          newest_minor=${newest#3.}
+
+          if [[ "${{ github.event.label.name }}" == "full-matrix" ]]; then
+            # Middle versions only (bookends already tested)
+            versions=""
+            for ((i=oldest_minor+1; i<newest_minor; i++)); do
+              if [[ -n "$versions" ]]; then
+                versions="$versions,"
+              fi
+              versions="$versions\"3.$i\""
+            done
+
+            if [[ -z "$versions" ]]; then
+              echo "No middle versions to test (oldest=$oldest, newest=$newest)"
+              echo 'matrix={"include":[]}' >> $GITHUB_OUTPUT
+            else
+              echo "Middle versions: $versions"
+              echo "matrix={\"os\":[\"ubuntu-latest\",\"windows-latest\",\"macos-latest\"],\"python-version\":[$versions]}" >> $GITHUB_OUTPUT
+            fi
           else
-            echo 'Bookend matrix: oldest + newest Python × all OSes'
-            echo 'matrix={"os":["ubuntu-latest","windows-latest","macos-latest"],"python-version":["3.12","3.14"]}' >> $GITHUB_OUTPUT
+            # Bookend versions (oldest + newest)
+            echo "Bookend versions: $oldest, $newest"
+            echo "matrix={\"os\":[\"ubuntu-latest\",\"windows-latest\",\"macos-latest\"],\"python-version\":[\"$oldest\",\"$newest\"]}" >> $GITHUB_OUTPUT
           fi
 
   test:
     needs: setup
+    if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -91,3 +119,31 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  ci-complete:
+    # Always run unless this is a non-full-matrix label event
+    if: always() && (github.event.action != 'labeled' || github.event.label.name == 'full-matrix')
+    needs: [setup, test]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check CI status
+        run: |
+          setup_result="${{ needs.setup.result }}"
+          test_result="${{ needs.test.result }}"
+
+          echo "Setup result: $setup_result"
+          echo "Test result: $test_result"
+
+          # Setup must succeed
+          if [[ "$setup_result" != "success" ]]; then
+            echo "Setup job failed"
+            exit 1
+          fi
+
+          # Test must succeed or be skipped (skipped = no middle versions)
+          if [[ "$test_result" != "success" && "$test_result" != "skipped" ]]; then
+            echo "Test job failed"
+            exit 1
+          fi
+
+          echo "CI completed successfully"

@@ -67,13 +67,30 @@ To balance test coverage with CI efficiency:
 
 | PR State | Python Versions Tested | Jobs |
 |----------|----------------------|------|
-| Default | Bookends only (oldest + newest active) × 3 OSes | 6 |
-| `full-matrix` label | All supported versions × 3 OSes | 9-15 |
+| Default | Bookends only (oldest + newest) × 3 OSes | 6 |
+| `full-matrix` label | Middle versions only × 3 OSes | 3 per middle version |
 
 The **bookend strategy** tests the oldest and newest supported versions. If both pass, intermediate versions are assumed compatible. Use the `full-matrix` label when:
 - Making changes that might affect version compatibility
 - Preparing a release
 - Investigating compatibility issues
+
+### Configuration
+
+Python versions are configured in `.github/python-versions.json`:
+
+```json
+{
+  "oldest": "3.12",
+  "newest": "3.14"
+}
+```
+
+The CI workflow automatically derives:
+- **Bookends**: oldest + newest (tested on every PR)
+- **Middle versions**: everything between (tested when `full-matrix` label is added)
+
+When updating supported versions, edit this config file - no workflow changes needed.
 
 ### Deprecation Process
 

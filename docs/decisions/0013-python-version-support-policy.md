@@ -13,14 +13,25 @@ Adopt a tiered Python version support policy:
 3. **Deprecation**: Versions removed from CI when tests fail, with final compatible release tagged
 
 CI matrix strategy:
-- **Default (6 jobs)**: Bookend versions (oldest + newest active) × 3 OSes
-- **Full matrix (9-15 jobs)**: All supported versions × 3 OSes, triggered by `full-matrix` label
+- **Default (6 jobs)**: Bookend versions (oldest + newest) × 3 OSes
+- **Full matrix (+3 jobs per middle version)**: Middle versions only × 3 OSes, triggered by `full-matrix` label
+
+Version configuration stored in `.github/python-versions.json`:
+```json
+{
+  "oldest": "3.12",
+  "newest": "3.14"
+}
+```
+
+Middle versions are derived automatically. A `ci-complete` summary job aggregates results for branch protection, eliminating the need to update branch protection when versions change.
 
 ## Rationale
 
 Testing every Python version on every PR creates excessive CI load without proportional benefit. The bookend strategy (testing oldest and newest supported versions) catches most compatibility issues:
 - If code works on 3.12 and 3.14, it almost certainly works on 3.13
-- Full matrix testing is available when needed (releases, compatibility-sensitive changes)
+- Full matrix testing runs only middle versions (bookends already passed)
+- Config-driven approach means no workflow or branch protection changes when versions update
 - Passive compatibility allows supporting older versions without maintenance burden
 - Clear deprecation process with tagged releases protects users on older Python versions
 
