@@ -831,6 +831,12 @@ When your PR implements or relates to an architectural decision, update the rele
 - Making decisions that affect project architecture
 - Decisions that future contributors should understand
 
+**Which issue types may need ADRs:**
+- **Feature**: Often - new features may introduce architectural decisions
+- **Refactor**: Often - refactoring may change architecture or patterns
+- **Bug**: Rarely - only if the fix reveals a significant design decision
+- **Doc/Chore**: No - documentation and maintenance don't need ADRs
+
 **Create a new ADR:**
 ```bash
 # Interactive (opens editor)
