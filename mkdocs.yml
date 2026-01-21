@@ -79,6 +79,11 @@ nav:
       - ADR-0005 AI Restrictions: decisions/0005-ai-agent-command-restrictions.md
       - ADR-0006 Merge-gate: decisions/0006-merge-gate-workflow.md
       - ADR-0007 mypy: decisions/0007-use-mypy-for-type-checking.md
+      - ADR-0008 PR workflow: decisions/0008-pr-based-development-workflow.md
+      - ADR-0009 pre-commit: decisions/0009-use-pre-commit-hooks-for-quality-gates.md
+      - ADR-0010 Conventional commits: decisions/0010-use-conventional-commits-format.md
+      - ADR-0011 pytest: decisions/0011-use-pytest-for-testing.md
+      - ADR-0012 mkdocs: decisions/0012-use-mkdocs-with-material-theme-for-documentation.md
   - Reference:
       - API Reference: reference/api.md
   - Examples: examples/README.md

@@ -56,3 +56,8 @@ Example: `0001-use-uv-for-package-management.md`
 | [0005](0005-ai-agent-command-restrictions.md) | AI agent command restrictions via hooks | Accepted | 2025-01-21 |
 | [0006](0006-merge-gate-workflow.md) | Merge-gate workflow requiring ready-to-merge label | Accepted | 2025-01-21 |
 | [0007](0007-use-mypy-for-type-checking.md) | Use mypy for static type checking | Accepted | 2025-01-21 |
+| [0008](0008-pr-based-development-workflow.md) | PR-based development workflow | Accepted | 2025-01-21 |
+| [0009](0009-use-pre-commit-hooks-for-quality-gates.md) | Use pre-commit hooks for quality gates | Accepted | 2025-01-21 |
+| [0010](0010-use-conventional-commits-format.md) | Use conventional commits format | Accepted | 2025-01-21 |
+| [0011](0011-use-pytest-for-testing.md) | Use pytest for testing | Accepted | 2025-01-21 |
+| [0012](0012-use-mkdocs-with-material-theme-for-documentation.md) | Use mkdocs with Material theme for documentation | Accepted | 2025-01-21 |

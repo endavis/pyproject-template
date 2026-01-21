@@ -55,6 +55,11 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [ADR-0005: AI agent command restrictions via hooks](decisions/0005-ai-agent-command-restrictions.md)
 - [ADR-0006: Merge-gate workflow requiring ready-to-merge label](decisions/0006-merge-gate-workflow.md)
 - [ADR-0007: Use mypy for static type checking](decisions/0007-use-mypy-for-type-checking.md)
+- [ADR-0008: PR-based development workflow](decisions/0008-pr-based-development-workflow.md)
+- [ADR-0009: Use pre-commit hooks for quality gates](decisions/0009-use-pre-commit-hooks-for-quality-gates.md)
+- [ADR-0010: Use conventional commits format](decisions/0010-use-conventional-commits-format.md)
+- [ADR-0011: Use pytest for testing](decisions/0011-use-pytest-for-testing.md)
+- [ADR-0012: Use mkdocs with Material theme for documentation](decisions/0012-use-mkdocs-with-material-theme-for-documentation.md)
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
