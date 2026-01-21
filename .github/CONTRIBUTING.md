@@ -837,6 +837,12 @@ When your PR implements or relates to an architectural decision, update the rele
 - **Bug**: Rarely - only if the fix reveals a significant design decision
 - **Doc/Chore**: No - documentation and maintenance don't need ADRs
 
+**The `needs-adr` label:**
+Use the `needs-adr` label on issues that require an ADR. This signals that:
+- The issue involves an architectural decision
+- An ADR should be created as part of the PR
+- The PR should not be merged without the ADR
+
 **Create a new ADR:**
 ```bash
 # Interactive (opens editor)
