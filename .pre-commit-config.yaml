@@ -143,3 +143,23 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # Protect dynamic version configuration
+      - id: protect-dynamic-version
+        name: Protect dynamic version configuration
+        entry: |
+          bash -c '
+          if git diff --cached --name-only | grep -q "^pyproject.toml$"; then
+            if git diff --cached pyproject.toml | grep -E "^[-+]dynamic\s*=" | grep -q .; then
+              echo "❌ ERROR: Changes to the dynamic field in pyproject.toml are not allowed!"
+              echo ""
+              echo "Version is managed dynamically via git tags."
+              echo "The dynamic = [\"version\"] setting should not be modified."
+              echo ""
+              echo "See AGENTS.md for details on version management."
+              exit 1
+            fi
+          fi'
+        language: system
+        pass_filenames: false
+        always_run: true
