@@ -180,9 +180,8 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
 
 
 def task_issue() -> dict[str, Any]:
-    """Create a GitHub issue using the appropriate template.
+    """Create issue from .github/ISSUE_TEMPLATE/<type>.yml (feature/bug/refactor/doc/chore).
 
-    Supports five issue types: feature, bug, refactor, doc, chore.
     Labels are automatically applied based on the issue type.
 
     Three modes:
@@ -248,6 +247,8 @@ def task_issue() -> dict[str, Any]:
         sections = _parse_markdown_sections(body_content)
         if not _validate_issue_content(sections, type, console):
             console.print("[red]Issue content validation failed.[/red]")
+            console.print()
+            console.print(f"[yellow]See template: .github/ISSUE_TEMPLATE/{type}.yml[/yellow]")
             sys.exit(1)
 
         # Get title if not provided
@@ -314,9 +315,7 @@ def task_issue() -> dict[str, Any]:
 
 
 def task_pr() -> dict[str, Any]:
-    """Create a GitHub PR using the repository template.
-
-    Auto-detects current branch and linked issue from branch name.
+    """Create PR from .github/pull_request_template.md (auto-detects branch and linked issue).
 
     Three modes:
     1. Interactive (default): Opens $EDITOR with template
@@ -399,6 +398,8 @@ def task_pr() -> dict[str, Any]:
         description = sections.get("Description", "").strip()
         if not description:
             console.print("[red]Description is required.[/red]")
+            console.print()
+            console.print("[yellow]See template: .github/pull_request_template.md[/yellow]")
             sys.exit(1)
 
         # Get title if not provided
