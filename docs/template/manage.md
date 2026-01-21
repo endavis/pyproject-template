@@ -84,6 +84,40 @@ After reviewing and applying template changes, marks your project as synced:
 
 **When to use:** After running "Check for template updates" and applying the changes you want.
 
+### [6] Clean up template files
+
+Removes template-specific files that are no longer needed after project setup:
+
+**Setup only mode:** Removes files only needed for initial setup:
+
+- `bootstrap.py` - Remote setup script
+- `tools/pyproject_template/setup_repo.py` - Repository creation
+- `tools/pyproject_template/migrate_existing_project.py` - Migration tool
+- `docs/template/new-project.md` - New project instructions
+- `docs/template/migration.md` - Migration guide
+
+This keeps the template update checking capability intact.
+
+**All mode:** Removes all template files:
+
+- All setup files (above)
+- `tools/pyproject_template/` directory (entire)
+- `docs/template/` directory (entire)
+- `.config/pyproject_template/` directory
+
+⚠️ **Warning:** After removing all template files, you won't be able to check for template updates.
+
+**When to use:** After setting up your project, to clean up files you no longer need.
+
+You can also use the doit task:
+
+```bash
+doit template_clean              # Interactive mode
+doit template_clean --setup      # Remove setup files only
+doit template_clean --all        # Remove all template files
+doit template_clean --dry-run    # Preview what would be deleted
+```
+
 ## Workflow: Staying Up to Date
 
 The recommended workflow for keeping your project in sync with template improvements:
