@@ -56,6 +56,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Committing** | `.github/CONTRIBUTING.md` (Commit Guidelines) | `<type>: <subject>` format. |
 | **New Dependency** | `.github/CONTRIBUTING.md` (Dependencies) | "Ask First" policy. |
 | **Creating Code** | `.claude/CLAUDE.md` (TodoWrite) | Plan -> Test -> Code loop. |
+| **Architectural Decision** | `docs/decisions/README.md` | Check for related ADRs to update. |
 
 ### 6. Decision Framework
 
@@ -127,6 +128,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Releases:** Never run `doit release` without explicit command.
 - **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format.
 - **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Fixed in PR #XXX".
+- **ADRs:** When implementing architectural decisions, update related ADRs in `docs/decisions/` to add the issue link. Create new ADRs for significant decisions using `doit adr`.
 
 ## Workflow Commands (for AI agents)
 ```bash
@@ -143,4 +145,8 @@ doit pr --title="fix: bug fix" --body-file=pr.md
 # Merge PR (enforces commit format)
 doit pr_merge                    # Merge PR for current branch
 doit pr_merge --pr=123           # Merge specific PR
+
+# Create ADR (non-interactive)
+doit adr --title="Use Redis for caching" --body="## Status\nAccepted\n..."
+doit adr --title="Use Redis" --body-file=adr.md
 ```
