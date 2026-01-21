@@ -120,25 +120,41 @@ def process_items(items: List[str]) -> Dict[str, int]:
 
 ### Docstrings
 
-Use Google-style docstrings:
+Use Google-style docstrings. These are automatically extracted into the
+[API Reference](../docs/reference/api.md) documentation using mkdocstrings.
+
 ```python
-def example_function(param1: str, param2: int) -> bool:
+def example_function(param1: str, param2: int = 10) -> bool:
     """Short description of the function.
 
     Longer description if needed, explaining the purpose,
     behavior, and any important details.
 
     Args:
-        param1: Description of param1
-        param2: Description of param2
+        param1: Description of param1.
+        param2: Description of param2. Defaults to 10.
 
     Returns:
-        Description of return value
+        Description of return value.
 
     Raises:
-        ValueError: When param2 is negative
+        ValueError: When param2 is negative.
+
+    Examples:
+        >>> example_function("test", 5)
+        True
+        >>> example_function("", 10)
+        False
     """
 ```
+
+**Key points:**
+
+- Type hints go in signatures, not duplicated in docstrings
+- End descriptions with periods for consistency
+- Include `Examples` section for complex functions (used by doctests)
+- Document all public functions, classes, and methods
+- Module-level docstrings describe the module's purpose
 
 ### Code Organization
 

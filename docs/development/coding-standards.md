@@ -241,11 +241,18 @@ def test_processor_validation_error(processor: Processor) -> None:
 
 ## Documentation
 
-### Docstrings
+### Docstring Standards
+
+Docstrings are automatically extracted into the [API Reference](../reference/api.md)
+using [mkdocstrings](https://mkdocstrings.github.io/).
+
+**Requirements:**
 
 - Use **Google-style docstrings** for consistency
 - Document all public functions, classes, and modules
-- Include Args, Returns, Raises sections
+- Include Args, Returns, Raises, Examples sections as appropriate
+- Type hints go in signatures, not duplicated in docstrings
+- End descriptions with periods for consistency
 - Keep line length ≤100 characters
 
 **Example:**
