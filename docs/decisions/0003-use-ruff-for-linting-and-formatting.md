@@ -66,3 +66,4 @@ ruff is an extremely fast Python linter and formatter written in Rust. It provid
 - [ruff documentation](https://docs.astral.sh/ruff/)
 - [ADR-0001: Use uv for package management](0001-use-uv-for-package-management.md)
 - [ADR-0002: Use doit for task automation](0002-use-doit-for-task-automation.md)
+- Issue #128: Align pre-commit, CI, and doit check to use consistent checks

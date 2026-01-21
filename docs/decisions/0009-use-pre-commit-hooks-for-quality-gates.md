@@ -81,3 +81,6 @@ Hooks are defined in `.pre-commit-config.yaml` and installed via `pre-commit ins
 - [ADR-0003: Use ruff for linting](0003-use-ruff-for-linting-and-formatting.md)
 - [ADR-0007: Use mypy for type checking](0007-use-mypy-for-type-checking.md)
 - [ADR-0005: AI agent command restrictions](0005-ai-agent-command-restrictions.md)
+- Issue #184: Use project's tool versions in pre-commit hooks
+- Issue #128: Align pre-commit, CI, and doit check to use consistent checks
+- Issue #19: Fix resolve pre-commit hook failures in template files

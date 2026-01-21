@@ -80,3 +80,5 @@ Test file conventions:
 
 - [pytest documentation](https://docs.pytest.org/)
 - [ADR-0009: Use pre-commit hooks](0009-use-pre-commit-hooks-for-quality-gates.md)
+- Issue #126: Add tests for template tools and exclude from generated projects
+- Issue #83: Add multi-OS CI testing (Windows, macOS)

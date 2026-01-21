@@ -83,3 +83,6 @@ Structure:
 - [MkDocs documentation](https://www.mkdocs.org/)
 - [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
 - [mkdocs.yml](../../mkdocs.yml)
+- Issue #169: Auto-generate categorized documentation TOC from frontmatter tags
+- Issue #109: Add comprehensive template tools and workflows documentation
+- Issue #105: Improve GitHub workflows and documentation

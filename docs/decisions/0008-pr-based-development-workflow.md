@@ -72,3 +72,6 @@ Key rules:
 - [ADR-0006: Merge-gate workflow](0006-merge-gate-workflow.md)
 - [ADR-0005: AI agent command restrictions](0005-ai-agent-command-restrictions.md)
 - [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+- Issue #80: Add doit issue and doit pr commands for GitHub workflow
+- Issue #48: Enforce workflow by blocking direct commits to main
+- Issue #176: Add doit pr_merge task with enforced commit format

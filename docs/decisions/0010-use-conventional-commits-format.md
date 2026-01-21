@@ -88,3 +88,5 @@ This is enforced by:
 - [ADR-0008: PR-based development workflow](0008-pr-based-development-workflow.md)
 - [Conventional Commits specification](https://www.conventionalcommits.org/)
 - [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+- Issue #176: Add doit pr_merge task with enforced commit format
+- Issue #175: Add PR title validation to enforce merge commit format

@@ -68,3 +68,7 @@ doit is a Python-based build tool that acts like Make but with Python syntax. It
 
 - [doit documentation](https://pydoit.org/)
 - [ADR-0001: Use uv for package management](0001-use-uv-for-package-management.md)
+- Issue #170: Rename tools/tasks to tools/doit
+- Issue #87: Add shell completions for doit tasks
+- Issue #80: Add doit issue and doit pr commands for GitHub workflow
+- Issue #65: Promote doit and rich to runtime dependencies
