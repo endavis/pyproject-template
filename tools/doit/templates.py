@@ -1,15 +1,25 @@
-"""Template parser for GitHub issue and PR templates.
+"""Template parser for GitHub issue and PR templates, and ADR templates.
 
-Reads templates from .github/ directory and converts them to editor-friendly markdown.
+Reads templates from .github/ directory and docs/decisions/ and converts them
+to editor-friendly markdown.
 """
 
 from __future__ import annotations
 
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, NamedTuple
 
 import yaml
+
+
+class AdrTemplate(NamedTuple):
+    """Parsed ADR template with editor content and metadata."""
+
+    editor_template: str
+    required_sections: list[str]
+    all_sections: list[str]
 
 
 class IssueTemplate(NamedTuple):
@@ -244,3 +254,106 @@ def clear_template_cache() -> None:
     """Clear the template cache. Useful for testing."""
     get_issue_template.cache_clear()
     get_pr_template.cache_clear()
+    get_adr_template.cache_clear()
+
+
+def _get_docs_dir() -> Path:
+    """Get the docs directory path."""
+    # Find project root by looking for docs directory
+    current = Path(__file__).resolve()
+    for parent in [current, *list(current.parents)]:
+        docs_dir = parent / "docs"
+        if docs_dir.is_dir():
+            return docs_dir
+    raise FileNotFoundError("Could not find docs directory")
+
+
+def _parse_adr_template(template_path: Path) -> AdrTemplate:
+    """Parse an ADR markdown template file.
+
+    Extracts section headers and identifies required sections marked with
+    <!-- Required --> comments.
+
+    Args:
+        template_path: Path to the ADR template file
+
+    Returns:
+        AdrTemplate with editor content and metadata
+    """
+    content = template_path.read_text(encoding="utf-8")
+
+    all_sections: list[str] = []
+    required_sections: list[str] = []
+
+    # Find all ## headers and check for <!-- Required --> marker
+    # Pattern: ## Section Name followed optionally by <!-- Required -->
+    lines = content.split("\n")
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        # Check for ## header (but not ### or more)
+        header_match = re.match(r"^##\s+(.+)$", line)
+        if header_match:
+            section_name = header_match.group(1).strip()
+            all_sections.append(section_name)
+
+            # Check next line for <!-- Required --> marker
+            if i + 1 < len(lines):
+                next_line = lines[i + 1].strip()
+                if next_line == "<!-- Required -->":
+                    required_sections.append(section_name)
+        i += 1
+
+    # Create editor template with instructions
+    editor_header = """\
+# Lines starting with # are comments and will be ignored.
+# Fill in the sections below, save, and exit.
+# Sections marked <!-- Required --> must have content.
+
+"""
+    editor_template = editor_header + content
+
+    return AdrTemplate(
+        editor_template=editor_template,
+        required_sections=required_sections,
+        all_sections=all_sections,
+    )
+
+
+@lru_cache(maxsize=1)
+def get_adr_template() -> AdrTemplate:
+    """Get the ADR template with parsed metadata.
+
+    Returns:
+        AdrTemplate with editor content and required sections
+
+    Raises:
+        FileNotFoundError: If template file doesn't exist
+    """
+    docs_dir = _get_docs_dir()
+    template_file = docs_dir / "decisions" / "adr-template.md"
+
+    if not template_file.exists():
+        raise FileNotFoundError(f"ADR template not found: {template_file}")
+
+    return _parse_adr_template(template_file)
+
+
+def get_adr_required_sections() -> list[str]:
+    """Get the required sections for ADRs.
+
+    Returns:
+        List of required section names
+    """
+    template = get_adr_template()
+    return template.required_sections
+
+
+def get_adr_all_sections() -> list[str]:
+    """Get all sections defined in the ADR template.
+
+    Returns:
+        List of all section names
+    """
+    template = get_adr_template()
+    return template.all_sections

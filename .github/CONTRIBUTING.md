@@ -271,7 +271,9 @@ Update calling code to use `await`.
 
 3. **Update documentation** (if needed)
 
-4. **Self-review your code**
+4. **Update related ADRs** (if implementing an architectural decision) - Add your issue link to the Related section
+
+5. **Self-review your code**
 
 ### PR Title
 
@@ -808,6 +810,56 @@ The task:
 - Constructs the merge commit subject automatically
 - Uses squash merge with the formatted subject
 
+### Architecture Decision Records (ADRs)
+
+When your PR implements or relates to an architectural decision, update the relevant ADR:
+
+**When to update an ADR:**
+- Your PR implements a decision documented in an existing ADR
+- Your PR changes behavior described in an ADR
+- Your issue is related to an architectural decision
+
+**How to update:**
+1. Find related ADRs in `docs/decisions/`
+2. Add your issue to the "Related Issues" section: `- Issue #XX: Brief description`
+3. Add links to implementation docs in "Related Documentation" section
+4. Include the ADR update in your PR
+
+**When to create a new ADR:**
+- Introducing a new tool, framework, or library
+- Changing development workflow or processes
+- Making decisions that affect project architecture
+- Decisions that future contributors should understand
+
+**Which issue types may need ADRs:**
+- **Feature**: Often - new features may introduce architectural decisions
+- **Refactor**: Often - refactoring may change architecture or patterns
+- **Bug**: Rarely - only if the fix reveals a significant design decision
+- **Doc/Chore**: No - documentation and maintenance don't need ADRs
+
+**The `needs-adr` label:**
+Use the `needs-adr` label on issues that require an ADR. This signals that:
+- The issue involves an architectural decision
+- An ADR should be created as part of the PR
+- The PR should not be merged without the ADR
+
+**Create a new ADR:**
+```bash
+# Interactive (opens editor)
+doit adr --title="Use Redis for caching"
+
+# Non-interactive (for scripts/AI)
+doit adr --title="Use Redis" --body-file=adr.md
+doit adr --title="Use Redis" --body="## Status\nAccepted\n..."
+```
+
+**ADR requirements:**
+- Every ADR must link to the GitHub Issues where the decision was discussed
+- Every ADR must link to documentation in `docs/` that describes the implementation
+- If no documentation exists, create it as part of the PR
+
+ADRs provide context for why decisions were made, helping future contributors understand the project's evolution.
+
 ### Edge Cases
 
 **Issue needs to be split during work:**
@@ -858,5 +910,6 @@ Your contributions make this project better for everyone. We appreciate your tim
 For more detailed information, see:
 - [README.md](../README.md) - Project overview
 - [AGENTS.md](../AGENTS.md) - Development guide for AI agents
+- [Architecture Decision Records](../docs/decisions/README.md) - Documented architectural decisions
 - [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md) - Community guidelines
 - [SECURITY.md](SECURITY.md) - Security policy

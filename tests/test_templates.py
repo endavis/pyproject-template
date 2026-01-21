@@ -11,8 +11,12 @@ import pytest
 from tools.doit.templates import (
     FIELD_ID_TO_SECTION,
     ISSUE_TYPE_TO_FILE,
+    AdrTemplate,
     IssueTemplate,
     clear_template_cache,
+    get_adr_all_sections,
+    get_adr_required_sections,
+    get_adr_template,
     get_issue_labels,
     get_issue_template,
     get_pr_template,
@@ -248,3 +252,101 @@ class TestClearTemplateCache:
 
         # Should be equal but not the same object (strings are immutable so may be same)
         assert result1 == result2
+
+
+class TestGetAdrTemplate:
+    """Test get_adr_template function."""
+
+    def test_returns_adr_template(self) -> None:
+        """Should return an AdrTemplate."""
+        result = get_adr_template()
+        assert isinstance(result, AdrTemplate)
+
+    def test_has_editor_template(self) -> None:
+        """Should have editor template content."""
+        result = get_adr_template()
+        assert result.editor_template
+        assert "# Lines starting with #" in result.editor_template
+
+    def test_has_required_sections(self) -> None:
+        """Should have required sections list."""
+        result = get_adr_template()
+        assert isinstance(result.required_sections, list)
+        assert len(result.required_sections) > 0
+
+    def test_has_all_sections(self) -> None:
+        """Should have all sections list."""
+        result = get_adr_template()
+        assert isinstance(result.all_sections, list)
+        assert len(result.all_sections) > 0
+
+    def test_required_sections_subset_of_all(self) -> None:
+        """Required sections should be a subset of all sections."""
+        result = get_adr_template()
+        for section in result.required_sections:
+            assert section in result.all_sections
+
+    def test_caching_returns_same_instance(self) -> None:
+        """Multiple calls should return cached result."""
+        result1 = get_adr_template()
+        result2 = get_adr_template()
+        assert result1 is result2
+
+    def test_missing_template_raises_error(self) -> None:
+        """Should raise FileNotFoundError if template doesn't exist."""
+        clear_template_cache()
+        with patch("tools.doit.templates._get_docs_dir") as mock_dir:
+            mock_dir.return_value = Path("/nonexistent")
+            with pytest.raises(FileNotFoundError):
+                get_adr_template()
+
+
+class TestGetAdrRequiredSections:
+    """Test get_adr_required_sections function."""
+
+    def test_returns_list(self) -> None:
+        """Should return a list."""
+        result = get_adr_required_sections()
+        assert isinstance(result, list)
+
+    def test_contains_status(self) -> None:
+        """Should contain Status section."""
+        result = get_adr_required_sections()
+        assert "Status" in result
+
+    def test_contains_decision(self) -> None:
+        """Should contain Decision section."""
+        result = get_adr_required_sections()
+        assert "Decision" in result
+
+    def test_contains_rationale(self) -> None:
+        """Should contain Rationale section."""
+        result = get_adr_required_sections()
+        assert "Rationale" in result
+
+
+class TestGetAdrAllSections:
+    """Test get_adr_all_sections function."""
+
+    def test_returns_list(self) -> None:
+        """Should return a list."""
+        result = get_adr_all_sections()
+        assert isinstance(result, list)
+
+    def test_contains_all_main_sections(self) -> None:
+        """Should contain all main ADR sections."""
+        result = get_adr_all_sections()
+        expected = [
+            "Status",
+            "Decision",
+            "Rationale",
+            "Related Issues",
+        ]
+        for section in expected:
+            assert section in result, f"Missing section: {section}"
+
+    def test_more_sections_than_required(self) -> None:
+        """All sections should be >= required sections."""
+        all_sections = get_adr_all_sections()
+        required_sections = get_adr_required_sections()
+        assert len(all_sections) >= len(required_sections)
