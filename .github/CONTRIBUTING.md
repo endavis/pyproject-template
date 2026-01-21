@@ -821,8 +821,9 @@ When your PR implements or relates to an architectural decision, update the rele
 
 **How to update:**
 1. Find related ADRs in `docs/decisions/`
-2. Add your issue to the "Related" section: `- Issue #XX: Brief description`
-3. Include the ADR update in your PR
+2. Add your issue to the "Related Issues" section: `- Issue #XX: Brief description`
+3. Add links to implementation docs in "Related Documentation" section
+4. Include the ADR update in your PR
 
 **When to create a new ADR:**
 - Introducing a new tool, framework, or library
@@ -839,6 +840,11 @@ doit adr --title="Use Redis for caching"
 doit adr --title="Use Redis" --body-file=adr.md
 doit adr --title="Use Redis" --body="## Status\nAccepted\n..."
 ```
+
+**ADR requirements:**
+- Every ADR must link to the GitHub Issues where the decision was discussed
+- Every ADR must link to documentation in `docs/` that describes the implementation
+- If no documentation exists, create it as part of the PR
 
 ADRs provide context for why decisions were made, helping future contributors understand the project's evolution.
 
