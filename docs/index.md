@@ -53,7 +53,6 @@ print(message)  # Output: Hello, Python!
 - **[Installation](getting-started/installation.md)** - How to install the package
 - **[Usage Guide](usage/basics.md)** - How to use the package
 - **[API Reference](reference/api.md)** - Complete API documentation
-- **[Migration Guide](template/migration.md)** - Move an existing project into this template
 
 ### For Contributors
 

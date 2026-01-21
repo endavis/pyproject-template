@@ -274,6 +274,19 @@ BREAKING CHANGE: All public methods are now async.
 Update calling code to use `await`.
 ```
 
+### Exceptions
+
+**Dependabot commits** are exempt from the full merge commit format. Dependabot automatically generates commits with:
+
+```
+chore(deps): bump <package> from X to Y (#PR)
+```
+
+This is acceptable because:
+- Dependabot creates commit messages before the PR exists (cannot reference PR number)
+- Automated dependency updates don't have linked issues
+- The `chore(deps):` format follows conventional commits with a scope
+
 ## Pull Request Process
 
 ### Before Submitting

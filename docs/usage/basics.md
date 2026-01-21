@@ -38,10 +38,6 @@ See the [API Reference](../reference/api.md) for complete documentation of all a
 
 This section is for developers working on the project.
 
-### Migration
-
-Coming from an existing project? See the [Migration Guide](../template/migration.md) for step-by-step instructions to adopt this template (configure placeholders, move code to `src/`, update deps, and align CI/release).
-
 ### Quick Reference
 
 ```bash

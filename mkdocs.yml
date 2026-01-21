@@ -73,10 +73,14 @@ nav:
   - Development:
       - Coding Standards: development/coding-standards.md
       - CI/CD & Testing: development/ci-cd-testing.md
+      - Doit Tasks Reference: development/doit-tasks-reference.md
       - Extensions: development/extensions.md
       - Release & Automation: development/release-and-automation.md
       - AI Agent Setup: development/AI_SETUP.md
       - AI Command Blocking: development/ai/command-blocking.md
+  - Deployment:
+      - Development: deployment/development.md
+      - Production: deployment/production.md
   - Template:
       - Overview: template/index.md
       - Template Manager: template/manage.md
@@ -98,9 +102,12 @@ nav:
       - ADR-0010 Conventional commits: decisions/0010-use-conventional-commits-format.md
       - ADR-0011 pytest: decisions/0011-use-pytest-for-testing.md
       - ADR-0012 mkdocs: decisions/0012-use-mkdocs-with-material-theme-for-documentation.md
+      - ADR-0013 Python versions: decisions/0013-python-version-support-policy.md
   - Reference:
       - API Reference: reference/api.md
-  - Examples: examples/README.md
+  - Examples:
+      - Overview: examples/README.md
+      - API Development: examples/api.md
   - All Documents: TABLE_OF_CONTENTS.md
 
 extra:

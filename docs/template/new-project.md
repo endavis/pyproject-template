@@ -157,6 +157,25 @@ uv sync --all-extras --dev
 uv run pre-commit install
 ```
 
+#### Enable Shell Completions (Optional)
+
+Enable tab completion for `doit` commands:
+
+```bash
+# Generate and install completions to your shell config
+doit completions_install
+```
+
+This will:
+- Generate completion scripts in `completions/`
+- Add source lines to `~/.bashrc` (Bash) and/or `~/.zshrc` (Zsh)
+
+After installation, reload your shell:
+```bash
+source ~/.bashrc   # For Bash
+source ~/.zshrc    # For Zsh
+```
+
 ### Step 4: Verify Setup
 
 ```bash

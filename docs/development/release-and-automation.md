@@ -17,6 +17,7 @@ This guide covers automated versioning, release management, governance validatio
 ## Table of Contents
 - [Automated Versioning](#automated-versioning)
 - [Release Management](#release-management)
+- [PR Merging](#pr-merging)
 - [Security & Quality Tasks](#security-quality-tasks)
 - [Governance Validation](#governance-validation)
 - [Environment Configuration](#environment-configuration)
@@ -168,6 +169,103 @@ uv run doit release
 # --> Creates v0.2.0, updates CHANGELOG, publishes to PyPI
 ```
 
+## PR Merging
+
+Use `doit pr_merge` to merge pull requests with properly formatted commit messages. This task enforces the merge commit format and provides a consistent workflow.
+
+### Basic Usage
+
+```bash
+# Merge PR for current branch
+doit pr_merge
+
+# Merge specific PR by number
+doit pr_merge --pr=123
+
+# Keep the branch after merge (default deletes it)
+doit pr_merge --delete-branch=false
+```
+
+### What It Does
+
+1. **Validates PR title** - Ensures the title follows conventional commit format (`<type>: <subject>`)
+2. **Extracts linked issues** - Parses PR body for `closes #XX`, `fixes #XX`, or `part of #XX`
+3. **Formats merge commit** - Creates a standardized commit message with PR and issue references
+4. **Squash merges** - Uses squash merge to maintain clean history
+5. **Deletes branch** - Removes the source branch after merge (default behavior)
+6. **Reminds to close issues** - Displays commands to manually close linked issues
+
+### Merge Commit Format
+
+The task automatically formats the merge commit subject:
+
+```
+<type>: <subject> (merges PR #XX, closes #YY)
+<type>: <subject> (merges PR #XX, part of #YY)
+<type>: <subject> (merges PR #XX)
+```
+
+**Examples:**
+```
+feat: add user authentication (merges PR #102, closes #99)
+fix: resolve parsing error (merges PR #103, closes #100, #101)
+docs: update installation guide (merges PR #104)
+refactor: extract helper functions (merges PR #105, part of #50)
+```
+
+### Linking Issues in PRs
+
+In your PR body, use these keywords to link issues:
+
+| Keyword | Effect | Use When |
+|---------|--------|----------|
+| `closes #XX`, `fixes #XX`, `resolves #XX` | Included as `closes #XX` in merge commit | PR fully completes the issue |
+| `part of #XX` | Included as `part of #XX` in merge commit | Issue requires multiple PRs |
+
+**Example PR body:**
+```markdown
+## Summary
+- Add login form component
+- Implement session management
+
+Closes #99
+
+## Test Plan
+- [ ] Test login flow
+```
+
+For multi-PR issues:
+```markdown
+## Summary
+First part of the authentication system refactor.
+
+Part of #50
+
+## Test Plan
+- [ ] Existing tests pass
+```
+
+### Closing Issues After Merge
+
+Issues are **not automatically closed** by GitHub when using squash merge with custom commit messages. After merging, manually close linked issues:
+
+```bash
+# The task displays these commands after merge
+gh issue close 99 --comment "Fixed in PR #102"
+gh issue close 100 --comment "Fixed in PR #103"
+```
+
+This ensures issues are explicitly closed with a reference to the PR that fixed them.
+
+### Why Use `doit pr_merge`?
+
+| Direct `gh pr merge` | `doit pr_merge` |
+|---------------------|-----------------|
+| Default commit message | Enforced format with PR/issue links |
+| May not validate title | Validates conventional commit format |
+| Manual issue tracking | Extracts and displays linked issues |
+| No post-merge guidance | Reminds to close issues |
+
 ## Security & Quality Tasks
 
 This template includes comprehensive security scanning and code quality tools.
@@ -303,6 +401,7 @@ This template enforces governance rules to ensure code quality and traceability.
 **Required Format**:
 ```
 <type>: <subject> (merges PR #XX, closes #YY)
+<type>: <subject> (merges PR #XX, part of #YY)
 <type>: <subject> (merges PR #XX)
 ```
 
@@ -311,11 +410,14 @@ This template enforces governance rules to ensure code quality and traceability.
 ✅ feat: add new feature (merges PR #102, closes #99)
 ✅ fix: resolve bug (merges PR #103, closes #100)
 ✅ docs: update guide (merges PR #104)
+✅ refactor: extract utils (merges PR #105, part of #50)
 
 ❌ Add new feature                    # Missing type
 ❌ feat: add feature                  # Missing PR reference
 ❌ feat: add feature (PR #102)        # Wrong format
 ```
+
+Use `closes` when the PR fully resolves an issue. Use `part of` when an issue requires multiple PRs to complete. See [PR Merging](#pr-merging) for details.
 
 **Valid Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`
 
@@ -558,10 +660,17 @@ uv run doit release
 
 **Problem**: Merge commit format doesn't match required pattern
 
-**Solution**: Update the merge commit message:
+**Solution**: Use `doit pr_merge` which automatically formats the commit message:
 ```bash
-# When merging PR #102 that closes issue #99
-git merge --no-ff feat/99-feature -m "feat: add new feature (merges PR #102, closes #99)"
+# Merge the PR with proper format
+doit pr_merge --pr=102
+```
+
+If you need to fix an existing merge commit, use interactive rebase (advanced):
+```bash
+git rebase -i HEAD~1
+# Change 'pick' to 'reword', then edit the message to:
+# feat: add new feature (merges PR #102, closes #99)
 ```
 
 ### Security Task Fails: "pip-audit not installed"

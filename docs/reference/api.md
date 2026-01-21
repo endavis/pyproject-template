@@ -142,3 +142,96 @@ doit test
 # Run with coverage
 uv run pytest --cov=package_name --cov-report=term-missing
 ```
+
+---
+
+## mkdocstrings Configuration
+
+This project uses [mkdocstrings](https://mkdocstrings.github.io/) to automatically generate API documentation from Python docstrings.
+
+### How It Works
+
+1. **Source scanning**: mkdocstrings parses your Python source files
+2. **Docstring extraction**: Extracts docstrings from modules, classes, and functions
+3. **Rendering**: Converts docstrings to HTML using the configured style
+
+### Configuration
+
+mkdocstrings is configured in `mkdocs.yml`:
+
+```yaml
+plugins:
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          options:
+            docstring_style: google        # Use Google-style docstrings
+            show_source: true              # Show source code link
+            show_signature_annotations: true  # Show type annotations
+            show_symbol_type_heading: true    # Show type in headings
+            show_symbol_type_toc: true        # Show type in TOC
+            members_order: source          # Order by source file position
+            merge_init_into_class: true    # Merge __init__ into class docs
+            show_root_heading: true        # Show module/class heading
+            show_root_full_path: false     # Don't show full import path
+```
+
+### Adding Module Documentation
+
+To document a new module, add it to `docs/reference/api.md`:
+
+```markdown
+## My Module
+
+Description of what this module does.
+
+::: package_name.my_module
+    options:
+      show_root_heading: true
+      show_root_full_path: true
+```
+
+### Customizing Per-Module Options
+
+Override options for specific modules:
+
+```markdown
+::: package_name.internal
+    options:
+      show_source: false        # Hide source for internal module
+      members: ["public_func"]  # Only document specific members
+```
+
+### Available Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `docstring_style` | `google` | Docstring format: `google`, `numpy`, `sphinx` |
+| `show_source` | `true` | Show link to source code |
+| `show_signature_annotations` | `true` | Display type hints in signatures |
+| `members_order` | `source` | Order: `source`, `alphabetical` |
+| `merge_init_into_class` | `true` | Combine `__init__` docs with class |
+| `show_root_heading` | `true` | Display module/class name as heading |
+| `members` | `null` | List of specific members to document |
+
+### Building API Docs
+
+```bash
+# Preview documentation locally
+doit docs_serve
+
+# Build static site
+doit docs_build
+```
+
+### Troubleshooting
+
+**Module not found errors:**
+- Ensure the package is installed: `uv sync --dev`
+- Check import paths match your package structure
+
+**Docstrings not rendering:**
+- Verify Google-style format is used
+- Check for syntax errors in docstrings
+- Run `doit docs_serve` and check console for errors
