@@ -16,3 +16,7 @@ Provides consistent, readable git history, enables automated changelog generatio
 
 - Issue #176: Add doit pr_merge task with enforced commit format
 - Issue #175: Add PR title validation to enforce merge commit format
+
+## Related Documentation
+
+- [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)

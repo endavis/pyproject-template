@@ -17,3 +17,8 @@ Provides clear audit trail linking issues to PRs to commits, enables code review
 - Issue #80: Add doit issue and doit pr commands for GitHub workflow
 - Issue #48: Enforce workflow by blocking direct commits to main
 - Issue #176: Add doit pr_merge task with enforced commit format
+
+## Related Documentation
+
+- [CI/CD Testing Guide](../development/ci-cd-testing.md)
+- [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)

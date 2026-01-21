@@ -24,6 +24,9 @@ Why this decision was made.
 
 ## Related Issues
 - Issue #XX: Description
+
+## Related Documentation
+- [Relevant Doc](../path/to/doc.md)
 ```
 
 See [adr-template.md](adr-template.md) for the template.

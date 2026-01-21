@@ -16,3 +16,8 @@ uv is a modern Python package manager written in Rust by Astral (creators of ruf
 
 - Issue #166: Block uv add in AI agent hooks/settings
 - Issue #148: dodo.py uses Unix-only shell syntax for UV_CACHE_DIR
+
+## Related Documentation
+
+- [Installation Guide](../getting-started/installation.md)
+- [Tools Reference](../template/tools-reference.md)

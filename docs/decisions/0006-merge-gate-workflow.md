@@ -16,3 +16,7 @@ PRs could be merged while CI was still running or without explicit human approva
 
 - Issue #149: Add merge-gate workflow to require ready-to-merge label
 - Issue #154: Fix merge-gate to wait for CI completion before allowing merge
+
+## Related Documentation
+
+- [CI/CD Testing Guide](../development/ci-cd-testing.md)

@@ -15,3 +15,7 @@ Manual imports were error-prone - developers would forget to add imports for new
 ## Related Issues
 
 - Issue #173: Auto-discover doit tasks from tools/doit modules
+
+## Related Documentation
+
+- [Tools Reference](../template/tools-reference.md)

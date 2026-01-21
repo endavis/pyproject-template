@@ -15,3 +15,7 @@ mypy is the most mature Python type checker with excellent IDE integration. Stri
 ## Related Issues
 
 - Issue #61: Make doit check use strict mypy mode to match pre-commit hooks
+
+## Related Documentation
+
+- [Coding Standards](../development/coding-standards.md)

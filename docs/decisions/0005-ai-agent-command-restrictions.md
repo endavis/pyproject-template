@@ -19,3 +19,9 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 - Issue #163: Add pre-commit hook to block pyproject.toml version changes
 - Issue #164: Block doit release in AI agent hooks
 - Issue #166: Block uv add in AI agent hooks
+
+## Related Documentation
+
+- [AI Command Blocking](../development/ai/command-blocking.md)
+- [AI Enforcement Principles](../development/ai/enforcement-principles.md)
+- [AI Setup Guide](../development/AI_SETUP.md)

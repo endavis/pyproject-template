@@ -17,3 +17,8 @@ Ensures bad code never enters the repository, provides fast feedback loop (secon
 - Issue #184: Use project's tool versions in pre-commit hooks
 - Issue #128: Align pre-commit, CI, and doit check to use consistent checks
 - Issue #19: Fix resolve pre-commit hook failures in template files
+
+## Related Documentation
+
+- [Coding Standards](../development/coding-standards.md)
+- [Installation Guide](../getting-started/installation.md)

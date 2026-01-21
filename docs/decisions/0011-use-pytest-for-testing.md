@@ -16,3 +16,8 @@ pytest minimizes boilerplate (plain functions, no classes required), has a power
 
 - Issue #126: Add tests for template tools and exclude from generated projects
 - Issue #83: Add multi-OS CI testing (Windows, macOS)
+
+## Related Documentation
+
+- [CI/CD Testing Guide](../development/ci-cd-testing.md)
+- [Coding Standards](../development/coding-standards.md)

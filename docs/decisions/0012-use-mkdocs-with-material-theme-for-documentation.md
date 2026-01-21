@@ -17,3 +17,8 @@ MkDocs uses Markdown (familiar to most developers), Material theme provides mode
 - Issue #169: Auto-generate categorized documentation TOC from frontmatter tags
 - Issue #109: Add comprehensive template tools and workflows documentation
 - Issue #105: Improve GitHub workflows and documentation
+
+## Related Documentation
+
+- [Documentation Index](../index.md)
+- [Extensions Guide](../development/extensions.md)

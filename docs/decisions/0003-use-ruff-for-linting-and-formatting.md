@@ -15,3 +15,7 @@ ruff is an extremely fast Python linter and formatter written in Rust that conso
 ## Related Issues
 
 - Issue #128: Align pre-commit, CI, and doit check to use consistent checks
+
+## Related Documentation
+
+- [Coding Standards](../development/coding-standards.md)
