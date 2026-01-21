@@ -180,6 +180,7 @@ These patterns are blocked across all AI agents. Claude and Gemini use the share
 | Merge commit on protected branch | `git merge` (without `--ff-only`) on `main` | Hook | Hook | — |
 | `gh pr create` | Use `doit pr` instead | Hook | Hook | Config |
 | `gh issue create` | Use `doit issue` instead | Hook | Hook | Config |
+| `uv add` | User runs manually | Hook | Hook | Config |
 
 > **Note**: "Hook" = `block-dangerous-commands.py`, "Config" = `.codex/config.toml` approval policy, "—" = not enforced for this agent.
 
@@ -278,7 +279,6 @@ The following AGENTS.md rules are currently instruction-only and could benefit f
 | Rule | Current State | Potential Enforcement |
 |------|---------------|----------------------|
 | "Never edit `pyproject.toml` version" | Instruction only | Pre-commit hook to block changes to `dynamic =` line (see issue #163). Build process catches invalid static+dynamic via PEP 621. |
-| "Ask before adding new dependencies" | Instruction only | Block `uv add` in AI hooks - agent suggests, user runs manually (see issue #166) |
 | "Protect user config (`.envrc.local`, `settings.local.json`)" | Instruction only | Pre-commit hook to block commits containing files with `.local` or `.local.` in name (excluding `.local.example`). Matches `*.local`, `*.local.*` as distinct segments, not substrings (see issue #165). |
 
 ### Low Priority / Difficult to Automate

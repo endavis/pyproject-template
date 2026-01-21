@@ -91,6 +91,16 @@ EOF
     ("gh pr merge 123", "BLOCK", "gh pr merge"),
     ("gh pr merge --squash", "BLOCK", "gh pr merge squash"),
     ("gh pr merge 123 --squash --delete-branch", "BLOCK", "gh pr merge full"),
+    # === SHOULD BLOCK - uv add (dependencies require user approval) ===
+    ("uv add requests", "BLOCK", "uv add single package"),
+    ("uv add requests httpx", "BLOCK", "uv add multiple packages"),
+    ("uv add 'requests>=2.0'", "BLOCK", "uv add with version"),
+    ("uv add --dev pytest", "BLOCK", "uv add dev dependency"),
+    # === SHOULD ALLOW - Other uv commands ===
+    ("uv sync", "ALLOW", "uv sync"),
+    ("uv run pytest", "ALLOW", "uv run"),
+    ("uv pip list", "ALLOW", "uv pip list"),
+    ("uv remove requests", "ALLOW", "uv remove"),
     # === SHOULD BLOCK - Governance labels ===
     ("gh pr edit 123 --add-label ready-to-merge", "BLOCK", "add ready-to-merge"),
     ("gh pr edit --add-label ready-to-merge", "BLOCK", "add ready-to-merge no PR"),
