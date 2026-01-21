@@ -150,3 +150,17 @@ doit pr_merge --pr=123           # Merge specific PR
 doit adr --title="Use Redis for caching" --body="## Status\nAccepted\n..."
 doit adr --title="Use Redis" --body-file=adr.md
 ```
+
+## PR Checklist (for AI agents)
+
+Before creating a PR, verify:
+
+- [ ] `doit check` passes (tests, lint, type-check, security)
+- [ ] Branch name follows convention: `<type>/<issue>-<description>`
+- [ ] Commits follow conventional format: `<type>: <subject>`
+- [ ] PR title follows conventional format: `<type>: <subject>`
+- [ ] PR description references the issue: "Closes #XX" or "Part of #XX"
+- [ ] If issue has `needs-adr` label: ADR created and included in PR
+- [ ] If implementing architectural decision: Related ADR updated with issue link
+- [ ] If ADR created/updated: Links to documentation in `docs/` included
+- [ ] Documentation updated if behavior changed
