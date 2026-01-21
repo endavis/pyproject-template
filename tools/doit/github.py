@@ -634,6 +634,21 @@ def task_pr_merge() -> dict[str, Any]:
                     border_style="green",
                 )
             )
+
+            # Reminder to close linked issues
+            if issues["closes"]:
+                close_commands = [
+                    f'gh issue close {issue} --comment "Fixed in PR #{pr_number}"'
+                    for issue in issues["closes"]
+                ]
+                console.print()
+                console.print(
+                    Panel.fit(
+                        "[bold yellow]Reminder: Close linked issues manually[/bold yellow]\n\n"
+                        + "\n".join(close_commands),
+                        border_style="yellow",
+                    )
+                )
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to merge PR.[/red]")
             if e.stderr:
