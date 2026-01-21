@@ -41,11 +41,15 @@ DANGEROUS_SEQUENCES = [
 # Force push flags
 FORCE_PUSH_FLAGS = {"--force", "-f", "--force-with-lease"}
 
-# Blocked workflow commands - use doit wrappers instead
+# Blocked workflow commands - use doit wrappers or require user approval
 BLOCKED_WORKFLOW_COMMANDS = {
     ("gh", "issue", "create"): "Use 'doit issue --type=<type>' instead of 'gh issue create'",
     ("gh", "pr", "create"): "Use 'doit pr' instead of 'gh pr create'",
     ("gh", "pr", "merge"): "Use 'doit pr_merge' instead of 'gh pr merge'",
+    ("uv", "add"): (
+        "Adding dependencies requires user approval. "
+        "Suggest the package and let the user run 'uv add <package>' manually."
+    ),
 }
 
 # Governance labels that require human approval - AI should never add these

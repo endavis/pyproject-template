@@ -80,6 +80,13 @@ pattern = "gh\\s+pr\\s+create"
 action = "deny"
 reason = "BLOCKED: Use 'doit pr' instead of 'gh pr create'. See AGENTS.md."
 
+# Block uv add - dependencies require user approval
+[[approval_policy]]
+type = "command"
+pattern = "uv\\s+add"
+action = "deny"
+reason = "BLOCKED: Adding dependencies requires user approval. Suggest the package and let the user run 'uv add <package>' manually. See AGENTS.md."
+
 # =============================================================================
 # ALLOWED COMMANDS - Standard development tools
 # =============================================================================
