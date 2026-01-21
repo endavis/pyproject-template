@@ -292,6 +292,100 @@ The comparison automatically skips:
 
 ---
 
+## cleanup.py
+
+Remove template-specific files after project setup.
+
+### Usage
+
+```bash
+python tools/pyproject_template/cleanup.py
+python tools/pyproject_template/cleanup.py --setup
+python tools/pyproject_template/cleanup.py --all
+python tools/pyproject_template/cleanup.py --dry-run
+```
+
+Or use the doit task:
+
+```bash
+doit template_clean
+doit template_clean --setup
+doit template_clean --all
+doit template_clean --dry-run
+```
+
+### Description
+
+Removes template-specific files that are no longer needed after project setup. Two cleanup modes are available:
+
+**Setup only mode (`--setup`):** Removes files only needed for initial setup:
+
+- `bootstrap.py` - Remote setup script
+- `tools/pyproject_template/setup_repo.py` - Repository creation
+- `tools/pyproject_template/migrate_existing_project.py` - Migration tool
+- `docs/template/new-project.md` - New project instructions
+- `docs/template/migration.md` - Migration guide
+
+This mode keeps the template update checking capability intact.
+
+**All mode (`--all`):** Removes all template files:
+
+- All setup files (above)
+- `tools/pyproject_template/` directory (entire)
+- `docs/template/` directory (entire)
+- `.config/pyproject_template/` directory
+
+### CLI Options
+
+| Option | Description |
+|--------|-------------|
+| `--setup` | Remove setup files only (keep update checking) |
+| `--all` | Remove all template files (no future updates) |
+| `--dry-run` | Show what would be deleted without deleting |
+
+### Exit Codes
+
+| Code | Meaning |
+|------|---------|
+| 0 | Success |
+| 1 | Error (conflicting flags, deletion failure) |
+
+---
+
+## repo_settings.py
+
+GitHub repository settings configuration functions.
+
+### Description
+
+Internal module providing functions to configure GitHub repository settings. Used by both `setup_repo.py` (initial setup) and `manage.py` (updating existing repositories).
+
+### Functions
+
+| Function | Description |
+|----------|-------------|
+| `configure_repository_settings()` | Configure repo description, features, security settings |
+| `configure_branch_protection()` | Set up branch protection rulesets |
+| `replicate_labels()` | Copy labels from template repository |
+| `enable_github_pages()` | Enable GitHub Pages for documentation |
+| `configure_codeql()` | Configure CodeQL code scanning |
+| `update_all_repo_settings()` | Convenience function to run all configuration steps |
+
+### Usage
+
+This module is not meant to be run directly. It's imported by other template tools:
+
+```python
+from tools.pyproject_template.repo_settings import update_all_repo_settings
+
+update_all_repo_settings(
+    repo_full="user/repo",
+    description="My project description",
+)
+```
+
+---
+
 ## utils.py
 
 Shared utilities used by other template tools.
