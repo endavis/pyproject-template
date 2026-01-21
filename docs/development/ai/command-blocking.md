@@ -183,6 +183,7 @@ These commands should use `doit` wrappers or require user approval:
 | `gh pr create` | `doit pr` | Ensures proper template format |
 | `gh pr merge` | `doit pr_merge` | Enforces merge commit format: `<type>: <subject> (merges PR #XX, closes #YY)` |
 | `uv add` | User runs manually | Dependencies require human approval - suggest package, let user run command |
+| `doit release*` | User runs manually | Releases require human approval - AI can help prepare but not execute |
 
 #### Governance Labels
 

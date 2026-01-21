@@ -181,6 +181,7 @@ These patterns are blocked across all AI agents. Claude and Gemini use the share
 | `gh pr create` | Use `doit pr` instead | Hook | Hook | Config |
 | `gh issue create` | Use `doit issue` instead | Hook | Hook | Config |
 | `uv add` | User runs manually | Hook | Hook | Config |
+| `doit release*` | User runs manually | Hook | Hook | Config |
 
 > **Note**: "Hook" = `block-dangerous-commands.py`, "Config" = `.codex/config.toml` approval policy, "—" = not enforced for this agent.
 
@@ -268,12 +269,6 @@ When blocking a command, provide an approved alternative when possible. This pro
 ## TODO: Potential Future Enforcement
 
 The following AGENTS.md rules are currently instruction-only and could benefit from automated enforcement:
-
-### High Priority
-
-| Rule | Current State | Potential Enforcement |
-|------|---------------|----------------------|
-| "Never run `doit release` without explicit command" | Instruction only | Hook to block `doit release` (see issue #164) |
 
 ### Medium Priority
 
