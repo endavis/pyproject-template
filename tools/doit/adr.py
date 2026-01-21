@@ -165,24 +165,7 @@ def _validate_adr_content(content: str, console: "ConsoleType") -> bool:
             return False
 
         section_content = match.group(1).strip()
-        # Special handling for Consequences section - check subsections
-        if section.lower() == "consequences":
-            # Check if there's content under Positive, Negative, or Neutral
-            has_content = False
-            for subsection in ["Positive", "Negative", "Neutral"]:
-                sub_pattern = rf"^###\s+{subsection}\s*\n(.*?)(?=^###|^##|\Z)"
-                sub_match = re.search(
-                    sub_pattern, content, re.DOTALL | re.IGNORECASE | re.MULTILINE
-                )
-                if sub_match:
-                    sub_content = sub_match.group(1).strip()
-                    # Check for actual content (not just "- " or placeholder)
-                    if sub_content and sub_content != "-" and "list" not in sub_content.lower():
-                        has_content = True
-                        break
-            if not has_content:
-                console.print(f"[yellow]Warning: '{section}' section appears empty.[/yellow]")
-        elif not section_content or _is_placeholder_content(section_content):
+        if not section_content or _is_placeholder_content(section_content):
             console.print(
                 f"[red]Section '{section}' is empty or contains only placeholder text.[/red]"
             )
@@ -201,10 +184,9 @@ def _is_placeholder_content(content: str) -> bool:
         True if content appears to be placeholder text
     """
     placeholder_patterns = [
-        r"^what is the issue",
-        r"^what is the change",
-        r"^\*\*proposed\*\*",
-        r"^yyyy-mm-dd$",
+        r"^brief summary",
+        r"^why this decision",
+        r"^issue #xx",
     ]
     content_lower = content.lower().strip()
     return any(re.match(pattern, content_lower) for pattern in placeholder_patterns)

@@ -309,30 +309,20 @@ class TestGetAdrRequiredSections:
         result = get_adr_required_sections()
         assert isinstance(result, list)
 
-    def test_contains_context(self) -> None:
-        """Should contain Context section."""
+    def test_contains_status(self) -> None:
+        """Should contain Status section."""
         result = get_adr_required_sections()
-        assert "Context" in result
+        assert "Status" in result
 
     def test_contains_decision(self) -> None:
         """Should contain Decision section."""
         result = get_adr_required_sections()
         assert "Decision" in result
 
-    def test_contains_consequences(self) -> None:
-        """Should contain Consequences section."""
+    def test_contains_rationale(self) -> None:
+        """Should contain Rationale section."""
         result = get_adr_required_sections()
-        assert "Consequences" in result
-
-    def test_contains_status(self) -> None:
-        """Should contain Status section."""
-        result = get_adr_required_sections()
-        assert "Status" in result
-
-    def test_contains_date(self) -> None:
-        """Should contain Date section."""
-        result = get_adr_required_sections()
-        assert "Date" in result
+        assert "Rationale" in result
 
 
 class TestGetAdrAllSections:
@@ -348,12 +338,9 @@ class TestGetAdrAllSections:
         result = get_adr_all_sections()
         expected = [
             "Status",
-            "Date",
-            "Context",
             "Decision",
-            "Consequences",
-            "Participants",
-            "Related",
+            "Rationale",
+            "Related Issues",
         ]
         for section in expected:
             assert section in result, f"Missing section: {section}"

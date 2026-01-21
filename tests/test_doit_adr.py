@@ -63,40 +63,35 @@ class TestGetNextAdrNumber:
     def test_returns_sequential_number(self) -> None:
         """Test that function returns the next sequential number.
 
-        Since we have seed ADRs 0001-0007 in place,
-        the next number should be at least 8.
+        Since we have seed ADRs 0001-0012 in place,
+        the next number should be at least 13.
         """
         result = _get_next_adr_number()
-        # After seeding, should be at least 8
         assert result >= 1
 
 
 class TestIsPlaceholderContent:
     """Tests for _is_placeholder_content function."""
 
-    def test_placeholder_what_is_the_issue(self) -> None:
-        """Test detection of 'What is the issue' placeholder."""
-        assert _is_placeholder_content("What is the issue that we're seeing?") is True
+    def test_placeholder_brief_summary(self) -> None:
+        """Test detection of 'Brief summary' placeholder."""
+        assert _is_placeholder_content("Brief summary of what was decided.") is True
 
-    def test_placeholder_what_is_the_change(self) -> None:
-        """Test detection of 'What is the change' placeholder."""
-        assert _is_placeholder_content("What is the change that we're proposing?") is True
+    def test_placeholder_why_decision(self) -> None:
+        """Test detection of 'Why this decision' placeholder."""
+        assert _is_placeholder_content("Why this decision was made.") is True
 
-    def test_placeholder_proposed(self) -> None:
-        """Test detection of '**Proposed**' placeholder."""
-        assert _is_placeholder_content("**Proposed** | Accepted | Deprecated") is True
-
-    def test_placeholder_date(self) -> None:
-        """Test detection of 'YYYY-MM-DD' placeholder."""
-        assert _is_placeholder_content("YYYY-MM-DD") is True
+    def test_placeholder_issue_xx(self) -> None:
+        """Test detection of 'Issue #XX' placeholder."""
+        assert _is_placeholder_content("Issue #XX: Description") is True
 
     def test_real_content(self) -> None:
         """Test that real content is not detected as placeholder."""
         assert _is_placeholder_content("Use Redis for caching to improve performance.") is False
 
-    def test_real_date(self) -> None:
-        """Test that real dates are not detected as placeholder."""
-        assert _is_placeholder_content("2025-01-21") is False
+    def test_real_issue_reference(self) -> None:
+        """Test that real issue references are not detected as placeholder."""
+        assert _is_placeholder_content("Issue #123: Add caching support") is False
 
 
 class TestValidateAdrContent:
@@ -111,171 +106,116 @@ class TestValidateAdrContent:
     @patch("tools.doit.adr.get_adr_required_sections")
     def test_valid_content(self, mock_get_sections: MagicMock) -> None:
         """Test validation of valid ADR content."""
-        mock_get_sections.return_value = ["Context", "Decision", "Consequences"]
+        mock_get_sections.return_value = ["Status", "Decision", "Rationale"]
         content = """# ADR-0001: Test
 
 ## Status
 
 Accepted
 
-## Date
-
-2025-01-21
-
-## Context
-
-This is the context.
-
 ## Decision
 
-This is the decision.
+Use Redis for caching.
 
-## Consequences
+## Rationale
 
-### Positive
+Improves performance significantly.
 
-- Good thing
+## Related Issues
 
-### Negative
-
-- Bad thing
-
-### Neutral
-
-- Neutral thing
+- Issue #42: Add caching
 """
         console = self._mock_console()
         assert _validate_adr_content(content, console) is True
-
-    @patch("tools.doit.adr.get_adr_required_sections")
-    def test_missing_context_section(self, mock_get_sections: MagicMock) -> None:
-        """Test validation fails when Context section is missing."""
-        mock_get_sections.return_value = ["Context", "Decision", "Consequences"]
-        content = """# ADR-0001: Test
-
-## Status
-
-Accepted
-
-## Decision
-
-This is the decision.
-
-## Consequences
-
-### Positive
-
-- Good thing
-"""
-        console = self._mock_console()
-        assert _validate_adr_content(content, console) is False
 
     @patch("tools.doit.adr.get_adr_required_sections")
     def test_missing_decision_section(self, mock_get_sections: MagicMock) -> None:
         """Test validation fails when Decision section is missing."""
-        mock_get_sections.return_value = ["Context", "Decision", "Consequences"]
+        mock_get_sections.return_value = ["Status", "Decision", "Rationale"]
         content = """# ADR-0001: Test
 
 ## Status
 
 Accepted
 
-## Context
+## Rationale
 
-This is the context.
-
-## Consequences
-
-### Positive
-
-- Good thing
+Some rationale.
 """
         console = self._mock_console()
         assert _validate_adr_content(content, console) is False
 
     @patch("tools.doit.adr.get_adr_required_sections")
-    def test_missing_consequences_section(self, mock_get_sections: MagicMock) -> None:
-        """Test validation fails when Consequences section is missing."""
-        mock_get_sections.return_value = ["Context", "Decision", "Consequences"]
+    def test_missing_rationale_section(self, mock_get_sections: MagicMock) -> None:
+        """Test validation fails when Rationale section is missing."""
+        mock_get_sections.return_value = ["Status", "Decision", "Rationale"]
         content = """# ADR-0001: Test
 
 ## Status
 
 Accepted
 
-## Context
-
-This is the context.
-
 ## Decision
 
-This is the decision.
+Use Redis.
 """
         console = self._mock_console()
         assert _validate_adr_content(content, console) is False
 
     @patch("tools.doit.adr.get_adr_required_sections")
-    def test_empty_context_section(self, mock_get_sections: MagicMock) -> None:
-        """Test validation fails when Context section is empty."""
-        mock_get_sections.return_value = ["Context", "Decision", "Consequences"]
+    def test_empty_decision_section(self, mock_get_sections: MagicMock) -> None:
+        """Test validation fails when Decision section is empty."""
+        mock_get_sections.return_value = ["Status", "Decision", "Rationale"]
         content = """# ADR-0001: Test
 
-## Context
+## Status
+
+Accepted
 
 ## Decision
 
-This is the decision.
+## Rationale
 
-## Consequences
-
-### Positive
-
-- Good thing
+Some rationale.
 """
         console = self._mock_console()
         assert _validate_adr_content(content, console) is False
 
     @patch("tools.doit.adr.get_adr_required_sections")
-    def test_consequences_with_content(self, mock_get_sections: MagicMock) -> None:
-        """Test validation passes with content in consequences subsections."""
-        mock_get_sections.return_value = ["Context", "Decision", "Consequences"]
+    def test_placeholder_content_rejected(self, mock_get_sections: MagicMock) -> None:
+        """Test validation fails when section has placeholder content."""
+        mock_get_sections.return_value = ["Status", "Decision", "Rationale"]
         content = """# ADR-0001: Test
 
-## Context
+## Status
 
-Context here.
+Accepted
 
 ## Decision
 
-Decision here.
+Brief summary of what was decided.
 
-## Consequences
+## Rationale
 
-### Positive
-
-- This is a positive consequence
-
-### Negative
-
--
-
-### Neutral
-
--
+Why this decision was made.
 """
         console = self._mock_console()
-        assert _validate_adr_content(content, console) is True
+        assert _validate_adr_content(content, console) is False
 
     @patch("tools.doit.adr.get_adr_required_sections")
     def test_uses_template_required_sections(self, mock_get_sections: MagicMock) -> None:
         """Test that validation uses sections from template."""
-        # Only require Context
-        mock_get_sections.return_value = ["Context"]
+        # Only require Status and Decision
+        mock_get_sections.return_value = ["Status", "Decision"]
         content = """# ADR-0001: Test
 
-## Context
+## Status
 
-This is the context.
+Accepted
+
+## Decision
+
+Use Redis.
 """
         console = self._mock_console()
         assert _validate_adr_content(content, console) is True
