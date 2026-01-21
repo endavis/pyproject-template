@@ -35,6 +35,73 @@ uv run pytest
 doit coverage
 ```
 
+## Python Version Support Policy
+
+### Active Support
+
+Only the **last 3 major Python versions** are actively supported. This means:
+- Bug fixes and new features are tested against these versions
+- CI runs these versions on every PR (using bookend strategy - oldest + newest)
+- Documentation and examples target these versions
+
+**Current active versions:** Python 3.12, 3.13, 3.14
+
+### Passive Compatibility
+
+Older Python versions may continue to work but are not actively maintained:
+- We continue testing previous versions in CI via the `full-matrix` label
+- Once a version fails CI tests, it is removed from the matrix and marked incompatible
+- Users on older Python versions can use version-tagged releases (e.g., `v1.2.3-py310-final`)
+
+### Version Lifecycle
+
+| Stage | Description | CI Testing |
+|-------|-------------|------------|
+| **Active** | Last 3 major versions | Every PR (bookend strategy) |
+| **Passive** | Older versions still passing | On-demand (`full-matrix` label) |
+| **Deprecated** | Fails CI tests | Removed from matrix |
+
+### CI Matrix Strategy
+
+To balance test coverage with CI efficiency:
+
+| PR State | Python Versions Tested | Jobs |
+|----------|----------------------|------|
+| Default | Bookends only (oldest + newest) × 3 OSes | 6 |
+| `full-matrix` label | Middle versions only × 3 OSes | 3 per middle version |
+
+The **bookend strategy** tests the oldest and newest supported versions. If both pass, intermediate versions are assumed compatible. Use the `full-matrix` label when:
+- Making changes that might affect version compatibility
+- Preparing a release
+- Investigating compatibility issues
+
+### Configuration
+
+Python versions are configured in `.github/python-versions.json`:
+
+```json
+{
+  "oldest": "3.12",
+  "newest": "3.14"
+}
+```
+
+The CI workflow automatically derives:
+- **Bookends**: oldest + newest (tested on every PR)
+- **Middle versions**: everything between (tested when `full-matrix` label is added)
+
+When updating supported versions, edit this config file - no workflow changes needed.
+
+### Deprecation Process
+
+When a Python version starts failing CI:
+
+1. **Assess**: Determine if the failure is fixable without significant effort
+2. **Decide**: Fix compatibility or deprecate the version
+3. **Tag**: If deprecating, tag the last compatible release (e.g., `v1.2.3-py310-final`)
+4. **Update**: Remove version from CI matrix and update `pyproject.toml` classifiers
+5. **Document**: Update this documentation and release notes
+
 ## Pipeline Details (GitHub Actions)
 
 ### Recommended Workflow Structure
@@ -56,7 +123,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.12", "3.14"]  # Bookend strategy: oldest + newest
 
     steps:
       - uses: actions/checkout@v4
@@ -408,7 +475,7 @@ Using `tox`:
 ```ini
 # tox.ini
 [tox]
-envlist = py312,py313
+envlist = py312,py313,py314
 
 [testenv]
 deps =
@@ -422,12 +489,12 @@ commands = pytest {posargs}
 tox
 
 # Run on specific environment
-tox -e py313
+tox -e py314
 ```
 
 ## Merge Gate Workflow
 
-The repository uses a merge gate to ensure PRs are only merged after all CI checks pass.
+The repository uses a merge gate to ensure PRs are only merged after explicit approval.
 
 ### How It Works
 
@@ -455,10 +522,10 @@ jobs:
 
 ### The `ready-to-merge` Label
 
-This label serves as an explicit signal that a PR is ready for merge:
+This label is a **pure merge gate** - it signals that a PR is approved for merge but does not trigger additional CI runs. The default CI matrix (6 jobs) provides sufficient coverage.
 
 **When to add the label:**
-- All CI checks have passed (including full OS matrix)
+- All CI checks have passed
 - Code review is complete and approved
 - All review feedback has been addressed
 
@@ -468,6 +535,20 @@ This label serves as an explicit signal that a PR is ready for merge:
 gh pr edit <PR-NUMBER> --add-label "ready-to-merge"
 
 # Or via GitHub web UI: PR page → Labels → ready-to-merge
+```
+
+### The `full-matrix` Label
+
+Use this label to trigger comprehensive compatibility testing across all supported Python versions:
+
+**When to use:**
+- Changes that might affect Python version compatibility
+- Preparing a release
+- Investigating compatibility issues reported by users
+
+```bash
+# Add full-matrix label for comprehensive testing
+gh pr edit <PR-NUMBER> --add-label "full-matrix"
 ```
 
 ### Branch Protection Integration
@@ -481,30 +562,29 @@ Configure branch protection rules to require the merge gate:
 
 This ensures PRs cannot be merged until:
 - The `ready-to-merge` label is present
-- All other required CI checks pass
+- All CI checks pass (default 6-job matrix)
 
 ### Interaction with Approval Workflows
 
-The merge gate works alongside GitHub's approval requirement. If you have both enabled:
+The merge gate works alongside GitHub's approval requirement:
 
 | Check | Type | Purpose |
 |-------|------|---------|
 | Approvals | GitHub built-in | Ensures code review is complete |
-| CI checks | GitHub Actions | Ensures tests/lint/type-check pass |
-| Merge gate | Custom workflow | Ensures explicit "ready" signal via label |
+| CI checks | GitHub Actions | Tests code on bookend Python versions × all OSes |
+| Merge gate | Custom workflow | Explicit "ready" signal via label |
 
-**Recommended merge flow with approvals:**
+**Recommended merge flow:**
 
 ```
-PR opened → CI runs → Review/Approval → CI passes → Add label → Merge
+PR opened → CI runs (6 jobs) → Review/Approval → Add ready-to-merge label → Merge
 ```
 
-All checks are independent - they don't interfere with each other. Branch protection waits for ALL required checks to pass before allowing merge.
+**Optional full compatibility check:**
 
-**Why use both?**
-- Approvals ensure human review happened
-- CI ensures code quality
-- The label provides a final checkpoint, preventing accidental merges while CI is still running on the full matrix
+```
+PR opened → CI runs → Add full-matrix label → Full CI runs (9-15 jobs) → Review → Add ready-to-merge → Merge
+```
 
 ## Troubleshooting
 

@@ -60,6 +60,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [ADR-0010: Use conventional commits format](decisions/0010-use-conventional-commits-format.md)
 - [ADR-0011: Use pytest for testing](decisions/0011-use-pytest-for-testing.md)
 - [ADR-0012: Use mkdocs with Material theme for documentation](decisions/0012-use-mkdocs-with-material-theme-for-documentation.md)
+- [ADR-0013: Python version support policy with bookend CI strategy](decisions/0013-python-version-support-policy.md)
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
