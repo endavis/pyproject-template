@@ -11,91 +11,35 @@ tags:
 
 # API Reference
 
-Complete API documentation for Package Name.
+Complete API documentation for Package Name, auto-generated from source code docstrings.
+
+## Package Overview
+
+::: package_name
+    options:
+      show_root_heading: false
+      show_source: false
+      members: false
 
 ## Core Module
 
-### `package_name.core`
+The core module provides the main functionality of the package.
 
-Core functionality for the package.
+::: package_name.core
+    options:
+      show_root_heading: true
+      show_root_full_path: true
 
-#### Functions
+## Logging Module
 
-##### `greet()`
+Centralized logging configuration with console and structured file output.
 
-```python
-def greet(name: str = "World") -> str
-```
+::: package_name.logging
+    options:
+      show_root_heading: true
+      show_root_full_path: true
 
-Return a greeting message.
-
-**Parameters:**
-- `name` (str, optional): The name to greet. Defaults to "World".
-
-**Returns:**
-- `str`: A greeting message string.
-
-**Example:**
-
-```python
-from package_name import greet
-
-# Default greeting
-message = greet()
-print(message)  # Output: "Hello, World!"
-
-# Custom greeting
-message = greet("Python")
-print(message)  # Output: "Hello, Python!"
-```
-
-**Doctests:**
-
-```python
->>> greet()
-'Hello, World!'
->>> greet("Python")
-'Hello, Python!'
-```
-
-## Package Metadata
-
-### `__version__`
-
-```python
-from package_name import __version__
-```
-
-The current version of the package as a string.
-
-**Example:**
-
-```python
-import package_name
-print(package_name.__version__)  # Derived from the git tag by hatch-vcs
-```
-
-## Module Structure
-
-The package is organized as follows:
-
-```
-package_name/
-├── __init__.py      # Package initialization, exports greet and __version__
-├── _version.py      # Version information (generated from git tags at build time)
-└── core.py          # Core functionality (greet function)
-```
-
-## Type Hints
-
-All public APIs include type hints for better IDE support and type checking:
-
-```python
-from package_name import greet
-
-# Type checkers will infer the correct types
-message: str = greet("Python")
-```
+---
 
 ## Extending the Package
 
@@ -109,7 +53,18 @@ This template provides a starting point. To add your own functionality:
    """New module description."""
 
    def new_function(param: str) -> str:
-       """Function documentation."""
+       """Process a parameter.
+
+       Args:
+           param: The input parameter.
+
+       Returns:
+           The processed result.
+
+       Examples:
+           >>> new_function("test")
+           'Processed: test'
+       """
        return f"Processed: {param}"
    ```
 
@@ -120,105 +75,61 @@ This template provides a starting point. To add your own functionality:
    __all__ = ["__version__", "greet", "new_function"]
    ```
 
-3. Add tests in `tests/`:
-   ```python
-   # tests/test_new_module.py
-   from package_name import new_function
+3. Add documentation to this file:
+   ```markdown
+   ## New Module
 
-   def test_new_function() -> None:
-       """Test new_function."""
-       assert new_function("test") == "Processed: test"
+   ::: package_name.new_module
    ```
 
-### Adding Exception Classes
+4. Add tests in `tests/`.
+
+### Docstring Format
+
+This project uses **Google-style docstrings**. See the
+[Docstring Standards](../development/coding-standards.md#docstring-standards) for the full format.
+
+Quick reference:
 
 ```python
-# src/package_name/exceptions.py
-"""Package exceptions."""
+def example_function(param1: str, param2: int = 10) -> dict[str, Any]:
+    """Short description of the function.
 
-class PackageError(Exception):
-    """Base exception for package errors."""
-    pass
+    Longer description if needed, explaining the behavior
+    in more detail.
 
-class ValidationError(PackageError):
-    """Raised when validation fails."""
-    pass
+    Args:
+        param1: Description of param1.
+        param2: Description of param2. Defaults to 10.
+
+    Returns:
+        Description of what is returned.
+
+    Raises:
+        ValueError: When param1 is empty.
+
+    Examples:
+        >>> example_function("test")
+        {'result': 'test', 'count': 10}
+    """
 ```
 
-Export them:
+## Type Hints
+
+All public APIs include type hints for better IDE support and type checking:
 
 ```python
-# src/package_name/__init__.py
-from .exceptions import PackageError, ValidationError
+from package_name import greet
 
-__all__ = [
-    "__version__",
-    "greet",
-    "PackageError",
-    "ValidationError",
-]
+# Type checkers will infer the correct types
+message: str = greet("Python")
 ```
 
-### Adding CLI Support
+Run mypy to verify type hints:
 
-1. Add `click` or `typer` to dependencies in `pyproject.toml`
-
-2. Create CLI module:
-   ```python
-   # src/package_name/cli.py
-   """Command-line interface."""
-   import click
-   from . import greet
-
-   @click.command()
-   @click.argument("name", default="World")
-   def main(name: str) -> None:
-       """Greet someone."""
-       click.echo(greet(name))
-   ```
-
-3. Add entry point in `pyproject.toml`:
-   ```toml
-   [project.scripts]
-   package-cli = "package_name.cli:main"
-   ```
-
-## Documentation Best Practices
-
-When adding new functions or classes:
-
-1. **Always include type hints**:
-   ```python
-   def process(data: str, validate: bool = True) -> dict[str, Any]:
-       """Process data."""
-   ```
-
-2. **Write comprehensive docstrings**:
-   ```python
-   def process(data: str, validate: bool = True) -> dict[str, Any]:
-       """Process input data.
-
-       Args:
-           data: The input data to process.
-           validate: Whether to validate the data. Defaults to True.
-
-       Returns:
-           A dictionary containing the processed results.
-
-       Raises:
-           ValueError: If validation fails and validate is True.
-
-       Example:
-           >>> process("test")
-           {'result': 'test'}
-       """
-   ```
-
-3. **Include examples in docstrings**
-
-4. **Update this API documentation**
-
-5. **Add tests for all new functionality**
+```bash
+uv run mypy src/
+```
 
 ## Testing
 
@@ -226,31 +137,8 @@ All public APIs should have comprehensive tests:
 
 ```bash
 # Run all tests
-uv run pytest -v
+doit test
 
 # Run with coverage
 uv run pytest --cov=package_name --cov-report=term-missing
-
-# Run specific test
-uv run pytest tests/test_example.py::test_version -v
 ```
-
-## Type Checking
-
-Run mypy to verify type hints:
-
-```bash
-# Check entire source
-uv run mypy src/
-
-# Check specific file
-uv run mypy src/package_name/core.py
-```
-
-## Changelog
-
-See [CHANGELOG.md](https://github.com/username/package_name/blob/main/CHANGELOG.md) for version history and changes.
-
-## Contributing
-
-See [CONTRIBUTING.md](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md) for information on contributing to the API.
