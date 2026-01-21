@@ -6,6 +6,9 @@ on:
     types: [opened, synchronize, reopened, labeled]
   workflow_call:
 
+permissions:
+  contents: read
+
 jobs:
   setup:
     # Skip CI if triggered by a label event that isn't 'full-matrix'
