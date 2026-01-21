@@ -56,6 +56,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Committing** | `.github/CONTRIBUTING.md` (Commit Guidelines) | `<type>: <subject>` format. |
 | **New Dependency** | `.github/CONTRIBUTING.md` (Dependencies) | "Ask First" policy. |
 | **Creating Code** | `.claude/CLAUDE.md` (TodoWrite) | Plan -> Test -> Code loop. |
+| **Architectural Decision** | `docs/decisions/README.md` | Check for related ADRs to update. |
 
 ### 6. Decision Framework
 
@@ -114,7 +115,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **No Speculation:** Don't read files you don't need.
 
 ## Critical Reminders
-- **Flow:** Issue (`doit issue`) -> Branch -> Commit -> PR (`doit pr`). NEVER commit to main.
+- **Flow:** Issue (`doit issue`) -> Branch -> Commit -> PR (`doit pr`) -> Merge (`doit pr_merge`). NEVER commit to main.
 - **Scope:** Never mix refactoring, features, and docs in one PR. Create separate branches.
 - **Verify:** Check file paths (`ls`) and branch (`git status`) before assuming they exist.
 - **Security:** NEVER bypass security checks (e.g., `--no-verify`, ignoring secrets).
@@ -125,8 +126,9 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Tests:** Creating code = Creating tests. No exceptions.
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
-- **PRs:** Use `doit pr` to create PRs with proper template format.
+- **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format.
 - **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Fixed in PR #XXX".
+- **ADRs:** When implementing architectural decisions (typically `feat` or `refactor`, rarely `fix`), update related ADRs in `docs/decisions/` to add the issue link. Create new ADRs for significant decisions using `doit adr`. Every ADR must link to the documentation in `docs/` that describes the implementation. Doc and chore issues do not need ADRs. Issues with the `needs-adr` label require an ADR before the PR can be merged.
 
 ## Workflow Commands (for AI agents)
 ```bash
@@ -139,4 +141,26 @@ doit issue --type=chore --title="Update CI" --body="## Description\n..."
 # Create PR (non-interactive)
 doit pr --title="feat: add feature" --body="## Description\n..."
 doit pr --title="fix: bug fix" --body-file=pr.md
+
+# Merge PR (enforces commit format)
+doit pr_merge                    # Merge PR for current branch
+doit pr_merge --pr=123           # Merge specific PR
+
+# Create ADR (non-interactive)
+doit adr --title="Use Redis for caching" --body="## Status\nAccepted\n..."
+doit adr --title="Use Redis" --body-file=adr.md
 ```
+
+## PR Checklist (for AI agents)
+
+Before creating a PR, verify:
+
+- [ ] `doit check` passes (tests, lint, type-check, security)
+- [ ] Branch name follows convention: `<type>/<issue>-<description>`
+- [ ] Commits follow conventional format: `<type>: <subject>`
+- [ ] PR title follows conventional format: `<type>: <subject>`
+- [ ] PR description references the issue: "Closes #XX" or "Part of #XX"
+- [ ] If issue has `needs-adr` label: ADR created and included in PR
+- [ ] If implementing architectural decision: Related ADR updated with issue link
+- [ ] If ADR created/updated: Links to documentation in `docs/` included
+- [ ] Documentation updated if behavior changed

@@ -11,7 +11,7 @@ from doit.tools import title_with_actions
 from rich.console import Console
 from rich.panel import Panel
 
-from tools.tasks.templates import get_issue_template, get_pr_template, get_required_sections
+from tools.doit.templates import get_issue_template, get_pr_template, get_required_sections
 
 if TYPE_CHECKING:
     from rich.console import Console as ConsoleType
@@ -447,6 +447,229 @@ def task_pr() -> dict[str, Any]:
                 "type": bool,
                 "default": False,
                 "help": "Create as draft PR",
+            },
+        ],
+        "title": title_with_actions,
+    }
+
+
+def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any] | None:
+    """Get PR information from GitHub API.
+
+    Args:
+        pr_number: PR number, or None to use current branch's PR
+        console: Rich console for output
+
+    Returns:
+        Dict with PR info, or None if not found
+    """
+    import json
+
+    cmd = ["gh", "pr", "view", "--json", "number,title,body,state"]
+    if pr_number:
+        cmd.append(pr_number)
+
+    try:
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+        data: dict[str, Any] = json.loads(result.stdout)
+        return data
+    except subprocess.CalledProcessError as e:
+        if "no pull requests found" in e.stderr.lower():
+            console.print("[red]No PR found for current branch.[/red]")
+        else:
+            console.print(f"[red]Failed to get PR info: {e.stderr}[/red]")
+        return None
+
+
+def _extract_linked_issues(body: str) -> dict[str, list[str]]:
+    """Extract linked issue numbers from PR body with relationship type.
+
+    Looks for patterns like:
+    - Closes #123, Fixes #456, Resolves #789 → "closes"
+    - Part of #101 → "part_of"
+
+    Args:
+        body: PR body text
+
+    Returns:
+        Dict with "closes" and "part_of" keys, each containing list of issue numbers
+    """
+    result: dict[str, list[str]] = {"closes": [], "part_of": []}
+    seen: set[str] = set()
+
+    # Pattern for closes/fixes/resolves
+    closes_pattern = r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)"
+    for match in re.finditer(closes_pattern, body, re.IGNORECASE):
+        issue = match.group(1)
+        if issue not in seen:
+            seen.add(issue)
+            result["closes"].append(issue)
+
+    # Pattern for part of
+    part_of_pattern = r"part\s+of\s+#(\d+)"
+    for match in re.finditer(part_of_pattern, body, re.IGNORECASE):
+        issue = match.group(1)
+        if issue not in seen:
+            seen.add(issue)
+            result["part_of"].append(issue)
+
+    return result
+
+
+def _format_merge_subject(title: str, pr_number: int, issues: dict[str, list[str]]) -> str:
+    """Format the merge commit subject line.
+
+    Args:
+        title: PR title (should be in conventional commit format)
+        pr_number: PR number
+        issues: Dict with "closes" and "part_of" keys containing issue numbers
+
+    Returns:
+        Formatted subject: "<type>: <subject> (merges PR #XX, closes #YY)"
+        or: "<type>: <subject> (merges PR #XX, part of #YY)"
+    """
+    closes = issues.get("closes", [])
+    part_of = issues.get("part_of", [])
+
+    # Build the suffix parts
+    parts = [f"merges PR #{pr_number}"]
+
+    if closes:
+        issue_refs = ", ".join(f"#{i}" for i in closes)
+        parts.append(f"closes {issue_refs}")
+
+    if part_of:
+        issue_refs = ", ".join(f"#{i}" for i in part_of)
+        parts.append(f"part of {issue_refs}")
+
+    suffix = f"({', '.join(parts)})"
+    return f"{title} {suffix}"
+
+
+def task_pr_merge() -> dict[str, Any]:
+    """Merge a PR with properly formatted commit message.
+
+    This task enforces the merge commit format:
+        <type>: <subject> (merges PR #XX, closes #YY)
+
+    Uses squash merge with a custom subject line to ensure consistent
+    commit history that matches the documented format.
+
+    Examples:
+        doit pr_merge                    # Merge PR for current branch
+        doit pr_merge --pr=123           # Merge specific PR
+        doit pr_merge --delete-branch    # Also delete the branch after merge
+    """
+
+    def merge_pr(
+        pr: str | None = None,
+        delete_branch: bool = True,
+    ) -> None:
+        console = Console()
+        console.print()
+        console.print(Panel.fit("[bold cyan]Merging Pull Request[/bold cyan]", border_style="cyan"))
+        console.print()
+
+        # Get PR info
+        pr_info = _get_pr_info(pr, console)
+        if not pr_info:
+            sys.exit(1)
+
+        pr_number = pr_info["number"]
+        pr_title = pr_info["title"]
+        pr_body = pr_info.get("body", "") or ""
+        pr_state = pr_info.get("state", "")
+
+        console.print(f"[dim]PR #{pr_number}: {pr_title}[/dim]")
+
+        # Check PR state
+        if pr_state.upper() != "OPEN":
+            console.print(f"[red]PR is not open (state: {pr_state}).[/red]")
+            sys.exit(1)
+
+        # Validate PR title format
+        title_pattern = re.compile(r"^(feat|fix|refactor|docs|test|chore|ci|perf)(\(.+\))?:\s.+")
+        if not title_pattern.match(pr_title):
+            console.print("[red]PR title does not follow conventional commit format.[/red]")
+            console.print("[yellow]Expected: <type>: <subject>[/yellow]")
+            console.print("[yellow]Example: feat: add user authentication[/yellow]")
+            sys.exit(1)
+
+        # Extract linked issues
+        issues = _extract_linked_issues(pr_body)
+        has_issues = issues["closes"] or issues["part_of"]
+        if has_issues:
+            all_issues = issues["closes"] + issues["part_of"]
+            console.print(f"[dim]Linked issues: {', '.join(f'#{i}' for i in all_issues)}[/dim]")
+        else:
+            console.print("[yellow]Warning: No linked issues found in PR body.[/yellow]")
+
+        # Format merge subject
+        merge_subject = _format_merge_subject(pr_title, pr_number, issues)
+        console.print("\n[cyan]Merge commit subject:[/cyan]")
+        console.print(f"  [bold]{merge_subject}[/bold]")
+
+        # Build merge command
+        cmd = [
+            "gh",
+            "pr",
+            "merge",
+            str(pr_number),
+            "--squash",
+            "--subject",
+            merge_subject,
+        ]
+        if delete_branch:
+            cmd.append("--delete-branch")
+
+        # Execute merge
+        console.print("\n[cyan]Merging...[/cyan]")
+        try:
+            subprocess.run(cmd, check=True)
+            console.print()
+            console.print(
+                Panel.fit(
+                    f"[bold green]PR #{pr_number} merged successfully![/bold green]\n\n"
+                    f"Commit: {merge_subject}",
+                    border_style="green",
+                )
+            )
+
+            # Reminder to close linked issues
+            if issues["closes"]:
+                close_commands = [
+                    f'gh issue close {issue} --comment "Fixed in PR #{pr_number}"'
+                    for issue in issues["closes"]
+                ]
+                console.print()
+                console.print(
+                    Panel.fit(
+                        "[bold yellow]Reminder: Close linked issues manually[/bold yellow]\n\n"
+                        + "\n".join(close_commands),
+                        border_style="yellow",
+                    )
+                )
+        except subprocess.CalledProcessError as e:
+            console.print("[red]Failed to merge PR.[/red]")
+            if e.stderr:
+                console.print(f"[red]{e.stderr}[/red]")
+            sys.exit(1)
+
+    return {
+        "actions": [merge_pr],
+        "params": [
+            {
+                "name": "pr",
+                "long": "pr",
+                "default": None,
+                "help": "PR number to merge (default: PR for current branch)",
+            },
+            {
+                "name": "delete_branch",
+                "long": "delete-branch",
+                "type": bool,
+                "default": True,
+                "help": "Delete branch after merge (default: True)",
             },
         ],
         "title": title_with_actions,

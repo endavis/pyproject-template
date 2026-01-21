@@ -173,6 +173,26 @@ Force push, delete, and merge operations are only blocked when targeting protect
 | `git merge --ff-only branch` (on main) | ALLOWED (fast-forward only) |
 | `git merge branch` (on feature) | ALLOWED |
 
+#### Blocked Workflow Commands
+
+These commands should use `doit` wrappers or require user approval:
+
+| Command | Use Instead | Reason |
+|---------|-------------|--------|
+| `gh issue create` | `doit issue --type=<type>` | Ensures proper template and labels |
+| `gh pr create` | `doit pr` | Ensures proper template format |
+| `gh pr merge` | `doit pr_merge` | Enforces merge commit format: `<type>: <subject> (merges PR #XX, closes #YY)` |
+| `uv add` | User runs manually | Dependencies require human approval - suggest package, let user run command |
+| `doit release*` | User runs manually | Releases require human approval - AI can help prepare but not execute |
+
+#### Governance Labels
+
+Some labels are governance controls that require human approval. AI agents are blocked from adding these labels:
+
+| Label | Reason |
+|-------|--------|
+| `ready-to-merge` | Signals human approval that PR is ready for merge. Add manually via `gh pr edit --add-label ready-to-merge` or GitHub web UI. |
+
 ### Adding New Patterns
 
 Edit `tools/hooks/ai/block-dangerous-commands.py`:

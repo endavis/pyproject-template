@@ -18,6 +18,7 @@ classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "License :: OSI Approved :: MIT License",
     "Intended Audience :: Developers",
     "Topic :: Software Development :: Libraries",
@@ -105,6 +106,8 @@ ignore = [
 "tools/pyproject_template/*.py" = [
     "E501",    # Line too long
     "RUF001",  # Ambiguous unicode
+    "RUF005",  # Tuple concatenation (stylistic preference)
+    "RUF022",  # __all__ not sorted (intentionally grouped by category)
     "SIM102",  # Nested if
 ]
 

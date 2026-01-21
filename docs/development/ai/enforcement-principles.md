@@ -180,6 +180,8 @@ These patterns are blocked across all AI agents. Claude and Gemini use the share
 | Merge commit on protected branch | `git merge` (without `--ff-only`) on `main` | Hook | Hook | — |
 | `gh pr create` | Use `doit pr` instead | Hook | Hook | Config |
 | `gh issue create` | Use `doit issue` instead | Hook | Hook | Config |
+| `uv add` | User runs manually | Hook | Hook | Config |
+| `doit release*` | User runs manually | Hook | Hook | Config |
 
 > **Note**: "Hook" = `block-dangerous-commands.py`, "Config" = `.codex/config.toml` approval policy, "—" = not enforced for this agent.
 
@@ -189,6 +191,8 @@ These patterns are blocked across all AI agents. Claude and Gemini use the share
 |------|------|--------|
 | No commits to `main` | `no-commit-to-main` | Blocks commit with guidance message |
 | Branch naming convention | `check-branch-name` | Requires `<type>/<issue#>-<description>` format |
+| No local config files | `no-local-config` | Blocks `*.local` and `*.local.*` files (allows `*.local.example`) |
+| Protect dynamic version | `protect-dynamic-version` | Blocks changes to `dynamic =` in pyproject.toml |
 | Conventional commits | `conventional-pre-commit` | Requires `<type>: <subject>` format |
 | Code formatting | `ruff-format` | Auto-fixes formatting issues |
 | Linting | `ruff` | Auto-fixes linting issues |
@@ -269,20 +273,6 @@ When blocking a command, provide an approved alternative when possible. This pro
 ## TODO: Potential Future Enforcement
 
 The following AGENTS.md rules are currently instruction-only and could benefit from automated enforcement:
-
-### High Priority
-
-| Rule | Current State | Potential Enforcement |
-|------|---------------|----------------------|
-| "Never run `doit release` without explicit command" | Instruction only | Hook to block `doit release` (see issue #164) |
-
-### Medium Priority
-
-| Rule | Current State | Potential Enforcement |
-|------|---------------|----------------------|
-| "Never edit `pyproject.toml` version" | Instruction only | Pre-commit hook to block changes to `dynamic =` line (see issue #163). Build process catches invalid static+dynamic via PEP 621. |
-| "Ask before adding new dependencies" | Instruction only | Block `uv add` in AI hooks - agent suggests, user runs manually (see issue #166) |
-| "Protect user config (`.envrc.local`, `settings.local.json`)" | Instruction only | Pre-commit hook to block commits containing files with `.local` or `.local.` in name (excluding `.local.example`). Matches `*.local`, `*.local.*` as distinct segments, not substrings (see issue #165). |
 
 ### Low Priority / Difficult to Automate
 

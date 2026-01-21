@@ -57,6 +57,7 @@ All template tools are located in `tools/pyproject_template/`:
 | `configure.py` | Replace placeholders with your project info |
 | `migrate_existing_project.py` | Copy template files to existing project |
 | `check_template_updates.py` | Compare project against latest template |
+| `cleanup.py` | Remove template files after setup |
 
 See the **[Template Manager](manage.md)** for the recommended interactive interface, or the **[Tools Reference](tools-reference.md)** for detailed CLI documentation of individual tools.
 

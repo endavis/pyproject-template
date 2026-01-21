@@ -83,17 +83,49 @@ EOF
     # branch, these would be BLOCK instead. The hook checks current branch.
     ("git merge some-branch", "ALLOW", "merge on feature branch"),
     ("git merge origin/main", "ALLOW", "merge origin/main on feat"),
-    # === SHOULD BLOCK - Direct gh issue/pr create (use doit wrappers) ===
+    # === SHOULD BLOCK - Direct gh issue/pr create/merge (use doit wrappers) ===
     ("gh issue create --title 'test'", "BLOCK", "gh issue create"),
     ("gh pr create --title 'test'", "BLOCK", "gh pr create"),
     ('gh issue create --title "test" --body "body"', "BLOCK", "gh issue create full"),
     ("gh pr create --fill", "BLOCK", "gh pr create fill"),
+    ("gh pr merge 123", "BLOCK", "gh pr merge"),
+    ("gh pr merge --squash", "BLOCK", "gh pr merge squash"),
+    ("gh pr merge 123 --squash --delete-branch", "BLOCK", "gh pr merge full"),
+    # === SHOULD BLOCK - uv add (dependencies require user approval) ===
+    ("uv add requests", "BLOCK", "uv add single package"),
+    ("uv add requests httpx", "BLOCK", "uv add multiple packages"),
+    ("uv add 'requests>=2.0'", "BLOCK", "uv add with version"),
+    ("uv add --dev pytest", "BLOCK", "uv add dev dependency"),
+    # === SHOULD ALLOW - Other uv commands ===
+    ("uv sync", "ALLOW", "uv sync"),
+    ("uv run pytest", "ALLOW", "uv run"),
+    ("uv pip list", "ALLOW", "uv pip list"),
+    ("uv remove requests", "ALLOW", "uv remove"),
+    # === SHOULD BLOCK - doit release (releases require user to run manually) ===
+    ("doit release", "BLOCK", "doit release"),
+    ("doit release --dry-run", "BLOCK", "doit release dry-run"),
+    ("doit release_dev", "BLOCK", "doit release_dev"),
+    ("doit release_tag", "BLOCK", "doit release_tag"),
+    ("doit release_pr", "BLOCK", "doit release_pr"),
+    # === SHOULD ALLOW - Other doit commands ===
+    ("doit check", "ALLOW", "doit check"),
+    ("doit test", "ALLOW", "doit test"),
+    ("doit pr", "ALLOW", "doit pr"),
+    ("doit issue --type=bug", "ALLOW", "doit issue"),
+    # === SHOULD BLOCK - Governance labels ===
+    ("gh pr edit 123 --add-label ready-to-merge", "BLOCK", "add ready-to-merge"),
+    ("gh pr edit --add-label ready-to-merge", "BLOCK", "add ready-to-merge no PR"),
+    ("gh issue edit 45 --add-label ready-to-merge", "BLOCK", "issue ready-to-merge"),
+    # === SHOULD ALLOW - Other labels ===
+    ("gh pr edit 123 --add-label bug", "ALLOW", "add bug label"),
+    ("gh pr edit 123 --add-label enhancement", "ALLOW", "add enhancement label"),
     # === SHOULD ALLOW - Other gh commands ===
     ("gh issue list", "ALLOW", "gh issue list"),
     ("gh pr list", "ALLOW", "gh pr list"),
     ("gh issue view 123", "ALLOW", "gh issue view"),
     ("gh pr view 456", "ALLOW", "gh pr view"),
     ("gh issue close 123", "ALLOW", "gh issue close"),
+    ("gh pr close 123", "ALLOW", "gh pr close"),
 ]
 
 

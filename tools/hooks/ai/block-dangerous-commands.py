@@ -41,10 +41,30 @@ DANGEROUS_SEQUENCES = [
 # Force push flags
 FORCE_PUSH_FLAGS = {"--force", "-f", "--force-with-lease"}
 
-# Blocked workflow commands - use doit wrappers instead
+# Blocked workflow commands - use doit wrappers or require user approval
 BLOCKED_WORKFLOW_COMMANDS = {
     ("gh", "issue", "create"): "Use 'doit issue --type=<type>' instead of 'gh issue create'",
     ("gh", "pr", "create"): "Use 'doit pr' instead of 'gh pr create'",
+    ("gh", "pr", "merge"): "Use 'doit pr_merge' instead of 'gh pr merge'",
+    ("uv", "add"): (
+        "Adding dependencies requires user approval. "
+        "Suggest the package and let the user run 'uv add <package>' manually."
+    ),
+    ("doit", "release"): (
+        "Releases must be run manually by the user, not by AI agents. "
+        "AI can help prepare (update changelog, verify CI) but not execute releases."
+    ),
+    ("doit", "release_dev"): "Releases must be run manually by the user, not by AI agents.",
+    ("doit", "release_tag"): "Releases must be run manually by the user, not by AI agents.",
+    ("doit", "release_pr"): "Releases must be run manually by the user, not by AI agents.",
+}
+
+# Governance labels that require human approval - AI should never add these
+GOVERNANCE_LABELS = {
+    "ready-to-merge": (
+        "The 'ready-to-merge' label is a governance control requiring human approval. "
+        "Add this label manually via 'gh pr edit --add-label ready-to-merge' or the GitHub web UI."
+    ),
 }
 
 
@@ -215,6 +235,34 @@ def check_blocked_workflow_commands(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
+def check_governance_labels(tokens: list[str]) -> tuple[bool, str]:
+    """
+    Check if command attempts to add a governance label.
+
+    Governance labels (like 'ready-to-merge') require human approval and
+    should never be added by AI agents.
+    """
+    tokens_lower = [t.lower() for t in tokens]
+
+    # Check for: gh pr edit --add-label <governance-label>
+    # or: gh issue edit --add-label <governance-label>
+    if "gh" not in tokens_lower:
+        return False, ""
+
+    if "edit" not in tokens_lower:
+        return False, ""
+
+    if "--add-label" not in tokens_lower:
+        return False, ""
+
+    # Check if any governance label is being added
+    for label, reason in GOVERNANCE_LABELS.items():
+        if label.lower() in tokens_lower:
+            return True, reason
+
+    return False, ""
+
+
 def check_merge_to_protected(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if command is a merge that would create a merge commit on a protected branch.
@@ -253,6 +301,8 @@ def check_command(command: str) -> tuple[bool, str]:
     3. Force push to protected branches
     4. Deletion of protected branches
     5. Merge commits on protected branches
+    6. Blocked workflow commands
+    7. Governance labels
 
     Returns:
         (is_dangerous, reason)
@@ -286,6 +336,11 @@ def check_command(command: str) -> tuple[bool, str]:
 
     # Check for blocked workflow commands
     is_dangerous, reason = check_blocked_workflow_commands(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for governance labels
+    is_dangerous, reason = check_governance_labels(tokens)
     if is_dangerous:
         return True, reason
 
