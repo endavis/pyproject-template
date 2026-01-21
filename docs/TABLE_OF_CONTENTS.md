@@ -9,6 +9,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 
 ### For Users
 <!-- BEGIN:audience=users -->
+- [API Development Guide](examples/api.md) - Building REST APIs with FastAPI - patterns, testing, and best practices
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
@@ -29,6 +30,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
 - [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
+- [API Development Guide](examples/api.md) - Building REST APIs with FastAPI - patterns, testing, and best practices
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
@@ -69,6 +71,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
 - [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
+- [API Development Guide](examples/api.md) - Building REST APIs with FastAPI - patterns, testing, and best practices
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
 - [Architecture Decision Records](decisions/README.md)
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
