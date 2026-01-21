@@ -101,6 +101,17 @@ EOF
     ("uv run pytest", "ALLOW", "uv run"),
     ("uv pip list", "ALLOW", "uv pip list"),
     ("uv remove requests", "ALLOW", "uv remove"),
+    # === SHOULD BLOCK - doit release (releases require user to run manually) ===
+    ("doit release", "BLOCK", "doit release"),
+    ("doit release --dry-run", "BLOCK", "doit release dry-run"),
+    ("doit release_dev", "BLOCK", "doit release_dev"),
+    ("doit release_tag", "BLOCK", "doit release_tag"),
+    ("doit release_pr", "BLOCK", "doit release_pr"),
+    # === SHOULD ALLOW - Other doit commands ===
+    ("doit check", "ALLOW", "doit check"),
+    ("doit test", "ALLOW", "doit test"),
+    ("doit pr", "ALLOW", "doit pr"),
+    ("doit issue --type=bug", "ALLOW", "doit issue"),
     # === SHOULD BLOCK - Governance labels ===
     ("gh pr edit 123 --add-label ready-to-merge", "BLOCK", "add ready-to-merge"),
     ("gh pr edit --add-label ready-to-merge", "BLOCK", "add ready-to-merge no PR"),
