@@ -285,6 +285,8 @@ def task_issue() -> dict[str, Any]:
                     border_style="green",
                 )
             )
+            console.print()
+            console.print("[dim]Note: Issue templates are in .github/ISSUE_TEMPLATE/[/dim]")
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to create issue:[/red]")
             console.print(f"[red]{e.stderr}[/red]")
@@ -425,6 +427,8 @@ def task_pr() -> dict[str, Any]:
                     border_style="green",
                 )
             )
+            console.print()
+            console.print("[dim]Note: PR template is at .github/pull_request_template.md[/dim]")
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to create PR:[/red]")
             console.print(f"[red]{e.stderr}[/red]")
