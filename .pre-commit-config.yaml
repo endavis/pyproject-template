@@ -120,3 +120,26 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # Prevent committing local config files
+      - id: no-local-config
+        name: Prevent committing local config files
+        entry: |
+          bash -c '
+          # Find staged files with .local or .local. in name (as distinct segment, not substring)
+          LOCAL_FILES=$(git diff --cached --name-only | grep -E "\.local$|\.local\." | grep -v "\.local\.example" || true)
+          if [[ -n "$LOCAL_FILES" ]]; then
+            echo "❌ ERROR: Local config files should not be committed!"
+            echo ""
+            echo "The following files appear to be user-specific configs:"
+            echo "$LOCAL_FILES" | sed "s/^/  - /"
+            echo ""
+            echo "These files are gitignored for a reason - they may contain"
+            echo "user-specific settings, paths, or sensitive data."
+            echo ""
+            echo "If this is a template, rename it to include .example (e.g., .envrc.local.example)"
+            exit 1
+          fi'
+        language: system
+        pass_filenames: false
+        always_run: true
