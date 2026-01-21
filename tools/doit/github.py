@@ -248,6 +248,8 @@ def task_issue() -> dict[str, Any]:
         sections = _parse_markdown_sections(body_content)
         if not _validate_issue_content(sections, type, console):
             console.print("[red]Issue content validation failed.[/red]")
+            console.print()
+            console.print(f"[yellow]See template: .github/ISSUE_TEMPLATE/{type}.yml[/yellow]")
             sys.exit(1)
 
         # Get title if not provided
@@ -285,8 +287,6 @@ def task_issue() -> dict[str, Any]:
                     border_style="green",
                 )
             )
-            console.print()
-            console.print("[dim]Note: Issue templates are in .github/ISSUE_TEMPLATE/[/dim]")
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to create issue:[/red]")
             console.print(f"[red]{e.stderr}[/red]")
@@ -401,6 +401,8 @@ def task_pr() -> dict[str, Any]:
         description = sections.get("Description", "").strip()
         if not description:
             console.print("[red]Description is required.[/red]")
+            console.print()
+            console.print("[yellow]See template: .github/pull_request_template.md[/yellow]")
             sys.exit(1)
 
         # Get title if not provided
@@ -427,8 +429,6 @@ def task_pr() -> dict[str, Any]:
                     border_style="green",
                 )
             )
-            console.print()
-            console.print("[dim]Note: PR template is at .github/pull_request_template.md[/dim]")
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to create PR:[/red]")
             console.print(f"[red]{e.stderr}[/red]")
