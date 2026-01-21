@@ -48,10 +48,19 @@ Complete index of all documentation, organized by audience and as a full alphabe
 
 ## Complete Index
 <!-- BEGIN:all -->
+- [ADR-0001: Use uv for package management](decisions/0001-use-uv-for-package-management.md)
+- [ADR-0002: Use doit for task automation](decisions/0002-use-doit-for-task-automation.md)
+- [ADR-0003: Use ruff for linting and formatting](decisions/0003-use-ruff-for-linting-and-formatting.md)
+- [ADR-0004: Auto-discover doit tasks from modules](decisions/0004-auto-discover-doit-tasks.md)
+- [ADR-0005: AI agent command restrictions via hooks](decisions/0005-ai-agent-command-restrictions.md)
+- [ADR-0006: Merge-gate workflow requiring ready-to-merge label](decisions/0006-merge-gate-workflow.md)
+- [ADR-0007: Use mypy for static type checking](decisions/0007-use-mypy-for-type-checking.md)
+- [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
 - [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
+- [Architecture Decision Records](decisions/README.md)
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
