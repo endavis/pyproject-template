@@ -264,13 +264,19 @@ def configure_branch_protection(
             Logger.warning("No rulesets found in template repository")
             return True  # Not a failure, just nothing to do
 
+        # Get existing rulesets from target repository to check for duplicates
+        existing_rulesets = GitHubCLI.api(f"repos/{repo_full}/rulesets")
+        existing_by_name: dict[str, int] = {
+            ruleset["name"]: ruleset["id"] for ruleset in existing_rulesets
+        }
+
         # Replicate each ruleset
         for template_ruleset in template_rulesets:
             # Get full ruleset details
             ruleset_id = template_ruleset["id"]
             full_ruleset = GitHubCLI.api(f"repos/{template_repo}/rulesets/{ruleset_id}")
 
-            # Prepare ruleset data for creation (remove read-only fields)
+            # Prepare ruleset data (remove read-only fields)
             ruleset_data = {
                 "name": full_ruleset["name"],
                 "target": full_ruleset["target"],
@@ -280,13 +286,26 @@ def configure_branch_protection(
                 "rules": full_ruleset.get("rules", []),
             }
 
-            # Create ruleset in new repository
-            GitHubCLI.api(
-                f"repos/{repo_full}/rulesets",
-                method="POST",
-                data=ruleset_data,
-            )
-            Logger.success(f"Ruleset '{full_ruleset['name']}' configured")
+            ruleset_name = full_ruleset["name"]
+
+            # Check if ruleset already exists
+            if ruleset_name in existing_by_name:
+                # Update existing ruleset
+                existing_id = existing_by_name[ruleset_name]
+                GitHubCLI.api(
+                    f"repos/{repo_full}/rulesets/{existing_id}",
+                    method="PUT",
+                    data=ruleset_data,
+                )
+                Logger.success(f"Ruleset '{ruleset_name}' updated")
+            else:
+                # Create new ruleset
+                GitHubCLI.api(
+                    f"repos/{repo_full}/rulesets",
+                    method="POST",
+                    data=ruleset_data,
+                )
+                Logger.success(f"Ruleset '{ruleset_name}' created")
 
         return True
 

@@ -62,11 +62,12 @@ class TestConfigureRepositorySettings:
 class TestConfigureBranchProtection:
     """Tests for configure_branch_protection function."""
 
-    def test_configure_branch_protection_success(self) -> None:
-        """Test successful branch protection configuration."""
+    def test_configure_branch_protection_creates_new_ruleset(self) -> None:
+        """Test creating a new ruleset when none exists."""
         from tools.pyproject_template.repo_settings import configure_branch_protection
 
-        mock_rulesets = [{"id": 1, "name": "main-protection"}]
+        mock_template_rulesets = [{"id": 1, "name": "main-protection"}]
+        mock_existing_rulesets: list[dict[str, object]] = []  # No existing rulesets
         mock_full_ruleset = {
             "id": 1,
             "name": "main-protection",
@@ -79,10 +80,54 @@ class TestConfigureBranchProtection:
 
         with patch(
             "tools.pyproject_template.repo_settings.GitHubCLI.api",
-            side_effect=[mock_rulesets, mock_full_ruleset, None],
-        ):
+            side_effect=[
+                mock_template_rulesets,  # GET template rulesets
+                mock_existing_rulesets,  # GET existing rulesets in target repo
+                mock_full_ruleset,  # GET full ruleset details
+                None,  # POST new ruleset
+            ],
+        ) as mock_api:
             result = configure_branch_protection(repo_full="user/repo")
             assert result is True
+            # Verify POST was used (4th call)
+            assert mock_api.call_count == 4
+            last_call = mock_api.call_args_list[3]
+            assert last_call.kwargs.get("method") == "POST"
+            assert "rulesets" in last_call.args[0]
+            assert "rulesets/" not in last_call.args[0]  # No ID in URL for POST
+
+    def test_configure_branch_protection_updates_existing_ruleset(self) -> None:
+        """Test updating an existing ruleset instead of creating a duplicate."""
+        from tools.pyproject_template.repo_settings import configure_branch_protection
+
+        mock_template_rulesets = [{"id": 1, "name": "main-protection"}]
+        mock_existing_rulesets = [{"id": 99, "name": "main-protection"}]  # Already exists
+        mock_full_ruleset = {
+            "id": 1,
+            "name": "main-protection",
+            "target": "branch",
+            "enforcement": "active",
+            "bypass_actors": [],
+            "conditions": {},
+            "rules": [],
+        }
+
+        with patch(
+            "tools.pyproject_template.repo_settings.GitHubCLI.api",
+            side_effect=[
+                mock_template_rulesets,  # GET template rulesets
+                mock_existing_rulesets,  # GET existing rulesets in target repo
+                mock_full_ruleset,  # GET full ruleset details
+                None,  # PUT existing ruleset
+            ],
+        ) as mock_api:
+            result = configure_branch_protection(repo_full="user/repo")
+            assert result is True
+            # Verify PUT was used with correct ID (4th call)
+            assert mock_api.call_count == 4
+            last_call = mock_api.call_args_list[3]
+            assert last_call.kwargs.get("method") == "PUT"
+            assert "rulesets/99" in last_call.args[0]  # Uses existing ID
 
     def test_configure_branch_protection_no_rulesets(self) -> None:
         """Test branch protection when template has no rulesets."""
