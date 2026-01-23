@@ -104,6 +104,51 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Testing** | `.github/CONTRIBUTING.md` | Test patterns, coverage rules. |
 | **Security** | `.github/SECURITY.md` | Policy, sensitive data handling. |
 
+## Common Pitfalls
+
+### Anti-Patterns to Avoid
+- **Tight Coupling**: Always use dependency injection
+- **Silent Failures**: Always log errors and raise exceptions with context
+- **Mutable Defaults**: Never use `def foo(items=[])`
+- **String Concatenation for Paths**: Use `Path` objects
+
+### Security Pitfalls
+- **Never log secrets**: Scrub sensitive data before logging
+- **Command Injection**: Always use subprocess with list args, not shell=True
+- **Path Traversal**: Validate all user-provided paths
+- **YAML Unsafe Loading**: Always use `yaml.safe_load()`
+
+## AI Agent Guidelines
+
+### When to Ask for User Input
+- **Ambiguous requirements**: Multiple valid implementation approaches exist
+- **Architectural decisions**: Choosing between patterns or libraries
+- **Breaking changes**: User impact needs to be understood
+- **Missing information**: Config values, credentials, or preferences needed
+- **Scope clarification**: Feature boundaries unclear
+
+### When to Proceed Autonomously
+- **Clear conventions exist**: Follow existing patterns in codebase
+- **Obvious fixes**: Clear bugs with single correct solution
+- **Documentation tasks**: Adding docstrings, comments, README updates
+- **Refactoring**: Improving code structure without behavior change
+- **Tests**: Adding missing test coverage for existing code
+
+## Breaking Changes Policy
+
+**What Constitutes a Breaking Change:**
+- Changes to public function/method signatures
+- Removal of public functions, classes, or modules
+- Changes to CLI command syntax or options
+- Changes to configuration file formats
+- Changes to default behavior that affects existing code
+
+**How to Handle:**
+1. Document in commit message with `BREAKING CHANGE:` footer
+2. Document in PR description with migration guide
+3. Update CHANGELOG.md
+4. Breaking changes require major version bump
+
 ## Tooling & Environment
 - **GitHub CLI (`gh`):** Primary tool for issue management, PR creation, and repository interaction.
 - **uv:** Package management and environment control.
@@ -131,23 +176,48 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **ADRs:** When implementing architectural decisions (typically `feat` or `refactor`, rarely `fix`), update related ADRs in `docs/decisions/` to add the issue link. Create new ADRs for significant decisions using `doit adr`. Every ADR must link to the documentation in `docs/` that describes the implementation. Doc and chore issues do not need ADRs. Issues with the `needs-adr` label require an ADR before the PR can be merged.
 
 ## Workflow Commands (for AI agents)
+
+### Issue Creation
+Each issue type requires specific sections. Use `--body-file` for complex bodies.
+
 ```bash
-# Create issue (non-interactive) - types: feature, bug, refactor, doc, chore
-doit issue --type=feature --title="Add feature" --body="## Problem\n..."
-doit issue --type=bug --title="Fix bug" --body-file=issue.md
-doit issue --type=doc --title="Add guide" --body="## Description\n..."
-doit issue --type=chore --title="Update CI" --body="## Description\n..."
+# Feature request (requires: Problem, Proposed Solution)
+doit issue --type=feature --title="feat: add caching" \
+  --body="## Problem\nDescribe the problem\n\n## Proposed Solution\nDescribe the solution"
 
-# Create PR (non-interactive)
-doit pr --title="feat: add feature" --body="## Description\n..."
-doit pr --title="fix: bug fix" --body-file=pr.md
+# Bug report (requires: Bug Description, Steps to Reproduce, Expected vs Actual Behavior)
+doit issue --type=bug --title="bug: crash on empty config" \
+  --body="## Bug Description\nWhat happened\n\n## Steps to Reproduce\n1. Step one\n\n## Expected vs Actual Behavior\nExpected X, got Y"
 
-# Merge PR (enforces commit format)
+# Refactor (requires: Current Code Issue, Proposed Improvement)
+doit issue --type=refactor --title="refactor: extract validation" \
+  --body="## Current Code Issue\nDuplicated logic\n\n## Proposed Improvement\nExtract to mixin"
+
+# Documentation (requires: Description)
+doit issue --type=doc --title="doc: add provider guide" \
+  --body="## Description\nAdd guide for creating custom providers"
+
+# Chore (requires: Description)
+doit issue --type=chore --title="chore: update dependencies" \
+  --body="## Description\nUpdate all dependencies to latest versions"
+```
+
+### PR Creation
+```bash
+doit pr --title="feat: add caching" --body="## Summary\nAdded caching support\n\nCloses #123"
+doit pr --title="fix: handle null" --body-file=pr.md
+```
+
+### PR Merge
+```bash
 doit pr_merge                    # Merge PR for current branch
 doit pr_merge --pr=123           # Merge specific PR
+```
 
-# Create ADR (non-interactive)
-doit adr --title="Use Redis for caching" --body="## Status\nAccepted\n..."
+### ADR Creation
+```bash
+doit adr --title="Use Redis for caching" \
+  --body="## Status\nAccepted\n\n## Context\nNeed caching\n\n## Decision\nUse Redis"
 doit adr --title="Use Redis" --body-file=adr.md
 ```
 
