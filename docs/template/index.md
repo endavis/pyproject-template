@@ -45,6 +45,11 @@ This interactive menu provides access to all template operations - creating proj
 - Compare your project against the latest template
 - Selectively merge updates you want
 
+**[AI Sync Checklist](ai-sync-checklist.md)** - Structured guide for AI agents performing synchronization.
+
+- Step-by-step phases from pre-flight through commit
+- Decision points where AI should ask for user input
+
 ## Template Tools
 
 All template tools are located in `tools/pyproject_template/`:
