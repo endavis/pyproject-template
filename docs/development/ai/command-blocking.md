@@ -96,6 +96,7 @@ EOF
 ```json
 {
   "hooks": {
+    "enabled" : true,
     "BeforeTool": [
       {
         "matcher": "run_shell_command",
