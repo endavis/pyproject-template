@@ -172,6 +172,30 @@ class TestDetectProjectSettings:
         result = detect_project_settings(tmp_path)
         assert result == {}
 
+    def test_rejects_non_github_url_with_github_in_path(self, tmp_path: Path) -> None:
+        """Test that URLs with github.com in path (not host) are rejected."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\nname = "test"\n'
+            '[project.urls]\nRepository = "https://evil.com/github.com/user/repo"\n'
+        )
+
+        result = detect_project_settings(tmp_path)
+        assert "github_user" not in result
+        assert "github_repo" not in result
+
+    def test_accepts_github_subdomain(self, tmp_path: Path) -> None:
+        """Test that GitHub subdomain URLs are accepted."""
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            '[project]\nname = "test"\n'
+            '[project.urls]\nRepository = "https://www.github.com/myuser/myrepo"\n'
+        )
+
+        result = detect_project_settings(tmp_path)
+        assert result["github_user"] == "myuser"
+        assert result["github_repo"] == "myrepo"
+
     def test_underscore_name_converted_to_hyphen_for_pypi(self, tmp_path: Path) -> None:
         """Test that underscores in name become hyphens for pypi_name."""
         pyproject = tmp_path / "pyproject.toml"

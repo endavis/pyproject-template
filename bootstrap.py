@@ -26,6 +26,7 @@ import sys
 import tempfile
 import urllib.request
 from pathlib import Path
+from urllib.parse import urlparse
 
 # Base URL for raw files
 REPO_OWNER = "endavis"
@@ -104,11 +105,10 @@ def detect_project_settings(project_root: Path) -> dict[str, str]:
                 settings["author_email"] = first["email"]
 
         repo_url = project.get("urls", {}).get("Repository", "")
-        if "github.com" in repo_url:
-            # Parse github.com/user/repo from URL
-            parts = repo_url.rstrip("/").split("github.com/")
-            if len(parts) == 2:
-                segments = parts[1].split("/")
+        if repo_url:
+            parsed = urlparse(repo_url)
+            if parsed.netloc == "github.com" or parsed.netloc.endswith(".github.com"):
+                segments = parsed.path.strip("/").split("/")
                 if len(segments) >= 2:
                     settings["github_user"] = segments[0]
                     settings["github_repo"] = segments[1].removesuffix(".git")
