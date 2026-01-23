@@ -151,9 +151,7 @@ precision = 2
 fail_under = 80
 exclude_lines = [
     "pragma: no cover",
-    "def __repr__",
     "if TYPE_CHECKING:",
-    "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
 ]
