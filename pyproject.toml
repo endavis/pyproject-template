@@ -95,14 +95,9 @@ select = [
 ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"bootstrap.py" = ["E501"]
 "tools/pyproject_template/*.py" = [
     "ANN401",  # Any return type for dynamic GitHub API responses
-    "E501",    # Line too long
-    "RUF001",  # Ambiguous unicode
-    "RUF005",  # Tuple concatenation (stylistic preference)
-    "RUF022",  # __all__ not sorted (intentionally grouped by category)
-    "SIM102",  # Nested if
+    "RUF022",  # __all__ intentionally grouped by category, not sorted
 ]
 
 [tool.ruff.format]
