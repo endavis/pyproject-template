@@ -170,6 +170,10 @@ diff -u your_file.py tmp/pyproject-template-*/your_file.py
 code --diff your_file.py tmp/pyproject-template-*/your_file.py
 ```
 
+## AI Agent Workflow
+
+If you're using an AI agent (Claude, Codex, etc.) to perform the synchronization, see the **[AI Sync Checklist](ai-sync-checklist.md)** for a structured, step-by-step guide covering all phases from pre-flight through commit.
+
 ## Best Practices
 
 1. **Update regularly** - Small, frequent updates are easier than large ones

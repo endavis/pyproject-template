@@ -87,6 +87,7 @@ nav:
       - New Project Setup: template/new-project.md
       - Migration Guide: template/migration.md
       - Keeping Up to Date: template/updates.md
+      - AI Sync Checklist: template/ai-sync-checklist.md
       - Tools Reference: template/tools-reference.md
   - Decisions:
       - Overview: decisions/README.md
