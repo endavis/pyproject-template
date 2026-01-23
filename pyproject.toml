@@ -124,8 +124,18 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
-# Ignore directories with duplicate module names or standalone scripts
+# tools/pyproject_template/ uses sys.path manipulation for standalone execution
 exclude = ["tools/pyproject_template/", ".claude/", ".gemini/", ".codex/"]
+
+[[tool.mypy.overrides]]
+module = "doit.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Standalone scripts using sys.path manipulation; excluded from discovery
+# but still followed via imports from bootstrap.py
+module = "tools.pyproject_template.*"
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
