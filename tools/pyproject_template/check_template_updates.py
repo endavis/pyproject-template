@@ -139,11 +139,13 @@ def compare_files(project_root: Path, template_root: Path) -> list[Path]:
 
         # Map src/package_name/* to src/{actual_package_name}/*
         mapped_path = rel_path
-        if actual_package_name and len(rel_path.parts) >= 2:
-            if rel_path.parts[0] == "src" and rel_path.parts[1] == "package_name":
-                # Replace package_name with actual package name
-                new_parts = ("src", actual_package_name) + rel_path.parts[2:]
-                mapped_path = Path(*new_parts)
+        if (
+            actual_package_name
+            and len(rel_path.parts) >= 2
+            and rel_path.parts[0] == "src"
+            and rel_path.parts[1] == "package_name"
+        ):
+            mapped_path = Path("src", actual_package_name, *rel_path.parts[2:])
 
         # Compare with project file
         project_file = project_root / mapped_path
@@ -253,10 +255,13 @@ def run_check_updates(
         for file_path in different_files:
             # Map src/package_name/* to src/{actual_package_name}/* for checking
             mapped_path = file_path
-            if actual_package_name and len(file_path.parts) >= 2:
-                if file_path.parts[0] == "src" and file_path.parts[1] == "package_name":
-                    new_parts = ("src", actual_package_name) + file_path.parts[2:]
-                    mapped_path = Path(*new_parts)
+            if (
+                actual_package_name
+                and len(file_path.parts) >= 2
+                and file_path.parts[0] == "src"
+                and file_path.parts[1] == "package_name"
+            ):
+                mapped_path = Path("src", actual_package_name, *file_path.parts[2:])
 
             project_file = project_root / mapped_path
             if project_file.exists():

@@ -92,24 +92,12 @@ select = [
     "SIM",  # flake8-simplify
     "ASYNC", # flake8-async
 ]
-ignore = [
-    "ANN401",  # Dynamically typed expressions (Any)
-    "ANN001",  # Missing type annotation for function argument
-    "ANN002",  # Missing type annotation for *args
-    "ANN003",  # Missing type annotation for **kwargs
-    "ANN101",  # Missing type annotation for self in method
-    "ANN201",  # Missing return type annotation for public function
-    "ANN202",  # Missing return type annotation for private function
-]
+ignore = []
 
 [tool.ruff.lint.per-file-ignores]
-"bootstrap.py" = ["E501"]
 "tools/pyproject_template/*.py" = [
-    "E501",    # Line too long
-    "RUF001",  # Ambiguous unicode
-    "RUF005",  # Tuple concatenation (stylistic preference)
-    "RUF022",  # __all__ not sorted (intentionally grouped by category)
-    "SIM102",  # Nested if
+    "ANN401",  # Any return type for dynamic GitHub API responses
+    "RUF022",  # __all__ intentionally grouped by category, not sorted
 ]
 
 [tool.ruff.format]
@@ -131,8 +119,18 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
-# Ignore directories with duplicate module names or standalone scripts
+# tools/pyproject_template/ uses sys.path manipulation for standalone execution
 exclude = ["tools/pyproject_template/", ".claude/", ".gemini/", ".codex/"]
+
+[[tool.mypy.overrides]]
+module = "doit.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Standalone scripts using sys.path manipulation; excluded from discovery
+# but still followed via imports from bootstrap.py
+module = "tools.pyproject_template.*"
+follow_imports = "skip"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -153,9 +151,7 @@ precision = 2
 fail_under = 80
 exclude_lines = [
     "pragma: no cover",
-    "def __repr__",
     "if TYPE_CHECKING:",
-    "raise AssertionError",
     "raise NotImplementedError",
     "if __name__ == .__main__.:",
 ]

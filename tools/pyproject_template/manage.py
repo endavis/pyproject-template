@@ -127,10 +127,8 @@ def print_template_status(
                 )
             else:
                 commits_behind = len(recent_commits) if recent_commits else "unknown"
-                print(
-                    f"  Template status:   {Colors.YELLOW}{commits_behind} commits behind{Colors.NC} "
-                    f"(last sync: {template_state.commit_date})"
-                )
+                status = f"{Colors.YELLOW}{commits_behind} commits behind{Colors.NC}"
+                print(f"  Template status:   {status} (last sync: {template_state.commit_date})")
                 if recent_commits and len(recent_commits) > 0:
                     print()
                     print(f"  {Colors.CYAN}Recent changes:{Colors.NC}")
@@ -417,16 +415,14 @@ def action_check_updates(manager: SettingsManager, dry_run: bool) -> int:
 
     # Show commit history link if we have a sync point (after the review section)
     latest = get_template_latest_commit()
-    if manager.template_state.commit and latest:
-        if latest[0] != manager.template_state.commit:
-            old_commit = manager.template_state.commit
-            new_commit = latest[0]
-            print()
-            Logger.info("View template commit history since last sync:")
-            print(
-                f"  https://github.com/endavis/pyproject-template/compare/"
-                f"{old_commit}...{new_commit}"
-            )
+    if manager.template_state.commit and latest and latest[0] != manager.template_state.commit:
+        old_commit = manager.template_state.commit
+        new_commit = latest[0]
+        print()
+        Logger.info("View template commit history since last sync:")
+        print(
+            f"  https://github.com/endavis/pyproject-template/compare/{old_commit}...{new_commit}"
+        )
 
     # Save commit info to template directory for later sync
     if latest and not dry_run:

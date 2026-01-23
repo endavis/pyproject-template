@@ -315,13 +315,15 @@ class RepositorySetup:
 
         try:
             # Define replacements
+            owner = self.config["repo_owner"]
+            pkg = self.config["package_name"]
             replacements = {
                 # URLs
-                "https://github.com/username/package_name": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
-                f"https://github.com/username/{self.config['package_name']}": f"https://github.com/{self.config['repo_owner']}/{self.config['package_name']}",
-                "gh username/package_name": f"gh {self.config['repo_owner']}/{self.config['package_name']}",
-                "username/package_name": f"{self.config['repo_owner']}/{self.config['package_name']}",
-                "username": self.config["repo_owner"],
+                "https://github.com/username/package_name": (f"https://github.com/{owner}/{pkg}"),
+                f"https://github.com/username/{pkg}": (f"https://github.com/{owner}/{pkg}"),
+                "gh username/package_name": f"gh {owner}/{pkg}",
+                "username/package_name": f"{owner}/{pkg}",
+                "username": owner,
                 # Package names
                 "package_name": self.config["package_name"],
                 "package-name": self.config["pypi_name"],

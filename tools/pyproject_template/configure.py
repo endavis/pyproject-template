@@ -155,7 +155,7 @@ def require(value: str, label: str) -> str:
     if value:
         return value
     raise SystemExit(
-        f"❌ Missing required value for {label} " "(supply in pyproject.toml or via prompt)."
+        f"❌ Missing required value for {label} (supply in pyproject.toml or via prompt)."
     )
 
 
@@ -337,7 +337,7 @@ def run_configure(
 
     if old_package_dir.exists() and old_package_dir != new_package_dir:
         if new_package_dir.exists():
-            print(f"  ⚠️  src/{package_name} already exists; " "skipping rename of src/package_name")
+            print(f"  ⚠️  src/{package_name} already exists; skipping rename of src/package_name")
         else:
             print(f"  ✓ Renaming src/package_name → src/{package_name}")
             shutil.move(str(old_package_dir), str(new_package_dir))
