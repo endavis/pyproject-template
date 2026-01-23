@@ -49,7 +49,7 @@ codex
 
 **Configuration:** `.gemini/settings.json`
 
-Gemini CLI can read `AGENTS.md` (or `GEMINI.md`) from the project root. The configuration file uses allowlists for tools and shell commands.
+Gemini CLI can read `AGENTS.md` (or `GEMINI.md`) from the project root. The configuration file uses allowlists for tools and shell commands, and configures lifecycle hooks.
 
 **Allowlisted commands:**
 - `git`, `gh`, `uv`, `doit` - Development tools
@@ -67,6 +67,11 @@ Gemini CLI can read `AGENTS.md` (or `GEMINI.md`) from the project root. The conf
 # Or copy to global config:
 cp .gemini/settings.json ~/.gemini/settings.json
 
+# Ensure hooks are enabled in settings.json:
+# {
+#   "hooks": { "enabled" : true }
+# }
+
 # Use YOLO mode to skip all permission prompts (use with caution):
 gemini --yolo
 # Or toggle auto-approve with Ctrl+Y during a session
@@ -74,6 +79,7 @@ gemini --yolo
 
 **Documentation:**
 - [Gemini CLI Configuration](https://geminicli.com/docs/get-started/configuration/)
+- [Gemini CLI Hooks](https://geminicli.com/docs/hooks/)
 - [Provide Context with GEMINI.md Files](https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html)
 - [Sandboxing in Gemini CLI](https://geminicli.com/docs/cli/sandbox/)
 - [Gemini CLI Settings](https://geminicli.com/docs/cli/settings/)
@@ -100,6 +106,7 @@ Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`
 **Files:**
 - `.claude/claude.md` - Imports AGENTS.md
 - `.claude/settings.local.json` - Command permissions
+- `.claude/settings.json` - Status line and PreToolUse hooks
 
 **LSP Support (Recommended):**
 
@@ -278,7 +285,7 @@ gemini --yolo
 
 ### Gemini CLI
 - [Gemini CLI Documentation](https://geminicli.com/docs/get-started/configuration/)
-- [Gemini CLI Configuration](https://google-gemini.github.io/gemini-cli/docs/get-started/configuration.html)
+- [Gemini CLI Hooks](https://geminicli.com/docs/hooks/)
 - [GEMINI.md Context Files](https://google-gemini.github.io/gemini-cli/docs/cli/gemini-md.html)
 - [Sandboxing in Gemini CLI](https://geminicli.com/docs/cli/sandbox/)
 - [Gemini CLI Settings](https://geminicli.com/docs/cli/settings/)
@@ -295,4 +302,4 @@ gemini --yolo
 
 ---
 
-**Note**: The `.codex/`, `.gemini/`, and `.claude/` directories should be committed to version control to share consistent AI assistant configuration across the team.
+**Note**: The `.codex/`, `.gemini/`, and `.claude/` directories should be committed to version control to share consistent AI assistant configuration across the team. .local files should not be committed.
