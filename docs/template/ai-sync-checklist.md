@@ -79,11 +79,50 @@ This will (per [Tools Reference](tools-reference.md)):
 diff <file> tmp/extracted/pyproject-template-main/<file>
 ```
 
-Review the output and proceed with Phases 3-7 to selectively apply changes.
+Review the output and proceed with Phases 3-8 to selectively apply changes.
 
 ---
 
-## Phase 3: GitHub Workflows (`.github/workflows/`)
+## Phase 3: pyproject.toml Tool Configuration
+
+Configuration changes often enable new doit tasks and workflows, so this phase comes first.
+
+### 3.1 Add Missing Tool Sections
+
+Check template's pyproject.toml for sections not present in the project:
+
+- [ ] `[tool.vulture]` - Dead code detection configuration
+- [ ] `[tool.pyright]` - LSP/type checking for AI code editors
+
+### 3.2 Update Existing Sections
+
+Compare each `[tool.*]` section and apply template improvements:
+
+- [ ] `[tool.ruff]` - New rules, updated ignores
+- [ ] `[tool.mypy]` - Configuration updates
+- [ ] `[tool.pytest.ini_options]` - Version bumps, new options
+- [ ] `[tool.coverage]` - Threshold changes, exclude patterns
+- [ ] `[tool.bandit]` - New skips, exclude patterns
+- [ ] `[tool.commitizen]` - Format updates
+
+**Decision points (ask user):**
+
+- Coverage `fail_under` threshold (project may intentionally differ)
+- Cache directory locations (template uses defaults, project may customize)
+- Extended ignores/excludes (project-specific suppressions should be preserved)
+
+### 3.3 Dev Dependencies
+
+Add any new dev dependencies required by new doit tasks:
+
+- [ ] `vulture` (for `task_deadcode()`)
+- [ ] `radon` (for `task_complexity()` and `task_maintainability()`)
+- [ ] `pyright` (for `[tool.pyright]`)
+- [ ] Any other new tools referenced by updated doit tasks
+
+---
+
+## Phase 4: GitHub Workflows (`.github/workflows/`)
 
 For each workflow file flagged as **Modified** or **Missing**:
 
@@ -105,14 +144,14 @@ For each workflow file flagged as **Modified** or **Missing**:
 
 ---
 
-## Phase 4: Doit Tasks (`tools/doit/`)
+## Phase 5: Doit Tasks (`tools/doit/`)
 
-### 4.1 Core Task Infrastructure
+### 5.1 Core Task Infrastructure
 
 - [ ] Compare `tools/doit/__init__.py` for discovery mechanism updates
 - [ ] Compare `tools/doit/base.py` for configuration changes (DOIT_CONFIG, helpers)
 
-### 4.2 Quality Tasks
+### 5.2 Quality Tasks
 
 - [ ] Compare `tools/doit/quality.py` - check for new tasks:
     - `task_deadcode()` (uses vulture)
@@ -120,48 +159,11 @@ For each workflow file flagged as **Modified** or **Missing**:
     - `task_maintainability()` (uses radon mi)
     - Any new linting/formatting improvements
 
-### 4.3 All Other Task Files
+### 5.3 All Other Task Files
 
 - [ ] Compare each of: `github.py`, `testing.py`, `security.py`, `maintenance.py`, `release.py`, `build.py`, `docs.py`, `git.py`, `install.py`, `adr.py`, `templates.py`
 - [ ] Apply differences that are template improvements (not project-specific)
 - [ ] Skip `template_clean.py` unless cleanup capability is desired
-
----
-
-## Phase 5: pyproject.toml Tool Configuration
-
-### 5.1 Add Missing Tool Sections
-
-Check template's pyproject.toml for sections not present in the project:
-
-- [ ] `[tool.vulture]` - Dead code detection configuration
-- [ ] `[tool.pyright]` - LSP/type checking for AI code editors
-
-### 5.2 Update Existing Sections
-
-Compare each `[tool.*]` section and apply template improvements:
-
-- [ ] `[tool.ruff]` - New rules, updated ignores
-- [ ] `[tool.mypy]` - Configuration updates
-- [ ] `[tool.pytest.ini_options]` - Version bumps, new options
-- [ ] `[tool.coverage]` - Threshold changes, exclude patterns
-- [ ] `[tool.bandit]` - New skips, exclude patterns
-- [ ] `[tool.commitizen]` - Format updates
-
-**Decision points (ask user):**
-
-- Coverage `fail_under` threshold (project may intentionally differ)
-- Cache directory locations (template uses defaults, project may customize)
-- Extended ignores/excludes (project-specific suppressions should be preserved)
-
-### 5.3 Dev Dependencies
-
-Add any new dev dependencies required by new doit tasks:
-
-- [ ] `vulture` (for `task_deadcode()`)
-- [ ] `radon` (for `task_complexity()` and `task_maintainability()`)
-- [ ] `pyright` (for `[tool.pyright]`)
-- [ ] Any other new tools referenced by updated doit tasks
 
 ---
 
@@ -184,7 +186,27 @@ Add any new dev dependencies required by new doit tasks:
 
 ---
 
-## Phase 8: Validation
+## Phase 8: AI Hooks
+
+AI coding assistants (Claude Code, Gemini CLI, Codex) use hooks to block dangerous commands. See [AI Command Blocking](../development/ai/command-blocking.md) for details.
+
+### 8.1 Hook Scripts
+
+- [ ] Compare `tools/hooks/ai/block-dangerous-commands.py` for new blocked patterns
+- [ ] Compare `tools/hooks/ai/test_hook.py` for new test cases
+- [ ] Run `python3 tools/hooks/ai/test_hook.py` to verify hooks work
+
+### 8.2 AI Agent Configuration
+
+- [ ] Compare `.claude/settings.json` for Claude Code hook configuration
+- [ ] Compare `.gemini/settings.json` for Gemini CLI hook configuration
+- [ ] Compare `.codex/config.toml` for Codex CLI approval policies
+
+**Note:** If these configuration files don't exist in the downstream project, copy them from the template to enable AI safety hooks.
+
+---
+
+## Phase 9: Validation
 
 - [ ] Run `doit check` - all checks must pass
 - [ ] Run `uv run pytest` - all tests must pass
@@ -195,7 +217,7 @@ Add any new dev dependencies required by new doit tasks:
 
 ---
 
-## Phase 9: Mark as Synced
+## Phase 10: Mark as Synced
 
 Per [Template Manager](manage.md) step [5]:
 
@@ -212,7 +234,7 @@ This:
 
 ---
 
-## Phase 10: Commit & PR
+## Phase 11: Commit & PR
 
 - [ ] Stage all changes
 - [ ] Commit with conventional format:
