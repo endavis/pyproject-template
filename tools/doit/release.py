@@ -52,7 +52,7 @@ def validate_merge_commits(console: "ConsoleType") -> bool:
     # Pattern: <type>: <subject> (merges PR #XX, addresses #YY) or (merges PR #XX)
     merge_pattern = re.compile(
         r"^[a-f0-9]+\s+(feat|fix|refactor|docs|test|chore|ci|perf):\s.+\s"
-        r"\(merges PR #\d+(?:, addresses #\d+)?\)$"
+        r"\(merges PR #\d+(?:, addresses #\d+(?:, #\d+)*)?\)$"
     )
 
     invalid_commits = []

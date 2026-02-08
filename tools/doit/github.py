@@ -622,7 +622,7 @@ def task_pr_merge() -> dict[str, Any]:
                 Panel.fit(
                     "[bold yellow]Reminder: Update linked issues[/bold yellow]\n\n"
                     "Examples:\n"
-                    f'  gh issue close <number> --comment "Fixed in PR #{pr_number}"\n'
+                    f'  gh issue close <number> --comment "Addressed in PR #{pr_number}"\n'
                     f'  gh issue comment <number> --body "Addressed in PR #{pr_number}"',
                     border_style="yellow",
                 )
