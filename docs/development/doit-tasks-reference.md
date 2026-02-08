@@ -32,6 +32,7 @@ doit <task_name>
 | Category | Tasks | Description |
 |----------|-------|-------------|
 | [Testing](#testing-tasks) | `test`, `coverage` | Run tests and coverage |
+| [Benchmarking](#benchmarking-tasks) | `benchmark`, `benchmark_save`, `benchmark_compare` | Performance benchmarks |
 | [Code Quality](#code-quality-tasks) | `format`, `lint`, `type_check`, `check` | Code formatting and linting |
 | [Code Analysis](#code-analysis-tasks) | `complexity`, `maintainability`, `deadcode` | Code metrics and analysis |
 | [Security](#security-tasks) | `security`, `audit`, `licenses` | Security scanning |
@@ -86,6 +87,61 @@ uv run pytest --cov=src --cov-report=term-missing --cov-report=html:tmp/htmlcov 
 - Terminal: Shows coverage summary with missing lines
 - HTML: `tmp/htmlcov/index.html`
 - XML: `tmp/coverage.xml`
+
+---
+
+## Benchmarking Tasks
+
+### `benchmark`
+
+Run performance benchmarks.
+
+```bash
+doit benchmark
+```
+
+**What it does:**
+- Runs pytest on `tests/benchmarks/` with `--benchmark-enable --benchmark-only`
+- Benchmarks are disabled by default during normal test runs
+
+**Equivalent command:**
+```bash
+uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only -v
+```
+
+### `benchmark_save`
+
+Run benchmarks and save results as a baseline.
+
+```bash
+doit benchmark_save
+```
+
+**What it does:**
+- Runs benchmarks and saves results to `tmp/benchmarks/`
+- Saved baseline can be used for comparison with `benchmark_compare`
+
+**Equivalent command:**
+```bash
+uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-save=baseline --benchmark-storage=tmp/benchmarks -v
+```
+
+### `benchmark_compare`
+
+Run benchmarks and compare against a saved baseline.
+
+```bash
+doit benchmark_compare
+```
+
+**What it does:**
+- Runs benchmarks and compares results against the saved baseline
+- Shows performance regressions or improvements
+
+**Equivalent command:**
+```bash
+uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-compare=0001_baseline --benchmark-storage=tmp/benchmarks -v
+```
 
 ---
 

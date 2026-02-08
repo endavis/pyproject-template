@@ -72,6 +72,7 @@ doit lint          # Run linting
 doit format        # Format code
 doit type_check    # Run type checking
 doit check         # Run all checks
+doit benchmark     # Run performance benchmarks
 doit cleanup       # Clean build artifacts
 ```
 

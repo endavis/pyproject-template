@@ -21,6 +21,7 @@ class TestDiscoverTasks:
         assert "task_check" in discovered
         assert "task_test" in discovered
         assert "task_lint" in discovered
+        assert "task_benchmark" in discovered
 
     def test_all_discovered_tasks_are_callable(self) -> None:
         """Test that all discovered task_* items are callable."""

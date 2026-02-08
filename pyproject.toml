@@ -46,6 +46,7 @@ dev = [
     "types-pyyaml>=6.0",
     "vulture>=2.11",
     "radon>=6.0",
+    "pytest-benchmark>=4.0",
 ]
 security = [
     "pip-audit>=2.6",
@@ -100,6 +101,9 @@ ignore = []
     "ANN401",  # Any return type for dynamic GitHub API responses
     "RUF022",  # __all__ intentionally grouped by category, not sorted
 ]
+"tests/benchmarks/*.py" = [
+    "ANN401",  # benchmark fixture has no py.typed
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -135,11 +139,19 @@ follow_imports = "skip"
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "--strict-config --strict-markers"
+addopts = "--strict-config --strict-markers --benchmark-disable"
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
+markers = [
+    "benchmark: marks tests as performance benchmarks (deselect with '--benchmark-disable')",
+]
+
+[tool.pytest-benchmark]
+disable_gc = true
+min_rounds = 5
+warmup = true
 
 [tool.coverage.run]
 branch = true
