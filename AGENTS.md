@@ -73,7 +73,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 **❌ PROHIBITED - These are assumption-based judgment calls:**
 - "This change is small/trivial, so I don't need to follow the full workflow"
 - "This is just a typo fix, so I can commit directly to main"
-- "GitHub will automatically close the issue with 'Closes #XX' syntax, so I don't need to verify"
+- "GitHub will automatically close the issue with 'Addresses #XX' syntax, so I don't need to verify"
 - "The user probably wants me to proceed without asking"
 - "This seems obvious, so I'll skip the issue creation step"
 - "It's just documentation, so tests aren't needed"
@@ -173,7 +173,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **Releases:** Never run `doit release` without explicit command.
 - **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format. Issues are not automatically closed. Ask the user if they would like the related issue closed.
 - **The Merge Gate action:** is a manual action for the user to add to a PR. It requires the ready-to-merge label and should never be added by automation.
-- **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Fixed in PR #XXX". Issues are not closed automatically when PRs are merged.
+- **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Addressed in PR #XXX". Issues are not closed automatically when PRs are merged.
 - **ADRs:** When implementing architectural decisions (typically `feat` or `refactor`, rarely `fix`), update related ADRs in `docs/decisions/` to add the issue link. Create new ADRs for significant decisions using `doit adr`. Every ADR must link to the documentation in `docs/` that describes the implementation. Doc and chore issues do not need ADRs. Issues with the `needs-adr` label require an ADR before the PR can be merged.
 
 ## Workflow Commands (for AI agents)
@@ -205,7 +205,7 @@ doit issue --type=chore --title="chore: update dependencies" \
 
 ### PR Creation
 ```bash
-doit pr --title="feat: add caching" --body="## Summary\nAdded caching support\n\nCloses #123"
+doit pr --title="feat: add caching" --body="## Summary\nAdded caching support\n\nAddresses #123"
 doit pr --title="fix: handle null" --body-file=pr.md
 ```
 
@@ -230,7 +230,7 @@ Before creating a PR, verify:
 - [ ] Branch name follows convention: `<type>/<issue>-<description>`
 - [ ] Commits follow conventional format: `<type>: <subject>`
 - [ ] PR title follows conventional format: `<type>: <subject>`
-- [ ] PR description references the issue: "Closes #XX" or "Part of #XX"
+- [ ] PR description references the issue: "Addresses #XX"
 - [ ] If issue has `needs-adr` label: ADR created and included in PR
 - [ ] If implementing architectural decision: Related ADR updated with issue link
 - [ ] If ADR created/updated: Links to documentation in `docs/` included

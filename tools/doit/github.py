@@ -482,66 +482,48 @@ def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any
         return None
 
 
-def _extract_linked_issues(body: str) -> dict[str, list[str]]:
-    """Extract linked issue numbers from PR body with relationship type.
+def _extract_linked_issues(body: str) -> list[str]:
+    """Extract linked issue numbers from PR body.
 
     Looks for patterns like:
-    - Closes #123, Fixes #456, Resolves #789 → "closes"
-    - Part of #101 → "part_of"
+    - Addresses #123
 
     Args:
         body: PR body text
 
     Returns:
-        Dict with "closes" and "part_of" keys, each containing list of issue numbers
+        List of issue numbers referenced with "Addresses"
     """
-    result: dict[str, list[str]] = {"closes": [], "part_of": []}
     seen: set[str] = set()
+    result: list[str] = []
 
-    # Pattern for closes/fixes/resolves
-    closes_pattern = r"(?:close[sd]?|fix(?:e[sd])?|resolve[sd]?)\s+#(\d+)"
-    for match in re.finditer(closes_pattern, body, re.IGNORECASE):
+    pattern = r"addresses\s+#(\d+)"
+    for match in re.finditer(pattern, body, re.IGNORECASE):
         issue = match.group(1)
         if issue not in seen:
             seen.add(issue)
-            result["closes"].append(issue)
-
-    # Pattern for part of
-    part_of_pattern = r"part\s+of\s+#(\d+)"
-    for match in re.finditer(part_of_pattern, body, re.IGNORECASE):
-        issue = match.group(1)
-        if issue not in seen:
-            seen.add(issue)
-            result["part_of"].append(issue)
+            result.append(issue)
 
     return result
 
 
-def _format_merge_subject(title: str, pr_number: int, issues: dict[str, list[str]]) -> str:
+def _format_merge_subject(title: str, pr_number: int, issues: list[str]) -> str:
     """Format the merge commit subject line.
 
     Args:
         title: PR title (should be in conventional commit format)
         pr_number: PR number
-        issues: Dict with "closes" and "part_of" keys containing issue numbers
+        issues: List of issue numbers referenced with "Addresses"
 
     Returns:
-        Formatted subject: "<type>: <subject> (merges PR #XX, closes #YY)"
-        or: "<type>: <subject> (merges PR #XX, part of #YY)"
+        Formatted subject: "<type>: <subject> (merges PR #XX, addresses #YY)"
     """
-    closes = issues.get("closes", [])
-    part_of = issues.get("part_of", [])
-
     # Build the suffix parts
     parts = [f"merges PR #{pr_number}"]
 
-    if closes:
-        issue_refs = ", ".join(f"#{i}" for i in closes)
-        parts.append(f"closes {issue_refs}")
-
-    if part_of:
-        issue_refs = ", ".join(f"#{i}" for i in part_of)
-        parts.append(f"part of {issue_refs}")
+    if issues:
+        issue_refs = ", ".join(f"#{i}" for i in issues)
+        parts.append(f"addresses {issue_refs}")
 
     suffix = f"({', '.join(parts)})"
     return f"{title} {suffix}"
@@ -551,7 +533,7 @@ def task_pr_merge() -> dict[str, Any]:
     """Merge a PR with properly formatted commit message.
 
     This task enforces the merge commit format:
-        <type>: <subject> (merges PR #XX, closes #YY)
+        <type>: <subject> (merges PR #XX, addresses #YY)
 
     Uses squash merge with a custom subject line to ensure consistent
     commit history that matches the documented format.
@@ -598,10 +580,8 @@ def task_pr_merge() -> dict[str, Any]:
 
         # Extract linked issues
         issues = _extract_linked_issues(pr_body)
-        has_issues = issues["closes"] or issues["part_of"]
-        if has_issues:
-            all_issues = issues["closes"] + issues["part_of"]
-            console.print(f"[dim]Linked issues: {', '.join(f'#{i}' for i in all_issues)}[/dim]")
+        if issues:
+            console.print(f"[dim]Linked issues: {', '.join(f'#{i}' for i in issues)}[/dim]")
         else:
             console.print("[yellow]Warning: No linked issues found in PR body.[/yellow]")
 
@@ -642,7 +622,7 @@ def task_pr_merge() -> dict[str, Any]:
                 Panel.fit(
                     "[bold yellow]Reminder: Update linked issues[/bold yellow]\n\n"
                     "Examples:\n"
-                    f'  gh issue close <number> --comment "Fixed in PR #{pr_number}"\n'
+                    f'  gh issue close <number> --comment "Addressed in PR #{pr_number}"\n'
                     f'  gh issue comment <number> --body "Addressed in PR #{pr_number}"',
                     border_style="yellow",
                 )
