@@ -89,21 +89,23 @@ nav:
       - Keeping Up to Date: template/updates.md
       - AI Sync Checklist: template/ai-sync-checklist.md
       - Tools Reference: template/tools-reference.md
+      - Template Decisions:
+          - Overview: template/decisions/README.md
+          - ADR-9001 uv: template/decisions/9001-use-uv-for-package-management.md
+          - ADR-9002 doit: template/decisions/9002-use-doit-for-task-automation.md
+          - ADR-9003 ruff: template/decisions/9003-use-ruff-for-linting-and-formatting.md
+          - ADR-9004 Auto-discover: template/decisions/9004-auto-discover-doit-tasks.md
+          - ADR-9005 AI Restrictions: template/decisions/9005-ai-agent-command-restrictions.md
+          - ADR-9006 Merge-gate: template/decisions/9006-merge-gate-workflow.md
+          - ADR-9007 mypy: template/decisions/9007-use-mypy-for-type-checking.md
+          - ADR-9008 PR workflow: template/decisions/9008-pr-based-development-workflow.md
+          - ADR-9009 pre-commit: template/decisions/9009-use-pre-commit-hooks-for-quality-gates.md
+          - ADR-9010 Conventional commits: template/decisions/9010-use-conventional-commits-format.md
+          - ADR-9011 pytest: template/decisions/9011-use-pytest-for-testing.md
+          - ADR-9012 mkdocs: template/decisions/9012-use-mkdocs-with-material-theme-for-documentation.md
+          - ADR-9013 Python versions: template/decisions/9013-python-version-support-policy.md
   - Decisions:
       - Overview: decisions/README.md
-      - ADR-0001 uv: decisions/0001-use-uv-for-package-management.md
-      - ADR-0002 doit: decisions/0002-use-doit-for-task-automation.md
-      - ADR-0003 ruff: decisions/0003-use-ruff-for-linting-and-formatting.md
-      - ADR-0004 Auto-discover: decisions/0004-auto-discover-doit-tasks.md
-      - ADR-0005 AI Restrictions: decisions/0005-ai-agent-command-restrictions.md
-      - ADR-0006 Merge-gate: decisions/0006-merge-gate-workflow.md
-      - ADR-0007 mypy: decisions/0007-use-mypy-for-type-checking.md
-      - ADR-0008 PR workflow: decisions/0008-pr-based-development-workflow.md
-      - ADR-0009 pre-commit: decisions/0009-use-pre-commit-hooks-for-quality-gates.md
-      - ADR-0010 Conventional commits: decisions/0010-use-conventional-commits-format.md
-      - ADR-0011 pytest: decisions/0011-use-pytest-for-testing.md
-      - ADR-0012 mkdocs: decisions/0012-use-mkdocs-with-material-theme-for-documentation.md
-      - ADR-0013 Python versions: decisions/0013-python-version-support-policy.md
   - Reference:
       - API Reference: reference/api.md
   - Examples:

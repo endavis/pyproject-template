@@ -1,4 +1,4 @@
-# ADR-0005: AI agent command restrictions via hooks
+# ADR-9005: AI agent command restrictions via hooks
 
 ## Status
 
@@ -22,6 +22,6 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 
 ## Related Documentation
 
-- [AI Command Blocking](../development/ai/command-blocking.md)
-- [AI Enforcement Principles](../development/ai/enforcement-principles.md)
-- [AI Setup Guide](../development/AI_SETUP.md)
+- [AI Command Blocking](../../development/ai/command-blocking.md)
+- [AI Enforcement Principles](../../development/ai/enforcement-principles.md)
+- [AI Setup Guide](../../development/AI_SETUP.md)

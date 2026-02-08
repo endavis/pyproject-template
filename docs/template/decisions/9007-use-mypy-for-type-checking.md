@@ -1,4 +1,4 @@
-# ADR-0007: Use mypy for static type checking
+# ADR-9007: Use mypy for static type checking
 
 ## Status
 
@@ -18,4 +18,4 @@ mypy is the most mature Python type checker with excellent IDE integration. Stri
 
 ## Related Documentation
 
-- [Coding Standards](../development/coding-standards.md)
+- [Coding Standards](../../development/coding-standards.md)

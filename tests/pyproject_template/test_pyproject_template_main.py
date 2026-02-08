@@ -434,6 +434,60 @@ class TestMainModule:
         assert result is None  # No recommendation, up to date
 
 
+class TestCopyTemplateAdrs:
+    """Tests for _copy_template_adrs helper function."""
+
+    def test_copies_only_9xxx_files(self, tmp_path: Path) -> None:
+        """Test that only 9*.md files are copied, not README."""
+        from tools.pyproject_template.manage import _copy_template_adrs
+
+        template_dir = tmp_path / "template_decisions"
+        template_dir.mkdir()
+        (template_dir / "9001-use-uv.md").write_text("# ADR-9001")
+        (template_dir / "9002-use-doit.md").write_text("# ADR-9002")
+        (template_dir / "README.md").write_text("# Template ADRs")
+
+        project_dir = tmp_path / "project_decisions"
+        project_dir.mkdir()
+
+        count = _copy_template_adrs(template_dir, project_dir)
+
+        assert count == 2
+        assert (project_dir / "9001-use-uv.md").exists()
+        assert (project_dir / "9002-use-doit.md").exists()
+        assert not (project_dir / "README.md").exists()
+
+    def test_returns_count_of_copied_files(self, tmp_path: Path) -> None:
+        """Test that function returns the correct count."""
+        from tools.pyproject_template.manage import _copy_template_adrs
+
+        template_dir = tmp_path / "template_decisions"
+        template_dir.mkdir()
+        (template_dir / "9001-test.md").write_text("# ADR-9001")
+        (template_dir / "9002-test.md").write_text("# ADR-9002")
+        (template_dir / "9003-test.md").write_text("# ADR-9003")
+
+        project_dir = tmp_path / "project_decisions"
+        project_dir.mkdir()
+
+        count = _copy_template_adrs(template_dir, project_dir)
+        assert count == 3
+
+    def test_returns_zero_when_no_9xxx_files(self, tmp_path: Path) -> None:
+        """Test that function returns 0 when no 9XXX files exist."""
+        from tools.pyproject_template.manage import _copy_template_adrs
+
+        template_dir = tmp_path / "template_decisions"
+        template_dir.mkdir()
+        (template_dir / "README.md").write_text("# Empty template ADRs")
+
+        project_dir = tmp_path / "project_decisions"
+        project_dir.mkdir()
+
+        count = _copy_template_adrs(template_dir, project_dir)
+        assert count == 0
+
+
 class TestConfigureModule:
     """Tests for the configure module refactoring."""
 

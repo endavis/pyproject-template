@@ -1,4 +1,4 @@
-# ADR-0004: Auto-discover doit tasks from modules
+# ADR-9004: Auto-discover doit tasks from modules
 
 ## Status
 
@@ -18,4 +18,4 @@ Manual imports were error-prone - developers would forget to add imports for new
 
 ## Related Documentation
 
-- [Tools Reference](../template/tools-reference.md)
+- [Tools Reference](../tools-reference.md)

@@ -1,4 +1,4 @@
-# ADR-0006: Merge-gate workflow requiring ready-to-merge label
+# ADR-9006: Merge-gate workflow requiring ready-to-merge label
 
 ## Status
 
@@ -22,4 +22,4 @@ PRs could be merged while CI was still running or without explicit human approva
 
 ## Related Documentation
 
-- [CI/CD Testing Guide](../development/ci-cd-testing.md)
+- [CI/CD Testing Guide](../../development/ci-cd-testing.md)

@@ -1,4 +1,4 @@
-# ADR-0012: Use mkdocs with Material theme for documentation
+# ADR-9012: Use mkdocs with Material theme for documentation
 
 ## Status
 
@@ -20,5 +20,5 @@ MkDocs uses Markdown (familiar to most developers), Material theme provides mode
 
 ## Related Documentation
 
-- [Documentation Index](../index.md)
-- [Extensions Guide](../development/extensions.md)
+- [Documentation Index](../../index.md)
+- [Extensions Guide](../../development/extensions.md)

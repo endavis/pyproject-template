@@ -63,8 +63,8 @@ class TestGetNextAdrNumber:
     def test_returns_sequential_number(self) -> None:
         """Test that function returns the next sequential number.
 
-        Since we have seed ADRs 0001-0012 in place,
-        the next number should be at least 13.
+        Template ADRs have been moved to docs/template/decisions/ with 9XXX numbering,
+        so docs/decisions/ starts empty and the next number should be 1.
         """
         result = _get_next_adr_number()
         assert result >= 1

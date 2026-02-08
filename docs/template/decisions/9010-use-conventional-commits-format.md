@@ -1,4 +1,4 @@
-# ADR-0010: Use conventional commits format
+# ADR-9010: Use conventional commits format
 
 ## Status
 
@@ -19,4 +19,4 @@ Provides consistent, readable git history, enables automated changelog generatio
 
 ## Related Documentation
 
-- [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+- [CONTRIBUTING.md](../../../.github/CONTRIBUTING.md)

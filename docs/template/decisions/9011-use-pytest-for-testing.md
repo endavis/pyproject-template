@@ -1,4 +1,4 @@
-# ADR-0011: Use pytest for testing
+# ADR-9011: Use pytest for testing
 
 ## Status
 
@@ -19,5 +19,5 @@ pytest minimizes boilerplate (plain functions, no classes required), has a power
 
 ## Related Documentation
 
-- [CI/CD Testing Guide](../development/ci-cd-testing.md)
-- [Coding Standards](../development/coding-standards.md)
+- [CI/CD Testing Guide](../../development/ci-cd-testing.md)
+- [Coding Standards](../../development/coding-standards.md)
