@@ -556,7 +556,7 @@ doit pr_merge --pr=123
 **What it does:**
 1. Finds PR associated with current branch (or uses `--pr`)
 2. Validates PR is approved and checks pass
-3. Merges with conventional commit format: `<type>: <subject> (merges PR #XX, closes #YY)`
+3. Merges with conventional commit format: `<type>: <subject> (merges PR #XX, addresses #YY)`
 
 **Options:**
 - `--pr`: PR number to merge (defaults to PR for current branch)

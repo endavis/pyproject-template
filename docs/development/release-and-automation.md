@@ -189,7 +189,7 @@ doit pr_merge --delete-branch=false
 ### What It Does
 
 1. **Validates PR title** - Ensures the title follows conventional commit format (`<type>: <subject>`)
-2. **Extracts linked issues** - Parses PR body for `closes #XX`, `fixes #XX`, or `part of #XX`
+2. **Extracts linked issues** - Parses PR body for `addresses #XX`
 3. **Formats merge commit** - Creates a standardized commit message with PR and issue references
 4. **Squash merges** - Uses squash merge to maintain clean history
 5. **Deletes branch** - Removes the source branch after merge (default behavior)
@@ -200,27 +200,25 @@ doit pr_merge --delete-branch=false
 The task automatically formats the merge commit subject:
 
 ```
-<type>: <subject> (merges PR #XX, closes #YY)
-<type>: <subject> (merges PR #XX, part of #YY)
+<type>: <subject> (merges PR #XX, addresses #YY)
 <type>: <subject> (merges PR #XX)
 ```
 
 **Examples:**
 ```
-feat: add user authentication (merges PR #102, closes #99)
-fix: resolve parsing error (merges PR #103, closes #100, #101)
+feat: add user authentication (merges PR #102, addresses #99)
+fix: resolve parsing error (merges PR #103, addresses #100, #101)
 docs: update installation guide (merges PR #104)
-refactor: extract helper functions (merges PR #105, part of #50)
+refactor: extract helper functions (merges PR #105, addresses #50)
 ```
 
 ### Linking Issues in PRs
 
-In your PR body, use these keywords to link issues:
+In your PR body, use the `Addresses` keyword to link issues:
 
 | Keyword | Effect | Use When |
 |---------|--------|----------|
-| `closes #XX`, `fixes #XX`, `resolves #XX` | Included as `closes #XX` in merge commit | PR fully completes the issue |
-| `part of #XX` | Included as `part of #XX` in merge commit | Issue requires multiple PRs |
+| `Addresses #XX` | Included as `addresses #XX` in merge commit | PR relates to the issue |
 
 **Example PR body:**
 ```markdown
@@ -228,34 +226,23 @@ In your PR body, use these keywords to link issues:
 - Add login form component
 - Implement session management
 
-Closes #99
+Addresses #99
 
 ## Test Plan
 - [ ] Test login flow
 ```
 
-For multi-PR issues:
-```markdown
-## Summary
-First part of the authentication system refactor.
-
-Part of #50
-
-## Test Plan
-- [ ] Existing tests pass
-```
-
 ### Closing Issues After Merge
 
-Issues are **not automatically closed** by GitHub when using squash merge with custom commit messages. After merging, manually close linked issues:
+Issues are **not automatically closed** when using `Addresses`. After merging, manually close linked issues:
 
 ```bash
 # The task displays these commands after merge
-gh issue close 99 --comment "Fixed in PR #102"
-gh issue close 100 --comment "Fixed in PR #103"
+gh issue close 99 --comment "Addressed in PR #102"
+gh issue close 100 --comment "Addressed in PR #103"
 ```
 
-This ensures issues are explicitly closed with a reference to the PR that fixed them.
+This ensures issues are explicitly closed with a reference to the PR that addressed them.
 
 ### Why Use `doit pr_merge`?
 
@@ -400,24 +387,23 @@ This template enforces governance rules to ensure code quality and traceability.
 
 **Required Format**:
 ```
-<type>: <subject> (merges PR #XX, closes #YY)
-<type>: <subject> (merges PR #XX, part of #YY)
+<type>: <subject> (merges PR #XX, addresses #YY)
 <type>: <subject> (merges PR #XX)
 ```
 
 **Examples**:
 ```
-✅ feat: add new feature (merges PR #102, closes #99)
-✅ fix: resolve bug (merges PR #103, closes #100)
+✅ feat: add new feature (merges PR #102, addresses #99)
+✅ fix: resolve bug (merges PR #103, addresses #100)
 ✅ docs: update guide (merges PR #104)
-✅ refactor: extract utils (merges PR #105, part of #50)
+✅ refactor: extract utils (merges PR #105, addresses #50)
 
 ❌ Add new feature                    # Missing type
 ❌ feat: add feature                  # Missing PR reference
 ❌ feat: add feature (PR #102)        # Wrong format
 ```
 
-Use `closes` when the PR fully resolves an issue. Use `part of` when an issue requires multiple PRs to complete. See [PR Merging](#pr-merging) for details.
+See [PR Merging](#pr-merging) for details.
 
 **Valid Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`
 
@@ -432,7 +418,7 @@ Use `closes` when the PR fully resolves an issue. Use `part of` when an issue re
 **Examples**:
 ```
 ✅ feat: add new feature (#99)
-✅ fix: resolve bug closes #100
+✅ fix: resolve bug addresses #100
 ✅ docs: update README                # Docs exempt
 
 ⚠️ feat: add new feature             # Warning only
@@ -670,7 +656,7 @@ If you need to fix an existing merge commit, use interactive rebase (advanced):
 ```bash
 git rebase -i HEAD~1
 # Change 'pick' to 'reword', then edit the message to:
-# feat: add new feature (merges PR #102, closes #99)
+# feat: add new feature (merges PR #102, addresses #99)
 ```
 
 ### Security Task Fails: "pip-audit not installed"

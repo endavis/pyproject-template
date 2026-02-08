@@ -73,7 +73,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 **❌ PROHIBITED - These are assumption-based judgment calls:**
 - "This change is small/trivial, so I don't need to follow the full workflow"
 - "This is just a typo fix, so I can commit directly to main"
-- "GitHub will automatically close the issue with 'Closes #XX' syntax, so I don't need to verify"
+- "GitHub will automatically close the issue with 'Addresses #XX' syntax, so I don't need to verify"
 - "The user probably wants me to proceed without asking"
 - "This seems obvious, so I'll skip the issue creation step"
 - "It's just documentation, so tests aren't needed"
@@ -205,7 +205,7 @@ doit issue --type=chore --title="chore: update dependencies" \
 
 ### PR Creation
 ```bash
-doit pr --title="feat: add caching" --body="## Summary\nAdded caching support\n\nCloses #123"
+doit pr --title="feat: add caching" --body="## Summary\nAdded caching support\n\nAddresses #123"
 doit pr --title="fix: handle null" --body-file=pr.md
 ```
 
@@ -230,7 +230,7 @@ Before creating a PR, verify:
 - [ ] Branch name follows convention: `<type>/<issue>-<description>`
 - [ ] Commits follow conventional format: `<type>: <subject>`
 - [ ] PR title follows conventional format: `<type>: <subject>`
-- [ ] PR description references the issue: "Closes #XX" or "Part of #XX"
+- [ ] PR description references the issue: "Addresses #XX"
 - [ ] If issue has `needs-adr` label: ADR created and included in PR
 - [ ] If implementing architectural decision: Related ADR updated with issue link
 - [ ] If ADR created/updated: Links to documentation in `docs/` included
