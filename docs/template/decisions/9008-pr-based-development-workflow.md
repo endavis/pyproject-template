@@ -1,4 +1,4 @@
-# ADR-0008: PR-based development workflow
+# ADR-9008: PR-based development workflow
 
 ## Status
 
@@ -20,5 +20,5 @@ Provides clear audit trail linking issues to PRs to commits, enables code review
 
 ## Related Documentation
 
-- [CI/CD Testing Guide](../development/ci-cd-testing.md)
-- [CONTRIBUTING.md](../../.github/CONTRIBUTING.md)
+- [CI/CD Testing Guide](../../development/ci-cd-testing.md)
+- [CONTRIBUTING.md](../../../.github/CONTRIBUTING.md)

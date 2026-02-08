@@ -1,4 +1,4 @@
-# ADR-0013: Python version support policy with bookend CI strategy
+# ADR-9013: Python version support policy with bookend CI strategy
 
 ## Status
 
@@ -41,4 +41,4 @@ Testing every Python version on every PR creates excessive CI load without propo
 
 ## Related Documentation
 
-- [CI/CD Testing Guide - Python Version Support Policy](../development/ci-cd-testing.md#python-version-support-policy)
+- [CI/CD Testing Guide - Python Version Support Policy](../../development/ci-cd-testing.md#python-version-support-policy)

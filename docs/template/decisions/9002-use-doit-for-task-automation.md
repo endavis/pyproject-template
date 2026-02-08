@@ -1,4 +1,4 @@
-# ADR-0002: Use doit for task automation
+# ADR-9002: Use doit for task automation
 
 ## Status
 
@@ -21,4 +21,4 @@ doit is a Python-based build tool that uses pure Python for task definitions (no
 
 ## Related Documentation
 
-- [Tools Reference](../template/tools-reference.md)
+- [Tools Reference](../tools-reference.md)

@@ -1,4 +1,4 @@
-# ADR-0009: Use pre-commit hooks for quality gates
+# ADR-9009: Use pre-commit hooks for quality gates
 
 ## Status
 
@@ -20,5 +20,5 @@ Ensures bad code never enters the repository, provides fast feedback loop (secon
 
 ## Related Documentation
 
-- [Coding Standards](../development/coding-standards.md)
-- [Installation Guide](../getting-started/installation.md)
+- [Coding Standards](../../development/coding-standards.md)
+- [Installation Guide](../../getting-started/installation.md)

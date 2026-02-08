@@ -40,7 +40,7 @@ from settings import (  # noqa: E402
     get_template_commits_since,
     get_template_latest_commit,
 )
-from utils import Colors, Logger, prompt, validate_package_name  # noqa: E402
+from utils import Colors, Logger, prompt, prompt_confirm, validate_package_name  # noqa: E402
 
 # Import cleanup utilities (optional - may not exist if already cleaned)
 try:
@@ -300,6 +300,25 @@ def run_action(action: int, manager: SettingsManager, dry_run: bool) -> int:
         return 1
 
 
+def _copy_template_adrs(template_dir: Path, project_dir: Path) -> int:
+    """Copy template ADR files (9*.md) into the project's decisions directory.
+
+    Args:
+        template_dir: Path to docs/template/decisions/ in the cloned project.
+        project_dir: Path to docs/decisions/ in the cloned project.
+
+    Returns:
+        Number of files copied.
+    """
+    import shutil
+
+    copied = 0
+    for adr_file in sorted(template_dir.glob("9*.md")):
+        shutil.copy2(adr_file, project_dir / adr_file.name)
+        copied += 1
+    return copied
+
+
 def action_create_project(manager: SettingsManager, dry_run: bool) -> int:
     """Create a new project from the template."""
     Logger.header("Creating New Project from Template")
@@ -352,6 +371,21 @@ def action_create_project(manager: SettingsManager, dry_run: bool) -> int:
 
         # Clone and configure locally BEFORE branch protection
         setup.clone_repository()
+
+        # Offer to copy template ADRs into project decisions
+        template_adrs_dir = Path.cwd() / "docs" / "template" / "decisions"
+        project_adrs_dir = Path.cwd() / "docs" / "decisions"
+        if (
+            template_adrs_dir.exists()
+            and project_adrs_dir.exists()
+            and prompt_confirm(
+                "Include template ADRs in project decisions directory?",
+                default=False,
+            )
+        ):
+            count = _copy_template_adrs(template_adrs_dir, project_adrs_dir)
+            Logger.info(f"Copied {count} template ADR(s) to docs/decisions/")
+
         setup.configure_placeholders()
         setup.setup_development_environment()
 

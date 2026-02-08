@@ -57,19 +57,19 @@ Complete index of all documentation, organized by audience and as a full alphabe
 
 ## Complete Index
 <!-- BEGIN:all -->
-- [ADR-0001: Use uv for package management](decisions/0001-use-uv-for-package-management.md)
-- [ADR-0002: Use doit for task automation](decisions/0002-use-doit-for-task-automation.md)
-- [ADR-0003: Use ruff for linting and formatting](decisions/0003-use-ruff-for-linting-and-formatting.md)
-- [ADR-0004: Auto-discover doit tasks from modules](decisions/0004-auto-discover-doit-tasks.md)
-- [ADR-0005: AI agent command restrictions via hooks](decisions/0005-ai-agent-command-restrictions.md)
-- [ADR-0006: Merge-gate workflow requiring ready-to-merge label](decisions/0006-merge-gate-workflow.md)
-- [ADR-0007: Use mypy for static type checking](decisions/0007-use-mypy-for-type-checking.md)
-- [ADR-0008: PR-based development workflow](decisions/0008-pr-based-development-workflow.md)
-- [ADR-0009: Use pre-commit hooks for quality gates](decisions/0009-use-pre-commit-hooks-for-quality-gates.md)
-- [ADR-0010: Use conventional commits format](decisions/0010-use-conventional-commits-format.md)
-- [ADR-0011: Use pytest for testing](decisions/0011-use-pytest-for-testing.md)
-- [ADR-0012: Use mkdocs with Material theme for documentation](decisions/0012-use-mkdocs-with-material-theme-for-documentation.md)
-- [ADR-0013: Python version support policy with bookend CI strategy](decisions/0013-python-version-support-policy.md)
+- [ADR-9001: Use uv for package management](template/decisions/9001-use-uv-for-package-management.md)
+- [ADR-9002: Use doit for task automation](template/decisions/9002-use-doit-for-task-automation.md)
+- [ADR-9003: Use ruff for linting and formatting](template/decisions/9003-use-ruff-for-linting-and-formatting.md)
+- [ADR-9004: Auto-discover doit tasks from modules](template/decisions/9004-auto-discover-doit-tasks.md)
+- [ADR-9005: AI agent command restrictions via hooks](template/decisions/9005-ai-agent-command-restrictions.md)
+- [ADR-9006: Merge-gate workflow requiring ready-to-merge label](template/decisions/9006-merge-gate-workflow.md)
+- [ADR-9007: Use mypy for static type checking](template/decisions/9007-use-mypy-for-type-checking.md)
+- [ADR-9008: PR-based development workflow](template/decisions/9008-pr-based-development-workflow.md)
+- [ADR-9009: Use pre-commit hooks for quality gates](template/decisions/9009-use-pre-commit-hooks-for-quality-gates.md)
+- [ADR-9010: Use conventional commits format](template/decisions/9010-use-conventional-commits-format.md)
+- [ADR-9011: Use pytest for testing](template/decisions/9011-use-pytest-for-testing.md)
+- [ADR-9012: Use mkdocs with Material theme for documentation](template/decisions/9012-use-mkdocs-with-material-theme-for-documentation.md)
+- [ADR-9013: Python version support policy with bookend CI strategy](template/decisions/9013-python-version-support-policy.md)
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Agent Sync Checklist](template/ai-sync-checklist.md) - Step-by-step checklist for AI agents synchronizing downstream projects with pyproject-template
@@ -92,6 +92,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Production Deployment Guide](deployment/production.md) - Comprehensive guide for deploying Python applications to production
 - [Python Project Coding Standards](development/coding-standards.md) - Guidelines for exceptions, typing, structure, testing, and documentation
 - [Release Automation & Security](development/release-and-automation.md) - Automated versioning, release management, and security tooling
+- [Template Architecture Decision Records](template/decisions/README.md)
 - [Template Management](template/manage.md) - Unified interface for creating projects, checking updates, and syncing
 - [Template Tools Reference](template/tools-reference.md) - Complete reference for all template tools in tools/pyproject_template/
 - [Usage Guide](usage/basics.md) - Package usage and development workflows
