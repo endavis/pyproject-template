@@ -209,8 +209,8 @@ AI coding assistants (Claude Code, Gemini CLI, Codex) use hooks to block dangero
 ## Phase 9: Validation
 
 - [ ] Run `doit check` - all checks must pass
-- [ ] Run `uv run pytest` - all tests must pass
-- [ ] Run `uv run pre-commit run --all-files` - all hooks must pass
+- [ ] Run `doit test` - all tests must pass
+- [ ] Run `doit pre_commit_run` - all hooks must pass
 - [ ] Run `doit lint` - no new linting issues
 - [ ] Run `doit type_check` - no new type errors
 - [ ] If new quality tasks added: run them and verify output is reasonable

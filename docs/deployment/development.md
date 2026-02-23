@@ -186,7 +186,7 @@ python -m package_name
 doit test
 
 # Run with coverage
-uv run pytest --cov
+doit coverage
 
 # Run specific test file
 uv run pytest tests/test_specific.py
@@ -344,7 +344,7 @@ uv run ruff check --fix src/
 doit fmt
 
 # Check format without changing
-uv run ruff format --check src/
+doit format_check
 ```
 
 ## Troubleshooting
