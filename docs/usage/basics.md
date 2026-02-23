@@ -185,7 +185,11 @@ Install hooks after cloning:
 
 ```bash
 uv run pre-commit install
+uv run pre-commit install --hook-type post-merge
+uv run pre-commit install --hook-type post-checkout
 ```
+
+The **post-merge** and **post-checkout** hooks automatically run `uv sync` when `uv.lock` changes after a `git pull` or branch switch, keeping your environment in sync.
 
 ## Creating Custom doit Tasks
 

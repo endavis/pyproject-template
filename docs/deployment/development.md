@@ -305,15 +305,17 @@ SQLite requires no external services and is suitable for most development work.
 The project uses pre-commit hooks for quality gates:
 
 ```bash
-# Install hooks (done automatically by uv sync)
-uv run pre-commit install
+# Install all hooks (pre-commit, post-merge, post-checkout)
+doit pre_commit_install
 
 # Run manually
-uv run pre-commit run --all-files
+doit pre_commit_run
 
 # Skip hooks (use sparingly)
 git commit --no-verify -m "WIP: work in progress"
 ```
+
+The project also includes **post-merge** and **post-checkout** hooks that automatically run `uv sync` when `uv.lock` changes after a `git pull` or branch switch. This keeps your local environment in sync without manual intervention.
 
 ### Type Checking
 
