@@ -163,3 +163,21 @@ repos:
         language: system
         pass_filenames: false
         always_run: true
+
+      # Auto-sync dependencies when uv.lock changes after git pull
+      - id: uv-sync-on-pull
+        name: Auto uv sync after pull (lock changed)
+        entry: bash -c 'git diff-tree -r --name-only --no-commit-id ORIG_HEAD HEAD | grep -q "^uv\.lock$" && echo "uv.lock changed — running uv sync..." && uv sync || true'
+        language: system
+        stages: [post-merge]
+        pass_filenames: false
+        always_run: true
+
+      # Auto-sync dependencies when uv.lock changes after branch switch
+      - id: uv-sync-on-checkout
+        name: Auto uv sync after branch switch (lock changed)
+        entry: bash -c 'if [ "$3" = "1" ]; then git diff --name-only "$1" "$2" | grep -q "^uv\.lock$" && echo "uv.lock changed — running uv sync..." && uv sync || true; fi'
+        language: system
+        stages: [post-checkout]
+        pass_filenames: false
+        always_run: true
