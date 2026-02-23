@@ -221,6 +221,47 @@ gh pr list --state open
 
 **Write operations** should go through `doit` when a task exists. Use raw `git`/`gh` for write operations only when no `doit` task covers the need (e.g., `git checkout -b`, `git add`, `gh issue close`).
 
+### Dependabot PRs
+
+When merging dependabot PRs that are behind `main`, **never** use the GitHub API `update-branch` endpoint or local rebase to update the branch. This strips the verified commit signatures from dependabot commits, which are required by branch protection rules.
+
+Instead, use dependabot's own rebase command:
+
+```bash
+gh pr comment <number> --body "@dependabot rebase"
+```
+
+Dependabot will rebase the branch and re-sign the commits, preserving verified signatures.
+
+#### Dependabot PR merge workflow
+
+When merging dependabot PRs that are behind `main`, use this procedure:
+
+1. **Request rebase** via dependabot's own action (preserves signed commits):
+   ```bash
+   gh pr comment <number> --body "@dependabot rebase"
+   ```
+
+2. **Wait for force-push** — poll until the PR's commit parent matches current `main` HEAD:
+   ```bash
+   # Get current main HEAD
+   main_sha=$(gh api repos/{owner}/{repo}/git/ref/heads/main --jq '.object.sha[0:7]')
+
+   # Poll PR commit parent until it matches
+   gh api repos/{owner}/{repo}/pulls/<number>/commits --jq '.[0].parents[0].sha[0:7]'
+   ```
+   This takes 1–3 minutes. **Do not** request a second rebase until the first one lands.
+
+3. **Wait for CI** to pass (`gh pr checks <number> --watch`).
+
+4. **Merge** with `doit pr_merge --pr=<number>`.
+
+#### What NOT to do
+
+- **Never** use `gh api .../update-branch` to rebase — this strips verified commit signatures.
+- **Never** rebase locally — same problem.
+- **Never** request a second `@dependabot rebase` before confirming the first force-push landed.
+
 ### AI Agent File Operations
 
 AI agents with native file tools (Read, Grep, Glob, Edit, Write) **must** prefer those over shell equivalents:
