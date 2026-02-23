@@ -154,7 +154,7 @@ direnv allow
 
 # Or manually set up
 uv sync --all-extras --dev
-uv run pre-commit install
+doit pre_commit_install
 ```
 
 #### Enable Shell Completions (Optional)

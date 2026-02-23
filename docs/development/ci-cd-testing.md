@@ -31,7 +31,7 @@ CI runs lint/format, tests, coverage, and quality checks to guard against regres
 Local commands:
 ```bash
 doit format && doit lint
-uv run pytest
+doit test
 doit coverage
 ```
 
@@ -249,7 +249,7 @@ Add coverage comments to PRs using GitHub Actions:
 
 ```bash
 # Run all tests
-uv run pytest
+doit test
 
 # Run specific test file
 uv run pytest tests/test_config.py
@@ -261,7 +261,7 @@ uv run pytest tests/test_config.py::test_load_config
 uv run pytest -v
 
 # Run with coverage
-uv run pytest --cov=src
+doit coverage
 
 # Generate HTML coverage report
 uv run pytest --cov=src --cov-report=html
@@ -308,10 +308,10 @@ The template includes pre-commit hooks that run automatically:
 
 ```bash
 # Install hooks
-uv run pre-commit install
+doit pre_commit_install
 
 # Run manually on all files
-uv run pre-commit run --all-files
+doit pre_commit_run
 
 # Update hook versions
 uv run pre-commit autoupdate
@@ -349,7 +349,7 @@ Before pushing to CI:
 - [ ] Run `doit format` to format code
 - [ ] Run `doit lint` to check for issues
 - [ ] Run `doit type_check` to verify types
-- [ ] Run `uv run pytest` to ensure tests pass
+- [ ] Run `doit test` to ensure tests pass
 - [ ] Run `doit coverage` to check coverage threshold
 - [ ] Review changes and commit messages
 

@@ -42,7 +42,7 @@ This section is for developers working on the project.
 
 ```bash
 # Run tests (parallel)
-uv run pytest -n auto -v
+doit test
 
 # Run all quality checks
 uv run doit check
@@ -184,9 +184,7 @@ The project includes pre-commit hooks that run automatically before each commit:
 Install hooks after cloning:
 
 ```bash
-uv run pre-commit install
-uv run pre-commit install --hook-type post-merge
-uv run pre-commit install --hook-type post-checkout
+doit pre_commit_install
 ```
 
 The **post-merge** and **post-checkout** hooks automatically run `uv sync` when `uv.lock` changes after a `git pull` or branch switch, keeping your environment in sync.
@@ -597,16 +595,16 @@ To run the same checks that CI runs:
 
 ```bash
 # Format check (what CI runs)
-uv run ruff format --check src/ tests/
+doit format_check
 
 # Linting
-uv run ruff check src/ tests/
+doit lint
 
 # Type checking
-uv run mypy src/
+doit type_check
 
 # Tests with coverage
-uv run pytest --cov=package_name --cov-report=xml:tmp/coverage.xml --cov-report=term -v
+doit coverage
 ```
 
 ### Updating Dependencies
@@ -630,10 +628,7 @@ uv run doit check
 
 ```bash
 # Serve with live reload
-uv run mkdocs serve
-
-# Or using doit
-uv run doit docs_serve
+doit docs_serve
 ```
 
 Open http://127.0.0.1:8000 in your browser.

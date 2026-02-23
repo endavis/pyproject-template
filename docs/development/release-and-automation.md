@@ -608,10 +608,10 @@ uv sync --dev --all-extras
 
 ```bash
 # Install hooks
-uv run pre-commit install
+doit pre_commit_install
 
 # Run manually on all files
-uv run pre-commit run --all-files
+doit pre_commit_run
 
 # Skip hooks (emergency only)
 git commit --no-verify

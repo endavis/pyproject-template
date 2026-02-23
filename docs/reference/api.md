@@ -128,7 +128,7 @@ message: str = greet("Python")
 Run mypy to verify type hints:
 
 ```bash
-uv run mypy src/
+doit type_check
 ```
 
 ## Testing
@@ -140,7 +140,7 @@ All public APIs should have comprehensive tests:
 doit test
 
 # Run with coverage
-uv run pytest --cov=package_name --cov-report=term-missing
+doit coverage
 ```
 
 ---
