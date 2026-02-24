@@ -713,14 +713,14 @@ The `benchmark.yml` workflow operates in two modes:
 | Trigger | Behavior |
 |---------|----------|
 | **Push to `main`** | Runs benchmarks and commits results to the `gh-benchmarks` data branch for long-term tracking |
-| **Pull request** | Runs benchmarks and posts a comparison comment on the PR (no commit to data branch) |
+| **Pull request** | Runs benchmarks and posts a comparison comment on the PR if the `gh-benchmarks` branch exists (no commit to data branch) |
 | **Manual dispatch** | Runs benchmarks and uploads artifact only |
 
 Only main branch results are stored to keep the historical data clean and consistent.
 
 ### The `gh-benchmarks` Branch
 
-Benchmark data is stored in a dedicated `gh-benchmarks` branch, separate from the main codebase. This branch is auto-created by the benchmark action on the first push to `main` after the workflow is enabled.
+Benchmark data is stored in a dedicated `gh-benchmarks` branch, separate from the main codebase. This branch is auto-created by the benchmark action on the first push to `main` after the workflow is enabled. Until the branch exists, PR benchmark comparisons are skipped gracefully.
 
 - **Data directory:** `dev/bench/` within the branch
 - **Format:** JSON files with benchmark metrics over time

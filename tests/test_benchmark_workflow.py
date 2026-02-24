@@ -75,6 +75,29 @@ class TestBenchmarkWorkflowSteps:
                 return step
         return None
 
+    def test_has_check_bench_branch_step(self) -> None:
+        """Workflow should check if the gh-benchmarks branch exists."""
+        step = self._find_step("Check for benchmark data branch")
+        assert step is not None, "Missing 'Check for benchmark data branch' step"
+        assert step.get("id") == "check-bench-branch"
+        assert "gh-benchmarks" in step["run"]
+
+    def test_store_step_conditional_on_branch_existence(self) -> None:
+        """Store step should only run on push or when gh-benchmarks branch exists."""
+        step = self._find_step("Store benchmark results")
+        assert step is not None
+        condition = step.get("if", "")
+        assert "push" in condition
+        assert "check-bench-branch" in condition
+
+    def test_check_bench_branch_before_store_step(self) -> None:
+        """Check branch step should come before store step."""
+        steps = self._get_steps()
+        step_names = [s.get("name") for s in steps]
+        check_idx = step_names.index("Check for benchmark data branch")
+        store_idx = step_names.index("Store benchmark results")
+        assert check_idx < store_idx, "Check branch step must come before Store step"
+
     def test_has_store_benchmark_results_step(self) -> None:
         """Workflow should have a step to store benchmark results."""
         step = self._find_step("Store benchmark results")
