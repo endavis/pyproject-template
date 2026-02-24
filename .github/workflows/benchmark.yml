@@ -1,12 +1,15 @@
 name: Benchmark
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   benchmark:
@@ -41,6 +44,29 @@ jobs:
           uv run pytest tests/benchmarks/
           --benchmark-enable --benchmark-only
           --benchmark-json=tmp/benchmark-results.json -v
+
+      - name: Check for benchmark data branch
+        id: check-bench-branch
+        run: |
+          if git ls-remote --exit-code origin gh-benchmarks >/dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Store benchmark results
+        if: github.event_name == 'push' || steps.check-bench-branch.outputs.exists == 'true'
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: tmp/benchmark-results.json
+          gh-pages-branch: gh-benchmarks
+          benchmark-data-dir-path: dev/bench
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          comment-on-alert: true
+          comment-always: ${{ github.event_name == 'pull_request' }}
+          alert-threshold: '110%'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload benchmark results
         if: always()
