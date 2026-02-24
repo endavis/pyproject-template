@@ -63,6 +63,7 @@ jobs:
           gh-pages-branch: gh-benchmarks
           benchmark-data-dir-path: dev/bench
           auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          skip-fetch-gh-pages: ${{ steps.check-bench-branch.outputs.exists != 'true' }}
           comment-on-alert: true
           comment-always: ${{ github.event_name == 'pull_request' }}
           alert-threshold: '110%'
