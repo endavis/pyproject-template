@@ -106,6 +106,8 @@ class TestBenchmarkWorkflowSteps:
         assert "check-bench-branch" in condition
         assert "push" in condition
         assert "gh-benchmarks" in step["run"]
+        assert "git config user.name" in step["run"]
+        assert "git config user.email" in step["run"]
 
     def test_create_branch_before_store_step(self) -> None:
         """Create branch step should come before store step."""
