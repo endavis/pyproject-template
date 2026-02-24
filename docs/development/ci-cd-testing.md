@@ -586,6 +586,44 @@ PR opened → CI runs (6 jobs) → Review/Approval → Add ready-to-merge label 
 PR opened → CI runs → Add full-matrix label → Full CI runs (9-15 jobs) → Review → Add ready-to-merge → Merge
 ```
 
+## Mutation Testing
+
+### What Is Mutation Testing?
+
+Mutation testing evaluates the effectiveness of your test suite by introducing small changes (mutations) to your source code and checking whether the tests detect them. Each mutation represents a potential bug -- if your tests catch it (a "killed" mutant), that area is well tested. If they don't (a "survived" mutant), your tests may have a gap.
+
+This project uses [mutmut](https://mutmut.readthedocs.io/) for mutation testing.
+
+### Running Locally
+
+```bash
+# Run mutation testing (generates results and prints summary)
+doit mutate
+
+# Generate an HTML report for detailed review
+doit mutate_html
+
+# Open the report in a browser
+xdg-open tmp/mutmut/index.html
+```
+
+### Interpreting Results
+
+| Term | Meaning |
+|------|---------|
+| **Killed** | A mutation was detected by the test suite -- good coverage |
+| **Survived** | A mutation was NOT detected -- potential test gap |
+| **Timeout** | The mutation caused the tests to hang -- typically counted as killed |
+| **Suspicious** | The mutation caused an unexpected result -- review manually |
+
+The **mutation score** is the percentage of mutants killed out of total mutants generated. A higher score indicates a more thorough test suite. There is no enforced threshold -- use the score as a guide to identify areas that need better test coverage.
+
+### CI Schedule
+
+Mutation testing runs weekly in CI (Sunday midnight UTC) via the `.github/workflows/mutation.yml` workflow. It is informational only and does not block merges or fail the build.
+
+Results are uploaded as artifacts with 90-day retention. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
+
 ## Troubleshooting
 
 ### Coverage Below Threshold
