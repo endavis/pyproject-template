@@ -62,7 +62,7 @@ jobs:
           git switch --orphan gh-benchmarks
           git commit --allow-empty -m "Initialize benchmark data branch"
           git push origin gh-benchmarks
-          git switch -
+          git checkout ${{ github.sha }}
 
       - name: Store benchmark results
         if: github.event_name == 'push' || steps.check-bench-branch.outputs.exists == 'true'
