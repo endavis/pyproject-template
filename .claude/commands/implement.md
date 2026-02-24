@@ -4,6 +4,8 @@ Implement the plan for GitHub issue #$ARGUMENTS.
 
 ## Instructions
 
+**CRITICAL: Do NOT enter plan mode. Do NOT use EnterPlanMode. This command executes code directly — plan mode will block the implementation agent from writing files.**
+
 You MUST delegate the implementation to an agent (Task tool) to keep the main conversation context clean. The agent does all the coding. You receive the summary for user review.
 
 ### Step 1: Validate preconditions
