@@ -700,6 +700,51 @@ Mutation testing runs weekly in CI (Sunday midnight UTC) via the `.github/workfl
 
 Results are uploaded as artifacts with 90-day retention. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
 
+## Benchmark Tracking
+
+### Overview
+
+Benchmark results are tracked historically using [benchmark-action/github-action-benchmark](https://github.com/benchmark-action/github-action-benchmark). This enables performance trend visualization and automatic regression detection across commits.
+
+### How It Works
+
+The `benchmark.yml` workflow operates in two modes:
+
+| Trigger | Behavior |
+|---------|----------|
+| **Push to `main`** | Runs benchmarks and commits results to the `gh-benchmarks` data branch for long-term tracking |
+| **Pull request** | Runs benchmarks and posts a comparison comment on the PR (no commit to data branch) |
+| **Manual dispatch** | Runs benchmarks and uploads artifact only |
+
+Only main branch results are stored to keep the historical data clean and consistent.
+
+### The `gh-benchmarks` Branch
+
+Benchmark data is stored in a dedicated `gh-benchmarks` branch, separate from the main codebase. This branch is auto-created by the benchmark action on the first push to `main` after the workflow is enabled.
+
+- **Data directory:** `dev/bench/` within the branch
+- **Format:** JSON files with benchmark metrics over time
+- **Purpose:** Serves as the data source for trend charts and regression detection
+
+### PR Comments
+
+On every pull request, the benchmark action posts a comment comparing the PR's benchmark results against the latest stored baseline from `main`. This gives reviewers immediate visibility into performance impact.
+
+### Alert Threshold
+
+The alert threshold is set to `110%`, meaning the workflow flags a warning if any benchmark is more than 10% slower than the baseline. To adjust this threshold, edit the `alert-threshold` value in `.github/workflows/benchmark.yml`.
+
+### GitHub Pages (Optional)
+
+The `gh-benchmarks` branch can optionally serve a trend chart via GitHub Pages:
+
+1. Go to **Settings** > **Pages**
+2. Set the source branch to `gh-benchmarks`
+3. Set the directory to `/ (root)`
+4. The trend chart will be available at `https://<owner>.github.io/<repo>/dev/bench/`
+
+This step is optional and not required for the core tracking functionality.
+
 ## Troubleshooting
 
 ### Coverage Below Threshold

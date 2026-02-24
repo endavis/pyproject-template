@@ -1,12 +1,15 @@
 name: Benchmark
 
 on:
+  push:
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:
 
 permissions:
-  contents: read
+  contents: write
+  pull-requests: write
 
 jobs:
   benchmark:
@@ -41,6 +44,19 @@ jobs:
           uv run pytest tests/benchmarks/
           --benchmark-enable --benchmark-only
           --benchmark-json=tmp/benchmark-results.json -v
+
+      - name: Store benchmark results
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          tool: 'pytest'
+          output-file-path: tmp/benchmark-results.json
+          gh-pages-branch: gh-benchmarks
+          benchmark-data-dir-path: dev/bench
+          auto-push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+          comment-on-alert: true
+          comment-always: ${{ github.event_name == 'pull_request' }}
+          alert-threshold: '110%'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload benchmark results
         if: always()
