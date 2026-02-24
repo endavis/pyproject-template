@@ -65,6 +65,7 @@ jobs:
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+      HYPOTHESIS_PROFILE: ci
 
     steps:
       - name: Configure git line endings (Windows)

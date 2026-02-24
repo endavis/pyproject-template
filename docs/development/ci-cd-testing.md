@@ -586,6 +586,82 @@ PR opened → CI runs (6 jobs) → Review/Approval → Add ready-to-merge label 
 PR opened → CI runs → Add full-matrix label → Full CI runs (9-15 jobs) → Review → Add ready-to-merge → Merge
 ```
 
+## Property-Based Testing
+
+### What Is Property-Based Testing?
+
+Property-based testing verifies *invariant properties* of your code by feeding it hundreds of randomly generated inputs rather than a handful of hand-picked examples. If a property holds for every input the framework can dream up, you gain much higher confidence than example-based tests alone.
+
+This project uses [Hypothesis](https://hypothesis.readthedocs.io/) for property-based testing.
+
+### When to Use Property-Based Tests
+
+| Good fit | Not a good fit |
+|----------|----------------|
+| Pure functions with clear contracts (validators, formatters, parsers) | Tests that require complex external state (databases, APIs) |
+| Functions whose output must satisfy invariants (e.g., "always lowercase") | Behaviour that depends on side effects or ordering |
+| Edge-case-heavy logic (string processing, numeric conversions) | Simple CRUD with no transformation logic |
+
+### Writing Property Tests
+
+```python
+import pytest
+from hypothesis import given, example
+from hypothesis import strategies as st
+
+@pytest.mark.property
+@given(name=st.text(min_size=1))
+@example("edge-case-value")
+def test_output_is_always_lowercase(name: str) -> None:
+    result = normalize(name)
+    assert result == result.lower()
+```
+
+**Key decorators and strategies:**
+
+| Element | Purpose |
+|---------|---------|
+| `@given(...)` | Declares the randomly generated inputs |
+| `@example(...)` | Pins a specific input that must always be tested |
+| `st.text()` | Generates arbitrary Unicode strings |
+| `st.from_regex(r"...")` | Generates strings matching a regular expression |
+| `st.integers()`, `st.floats()` | Numeric strategies |
+| `@pytest.mark.property` | Custom marker to select/deselect property tests |
+
+### Hypothesis Profiles
+
+Two profiles are configured in `tests/conftest.py`:
+
+| Profile | `max_examples` | `deadline` | Used when |
+|---------|---------------|------------|-----------|
+| `default` | 200 | Hypothesis default | Local development |
+| `ci` | 50 | 500 ms | GitHub Actions CI |
+
+The CI workflow sets `HYPOTHESIS_PROFILE: ci` so property tests run faster in pipelines.
+
+### Running Property Tests
+
+```bash
+# Run only property tests
+uv run pytest -m property -v
+
+# Run with a specific seed for reproducibility
+uv run pytest -m property --hypothesis-seed=12345
+
+# Run with more examples locally
+HYPOTHESIS_PROFILE=default uv run pytest -m property -v
+```
+
+### Debugging Failures
+
+When a property test fails, Hypothesis prints the **minimal failing example**. To reproduce:
+
+1. Copy the seed from the failure output (e.g., `--hypothesis-seed=98765`)
+2. Re-run: `uv run pytest tests/test_properties.py --hypothesis-seed=98765 -v`
+3. Hypothesis will reproduce the exact same sequence of inputs
+
+Hypothesis also stores failing examples in a `.hypothesis/` directory (git-ignored) so they are replayed automatically on the next run.
+
 ## Mutation Testing
 
 ### What Is Mutation Testing?
