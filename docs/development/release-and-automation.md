@@ -19,6 +19,7 @@ This guide covers automated versioning, release management, governance validatio
 - [Release Management](#release-management)
 - [PR Merging](#pr-merging)
 - [Security & Quality Tasks](#security-quality-tasks)
+- [SBOM Generation](#sbom-generation)
 - [Governance Validation](#governance-validation)
 - [Environment Configuration](#environment-configuration)
 
@@ -349,6 +350,69 @@ uv run doit fmt_pyproject
   | pydantic     | 2.5.0   | MIT         |
   ```
 
+#### `doit sbom`
+- **Tool**: cyclonedx-py
+- **Purpose**: Generates a Software Bill of Materials (SBOM) in CycloneDX format
+- **Output**: `tmp/sbom.json` (JSON) and `tmp/sbom.xml` (XML)
+- **Example**:
+  ```bash
+  $ uv run doit sbom
+  # Generates tmp/sbom.json and tmp/sbom.xml
+  ```
+
+### SBOM Generation
+
+A **Software Bill of Materials (SBOM)** is a machine-readable inventory of all software components and dependencies in a project. SBOMs are increasingly required for regulatory compliance (e.g., US Executive Order 14028) and are essential for security auditing and supply chain transparency.
+
+#### Why SBOM Matters
+
+- **Compliance**: Many organizations and government agencies require SBOMs for software procurement
+- **Security Auditing**: Enables automated vulnerability scanning across all dependencies
+- **Supply Chain Transparency**: Provides a complete picture of third-party components
+- **Incident Response**: Quickly determine if a newly discovered vulnerability affects your software
+
+#### Local Usage
+
+Generate SBOMs locally using the `doit sbom` task:
+
+```bash
+# Install security extras (if not already installed)
+uv sync --extra security
+
+# Generate SBOM files
+uv run doit sbom
+```
+
+This produces two files in the `tmp/` directory:
+
+- `tmp/sbom.json` — CycloneDX JSON format
+- `tmp/sbom.xml` — CycloneDX XML format
+
+#### Release Integration
+
+SBOMs are automatically generated and attached to every GitHub release:
+
+1. During the **build** job, `cyclonedx-py` generates both JSON and XML SBOMs
+2. The SBOM files are included in the `dist/` artifact alongside wheel and sdist packages
+3. After publishing to PyPI, a dedicated **upload-sbom** job attaches the SBOMs as GitHub release assets
+
+Users can download the SBOM from the GitHub release page for any version.
+
+#### Using SBOMs for Vulnerability Scanning
+
+You can feed the generated SBOM into vulnerability scanners for continuous monitoring:
+
+```bash
+# Using grype (https://github.com/anchore/grype)
+grype sbom:tmp/sbom.json
+
+# Using trivy (https://github.com/aquasecurity/trivy)
+trivy sbom tmp/sbom.json
+
+# Using osv-scanner (https://github.com/google/osv-scanner)
+osv-scanner --sbom=tmp/sbom.json
+```
+
 ### Integrating into CI
 
 Add security checks to your CI pipeline:
@@ -585,6 +649,7 @@ uv run doit audit           # Vulnerability scan
 uv run doit security        # Security analysis
 uv run doit spell_check     # Spell checking
 uv run doit licenses        # License compliance
+uv run doit sbom            # Generate SBOM (CycloneDX)
 
 # Releases
 uv run doit release_dev     # Create pre-release (TestPyPI)

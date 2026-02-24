@@ -55,6 +55,7 @@ security = [
     "bandit>=1.7",
     "pip>=26.0",
     "pip-licenses>=4.0",
+    "cyclonedx-bom>=4.0",
 ]
 
 [project.urls]
