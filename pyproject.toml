@@ -47,6 +47,7 @@ dev = [
     "vulture>=2.11",
     "radon>=6.0",
     "pytest-benchmark>=4.0",
+    "mutmut>=3.0",
 ]
 security = [
     "pip-audit>=2.6",
@@ -229,6 +230,11 @@ ignore_decorators = [
     "@click.group",
     "@abstractmethod",
 ]
+
+[tool.mutmut]
+paths_to_mutate = "src/"
+tests_dir = "tests/"
+runner = "uv run python -m pytest -x --assert=plain"
 
 [tool.commitizen]
 name = "cz_conventional_commits"
