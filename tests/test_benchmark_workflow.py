@@ -98,12 +98,22 @@ class TestBenchmarkWorkflowSteps:
         store_idx = step_names.index("Store benchmark results")
         assert check_idx < store_idx, "Check branch step must come before Store step"
 
-    def test_store_step_skips_fetch_when_branch_missing(self) -> None:
-        """Store step should skip gh-pages fetch when the data branch doesn't exist."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        skip_fetch = step["with"]["skip-fetch-gh-pages"]
-        assert "check-bench-branch" in skip_fetch
+    def test_has_create_bench_branch_step(self) -> None:
+        """Workflow should create the gh-benchmarks branch if it doesn't exist."""
+        step = self._find_step("Create benchmark data branch")
+        assert step is not None, "Missing 'Create benchmark data branch' step"
+        condition = step.get("if", "")
+        assert "check-bench-branch" in condition
+        assert "push" in condition
+        assert "gh-benchmarks" in step["run"]
+
+    def test_create_branch_before_store_step(self) -> None:
+        """Create branch step should come before store step."""
+        steps = self._get_steps()
+        step_names = [s.get("name") for s in steps]
+        create_idx = step_names.index("Create benchmark data branch")
+        store_idx = step_names.index("Store benchmark results")
+        assert create_idx < store_idx
 
     def test_has_store_benchmark_results_step(self) -> None:
         """Workflow should have a step to store benchmark results."""
