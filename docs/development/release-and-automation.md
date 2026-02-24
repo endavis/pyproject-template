@@ -17,6 +17,7 @@ This guide covers automated versioning, release management, governance validatio
 ## Table of Contents
 - [Automated Versioning](#automated-versioning)
 - [Release Management](#release-management)
+- [Release Notes](#release-notes)
 - [PR Merging](#pr-merging)
 - [Security & Quality Tasks](#security-quality-tasks)
 - [SBOM Generation](#sbom-generation)
@@ -169,6 +170,63 @@ uv run doit release_dev --type=beta
 uv run doit release
 # --> Creates v0.2.0, updates CHANGELOG, publishes to PyPI
 ```
+
+## Release Notes
+
+Release notes are automatically generated from merged pull requests when a GitHub release is created. The release workflow creates a GitHub release with auto-generated notes after publishing to PyPI.
+
+### How It Works
+
+1. When a version tag (e.g., `v1.0.0`) is pushed, the release workflow runs
+2. After the package is published to PyPI, the `github-release` job creates a GitHub release
+3. GitHub generates release notes by categorizing merged PRs since the last release
+4. SBOM files are attached to the release as downloadable assets
+
+### Category Configuration
+
+PR labels and conventional commit prefixes are mapped to release note sections in `.github/release.yml`:
+
+| Section | Labels |
+|---------|--------|
+| **Breaking Changes** | `breaking` |
+| **New Features** | `enhancement`, `feat` |
+| **Bug Fixes** | `bug`, `fix` |
+| **Documentation** | `documentation`, `docs` |
+| **Performance** | `performance`, `perf` |
+| **Other Changes** | Everything else |
+
+PRs with the `dependencies` or `needs-triage` labels are excluded from release notes.
+
+### Customizing Categories
+
+To add or modify categories, edit `.github/release.yml`:
+
+```yaml
+changelog:
+  exclude:
+    labels:
+      - dependencies
+      - needs-triage
+  categories:
+    - title: Breaking Changes
+      labels:
+        - breaking
+    - title: New Features
+      labels:
+        - enhancement
+        - feat
+    # Add more categories here
+    - title: Other Changes
+      labels:
+        - "*"
+```
+
+Categories are evaluated in order. A PR is placed in the first matching category. The `"*"` wildcard matches any label and serves as a catch-all.
+
+### Further Reading
+
+- [GitHub Docs: Automatically generated release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes)
+- [GitHub Docs: Configuring automatically generated release notes](https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes#configuring-automatically-generated-release-notes)
 
 ## PR Merging
 
@@ -394,7 +452,7 @@ SBOMs are automatically generated and attached to every GitHub release:
 
 1. During the **build** job, `cyclonedx-py` generates both JSON and XML SBOMs
 2. The SBOM files are included in the `dist/` artifact alongside wheel and sdist packages
-3. After publishing to PyPI, a dedicated **upload-sbom** job attaches the SBOMs as GitHub release assets
+3. After publishing to PyPI, the **github-release** job creates a GitHub release with auto-generated notes and attaches the SBOMs as release assets
 
 Users can download the SBOM from the GitHub release page for any version.
 

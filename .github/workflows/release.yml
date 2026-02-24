@@ -97,13 +97,23 @@ jobs:
           packages-dir: dist
           skip-existing: true
 
-  upload-sbom:
-    name: Upload SBOM to GitHub Release
+  github-release:
+    name: Create GitHub Release
     needs: publish
     runs-on: ubuntu-latest
     permissions:
       contents: write
     steps:
+      - uses: actions/checkout@v6
+
+      - name: Create GitHub release with auto-generated notes
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          tag="${GITHUB_REF_NAME}"
+          gh release create "$tag" --generate-notes --title "$tag"
+
       - uses: actions/download-artifact@v7
         with:
           name: dist
