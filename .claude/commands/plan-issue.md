@@ -43,44 +43,47 @@ This command runs in the main conversation context (NOT in a subagent) so the us
 - Check for related ADRs in `docs/decisions/`
 - If anything is ambiguous or there are multiple valid approaches, **ask the user** before deciding
 
-### Step 6: Draft the implementation plan
+### Step 6: Draft the plan and iterate with the user (inside plan mode)
 
-Present the plan to the user for discussion. The plan MUST include these sections:
+**Stay in plan mode for this entire step.** Draft the plan, present it, and iterate until the user approves — all before leaving plan mode.
 
-```
-## Implementation Plan for #<number>: <title>
+1. Present the plan to the user. The plan MUST include these sections:
 
-### Overview
-Brief description of what will be done.
+   ```
+   ## Implementation Plan for #<number>: <title>
 
-### Files to Create/Modify
-- [ ] `path/to/file.py` — description of changes
-- [ ] `tests/test_file.py` — description of test coverage
+   ### Overview
+   Brief description of what will be done.
 
-### Test Plan
-- [ ] Test case 1: description
-- [ ] Test case 2: description
+   ### Files to Create/Modify
+   - [ ] `path/to/file.py` — description of changes
+   - [ ] `tests/test_file.py` — description of test coverage
 
-### Documentation
-- [ ] Any docs that need updating
-- [ ] ADR needed: yes/no (if yes, brief description)
+   ### Test Plan
+   - [ ] Test case 1: description
+   - [ ] Test case 2: description
 
-### Validation
-- [ ] `doit check` passes
-- [ ] Manual verification steps
-```
+   ### Documentation
+   - [ ] Any docs that need updating
+   - [ ] ADR needed: yes/no (if yes, brief description)
+
+   ### Validation
+   - [ ] `doit check` passes
+   - [ ] Manual verification steps
+   ```
+
+2. Use `AskUserQuestion` to ask for feedback on the plan.
+3. Discuss alternatives, answer questions, and adjust the plan as the user requests.
+4. Keep iterating inside plan mode until the user explicitly says the plan is approved.
+5. Do NOT leave plan mode until the user confirms approval.
 
 ### Step 7: Leave plan mode
 
-### Step 8: Iterate with the user
+Once the user has approved the plan, leave plan mode. The `ExitPlanMode` approval prompt means: **"Post the approved plan to the issue."** The plan has already been reviewed and approved by the user during Step 6.
 
-- Present the plan and ask for feedback
-- Discuss alternatives, answer questions, adjust the plan as needed
-- Do NOT post the plan to the issue until the user approves it
+### Step 8: Post the approved plan to the issue
 
-### Step 9: Post the approved plan to the issue
-
-Only after the user approves the plan:
+Post the approved plan as a comment on the issue:
 
 ```bash
 gh issue comment $ARGUMENTS --body "<approved plan>"
