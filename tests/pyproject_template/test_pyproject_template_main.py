@@ -752,6 +752,182 @@ class TestCheckUpdatesModule:
         assert args.dry_run is True
 
 
+class TestYesFlagBehavior:
+    """Tests for --yes flag threading through subcommands."""
+
+    def test_yes_flag_passed_to_run_action(self) -> None:
+        """Verify main(["--yes", "sync"]) passes yes=True through to run_action."""
+        from tools.pyproject_template.manage import main
+
+        with (
+            patch("tools.pyproject_template.manage.SettingsManager") as mock_manager_cls,
+            patch("tools.pyproject_template.manage.run_action", return_value=0) as mock_run_action,
+        ):
+            mock_manager = MagicMock()
+            mock_manager_cls.return_value = mock_manager
+
+            main(["--yes", "sync"])
+
+            mock_run_action.assert_called_once_with(
+                5, mock_manager, False, yes=True, cleanup_mode=None
+            )
+
+    def test_sync_with_yes_skips_prompt(self, tmp_path: Path) -> None:
+        """Verify action_mark_synced() with yes=True skips the confirmation prompt."""
+        from tools.pyproject_template.manage import action_mark_synced
+
+        # Set up template commit file
+        template_dir = tmp_path / "tmp" / "extracted" / "pyproject-template-main"
+        template_dir.mkdir(parents=True)
+        commit_file = template_dir / ".template_commit"
+        commit_file.write_text("abc123newcommit\n2025-06-15\n")
+
+        mock_manager = MagicMock()
+        mock_manager.template_state.commit = "oldcommit000"
+
+        with (
+            patch("tools.pyproject_template.manage.Path") as mock_path_cls,
+            patch("tools.pyproject_template.manage.prompt") as mock_prompt,
+            patch("subprocess.run") as mock_subprocess,
+        ):
+            # Make Path("tmp/extracted/...") resolve to our tmp_path
+            def path_side_effect(arg: str = "") -> Path:
+                if arg == "tmp/extracted/pyproject-template-main":
+                    return template_dir
+                return Path(arg)
+
+            mock_path_cls.side_effect = path_side_effect
+
+            # subprocess calls succeed
+            mock_subprocess.return_value = MagicMock(returncode=0)
+
+            action_mark_synced(mock_manager, dry_run=False, yes=True)
+
+            # prompt should NOT have been called
+            mock_prompt.assert_not_called()
+            # update_template_state should have been called
+            mock_manager.update_template_state.assert_called_once_with(
+                "abc123newcommit", "2025-06-15"
+            )
+
+    def test_create_with_yes_skips_adr_prompt(self) -> None:
+        """Verify action_create_project() with yes=True skips prompt_confirm for ADRs."""
+        from tools.pyproject_template.manage import action_create_project
+
+        mock_manager = MagicMock()
+        mock_manager.settings.github_user = "testuser"
+        mock_manager.settings.github_repo = "test-repo"
+        mock_manager.settings.description = "desc"
+        mock_manager.settings.package_name = "test_pkg"
+        mock_manager.settings.pypi_name = "test-pkg"
+        mock_manager.settings.author_name = "Author"
+        mock_manager.settings.author_email = "a@b.com"
+
+        with (
+            patch("tools.pyproject_template.manage.prompt_confirm") as mock_confirm,
+            patch.dict("sys.modules", {"setup_repo": MagicMock()}),
+        ):
+            # Import the mocked setup_repo
+            import sys
+
+            mock_setup_module = sys.modules["setup_repo"]
+            mock_setup_cls = MagicMock()
+            mock_setup_module.RepositorySetup.return_value = mock_setup_cls
+            mock_setup_cls.config = {}
+
+            with (
+                patch("tools.pyproject_template.manage.Path") as mock_path_cls,
+                patch(
+                    "tools.pyproject_template.manage.get_template_latest_commit", return_value=None
+                ),
+            ):
+                mock_cwd = MagicMock()
+                mock_path_cls.cwd.return_value = mock_cwd
+                mock_template_dir = MagicMock()
+                mock_project_dir = MagicMock()
+                mock_template_dir.exists.return_value = True
+                mock_project_dir.exists.return_value = True
+                mock_cwd.__truediv__ = lambda self, key: (
+                    mock_template_dir
+                    if "template" in str(key)
+                    else mock_project_dir
+                    if "decisions" in str(key)
+                    else MagicMock()
+                )
+
+                action_create_project(mock_manager, dry_run=False, yes=True)
+
+                # prompt_confirm should NOT have been called (skipped by yes=True)
+                mock_confirm.assert_not_called()
+
+    def test_cleanup_with_yes_skips_prompt(self) -> None:
+        """Verify action_template_cleanup() with yes=True skips prompt_cleanup."""
+        from tools.pyproject_template.manage import action_template_cleanup
+
+        mock_manager = MagicMock()
+
+        with patch("tools.pyproject_template.manage.prompt_cleanup") as mock_prompt_cleanup:
+            result = action_template_cleanup(mock_manager, dry_run=False, yes=True)
+
+            assert result == 0
+            mock_prompt_cleanup.assert_not_called()
+
+    def test_configure_with_yes_uses_auto_mode(self) -> None:
+        """Verify action_configure() with yes=True calls run_configure with auto=True."""
+        from tools.pyproject_template.manage import action_configure
+
+        mock_manager = MagicMock()
+        mock_manager.settings.project_name = "test"
+        mock_manager.settings.package_name = "test"
+        mock_manager.settings.pypi_name = "test"
+        mock_manager.settings.description = "test"
+        mock_manager.settings.author_name = "test"
+        mock_manager.settings.author_email = "test@test.com"
+        mock_manager.settings.github_user = "test"
+
+        with (
+            patch("tools.pyproject_template.manage.run_configure", return_value=0) as mock_run,
+            patch("tools.pyproject_template.manage.load_defaults", return_value={}),
+        ):
+            result = action_configure(mock_manager, dry_run=False, yes=True)
+
+            assert result == 0
+            mock_run.assert_called_once()
+            _, kwargs = mock_run.call_args
+            assert kwargs["auto"] is True
+            assert kwargs["yes"] is True
+
+    def test_cleanup_with_cleanup_mode_setup(self) -> None:
+        """Verify action_template_cleanup() with cleanup_mode='setup' uses that mode."""
+        from tools.pyproject_template.manage import action_template_cleanup
+
+        mock_manager = MagicMock()
+
+        with (
+            patch("tools.pyproject_template.manage.cleanup_template_files") as mock_cleanup,
+            patch("tools.pyproject_template.manage.prompt_cleanup"),
+        ):
+            mock_result = MagicMock()
+            mock_result.failed = []
+            mock_cleanup.return_value = mock_result
+
+            result = action_template_cleanup(mock_manager, dry_run=False, cleanup_mode="setup")
+
+            assert result == 0
+            mock_cleanup.assert_called_once()
+
+    def test_cleanup_with_invalid_mode_fails(self) -> None:
+        """Verify action_template_cleanup() with invalid cleanup_mode returns error."""
+        from tools.pyproject_template.manage import action_template_cleanup
+
+        mock_manager = MagicMock()
+
+        with patch("tools.pyproject_template.manage.prompt_cleanup"):
+            result = action_template_cleanup(mock_manager, dry_run=False, cleanup_mode="invalid")
+
+            assert result == 1
+
+
 class TestMigrateModule:
     """Tests for the migrate_existing_project module refactoring."""
 
