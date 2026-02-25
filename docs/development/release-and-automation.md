@@ -171,6 +171,46 @@ uv run doit release
 # --> Creates v0.2.0, updates CHANGELOG, publishes to PyPI
 ```
 
+### 3. PR-Based Release (`doit release_pr` + `doit release_tag`)
+
+For teams that require review of changelog and version bump changes before releasing, this two-step workflow routes the release through a pull request.
+
+**When to use instead of `doit release`:**
+
+- Your branch protection rules require PR approval for all changes to `main`
+- You want the changelog and version bump reviewed before the release is finalized
+- Your team prefers an auditable release process with PR-based approvals
+
+**Step 1: Create the release PR**
+
+```bash
+uv run doit release_pr
+```
+
+This creates a PR containing the version bump and updated CHANGELOG.md. The PR can be reviewed, discussed, and approved like any other change.
+
+**Step 2: Tag the release after merge**
+
+After the release PR is merged to `main`, create the release tag:
+
+```bash
+git checkout main
+git pull
+uv run doit release_tag
+```
+
+This creates the git tag and pushes it, triggering CI/CD to build and publish the package.
+
+**Comparison with direct release:**
+
+| Aspect | `doit release` | `doit release_pr` + `doit release_tag` |
+|--------|---------------|---------------------------------------|
+| Steps | Single command | Two-step (PR then tag) |
+| Review | No PR review of changelog | Changelog reviewed in PR |
+| Branch protection | Pushes directly to `main` | Works with strict branch protection |
+| Governance | Built-in validation | Validation in both steps |
+| Best for | Solo maintainers, trusted CI | Teams, regulated environments |
+
 ## Release Notes
 
 Release notes are automatically generated from merged pull requests when a GitHub release is created. The release workflow creates a GitHub release with auto-generated notes after publishing to PyPI.
