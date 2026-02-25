@@ -35,6 +35,11 @@ Package Name is a modern Python project template with comprehensive tooling for 
 - ✅ **Documentation**: MkDocs with Material theme support
 - ✅ **CI/CD**: GitHub Actions with safe release workflows
 - ✅ **Pre-commit Hooks**: Automated code quality checks
+- ✅ **Auto Dependency Sync**: Post-merge and post-checkout hooks keep dependencies in sync
+- ✅ **Mutation Testing**: mutmut for test suite effectiveness analysis
+- ✅ **Property-Based Testing**: Hypothesis for invariant-based testing with random inputs
+- ✅ **Benchmark Tracking**: Historical CI benchmarks with regression detection
+- ✅ **SBOM Generation**: CycloneDX Software Bill of Materials for compliance and security
 
 ## Quick Start
 

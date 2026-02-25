@@ -31,11 +31,11 @@ doit <task_name>
 
 | Category | Tasks | Description |
 |----------|-------|-------------|
-| [Testing](#testing-tasks) | `test`, `coverage` | Run tests and coverage |
+| [Testing](#testing-tasks) | `test`, `coverage`, `mutate`, `mutate_html` | Run tests, coverage, and mutation testing |
 | [Benchmarking](#benchmarking-tasks) | `benchmark`, `benchmark_save`, `benchmark_compare` | Performance benchmarks |
 | [Code Quality](#code-quality-tasks) | `format`, `lint`, `type_check`, `check` | Code formatting and linting |
 | [Code Analysis](#code-analysis-tasks) | `complexity`, `maintainability`, `deadcode` | Code metrics and analysis |
-| [Security](#security-tasks) | `security`, `audit`, `licenses` | Security scanning |
+| [Security](#security-tasks) | `security`, `audit`, `licenses`, `sbom` | Security scanning and SBOM |
 | [Documentation](#documentation-tasks) | `docs_serve`, `docs_build`, `docs_deploy`, `docs_toc` | Documentation management |
 | [Dependencies](#dependency-tasks) | `install`, `install_dev`, `update_deps` | Package management |
 | [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr` | Issue and PR management |
@@ -87,6 +87,48 @@ uv run pytest --cov=src --cov-report=term-missing --cov-report=html:tmp/htmlcov 
 - Terminal: Shows coverage summary with missing lines
 - HTML: `tmp/htmlcov/index.html`
 - XML: `tmp/coverage.xml`
+
+### `mutate`
+
+Run mutation testing with mutmut.
+
+```bash
+doit mutate
+```
+
+**What it does:**
+- Introduces small changes (mutations) to source code
+- Runs the test suite against each mutation
+- Reports which mutations were killed (detected) vs survived (missed)
+- Prints a summary with the mutation score
+
+**Output:** Results are stored in `tmp/mutmut/` directory.
+
+**When to use:**
+- To evaluate how effective your test suite is at detecting bugs
+- To identify areas where tests could be strengthened
+- Informational only -- no enforced threshold
+
+See [Mutation Testing](ci-cd-testing.md#mutation-testing) for details on interpreting results.
+
+### `mutate_html`
+
+Generate an HTML report from mutation testing results.
+
+```bash
+doit mutate_html
+```
+
+**What it does:**
+- Generates a detailed HTML report from the latest `doit mutate` run
+- Report is saved to `tmp/mutmut/index.html`
+
+**Prerequisite:** Run `doit mutate` first to generate results.
+
+**Viewing the report:**
+```bash
+xdg-open tmp/mutmut/index.html
+```
 
 ---
 
@@ -405,6 +447,31 @@ doit licenses
 - Outputs in markdown table format
 
 **Requires:** `[security]` extras installed (`uv sync --extra security`)
+
+### `sbom`
+
+Generate a Software Bill of Materials (SBOM) in CycloneDX format.
+
+```bash
+doit sbom
+```
+
+**What it does:**
+- Generates SBOM files from the project's dependency tree
+- Produces both JSON and XML formats
+
+**Output locations:**
+- `tmp/sbom.json` -- CycloneDX JSON format
+- `tmp/sbom.xml` -- CycloneDX XML format
+
+**Requires:** `[security]` extras installed (`uv sync --extra security`)
+
+**When to use:**
+- For regulatory compliance (e.g., US Executive Order 14028)
+- For security auditing and vulnerability scanning
+- Before releases (SBOMs are also auto-generated in CI release workflows)
+
+See [SBOM Generation](release-and-automation.md#sbom-generation) for details on usage and CI integration.
 
 ---
 

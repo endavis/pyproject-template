@@ -317,31 +317,42 @@ doit pre_commit_run
 uv run pre-commit autoupdate
 ```
 
-**Pre-commit configuration (`.pre-commit-config.yaml`):**
-```yaml
-repos:
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.0
-    hooks:
-      - id: ruff-format
-      - id: ruff
-        args: [--fix]
+**Hook stages in `.pre-commit-config.yaml`:**
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.0.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-all]
+**Pre-commit stage** (runs on every `git commit`):
 
-  - repo: local
-    hooks:
-      - id: pytest
-        name: pytest
-        entry: uv run pytest
-        language: system
-        pass_filenames: false
-        always_run: true
-```
+| Hook | Purpose |
+|------|---------|
+| `trailing-whitespace` | Remove trailing whitespace |
+| `end-of-file-fixer` | Ensure files end with a newline |
+| `check-yaml` | Validate YAML syntax |
+| `check-added-large-files` | Prevent large files from being committed |
+| `check-toml` | Validate TOML syntax |
+| `check-merge-conflict` | Detect merge conflict markers |
+| `detect-private-key` | Prevent private keys from being committed |
+| `ruff` | Lint and auto-fix Python code |
+| `ruff-format` | Format Python code |
+| `mypy` | Type checking (strict mode, `src/` only) |
+| `bandit` | Security scanning (skipped if not installed) |
+| `codespell` | Spell checking |
+| `check-branch-name` | Enforce branch naming convention |
+| `generate-doc-toc` | Update documentation TOC when docs change |
+| `no-commit-to-main` | Prevent direct commits to main branch |
+| `no-local-config` | Prevent committing local config files |
+| `protect-dynamic-version` | Protect `dynamic = ["version"]` in `pyproject.toml` |
+
+**Commit-msg stage** (validates commit messages):
+
+| Hook | Purpose |
+|------|---------|
+| `conventional-pre-commit` | Enforce conventional commit format |
+
+**Post-merge / Post-checkout stage** (automatic dependency sync):
+
+| Hook | Purpose |
+|------|---------|
+| `uv-sync-on-pull` | Runs `uv sync --all-extras --dev` when `uv.lock` changes after `git pull` |
+| `uv-sync-on-checkout` | Runs `uv sync --all-extras --dev` when `uv.lock` changes after branch switch |
 
 ### Continuous Integration Checklist
 
