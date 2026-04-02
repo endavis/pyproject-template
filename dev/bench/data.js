@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775139719132,
+  "lastUpdate": 1775140078101,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -944,6 +944,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.219196340367717e-7",
             "extra": "mean: 1.9925941335764488 usec\nrounds: 50184"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dca7e6076ee6a124ece1843bcd2ac4140435fb1c",
+          "message": "chore(deps): bump the dev-dependencies group across 1 directory with 2 updates (merges PR #318)\n\nBumps the dev-dependencies group with 2 updates in the / directory: [ruff](https://github.com/astral-sh/ruff) and [mypy](https://github.com/python/mypy).\n\n\nUpdates `ruff` from 0.15.7 to 0.15.8\n- [Release notes](https://github.com/astral-sh/ruff/releases)\n- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/astral-sh/ruff/compare/0.15.7...0.15.8)\n\nUpdates `mypy` from 1.19.1 to 1.20.0\n- [Changelog](https://github.com/python/mypy/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/python/mypy/compare/v1.19.1...v1.20.0)\n\n---\nupdated-dependencies:\n- dependency-name: ruff\n  dependency-version: 0.15.8\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: dev-dependencies\n- dependency-name: mypy\n  dependency-version: 1.20.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: dev-dependencies\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T15:27:32+01:00",
+          "tree_id": "a1297d11c9319c2a4da70daf1d55b2269a2cebb2",
+          "url": "https://github.com/endavis/pyproject-template/commit/dca7e6076ee6a124ece1843bcd2ac4140435fb1c"
+        },
+        "date": 1775140077763,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8757112.396261673,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0834846481470944e-8",
+            "extra": "mean: 114.19289313071855 nsec\nrounds: 86498"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8888717.989288853,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1617330351404918e-8",
+            "extra": "mean: 112.50216298964902 nsec\nrounds: 88803"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5411053.173608781,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5415967174234234e-8",
+            "extra": "mean: 184.80690688409413 nsec\nrounds: 54964"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1648190.0775317673,
+            "unit": "iter/sec",
+            "range": "stddev: 4.071787401795916e-7",
+            "extra": "mean: 606.7261377386408 nsec\nrounds: 59592"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505436.5681341229,
+            "unit": "iter/sec",
+            "range": "stddev: 4.887067305672338e-7",
+            "extra": "mean: 1.9784876343467088 usec\nrounds: 52646"
           }
         ]
       }
