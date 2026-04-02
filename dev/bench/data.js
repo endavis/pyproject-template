@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775144102707,
+  "lastUpdate": 1775146968242,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1239,6 +1239,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.610588757791842e-7",
             "extra": "mean: 1.9752631763517747 usec\nrounds: 53865"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "75cbe9b37181359365d57b4e54cb59b8a47507fb",
+          "message": "feat: add reusable GitHub Release binary installer framework (merges PR #325, addresses #293)\n\n* feat: add reusable GitHub Release binary installer framework\n\nAddresses #293\n\n* fix: skip executable permissions test on Windows\n\nchmod is a no-op on Windows, so the permission assertion fails.",
+          "timestamp": "2026-04-02T17:22:23+01:00",
+          "tree_id": "06452b15d9eca8ca3a224b93f9b099137ad248a9",
+          "url": "https://github.com/endavis/pyproject-template/commit/75cbe9b37181359365d57b4e54cb59b8a47507fb"
+        },
+        "date": 1775146967747,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8522999.135197617,
+            "unit": "iter/sec",
+            "range": "stddev: 2.546878533790938e-8",
+            "extra": "mean: 117.32959069188192 nsec\nrounds: 87367"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8749033.081661636,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4579529090002195e-8",
+            "extra": "mean: 114.29834481893144 nsec\nrounds: 87936"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5622823.934611536,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4188335996232979e-8",
+            "extra": "mean: 177.84657880615055 nsec\nrounds: 53987"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1565625.1915514101,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8308253629604013e-7",
+            "extra": "mean: 638.7224767436703 nsec\nrounds: 68106"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 526958.7731716314,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1064808493592077e-7",
+            "extra": "mean: 1.897681661093245 usec\nrounds: 37036"
           }
         ]
       }
