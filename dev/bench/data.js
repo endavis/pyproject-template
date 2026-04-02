@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128085796,
+  "lastUpdate": 1775128093233,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -767,6 +767,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.463968436515078e-7",
             "extra": "mean: 1.9977680112650449 usec\nrounds: 39989"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "048953081700c12ade7b738a8d00b45984fdc56c",
+          "message": "chore(deps): bump vulture from 2.14 to 2.16 (merges PR #315)\n\nBumps [vulture](https://github.com/jendrikseipp/vulture) from 2.14 to 2.16.\n- [Release notes](https://github.com/jendrikseipp/vulture/releases)\n- [Changelog](https://github.com/jendrikseipp/vulture/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/jendrikseipp/vulture/compare/v2.14...v2.16)\n\n---\nupdated-dependencies:\n- dependency-name: vulture\n  dependency-version: '2.16'\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:07:24+01:00",
+          "tree_id": "73dbdb3a018c1137434c4bfdc4fb371a323b8692",
+          "url": "https://github.com/endavis/pyproject-template/commit/048953081700c12ade7b738a8d00b45984fdc56c"
+        },
+        "date": 1775128092351,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8998324.713589584,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5237029155276775e-8",
+            "extra": "mean: 111.13179751001483 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8872471.056192836,
+            "unit": "iter/sec",
+            "range": "stddev: 1.153559415341367e-8",
+            "extra": "mean: 112.70817269130643 nsec\nrounds: 47217"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5530356.850105462,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2095937957409967e-8",
+            "extra": "mean: 180.82015810262413 nsec\nrounds: 53952"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1630684.3953995586,
+            "unit": "iter/sec",
+            "range": "stddev: 3.273030039938512e-7",
+            "extra": "mean: 613.2394489216749 nsec\nrounds: 48478"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496825.85052451806,
+            "unit": "iter/sec",
+            "range": "stddev: 5.719404469133403e-7",
+            "extra": "mean: 2.0127777146544643 usec\nrounds: 44011"
           }
         ]
       }
