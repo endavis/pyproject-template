@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128020126,
+  "lastUpdate": 1775128042139,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -472,6 +472,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.426754173401062e-7",
             "extra": "mean: 2.0144366194025705 usec\nrounds: 39531"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d65a2e46ea76df7ad322c1a544df192efcb7cd7f",
+          "message": "chore(deps): bump mkdocs-material from 9.7.2 to 9.7.6 (merges PR #310)\n\nBumps [mkdocs-material](https://github.com/squidfunk/mkdocs-material) from 9.7.2 to 9.7.6.\n- [Release notes](https://github.com/squidfunk/mkdocs-material/releases)\n- [Changelog](https://github.com/squidfunk/mkdocs-material/blob/master/CHANGELOG)\n- [Commits](https://github.com/squidfunk/mkdocs-material/compare/9.7.2...9.7.6)\n\n---\nupdated-dependencies:\n- dependency-name: mkdocs-material\n  dependency-version: 9.7.6\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:06:44+01:00",
+          "tree_id": "2a22aed7eaebe3a54570c14dd6d4b9bd61d9214f",
+          "url": "https://github.com/endavis/pyproject-template/commit/d65a2e46ea76df7ad322c1a544df192efcb7cd7f"
+        },
+        "date": 1775128041368,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8830573.62867569,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1444950754397564e-8",
+            "extra": "mean: 113.24292645640607 nsec\nrounds: 87635"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8985585.128504755,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1355207348009182e-8",
+            "extra": "mean: 111.28935797711428 nsec\nrounds: 86648"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5633352.44650994,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4103279193208912e-8",
+            "extra": "mean: 177.51419061655469 nsec\nrounds: 54245"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1619816.6237950304,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0693516282753784e-7",
+            "extra": "mean: 617.3538321005271 nsec\nrounds: 45954"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 499399.76519554,
+            "unit": "iter/sec",
+            "range": "stddev: 4.808841403284254e-7",
+            "extra": "mean: 2.0024038249366214 usec\nrounds: 49831"
           }
         ]
       }
