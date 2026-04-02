@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128016335,
+  "lastUpdate": 1775128020126,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -413,6 +413,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.17937575911733e-7",
             "extra": "mean: 2.0479565317988966 usec\nrounds: 47552"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9e88955acf162e9bda9fcdbc43f73b89b8f63430",
+          "message": "chore(deps): bump codespell from 2.4.1 to 2.4.2 (merges PR #305)\n\nBumps [codespell](https://github.com/codespell-project/codespell) from 2.4.1 to 2.4.2.\n- [Release notes](https://github.com/codespell-project/codespell/releases)\n- [Commits](https://github.com/codespell-project/codespell/compare/v2.4.1...v2.4.2)\n\n---\nupdated-dependencies:\n- dependency-name: codespell\n  dependency-version: 2.4.2\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:06:37+01:00",
+          "tree_id": "b22673fc3609b17c3c409c90893d8ccd90c27237",
+          "url": "https://github.com/endavis/pyproject-template/commit/9e88955acf162e9bda9fcdbc43f73b89b8f63430"
+        },
+        "date": 1775128019842,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8672615.345806224,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1263120948150436e-8",
+            "extra": "mean: 115.30547131708836 nsec\nrounds: 84232"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8795622.457884628,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3329843555706627e-8",
+            "extra": "mean: 113.6929199483288 nsec\nrounds: 191976"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5235525.788414557,
+            "unit": "iter/sec",
+            "range": "stddev: 3.39111640447305e-8",
+            "extra": "mean: 191.0027837534201 nsec\nrounds: 199601"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1635984.3832920056,
+            "unit": "iter/sec",
+            "range": "stddev: 3.068949063137644e-7",
+            "extra": "mean: 611.2527785795561 nsec\nrounds: 55424"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496416.71044312837,
+            "unit": "iter/sec",
+            "range": "stddev: 5.426754173401062e-7",
+            "extra": "mean: 2.0144366194025705 usec\nrounds: 39531"
           }
         ]
       }
