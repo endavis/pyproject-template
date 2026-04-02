@@ -280,6 +280,25 @@ AI agents with native file tools (Read, Grep, Glob, Edit, Write) **must** prefer
 
 Native tools provide better visibility, review capabilities, and error handling for the user.
 
+### Temporary Files
+
+AI agents **must never** write temporary files to generic locations like `/tmp/`. Instead, use the project-scoped directory:
+
+```
+tmp/agents/<agent-type>/
+```
+
+Where `<agent-type>` is one of: `claude`, `gemini`, `copilot`, `codex`, or the relevant agent name.
+
+**Filenames must include context** (issue number, PR number, or task identifier) to prevent collisions when multiple sub-agents run concurrently.
+
+| | Example |
+| :--- | :--- |
+| **Before (wrong)** | `/tmp/pr-body.md` |
+| **After (correct)** | `tmp/agents/claude/pr-body-issue-307.md` |
+
+**Cleanup rule:** Agents must delete their temporary files when the task is complete. Do not leave stale files in `tmp/agents/`.
+
 ## Token Efficiency
 - **Be Concise:** Minimal text output.
 - **Use Local Tools:** Prefer native file tools over sub-agents (see [AI Agent File Operations](#ai-agent-file-operations)).
