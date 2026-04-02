@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128005171,
+  "lastUpdate": 1775128016335,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -354,6 +354,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.186242351209401e-7",
             "extra": "mean: 2.0243730683271988 usec\nrounds: 52674"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fb6160cb5a68591bf3495be72e93f55a237e8028",
+          "message": "chore(deps): bump bandit from 1.9.3 to 1.9.4 (merges PR #301)\n\nBumps [bandit](https://github.com/PyCQA/bandit) from 1.9.3 to 1.9.4.\n- [Release notes](https://github.com/PyCQA/bandit/releases)\n- [Commits](https://github.com/PyCQA/bandit/compare/1.9.3...1.9.4)\n\n---\nupdated-dependencies:\n- dependency-name: bandit\n  dependency-version: 1.9.4\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:06:29+01:00",
+          "tree_id": "4384b0c0ff9782a88e411e6a4169e21bda084cbb",
+          "url": "https://github.com/endavis/pyproject-template/commit/fb6160cb5a68591bf3495be72e93f55a237e8028"
+        },
+        "date": 1775128016020,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8656814.668114264,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9956087875720605e-8",
+            "extra": "mean: 115.5159303205728 nsec\nrounds: 83181"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8908790.363150453,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4532090910915097e-8",
+            "extra": "mean: 112.24868464032033 nsec\nrounds: 86942"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5396257.214402827,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6538642288161534e-8",
+            "extra": "mean: 185.31362762526584 nsec\nrounds: 55761"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1559228.0087210394,
+            "unit": "iter/sec",
+            "range": "stddev: 3.73979789621371e-7",
+            "extra": "mean: 641.3430200117124 nsec\nrounds: 43152"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488291.61384671275,
+            "unit": "iter/sec",
+            "range": "stddev: 7.17937575911733e-7",
+            "extra": "mean: 2.0479565317988966 usec\nrounds: 47552"
           }
         ]
       }
