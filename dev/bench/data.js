@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128080348,
+  "lastUpdate": 1775128085796,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -708,6 +708,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.286283111528295e-7",
             "extra": "mean: 2.007662198743664 usec\nrounds: 45062"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1aa06a2cc6c4cab1deac97840d3f0e2603205636",
+          "message": "chore(deps): bump hypothesis from 6.151.9 to 6.151.10 (merges PR #314)\n\nBumps [hypothesis](https://github.com/HypothesisWorks/hypothesis) from 6.151.9 to 6.151.10.\n- [Release notes](https://github.com/HypothesisWorks/hypothesis/releases)\n- [Commits](https://github.com/HypothesisWorks/hypothesis/compare/hypothesis-python-6.151.9...hypothesis-python-6.151.10)\n\n---\nupdated-dependencies:\n- dependency-name: hypothesis\n  dependency-version: 6.151.10\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:07:15+01:00",
+          "tree_id": "d1b78ab4523394f7efee79f989f5afadcae55546",
+          "url": "https://github.com/endavis/pyproject-template/commit/1aa06a2cc6c4cab1deac97840d3f0e2603205636"
+        },
+        "date": 1775128085488,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8795615.21946149,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0841423895299467e-8",
+            "extra": "mean: 113.69301351284271 nsec\nrounds: 84589"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8821599.085972844,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4334352940680112e-8",
+            "extra": "mean: 113.358132721095 nsec\nrounds: 87025"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5344043.791898444,
+            "unit": "iter/sec",
+            "range": "stddev: 1.523907474602267e-8",
+            "extra": "mean: 187.1242150964401 nsec\nrounds: 53548"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1685717.3296174307,
+            "unit": "iter/sec",
+            "range": "stddev: 4.2265465819542453e-7",
+            "extra": "mean: 593.2192678039013 nsec\nrounds: 55024"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 500558.6206011832,
+            "unit": "iter/sec",
+            "range": "stddev: 5.463968436515078e-7",
+            "extra": "mean: 1.9977680112650449 usec\nrounds: 39989"
           }
         ]
       }
