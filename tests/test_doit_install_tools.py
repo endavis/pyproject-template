@@ -2,6 +2,7 @@
 
 import json
 import subprocess  # nosec B404 - needed for CompletedProcess in tests
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -199,6 +200,9 @@ class TestDownloadGithubReleaseBinary:
             dest,
         )
 
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Windows does not support Unix file permissions"
+    )
     @patch("tools.doit.install_tools.get_install_dir")
     @patch("tools.doit.install_tools.urllib.request.urlretrieve")
     def test_sets_executable_permissions(
