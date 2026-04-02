@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128093233,
+  "lastUpdate": 1775128098834,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -826,6 +826,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.719404469133403e-7",
             "extra": "mean: 2.0127777146544643 usec\nrounds: 44011"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d349e4febc5c9b7f5cbde142acf1a940a969081",
+          "message": "chore(deps): bump pip-licenses from 5.5.1 to 5.5.5 (merges PR #316)\n\nBumps [pip-licenses](https://github.com/raimon49/pip-licenses) from 5.5.1 to 5.5.5.\n- [Release notes](https://github.com/raimon49/pip-licenses/releases)\n- [Changelog](https://github.com/raimon49/pip-licenses/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/raimon49/pip-licenses/compare/v-5.5.1...v-5.5.5)\n\n---\nupdated-dependencies:\n- dependency-name: pip-licenses\n  dependency-version: 5.5.5\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:07:32+01:00",
+          "tree_id": "bcd6706458bf8840da06e1e0abc2b37b03339270",
+          "url": "https://github.com/endavis/pyproject-template/commit/9d349e4febc5c9b7f5cbde142acf1a940a969081"
+        },
+        "date": 1775128098075,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7436045.899894581,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1499186836106471e-8",
+            "extra": "mean: 134.4800736119954 nsec\nrounds: 86942"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 7135861.838921922,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4111033720854157e-8",
+            "extra": "mean: 140.1372423644176 nsec\nrounds: 84732"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5200288.4396295175,
+            "unit": "iter/sec",
+            "range": "stddev: 2.745614292974354e-8",
+            "extra": "mean: 192.2970257532951 nsec\nrounds: 194591"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1548403.1037410446,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7762868640815016e-7",
+            "extra": "mean: 645.8266568853638 nsec\nrounds: 64231"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 474233.7635704471,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1249378280118e-7",
+            "extra": "mean: 2.1086647067706106 usec\nrounds: 56297"
           }
         ]
       }
