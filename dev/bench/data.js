@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775128078518,
+  "lastUpdate": 1775128080348,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -649,6 +649,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.80604972692398e-7",
             "extra": "mean: 2.0310638391718525 usec\nrounds: 51849"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1f613446890761bbe2e417e892a123fb190fa330",
+          "message": "chore(deps): bump the dev-dependencies group across 1 directory with 2 updates (merges PR #312)\n\nBumps the dev-dependencies group with 2 updates in the / directory: [pytest-cov](https://github.com/pytest-dev/pytest-cov) and [ruff](https://github.com/astral-sh/ruff).\n\n\nUpdates `pytest-cov` from 7.0.0 to 7.1.0\n- [Changelog](https://github.com/pytest-dev/pytest-cov/blob/master/CHANGELOG.rst)\n- [Commits](https://github.com/pytest-dev/pytest-cov/compare/v7.0.0...v7.1.0)\n\nUpdates `ruff` from 0.15.2 to 0.15.7\n- [Release notes](https://github.com/astral-sh/ruff/releases)\n- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/astral-sh/ruff/compare/0.15.2...0.15.7)\n\n---\nupdated-dependencies:\n- dependency-name: pytest-cov\n  dependency-version: 7.1.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: dev-dependencies\n- dependency-name: ruff\n  dependency-version: 0.15.7\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: dev-dependencies\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-02T12:07:00+01:00",
+          "tree_id": "2a06c2da9210c66da91ef5dca1ace1860c8a465b",
+          "url": "https://github.com/endavis/pyproject-template/commit/1f613446890761bbe2e417e892a123fb190fa330"
+        },
+        "date": 1775128079526,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8827676.205733664,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0928496977024734e-8",
+            "extra": "mean: 113.2800950889533 nsec\nrounds: 86866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8796748.08448101,
+            "unit": "iter/sec",
+            "range": "stddev: 1.403022566440868e-8",
+            "extra": "mean: 113.67837187064315 nsec\nrounds: 88961"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5367700.496290636,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3960058889585893e-8",
+            "extra": "mean: 186.29951516316024 nsec\nrounds: 54245"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1682403.238095837,
+            "unit": "iter/sec",
+            "range": "stddev: 2.616192759099994e-7",
+            "extra": "mean: 594.3878241293753 nsec\nrounds: 58542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498091.7609674429,
+            "unit": "iter/sec",
+            "range": "stddev: 5.286283111528295e-7",
+            "extra": "mean: 2.007662198743664 usec\nrounds: 45062"
           }
         ]
       }
