@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775140078101,
+  "lastUpdate": 1775140302665,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1003,6 +1003,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.887067305672338e-7",
             "extra": "mean: 1.9784876343467088 usec\nrounds: 52646"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e935339996bf17fdef09d90ddaac49a8da86e4b7",
+          "message": "fix: block all git push to protected branches, not just force push (merges PR #308, addresses #307)\n\nAlso fixes false positive where git stash push was matched as git push.\n\nCo-authored-by: Claude Opus 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-04-02T15:31:14+01:00",
+          "tree_id": "43e08ae5033e0a3d23c892e553dbd19c633e5337",
+          "url": "https://github.com/endavis/pyproject-template/commit/e935339996bf17fdef09d90ddaac49a8da86e4b7"
+        },
+        "date": 1775140302116,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8733923.085942661,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0440638971668242e-8",
+            "extra": "mean: 114.49608499638728 nsec\nrounds: 90498"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9197553.125322312,
+            "unit": "iter/sec",
+            "range": "stddev: 1.486908782794369e-8",
+            "extra": "mean: 108.72456906466162 nsec\nrounds: 90408"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5223558.030268149,
+            "unit": "iter/sec",
+            "range": "stddev: 3.07993543840657e-8",
+            "extra": "mean: 191.44039258403058 nsec\nrounds: 194932"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1657548.2941188205,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6302662270262894e-7",
+            "extra": "mean: 603.30067217234 nsec\nrounds: 59806"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 499812.6977671221,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7682763159162604e-7",
+            "extra": "mean: 2.0007494896936975 usec\nrounds: 55359"
           }
         ]
       }
