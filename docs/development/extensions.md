@@ -126,7 +126,7 @@ Test your tests by introducing bugs and verifying they catch them.
 [project.optional-dependencies]
 dev = [
     # ... existing deps ...
-    "mutmut>=2.4",
+    "mutmut>=3.0",
 ]
 
 # Install
