@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775146968242,
+  "lastUpdate": 1775494482885,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1298,6 +1298,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.1064808493592077e-7",
             "extra": "mean: 1.897681661093245 usec\nrounds: 37036"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "56e39e98576f4fa73bbd2a60c2b259d37509853e",
+          "message": "fix: restore mutation testing workflow on mutmut 3.x (merges PR #335, addresses #330)\n\nAddresses #330\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-06T17:54:12+01:00",
+          "tree_id": "4bcad0b3433995e3b39222b23c4d8f801743d26b",
+          "url": "https://github.com/endavis/pyproject-template/commit/56e39e98576f4fa73bbd2a60c2b259d37509853e"
+        },
+        "date": 1775494482038,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8188607.644204087,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1032857194504356e-8",
+            "extra": "mean: 122.12088348228554 nsec\nrounds: 84382"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8800635.036275884,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2667434864480236e-8",
+            "extra": "mean: 113.62816386295283 nsec\nrounds: 88098"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5380637.971877145,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6474012294722172e-8",
+            "extra": "mean: 185.85156727263134 nsec\nrounds: 54413"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1657278.9116779447,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7869868516887166e-7",
+            "extra": "mean: 603.3987356947239 nsec\nrounds: 54101"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 497353.21045626537,
+            "unit": "iter/sec",
+            "range": "stddev: 5.370972183307006e-7",
+            "extra": "mean: 2.0106435003859993 usec\nrounds: 47195"
           }
         ]
       }
