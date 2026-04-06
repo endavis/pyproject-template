@@ -31,7 +31,7 @@ doit <task_name>
 
 | Category | Tasks | Description |
 |----------|-------|-------------|
-| [Testing](#testing-tasks) | `test`, `coverage`, `mutate`, `mutate_html` | Run tests, coverage, and mutation testing |
+| [Testing](#testing-tasks) | `test`, `coverage`, `mutate` | Run tests, coverage, and mutation testing |
 | [Benchmarking](#benchmarking-tasks) | `benchmark`, `benchmark_save`, `benchmark_compare` | Performance benchmarks |
 | [Code Quality](#code-quality-tasks) | `format`, `lint`, `type_check`, `check` | Code formatting and linting |
 | [Code Analysis](#code-analysis-tasks) | `complexity`, `maintainability`, `deadcode` | Code metrics and analysis |
@@ -102,7 +102,7 @@ doit mutate
 - Reports which mutations were killed (detected) vs survived (missed)
 - Prints a summary with the mutation score
 
-**Output:** Results are stored in `tmp/mutmut/` directory.
+**Output:** Results are stored in the `mutants/` cache directory. Re-run `uv run mutmut results` at any time to re-display the text summary.
 
 **When to use:**
 - To evaluate how effective your test suite is at detecting bugs
@@ -110,25 +110,6 @@ doit mutate
 - Informational only -- no enforced threshold
 
 See [Mutation Testing](ci-cd-testing.md#mutation-testing) for details on interpreting results.
-
-### `mutate_html`
-
-Generate an HTML report from mutation testing results.
-
-```bash
-doit mutate_html
-```
-
-**What it does:**
-- Generates a detailed HTML report from the latest `doit mutate` run
-- Report is saved to `tmp/mutmut/index.html`
-
-**Prerequisite:** Run `doit mutate` first to generate results.
-
-**Viewing the report:**
-```bash
-xdg-open tmp/mutmut/index.html
-```
 
 ---
 

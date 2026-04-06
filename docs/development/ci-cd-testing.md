@@ -687,11 +687,8 @@ This project uses [mutmut](https://mutmut.readthedocs.io/) for mutation testing.
 # Run mutation testing (generates results and prints summary)
 doit mutate
 
-# Generate an HTML report for detailed review
-doit mutate_html
-
-# Open the report in a browser
-xdg-open tmp/mutmut/index.html
+# View text results again without re-running
+uv run mutmut results
 ```
 
 ### Interpreting Results
@@ -709,7 +706,7 @@ The **mutation score** is the percentage of mutants killed out of total mutants 
 
 Mutation testing runs weekly in CI (Sunday midnight UTC) via the `.github/workflows/mutation.yml` workflow. It is informational only and does not block merges or fail the build.
 
-Results are uploaded as artifacts with 90-day retention. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
+Results are uploaded as the `mutmut-results.txt` artifact with 90-day retention. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
 
 ## Benchmark Tracking
 

@@ -74,13 +74,16 @@ class TestGetLatestGithubRelease:
             "Authorization", "token test-token"
         )
 
-    @patch.dict("os.environ", {}, clear=True)
     @patch("tools.doit.install_tools.urllib.request.urlopen")
     @patch("tools.doit.install_tools.urllib.request.Request")
     def test_no_auth_header_when_no_token(
-        self, mock_request_cls: MagicMock, mock_urlopen: MagicMock
+        self,
+        mock_request_cls: MagicMock,
+        mock_urlopen: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """Test that no Authorization header is added without GITHUB_TOKEN."""
+        monkeypatch.delenv("GITHUB_TOKEN", raising=False)
         mock_request_instance = MagicMock()
         mock_request_cls.return_value = mock_request_instance
 
