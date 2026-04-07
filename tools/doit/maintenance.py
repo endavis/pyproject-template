@@ -145,7 +145,7 @@ def task_update_deps() -> dict[str, Any]:
         print()
         if check_result.returncode == 0:
             print("=" * 70)
-            print(" " * 20 + "✓ All checks passed!")
+            print(" " * 20 + "[OK] All checks passed!")
             print("=" * 70)
             print()
             print("Next steps:")

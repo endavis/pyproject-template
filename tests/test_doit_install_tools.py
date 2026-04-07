@@ -424,6 +424,51 @@ class TestInstallTool:
             check=True,
         )
 
+    @patch("tools.doit.install_tools.subprocess.run")
+    @patch("tools.doit.install_tools.shutil.which", return_value="/usr/bin/mytool")
+    def test_already_installed_output_is_cp1252_encodable(
+        self, mock_which: MagicMock, mock_run: MagicMock, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Regression test for #328: already-installed output must encode in cp1252 (Windows)."""
+        mock_run.return_value = subprocess.CompletedProcess(
+            args=["mytool", "--version"], returncode=0, stdout="1.0.0\n", stderr=""
+        )
+
+        install_tool(
+            name="mytool",
+            repo="owner/repo",
+            asset_patterns={"linux": "mytool.linux-amd64"},
+        )
+
+        captured = capsys.readouterr()
+        # Must not raise UnicodeEncodeError on Windows cp1252 console
+        captured.out.encode("cp1252")
+        assert "already installed" in captured.out
+
+    @patch("tools.doit.install_tools.download_github_release_binary")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="2.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Linux")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_fresh_install_output_is_cp1252_encodable(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_download: MagicMock,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Regression test for #328: fresh-install output must encode in cp1252 (Windows)."""
+        install_tool(
+            name="mytool",
+            repo="owner/repo",
+            asset_patterns={"linux": "mytool.linux-amd64"},
+        )
+
+        captured = capsys.readouterr()
+        # Must not raise UnicodeEncodeError on Windows cp1252 console
+        captured.out.encode("cp1252")
+        assert "mytool installed" in captured.out
+
 
 class TestCreateInstallTask:
     """Tests for create_install_task function."""
