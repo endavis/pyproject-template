@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775552072462,
+  "lastUpdate": 1775552557468,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1416,6 +1416,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.034656512977336e-7",
             "extra": "mean: 2.0044624114517706 usec\nrounds: 50667"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "16df0363760787646ce4c5b759824986f09c87c2",
+          "message": "chore(deps): bump pyproject-fmt from 2.20.0 to 2.21.0 (merges PR #332)\n\nBumps [pyproject-fmt](https://github.com/tox-dev/toml-fmt) from 2.20.0 to 2.21.0.\n- [Release notes](https://github.com/tox-dev/toml-fmt/releases)\n- [Commits](https://github.com/tox-dev/toml-fmt/compare/pyproject-fmt/2.20.0...pyproject-fmt/2.21.0)\n\n---\nupdated-dependencies:\n- dependency-name: pyproject-fmt\n  dependency-version: 2.21.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-07T10:02:12+01:00",
+          "tree_id": "253ec5c2a99221c56b161ac240e890099b8bf66b",
+          "url": "https://github.com/endavis/pyproject-template/commit/16df0363760787646ce4c5b759824986f09c87c2"
+        },
+        "date": 1775552557022,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8923151.033095391,
+            "unit": "iter/sec",
+            "range": "stddev: 7.46938303338607e-9",
+            "extra": "mean: 112.0680347436757 nsec\nrounds: 86289"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8806622.164555758,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0821028665560285e-8",
+            "extra": "mean: 113.55091444989273 nsec\nrounds: 86686"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5530708.5188584225,
+            "unit": "iter/sec",
+            "range": "stddev: 2.379011053988079e-8",
+            "extra": "mean: 180.8086606969494 nsec\nrounds: 56507"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1527497.9767447992,
+            "unit": "iter/sec",
+            "range": "stddev: 2.519068610418023e-7",
+            "extra": "mean: 654.6653515908854 nsec\nrounds: 63368"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506086.2069069034,
+            "unit": "iter/sec",
+            "range": "stddev: 5.2120675369725e-7",
+            "extra": "mean: 1.9759479439516796 usec\nrounds: 50023"
           }
         ]
       }
