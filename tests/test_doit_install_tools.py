@@ -1,15 +1,21 @@
 """Tests for install_tools.py reusable tool installation framework."""
 
 import json
+import shutil
 import subprocess  # nosec B404 - needed for CompletedProcess in tests
 import sys
+import tarfile
+import tempfile
+import zipfile
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
 from tools.doit.install_tools import (
+    _get_arch,
     create_install_task,
+    download_and_extract_archive,
     download_github_release_binary,
     get_install_dir,
     get_latest_github_release,
@@ -469,6 +475,126 @@ class TestInstallTool:
         captured.out.encode("cp1252")
         assert "mytool installed" in captured.out
 
+    @patch("tools.doit.install_tools.urllib.request.urlretrieve")
+    @patch("tools.doit.install_tools.get_install_dir")
+    @patch("tools.doit.install_tools._get_arch", return_value="amd64")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.5.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Linux")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_url_template_substitutes_placeholders(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_arch: MagicMock,
+        mock_get_install_dir: MagicMock,
+        mock_urlretrieve: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that url_template placeholders are substituted."""
+        mock_get_install_dir.return_value = tmp_path
+        mock_urlretrieve.side_effect = lambda url, dest: Path(dest).touch()
+
+        install_tool(
+            name="terraform",
+            repo="hashicorp/terraform",
+            asset_patterns={},
+            url_template="https://releases.example.com/{version}/terraform_{os}_{arch}",
+        )
+
+        called_url = mock_urlretrieve.call_args.args[0]
+        assert called_url == "https://releases.example.com/1.5.0/terraform_linux_amd64"
+
+    @patch("tools.doit.install_tools.download_and_extract_archive")
+    @patch("tools.doit.install_tools.get_install_dir")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Linux")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_extract_binaries_calls_extract(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_get_install_dir: MagicMock,
+        mock_extract: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that extract_binaries triggers download_and_extract_archive."""
+        mock_get_install_dir.return_value = tmp_path
+
+        install_tool(
+            name="age",
+            repo="FiloSottile/age",
+            asset_patterns={"linux": "age-v{version}-linux-amd64.tar.gz"},
+            extract_binaries=["age", "age-keygen"],
+        )
+
+        mock_extract.assert_called_once()
+        args = mock_extract.call_args.args
+        assert args[1] == ["age", "age-keygen"]
+        assert args[2] == tmp_path
+
+    @patch("tools.doit.install_tools.download_github_release_binary")
+    @patch("tools.doit.install_tools.subprocess.run")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Darwin")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_prefer_brew_false_on_darwin_bypasses_brew(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_run: MagicMock,
+        mock_download: MagicMock,
+    ) -> None:
+        """Test that prefer_brew=False on darwin downloads instead of brew."""
+        install_tool(
+            name="mytool",
+            repo="owner/repo",
+            asset_patterns={"darwin": "mytool.darwin-amd64"},
+            prefer_brew=False,
+        )
+
+        mock_run.assert_not_called()
+        mock_download.assert_called_once_with(
+            repo="owner/repo",
+            version="1.0.0",
+            asset_pattern="mytool.darwin-amd64",
+            dest_name="mytool",
+        )
+
+    @patch("tools.doit.install_tools.urllib.request.urlretrieve")
+    @patch("tools.doit.install_tools.get_install_dir")
+    @patch("tools.doit.install_tools._get_arch", return_value="amd64")
+    @patch("tools.doit.install_tools.subprocess.run")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Darwin")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_url_template_on_darwin_bypasses_brew(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_run: MagicMock,
+        mock_arch: MagicMock,
+        mock_get_install_dir: MagicMock,
+        mock_urlretrieve: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that url_template on darwin always bypasses brew."""
+        mock_get_install_dir.return_value = tmp_path
+        mock_urlretrieve.side_effect = lambda url, dest: Path(dest).touch()
+
+        install_tool(
+            name="terraform",
+            repo="hashicorp/terraform",
+            asset_patterns={},
+            url_template="https://releases.example.com/{version}/{os}_{arch}",
+        )
+
+        mock_run.assert_not_called()
+        mock_urlretrieve.assert_called_once()
+
 
 class TestCreateInstallTask:
     """Tests for create_install_task function."""
@@ -507,6 +633,9 @@ class TestCreateInstallTask:
             asset_patterns={"linux": "mytool.linux-amd64"},
             version_cmd=["mytool", "version"],
             post_install_message="Done!",
+            extract_binaries=None,
+            url_template=None,
+            prefer_brew=True,
         )
 
     @patch("tools.doit.install_tools.install_tool")
@@ -526,4 +655,252 @@ class TestCreateInstallTask:
             asset_patterns={"linux": "mytool.linux-amd64"},
             version_cmd=None,
             post_install_message=None,
+            extract_binaries=None,
+            url_template=None,
+            prefer_brew=True,
         )
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_forwards_extract_binaries(self, mock_install: MagicMock) -> None:
+        """Test that extract_binaries kwarg is forwarded to install_tool."""
+        result = create_install_task(
+            name="age",
+            repo="FiloSottile/age",
+            asset_patterns={"linux": "age.tar.gz"},
+            extract_binaries=["age", "age-keygen"],
+        )
+
+        result["actions"][0]()
+
+        assert mock_install.call_args.kwargs["extract_binaries"] == ["age", "age-keygen"]
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_forwards_url_template(self, mock_install: MagicMock) -> None:
+        """Test that url_template kwarg is forwarded to install_tool."""
+        template = "https://example.com/{version}/{os}/{arch}/tool.zip"
+        result = create_install_task(
+            name="terraform",
+            repo="hashicorp/terraform",
+            asset_patterns={},
+            url_template=template,
+        )
+
+        result["actions"][0]()
+
+        assert mock_install.call_args.kwargs["url_template"] == template
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_forwards_prefer_brew(self, mock_install: MagicMock) -> None:
+        """Test that prefer_brew kwarg is forwarded to install_tool."""
+        result = create_install_task(
+            name="mytool",
+            repo="owner/repo",
+            asset_patterns={"linux": "mytool"},
+            prefer_brew=False,
+        )
+
+        result["actions"][0]()
+
+        assert mock_install.call_args.kwargs["prefer_brew"] is False
+
+
+class TestGetArch:
+    """Tests for _get_arch internal helper."""
+
+    @patch("tools.doit.install_tools.platform.machine", return_value="x86_64")
+    def test_x86_64_maps_to_amd64(self, mock_machine: MagicMock) -> None:
+        assert _get_arch() == "amd64"
+
+    @patch("tools.doit.install_tools.platform.machine", return_value="aarch64")
+    def test_aarch64_maps_to_arm64(self, mock_machine: MagicMock) -> None:
+        assert _get_arch() == "arm64"
+
+    @patch("tools.doit.install_tools.platform.machine", return_value="arm64")
+    def test_arm64_passthrough(self, mock_machine: MagicMock) -> None:
+        assert _get_arch() == "arm64"
+
+    @patch("tools.doit.install_tools.platform.machine", return_value="riscv64")
+    def test_unknown_passthrough(self, mock_machine: MagicMock) -> None:
+        assert _get_arch() == "riscv64"
+
+
+def _make_targz(path: Path, files: dict[str, bytes]) -> None:
+    """Build a .tar.gz with the given filename->content map."""
+    with tarfile.open(path, "w:gz") as tar:
+        for name, content in files.items():
+            info = tarfile.TarInfo(name=name)
+            info.size = len(content)
+            info.mode = 0o644
+            import io
+
+            tar.addfile(info, io.BytesIO(content))
+
+
+def _make_zip(path: Path, files: dict[str, bytes]) -> None:
+    """Build a .zip with the given filename->content map."""
+    with zipfile.ZipFile(path, "w") as zf:
+        for name, content in files.items():
+            zf.writestr(name, content)
+
+
+class TestDownloadAndExtractArchive:
+    """Tests for download_and_extract_archive function."""
+
+    def test_extracts_targz_with_multiple_binaries(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.tar.gz"
+        _make_targz(
+            fixture,
+            {"age/age": b"age-binary", "age/age-keygen": b"age-keygen-binary"},
+        )
+        dest = tmp_path / "out"
+
+        with patch(
+            "tools.doit.install_tools.urllib.request.urlretrieve",
+            side_effect=lambda url, d: shutil.copy(fixture, d),
+        ):
+            result = download_and_extract_archive(
+                "https://example.com/age.tar.gz", ["age", "age-keygen"], dest
+            )
+
+        assert (dest / "age").read_bytes() == b"age-binary"
+        assert (dest / "age-keygen").read_bytes() == b"age-keygen-binary"
+        assert result == [dest / "age", dest / "age-keygen"]
+
+    def test_extracts_zip_with_single_binary(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.zip"
+        _make_zip(fixture, {"terraform": b"tf-binary"})
+        dest = tmp_path / "out"
+
+        with patch(
+            "tools.doit.install_tools.urllib.request.urlretrieve",
+            side_effect=lambda url, d: shutil.copy(fixture, d),
+        ):
+            result = download_and_extract_archive(
+                "https://example.com/terraform.zip", ["terraform"], dest
+            )
+
+        assert (dest / "terraform").read_bytes() == b"tf-binary"
+        assert result == [dest / "terraform"]
+
+    def test_ignores_extra_files_in_archive(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.tar.gz"
+        _make_targz(
+            fixture,
+            {
+                "age/age": b"age",
+                "age/LICENSE": b"license-text",
+                "age/README.md": b"readme",
+            },
+        )
+        dest = tmp_path / "out"
+
+        with patch(
+            "tools.doit.install_tools.urllib.request.urlretrieve",
+            side_effect=lambda url, d: shutil.copy(fixture, d),
+        ):
+            download_and_extract_archive("https://example.com/age.tar.gz", ["age"], dest)
+
+        assert (dest / "age").exists()
+        assert not (dest / "LICENSE").exists()
+        assert not (dest / "README.md").exists()
+
+    def test_blocks_path_traversal_in_tar(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.tar.gz"
+        # Create a tar member that attempts to escape via parent dirs
+        with tarfile.open(fixture, "w:gz") as tar:
+            import io
+
+            evil = b"pwned"
+            info = tarfile.TarInfo(name="../../../etc/evil")
+            info.size = len(evil)
+            info.mode = 0o644
+            tar.addfile(info, io.BytesIO(evil))
+            good = b"good-binary"
+            info2 = tarfile.TarInfo(name="bin/mytool")
+            info2.size = len(good)
+            info2.mode = 0o644
+            tar.addfile(info2, io.BytesIO(good))
+
+        dest = tmp_path / "out"
+
+        with patch(
+            "tools.doit.install_tools.urllib.request.urlretrieve",
+            side_effect=lambda url, d: shutil.copy(fixture, d),
+        ):
+            download_and_extract_archive("https://example.com/x.tar.gz", ["mytool"], dest)
+
+        # Confirm no file landed outside dest_dir
+        assert (dest / "mytool").exists()
+        # The traversal target must not exist
+        assert not Path("/etc/evil").exists()
+        # And no "evil" file inside dest_dir
+        assert not (dest / "evil").exists()
+
+    def test_unsupported_extension_raises_value_error(self, tmp_path: Path) -> None:
+        with pytest.raises(ValueError, match="Unsupported archive extension"):
+            download_and_extract_archive("https://example.com/foo.7z", ["foo"], tmp_path)
+
+    def test_temp_file_cleanup_on_success(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.tar.gz"
+        _make_targz(fixture, {"mytool": b"binary"})
+        dest = tmp_path / "out"
+
+        before = set(Path(tempfile.gettempdir()).iterdir())
+        with patch(
+            "tools.doit.install_tools.urllib.request.urlretrieve",
+            side_effect=lambda url, d: shutil.copy(fixture, d),
+        ):
+            download_and_extract_archive("https://example.com/x.tar.gz", ["mytool"], dest)
+        after = set(Path(tempfile.gettempdir()).iterdir())
+
+        new_files = after - before
+        assert not any(f.suffix in (".gz", ".zip") for f in new_files)
+
+    def test_temp_file_cleanup_on_failure(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.tar.gz"
+        _make_targz(fixture, {"other": b"binary"})
+        dest = tmp_path / "out"
+
+        before = set(Path(tempfile.gettempdir()).iterdir())
+        with (
+            patch(
+                "tools.doit.install_tools.urllib.request.urlretrieve",
+                side_effect=lambda url, d: shutil.copy(fixture, d),
+            ),
+            pytest.raises(RuntimeError, match="not found in archive"),
+        ):
+            download_and_extract_archive("https://example.com/x.tar.gz", ["missing"], dest)
+        after = set(Path(tempfile.gettempdir()).iterdir())
+
+        new_files = after - before
+        assert not any(f.suffix in (".gz", ".zip") for f in new_files)
+
+    def test_missing_binary_raises_runtime_error(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.tar.gz"
+        _make_targz(fixture, {"present": b"x"})
+        dest = tmp_path / "out"
+
+        with (
+            patch(
+                "tools.doit.install_tools.urllib.request.urlretrieve",
+                side_effect=lambda url, d: shutil.copy(fixture, d),
+            ),
+            pytest.raises(RuntimeError, match="absent"),
+        ):
+            download_and_extract_archive("https://example.com/x.tar.gz", ["absent"], dest)
+
+    @pytest.mark.skipif(
+        sys.platform == "win32", reason="Windows does not support Unix file permissions"
+    )
+    def test_chmod_755_on_extracted(self, tmp_path: Path) -> None:
+        fixture = tmp_path / "fixture.zip"
+        _make_zip(fixture, {"mytool": b"binary"})
+        dest = tmp_path / "out"
+
+        with patch(
+            "tools.doit.install_tools.urllib.request.urlretrieve",
+            side_effect=lambda url, d: shutil.copy(fixture, d),
+        ):
+            download_and_extract_archive("https://example.com/x.zip", ["mytool"], dest)
+
+        assert (dest / "mytool").stat().st_mode & 0o755 == 0o755

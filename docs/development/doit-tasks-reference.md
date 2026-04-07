@@ -920,6 +920,8 @@ echo 'eval "$(direnv hook bash)"' >> ~/.bashrc
 direnv allow
 ```
 
+This task uses the reusable install_tools framework — see [install_tools framework](install-tools-framework.md) for adding more tools.
+
 ### `commit`
 
 Interactive commit with commitizen.
