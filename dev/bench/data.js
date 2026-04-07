@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775559875887,
+  "lastUpdate": 1775562815496,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1770,6 +1770,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.659710204075393e-7",
             "extra": "mean: 2.022281888512611 usec\nrounds: 51978"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "117ecd05ad5e548735a23f52e4bedfeddd35b6bf",
+          "message": "feat: add archive extraction and custom URL support to install_tools framework (merges PR #339, addresses #326)\n\nAddresses #326",
+          "timestamp": "2026-04-07T12:53:09+01:00",
+          "tree_id": "80808c89bb37f21b3ea45d610d0497ac172b006b",
+          "url": "https://github.com/endavis/pyproject-template/commit/117ecd05ad5e548735a23f52e4bedfeddd35b6bf"
+        },
+        "date": 1775562815004,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8849484.617671942,
+            "unit": "iter/sec",
+            "range": "stddev: 8.70657834586307e-9",
+            "extra": "mean: 113.0009309246161 nsec\nrounds: 86022"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8279783.304110707,
+            "unit": "iter/sec",
+            "range": "stddev: 3.79166889830101e-8",
+            "extra": "mean: 120.77610769155334 nsec\nrounds: 92115"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5692966.98363091,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2212629779603913e-8",
+            "extra": "mean: 175.65533102076964 nsec\nrounds: 55057"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1852397.2462099444,
+            "unit": "iter/sec",
+            "range": "stddev: 1.789310268254895e-7",
+            "extra": "mean: 539.8410098298448 nsec\nrounds: 59337"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 527780.7014771979,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4828024319377935e-7",
+            "extra": "mean: 1.8947263460015007 usec\nrounds: 48068"
           }
         ]
       }
