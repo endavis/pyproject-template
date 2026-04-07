@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775558853869,
+  "lastUpdate": 1775559875887,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1711,6 +1711,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.341842307541136e-7",
             "extra": "mean: 2.074249067437509 usec\nrounds: 57101"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "595b68f88c764036ea4f8803951eb5e12c0ebd23",
+          "message": "fix: skip benchmark workflow gracefully when tests/benchmarks/ is missing (merges PR #338, addresses #327)\n\nAddresses #327",
+          "timestamp": "2026-04-07T12:04:11+01:00",
+          "tree_id": "58ef48b43bc7ab62f78add594e98fd195d3a05ac",
+          "url": "https://github.com/endavis/pyproject-template/commit/595b68f88c764036ea4f8803951eb5e12c0ebd23"
+        },
+        "date": 1775559875612,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8356566.650048209,
+            "unit": "iter/sec",
+            "range": "stddev: 5.413339221445576e-8",
+            "extra": "mean: 119.66637039797091 nsec\nrounds: 88332"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9230342.626846008,
+            "unit": "iter/sec",
+            "range": "stddev: 3.125326230274287e-8",
+            "extra": "mean: 108.33834023577283 nsec\nrounds: 87169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5417779.742981614,
+            "unit": "iter/sec",
+            "range": "stddev: 1.970699243909538e-8",
+            "extra": "mean: 184.5774556072413 nsec\nrounds: 54964"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1651371.5645145136,
+            "unit": "iter/sec",
+            "range": "stddev: 2.846199764763096e-7",
+            "extra": "mean: 605.5572358689546 nsec\nrounds: 58984"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494490.9043988423,
+            "unit": "iter/sec",
+            "range": "stddev: 6.659710204075393e-7",
+            "extra": "mean: 2.022281888512611 usec\nrounds: 51978"
           }
         ]
       }
