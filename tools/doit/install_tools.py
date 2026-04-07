@@ -114,7 +114,7 @@ def install_tool(
             check=True,
         )
         version_output = result.stdout.strip() or result.stderr.strip()
-        print(f"\u2713 {name} already installed: {version_output}")
+        print(f"[OK] {name} already installed: {version_output}")
         return
 
     print(f"Installing {name}...")
@@ -135,7 +135,7 @@ def install_tool(
         print(f"Unsupported OS for {name}: {system}")
         sys.exit(1)
 
-    print(f"\u2713 {name} installed.")
+    print(f"[OK] {name} installed.")
     if post_install_message:
         print(post_install_message)
 
