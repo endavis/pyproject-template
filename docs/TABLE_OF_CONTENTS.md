@@ -57,6 +57,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 
 ## Complete Index
 <!-- BEGIN:all -->
+- [ADR-0001: install_tools framework: archive extraction and custom URLs](decisions/0001-install-tools-framework-archive-extraction-and-custom-urls.md)
 - [ADR-9001: Use uv for package management](template/decisions/9001-use-uv-for-package-management.md)
 - [ADR-9002: Use doit for task automation](template/decisions/9002-use-doit-for-task-automation.md)
 - [ADR-9003: Use ruff for linting and formatting](template/decisions/9003-use-ruff-for-linting-and-formatting.md)
@@ -83,6 +84,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
+- [install_tools Framework](development/install-tools-framework.md)
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
 - [Migration Guide](template/migration.md) - Migrate existing Python projects to use this template
