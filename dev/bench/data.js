@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775494482885,
+  "lastUpdate": 1775552072462,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1357,6 +1357,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.370972183307006e-7",
             "extra": "mean: 2.0106435003859993 usec\nrounds: 47195"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d2c5b22bf3a3a0d32fe2fb4bbee6b33264d26e6e",
+          "message": "chore(deps): bump ruff from 0.15.8 to 0.15.9 in the dev-dependencies group across 1 directory (merges PR #331)\n\nchore(deps): bump ruff in the dev-dependencies group\n\nBumps the dev-dependencies group with 1 update: [ruff](https://github.com/astral-sh/ruff).\n\n\nUpdates `ruff` from 0.15.8 to 0.15.9\n- [Release notes](https://github.com/astral-sh/ruff/releases)\n- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/astral-sh/ruff/compare/0.15.8...0.15.9)\n\n---\nupdated-dependencies:\n- dependency-name: ruff\n  dependency-version: 0.15.9\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: dev-dependencies\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-07T09:54:02+01:00",
+          "tree_id": "a03f41f272508b394fa00a34a1401aa489b97d22",
+          "url": "https://github.com/endavis/pyproject-template/commit/d2c5b22bf3a3a0d32fe2fb4bbee6b33264d26e6e"
+        },
+        "date": 1775552071551,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8421160.937145447,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4025367732752085e-8",
+            "extra": "mean: 118.74847274192742 nsec\nrounds: 87405"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8931462.185339836,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3187802674667761e-8",
+            "extra": "mean: 111.96375008354252 nsec\nrounds: 89598"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5320228.845301308,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0761476773067336e-8",
+            "extra": "mean: 187.96183943913897 nsec\nrounds: 195351"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1678531.1995465136,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1030741485247953e-7",
+            "extra": "mean: 595.758958945874 nsec\nrounds: 50564"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498886.8807351347,
+            "unit": "iter/sec",
+            "range": "stddev: 7.034656512977336e-7",
+            "extra": "mean: 2.0044624114517706 usec\nrounds: 50667"
           }
         ]
       }
