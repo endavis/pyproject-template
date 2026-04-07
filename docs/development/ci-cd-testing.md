@@ -726,6 +726,8 @@ The `benchmark.yml` workflow operates in two modes:
 
 Only main branch results are stored to keep the historical data clean and consistent.
 
+If `tests/benchmarks/` does not exist or contains no `test_*.py` files, the workflow skips all benchmark steps and finishes successfully. This allows downstream projects generated from this template to enable the workflow incrementally without CI failures before any benchmark tests are written.
+
 ### The `gh-benchmarks` Branch
 
 Benchmark data is stored in a dedicated `gh-benchmarks` branch, separate from the main codebase. This branch is auto-created by the benchmark action on the first push to `main` after the workflow is enabled. Until the branch exists, PR benchmark comparisons are skipped gracefully.
