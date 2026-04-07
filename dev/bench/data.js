@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775558043572,
+  "lastUpdate": 1775558853869,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1652,6 +1652,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.093517745268903e-7",
             "extra": "mean: 1.9940540736119472 usec\nrounds: 55258"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aa6337c7ac254e5e6256ce00c76323987dde24f3",
+          "message": "fix: replace Unicode checkmark with ASCII marker in direct-stdout task output (merges PR #337, addresses #328)\n\nAddresses #328",
+          "timestamp": "2026-04-07T11:47:05+01:00",
+          "tree_id": "3847f038ebd6e4f1bb4a17c5a3b6f2a44b8b5802",
+          "url": "https://github.com/endavis/pyproject-template/commit/aa6337c7ac254e5e6256ce00c76323987dde24f3"
+        },
+        "date": 1775558853127,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8673523.979971722,
+            "unit": "iter/sec",
+            "range": "stddev: 5.4125648879559805e-8",
+            "extra": "mean: 115.29339197183613 nsec\nrounds: 89759"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8881902.121657511,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4581367936575283e-8",
+            "extra": "mean: 112.58849583149687 nsec\nrounds: 89119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5220907.768633323,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8265143462219372e-8",
+            "extra": "mean: 191.5375724520355 nsec\nrounds: 52897"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1610713.0845057322,
+            "unit": "iter/sec",
+            "range": "stddev: 2.686554325749458e-7",
+            "extra": "mean: 620.8430350628602 nsec\nrounds: 59663"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 482102.1813139261,
+            "unit": "iter/sec",
+            "range": "stddev: 5.341842307541136e-7",
+            "extra": "mean: 2.074249067437509 usec\nrounds: 57101"
           }
         ]
       }
