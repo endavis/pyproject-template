@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775557170550,
+  "lastUpdate": 1775558043572,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1593,6 +1593,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.561364414438025e-7",
             "extra": "mean: 1.9702866911755323 usec\nrounds: 54693"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9b369f4f59f00b359061d13efbbdd201bebd402",
+          "message": "docs: add git pull reminder before branching in AGENTS.md Flow (merges PR #336, addresses #329)\n\ndocs: add git pull reminder before branching in Critical Reminders Flow\n\nAddresses #329",
+          "timestamp": "2026-04-07T11:33:40+01:00",
+          "tree_id": "09eae13965dfeaad51dff82d158b360a6e09df67",
+          "url": "https://github.com/endavis/pyproject-template/commit/c9b369f4f59f00b359061d13efbbdd201bebd402"
+        },
+        "date": 1775558043202,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8957227.68225561,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1207037630127527e-8",
+            "extra": "mean: 111.64168596283574 nsec\nrounds: 82659"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8784388.760727834,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1135090486265641e-8",
+            "extra": "mean: 113.838313312211 nsec\nrounds: 85493"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5986108.902179079,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5076350352819906e-8",
+            "extra": "mean: 167.05342591344728 nsec\nrounds: 59120"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1797381.5093538573,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3235574789485587e-7",
+            "extra": "mean: 556.3649090612327 nsec\nrounds: 56288"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501490.9140295485,
+            "unit": "iter/sec",
+            "range": "stddev: 5.093517745268903e-7",
+            "extra": "mean: 1.9940540736119472 usec\nrounds: 55258"
           }
         ]
       }
