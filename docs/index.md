@@ -65,6 +65,10 @@ print(message)  # Output: Hello, Python!
 - **[Code of Conduct](https://github.com/endavis/pyproject-template/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
 - **[AI Agent Setup](development/AI_SETUP.md)** - Setup guide for AI coding assistants
 
+### Tooling roles
+
+The template layers a small runtime package, a heavier set of development tools, and `doit` as the dev task runner. Knowing which tool belongs to which audience prevents the most common architectural mistake: treating `doit` as if it were the application's user-facing CLI. See [Tooling Roles and Architectural Boundaries](development/tooling-roles.md) for the full breakdown.
+
 ## Support
 
 - **Issues:** [GitHub Issues](https://github.com/endavis/pyproject-template/issues)

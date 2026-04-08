@@ -151,6 +151,8 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 
 ## Tooling & Environment
 
+> For the architectural rationale behind this hierarchy — what each tool is for, who uses it, and where runtime code ends and dev tooling begins — see [Tooling Roles and Architectural Boundaries](docs/development/tooling-roles.md).
+
 ### Principle: Use the Highest-Level Tool Available
 
 This project wraps common operations in `doit` tasks that enforce conventions, validate inputs, and reduce errors. **Always check if a `doit` task exists before running a raw command.**

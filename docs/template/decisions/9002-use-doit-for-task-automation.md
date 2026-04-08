@@ -12,12 +12,29 @@ Use **doit** as the task automation framework for common operations like testing
 
 doit is a Python-based build tool that uses pure Python for task definitions (no DSL to learn), provides automatic task dependency resolution and incremental builds, and encourages modular task organization. Being Python-native means no context switching for developers already working in Python.
 
+## Scope
+
+doit is a **development task runner only**. It exists to make contributor
+workflows (testing, linting, releases, issue and PR creation) reproducible
+and discoverable. It is not part of the published package's public API.
+
+- doit must **not** be used to front the application's user-facing CLI. The
+  application's CLI is a console script under `src/package_name/`. End users
+  of the published package should never need to install `doit` to use it.
+- The runtime-dependency status of `doit` (see #65) is a **packaging
+  convenience** for adopters of the template and does **not** make `doit` a
+  runtime CLI surface for the application.
+
+For the broader layering rationale, see
+[Tooling Roles and Architectural Boundaries](../../development/tooling-roles.md).
+
 ## Related Issues
 
 - Issue #170: Rename tools/tasks to tools/doit
 - Issue #87: Add shell completions for doit tasks
 - Issue #80: Add doit issue and doit pr commands for GitHub workflow
 - Issue #65: Promote doit and rich to runtime dependencies
+- Issue #340: Document tooling roles and architectural boundaries
 
 ## Related Documentation
 
