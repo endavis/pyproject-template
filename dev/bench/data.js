@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775648882559,
+  "lastUpdate": 1775654980894,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1947,6 +1947,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.546480643747749e-7",
             "extra": "mean: 1.996803933586732 usec\nrounds: 50539"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "276259d74765bf2b875f799a2c755c9ddc3aeb20",
+          "message": "docs: document slash commands and dual-agent workflow (merges PR #351, addresses #344)\n\nAdd a single reference page covering the ten slash commands that ship\nunder .claude/commands/ and .gemini/commands/, the single-agent and\ndual-agent workflows built on top of them, and how to add new commands.\nCross-link from AGENTS.md Sources of Truth and AI_SETUP.md so\ncontributors can discover the workflow from either entry point.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-08T14:29:07+01:00",
+          "tree_id": "5b2178e0637c8b659713aba1a5eda96346854972",
+          "url": "https://github.com/endavis/pyproject-template/commit/276259d74765bf2b875f799a2c755c9ddc3aeb20"
+        },
+        "date": 1775654979923,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8960171.27248787,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1013030530278131e-8",
+            "extra": "mean: 111.6050095013799 nsec\nrounds: 84725"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8904366.17915838,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2087739400893152e-8",
+            "extra": "mean: 112.30445602524824 nsec\nrounds: 87789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5441290.137402907,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4174506972934403e-8",
+            "extra": "mean: 183.7799445991854 nsec\nrounds: 54873"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1696187.937912317,
+            "unit": "iter/sec",
+            "range": "stddev: 2.640617399459359e-7",
+            "extra": "mean: 589.5573112203643 nsec\nrounds: 56010"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 474162.80983405816,
+            "unit": "iter/sec",
+            "range": "stddev: 5.249988159412179e-7",
+            "extra": "mean: 2.108980247417481 usec\nrounds: 48905"
           }
         ]
       }
