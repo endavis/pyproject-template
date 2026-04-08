@@ -80,6 +80,7 @@ nav:
       - Release & Automation: development/release-and-automation.md
       - AI:
           - Setup: development/AI_SETUP.md
+          - Slash Commands: development/ai/slash-commands.md
           - Architectural Conventions: development/ai/architectural-conventions.md
           - Enforcement Principles: development/ai/enforcement-principles.md
           - Command Blocking: development/ai/command-blocking.md

@@ -105,6 +105,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Testing** | `.github/CONTRIBUTING.md` | Test patterns, coverage rules. |
 | **Security** | `.github/SECURITY.md` | Policy, sensitive data handling. |
 | **Architecture & Layering** | `docs/development/ai/architectural-conventions.md` | Imperative-form rules for AI agents. |
+| **Slash Commands & Workflows** | `docs/development/ai/slash-commands.md` | Reference for /plan-issue, /implement, /finalize, dual-agent workflow. |
 
 ## Common Pitfalls
 

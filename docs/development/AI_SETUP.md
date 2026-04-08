@@ -143,6 +143,8 @@ The `AGENTS.md` file serves as general-purpose documentation for any AI coding a
 - **Codeium**: Reference in project settings
 - **Tabnine**: Reference in configuration
 
+> **Note**: For the slash commands and dual-agent workflow this template ships with, see [Slash Commands and Workflows](ai/slash-commands.md).
+
 ## AGENTS.md - Universal Context File
 
 The `AGENTS.md` file provides comprehensive project context including:
