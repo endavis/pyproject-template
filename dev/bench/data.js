@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775562815496,
+  "lastUpdate": 1775645280796,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1829,6 +1829,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.4828024319377935e-7",
             "extra": "mean: 1.8947263460015007 usec\nrounds: 48068"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5cd4ae76328b376f0e3b07968e5f42a4a60273a3",
+          "message": "docs: document tooling roles and architectural boundaries (merges PR #347, addresses #340)\n\nAdd a source-of-truth doc for the roles of doit, uv, gh, and git, and\nthe boundary between dev tooling and the published runtime package.\nCodify doit as a development task runner only via a new Scope section\nin ADR-9002, with a current-state callout about #65.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-08T11:47:32+01:00",
+          "tree_id": "a6dc5cdcb191afbcac3bec91432e9d87cc6fee90",
+          "url": "https://github.com/endavis/pyproject-template/commit/5cd4ae76328b376f0e3b07968e5f42a4a60273a3"
+        },
+        "date": 1775645280293,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8603078.820334164,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0149771836452075e-8",
+            "extra": "mean: 116.23745648318464 nsec\nrounds: 90827"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9059521.889459325,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3190719801695913e-8",
+            "extra": "mean: 110.38110092360296 nsec\nrounds: 88889"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5352669.0127698975,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7325246832512503e-8",
+            "extra": "mean: 186.82268558251843 nsec\nrounds: 54275"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1684848.121245208,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9074812718967716e-7",
+            "extra": "mean: 593.5253079434469 nsec\nrounds: 58855"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498847.4507590762,
+            "unit": "iter/sec",
+            "range": "stddev: 5.219044172125778e-7",
+            "extra": "mean: 2.0046208484744987 usec\nrounds: 50795"
           }
         ]
       }
