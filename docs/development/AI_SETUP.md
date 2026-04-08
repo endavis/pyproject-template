@@ -16,9 +16,21 @@ This template includes pre-configured settings for multiple AI coding assistants
 
 ## Supported AI Agents
 
+### Agent comparison
+
+| Agent | Permission model | Hooks support | Slash commands | LSP | Dual-agent role |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **Codex CLI** | TOML approval policies (`.codex/config.toml`) | Project-level `tools/hooks/ai/` apply via shell | None shipped | Not documented | Standalone alternative (not part of dual-agent flow) |
+| **Gemini CLI** | JSON allowlists + lifecycle hooks (`.gemini/settings.json`) | Project-level hooks apply; Gemini lifecycle hooks supported | 2 output-only (`/plan-issue`, `/review-pr`) | Not documented | Second-opinion reviewer / planner in dual-agent flow |
+| **Claude Code** | Layered permissions (`.claude/settings.local.json` + `.claude/settings.json` PreToolUse hooks) | Project-level hooks plus Claude PreToolUse hooks | 8 (`plan-issue`, `implement`, `finalize`, `close-issue`, `plan-both`, `review-both`, `gemini-review`, `where-am-i`) | Supported | Primary orchestrator in single-agent and dual-agent flows |
+
+The project-level dangerous-command hooks under `tools/hooks/ai/` apply to all three agents regardless of per-agent config and cannot be bypassed by editing `.claude/settings.local.json`, `.codex/config.toml`, or `.gemini/settings.json`. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
+
 ### 1. Codex CLI (OpenAI)
 
 **Configuration:** `.codex/config.toml`
+
+> **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
 Codex CLI directly reads `AGENTS.md` from the project root. The configuration file whitelists common development commands.
 
@@ -45,9 +57,13 @@ codex
 - [Configuring Codex](https://developers.openai.com/codex/local-config/)
 - [Codex Security Guide](https://developers.openai.com/codex/security/)
 
+**Codex parity status:** Codex ships no slash commands in this template — `.codex/` contains only `config.toml`. LSP integration is not documented for Codex here. Codex is not part of the dual-agent workflow (Claude and Gemini are); it works as a standalone alternative for contributors who prefer the OpenAI CLI. The project-level hooks under `tools/hooks/ai/` still apply to Codex — see [Command Blocking](ai/command-blocking.md). For the broader slash-command and dual-agent picture, see [Slash Commands and Workflows](ai/slash-commands.md).
+
 ### 2. Gemini CLI (Google)
 
 **Configuration:** `.gemini/settings.json`
+
+> **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
 Gemini CLI can read `AGENTS.md` (or `GEMINI.md`) from the project root. The configuration file uses allowlists for tools and shell commands, and configures lifecycle hooks.
 
@@ -87,6 +103,8 @@ gemini --yolo
 ### 3. Claude Code (Anthropic)
 
 **Configuration:** `.claude/` directory
+
+> **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
 Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`.
 
@@ -160,6 +178,29 @@ This file is:
 - **Read directly** by Codex CLI and Gemini CLI
 - **Imported** by Claude Code via `.claude/claude.md`
 - **Referenceable** by other AI tools
+
+## Context files and precedence
+
+This template ships several files that influence agent behavior. They fall into two categories: **context/instruction files** (markdown) and **settings/config files** (JSON or TOML). Knowing which is which — and which one wins on conflict — matters when adapting the template for a new project.
+
+**File inventory:**
+
+- **`AGENTS.md`** (project root, ~20 KB) — universal source of truth for architecture, workflow, tooling hierarchy, and security rules. Read directly by Codex CLI and Gemini CLI; imported by Claude Code via `@../AGENTS.md` in `.claude/CLAUDE.md`.
+- **`.claude/CLAUDE.md`** (~2 KB) — Claude-specific complement. First line is `@../AGENTS.md`, which imports the universal rules; the rest adds Claude-specific layers (token-efficiency guidance, the mandatory TodoWrite plan-test-code loop, the development workflow reminder, and the commit workflow reminder).
+- **`GEMINI.md`** (project root, ~1 KB) — Gemini-specific complement. Covers Gemini's stdout-only collaboration mode (so Claude handles GitHub writes), the output signing footer, and Gemini's tool-usage rules. Read alongside `AGENTS.md` by Gemini CLI, not instead of it.
+- **`.codex/config.toml`** — Codex approval policy file (TOML). Not a context file; configures permissions only. Codex reads `AGENTS.md` directly for instructions.
+- **`.claude/settings.json`** — Claude PreToolUse hooks and statusline configuration. Committed.
+- **`.claude/settings.local.json`** — local Claude permissions overlay. Not committed.
+- **`.gemini/settings.json`** — Gemini tool allowlists and lifecycle hook configuration.
+
+**Precedence rules:**
+
+- All three agents treat `AGENTS.md` as the architectural and workflow source of truth.
+- Agent-specific markdown files (`.claude/CLAUDE.md`, `GEMINI.md`) **complement** `AGENTS.md` — they cover behaviors specific to that agent's interaction model and do not override the universal rules.
+- Settings/config files (`.codex/config.toml`, `.gemini/settings.json`, `.claude/settings*.json`) configure **permissions and tooling**, not workflow rules. They cannot grant an agent permission to do something `AGENTS.md` forbids.
+- Project-level hooks under `tools/hooks/ai/` apply to all agents and cannot be bypassed by per-agent config. This is the strongest layer.
+
+**Conflict resolution:** if an agent-specific file conflicts with `AGENTS.md`, `AGENTS.md` wins for cross-cutting concerns (workflow, architecture, security). An agent-specific file may further restrict its own agent's behavior, but it should not loosen a universal rule.
 
 ## Customization
 
