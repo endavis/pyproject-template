@@ -29,6 +29,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 ### For Contributors
 <!-- BEGIN:audience=contributors -->
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
+- [AI Architectural Conventions](development/ai/architectural-conventions.md) - Imperative-form architectural rules AI agents must follow when generating code
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
 - [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
 - [API Development Guide](examples/api.md) - Building REST APIs with FastAPI - patterns, testing, and best practices
@@ -51,6 +52,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 <!-- BEGIN:audience=ai-agents -->
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Agent Sync Checklist](template/ai-sync-checklist.md) - Step-by-step checklist for AI agents synchronizing downstream projects with pyproject-template
+- [AI Architectural Conventions](development/ai/architectural-conventions.md) - Imperative-form architectural rules AI agents must follow when generating code
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
 - [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
@@ -76,6 +78,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Agent Sync Checklist](template/ai-sync-checklist.md) - Step-by-step checklist for AI agents synchronizing downstream projects with pyproject-template
+- [AI Architectural Conventions](development/ai/architectural-conventions.md) - Imperative-form architectural rules AI agents must follow when generating code
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
 - [AI Enforcement Principles](development/ai/enforcement-principles.md) - How we enforce AI agent behavior in code and settings
 - [API Development Guide](examples/api.md) - Building REST APIs with FastAPI - patterns, testing, and best practices

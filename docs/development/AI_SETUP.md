@@ -208,6 +208,8 @@ All configuration files are set up with security in mind.
 
 > **Note**: This template enforces security rules in code and settings, not just instructions. See [AI Enforcement Principles](ai/enforcement-principles.md) for details.
 
+> **Note**: For the architectural rules AI agents must follow when generating code, see [Architectural Conventions](ai/architectural-conventions.md).
+
 **Whitelisted Operations:**
 - Read-only file operations
 - Safe git operations (status, diff, log, add, commit, push, pull)

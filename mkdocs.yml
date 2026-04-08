@@ -78,8 +78,11 @@ nav:
       - Tooling Roles: development/tooling-roles.md
       - Extensions: development/extensions.md
       - Release & Automation: development/release-and-automation.md
-      - AI Agent Setup: development/AI_SETUP.md
-      - AI Command Blocking: development/ai/command-blocking.md
+      - AI:
+          - Setup: development/AI_SETUP.md
+          - Architectural Conventions: development/ai/architectural-conventions.md
+          - Enforcement Principles: development/ai/enforcement-principles.md
+          - Command Blocking: development/ai/command-blocking.md
   - Deployment:
       - Development: deployment/development.md
       - Production: deployment/production.md

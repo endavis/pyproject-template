@@ -56,6 +56,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Committing** | `.github/CONTRIBUTING.md` (Commit Guidelines) | `<type>: <subject>` format. |
 | **New Dependency** | `.github/CONTRIBUTING.md` (Dependencies) | "Ask First" policy. |
 | **Creating Code** | `.claude/CLAUDE.md` (TodoWrite) | Plan -> Test -> Code loop. |
+| **Generating new code** | `docs/development/ai/architectural-conventions.md` | Layering rules and anti-patterns to avoid before writing code. |
 | **Architectural Decision** | `docs/decisions/README.md` | Check for related ADRs to update. |
 
 ### 6. Decision Framework
@@ -103,6 +104,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Code Style** | `.github/CONTRIBUTING.md` | Python standards, naming, typing. |
 | **Testing** | `.github/CONTRIBUTING.md` | Test patterns, coverage rules. |
 | **Security** | `.github/SECURITY.md` | Policy, sensitive data handling. |
+| **Architecture & Layering** | `docs/development/ai/architectural-conventions.md` | Imperative-form rules for AI agents. |
 
 ## Common Pitfalls
 
