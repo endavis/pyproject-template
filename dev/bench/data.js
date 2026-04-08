@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775645280796,
+  "lastUpdate": 1775648882559,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -1888,6 +1888,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.219044172125778e-7",
             "extra": "mean: 2.0046208484744987 usec\nrounds: 50795"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c118c9747f8fde6a7b90d6c6a9ed48ddc406b540",
+          "message": "docs: add AI agent architectural conventions guide (merges PR #350, addresses #343)\n\nAdd an AI-facing counterpart to the human-facing tooling-roles doc,\nstating the doit/uv/gh/git layering rules in imperative DO/DO NOT form\nand documenting 5 concrete AI failure modes with correct alternatives.\nCross-link from AGENTS.md (Pre-Action Checks and Sources of Truth\ntables) and AI_SETUP.md so agents reach it via existing paths.\nRestructure the mkdocs Development nav with a nested AI subsection.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-08T12:47:33+01:00",
+          "tree_id": "3c7066eff9191d034c6b33e290f4bf1952670729",
+          "url": "https://github.com/endavis/pyproject-template/commit/c118c9747f8fde6a7b90d6c6a9ed48ddc406b540"
+        },
+        "date": 1775648882083,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8717893.552177658,
+            "unit": "iter/sec",
+            "range": "stddev: 1.310237481377344e-8",
+            "extra": "mean: 114.70660819782644 nsec\nrounds: 87169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8874988.216872536,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5780549399467695e-8",
+            "extra": "mean: 112.67620593556019 nsec\nrounds: 89358"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5388478.786477845,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5794430146819824e-8",
+            "extra": "mean: 185.5811333078747 nsec\nrounds: 54663"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1676340.9409367878,
+            "unit": "iter/sec",
+            "range": "stddev: 3.464976048455612e-7",
+            "extra": "mean: 596.5373603779975 nsec\nrounds: 56584"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 500800.2955021045,
+            "unit": "iter/sec",
+            "range": "stddev: 8.546480643747749e-7",
+            "extra": "mean: 1.996803933586732 usec\nrounds: 50539"
           }
         ]
       }
