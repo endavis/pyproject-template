@@ -221,4 +221,4 @@ After setup is complete:
 3. **Update documentation** in `docs/`
 4. **Follow the workflow**: Issue → Branch → Commit → PR → Merge
 
-See [CONTRIBUTING.md](https://github.com/endavis/pyproject-template/blob/main/.github/CONTRIBUTING.md) for the development workflow.
+See [CONTRIBUTING.md](https://github.com/endavis/pyproject-template/blob/main/.github/CONTRIBUTING.md) for the development workflow, and [Tooling Roles and Architectural Boundaries](../development/tooling-roles.md) for the conventions you are inheriting from the template.
