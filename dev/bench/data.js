@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775654980894,
+  "lastUpdate": 1775658412813,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2006,6 +2006,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.249988159412179e-7",
             "extra": "mean: 2.108980247417481 usec\nrounds: 48905"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6e30481dbd889744cc1af597b8437640cebfd237",
+          "message": "docs: clarify AI agent parity, file relationships, and enforcement (merges PR #352, addresses #345)\n\nAdd an agent comparison table, per-agent enforcement-hook callouts, a\nnew \"Context files and precedence\" section, and a Codex parity\nstatement to AI_SETUP.md. Closes the cross-cutting gaps a new adopter\nhits when trying to choose an agent or understand which file wins on\nconflict.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-08T15:26:21+01:00",
+          "tree_id": "268fc7f4e4c83ba437d5296a675695775a99591c",
+          "url": "https://github.com/endavis/pyproject-template/commit/6e30481dbd889744cc1af597b8437640cebfd237"
+        },
+        "date": 1775658412215,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7598526.16335359,
+            "unit": "iter/sec",
+            "range": "stddev: 4.151512750192131e-8",
+            "extra": "mean: 131.60446888014036 nsec\nrounds: 84303"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8928185.7293777,
+            "unit": "iter/sec",
+            "range": "stddev: 1.197341863933405e-8",
+            "extra": "mean: 112.00483841969769 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5379377.941922918,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5835023175226202e-8",
+            "extra": "mean: 185.89509991605814 nsec\nrounds: 53695"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1655866.486097038,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0421510320398796e-7",
+            "extra": "mean: 603.9134244192907 nsec\nrounds: 35495"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494458.58990741015,
+            "unit": "iter/sec",
+            "range": "stddev: 5.57349187828406e-7",
+            "extra": "mean: 2.022414051270209 usec\nrounds: 47284"
           }
         ]
       }
