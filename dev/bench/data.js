@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775742101503,
+  "lastUpdate": 1775749302442,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2301,6 +2301,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.244643309267699e-7",
             "extra": "mean: 2.027604759574193 usec\nrounds: 51055"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8683c3fc8eb1b8e320979522159425a74f2bac2d",
+          "message": "feat: add click-based application CLI with greet subcommand (merges PR #358, addresses #341)\n\nThe template previously shipped with an empty `[project.scripts]` block\nand no `cli.py`, leaving contributors with no concrete pattern to copy\nand making the runtime/dev tooling split documented in\n`docs/development/tooling-roles.md` purely aspirational — that file even\nforward-referenced this issue as a TODO. This commit closes the gap:\nreal runtime CLI, real tests, real guide, and an ADR explaining the\nframework choice.\n\nAdded:\n- `src/package_name/cli.py` — click `Group` `main` with a `greet`\n  subcommand and `@click.version_option` wired to installed package\n  metadata. Delegates to `package_name.core.greet`; the CLI is a thin\n  presentation layer over the runtime package.\n- `tests/test_cli.py` — 7 `click.testing.CliRunner` tests covering the\n  default greet, `--name`/`-n`, top-level `--help`, `greet --help`,\n  `--version`, and entry-point importability. In-process, no subprocess.\n- `docs/usage/cli.md` — CLI Guide with entry-point layout, a copyable\n  walkthrough for adding subcommands, and a testing recipe. Linked from\n  `docs/index.md`, `docs/usage/basics.md`, and the Usage section of\n  `mkdocs.yml`.\n- ADR-9014 at `docs/template/decisions/9014-use-click-for-application-cli.md`\n  documenting the choice of `click` over `argparse` (too much boilerplate,\n  no `CliRunner` equivalent) and `typer` (built on click anyway, adds\n  presentation coupling). Registered in `mkdocs.yml` nav.\n- `[project.scripts]` populated with\n  `package-name = \"package_name.cli:main\"`.\n- `click>=8.1` added to `[project] dependencies` as a runtime dep\n  (not dev), so the published wheel's `Requires-Dist:` ships it.\n\nScope note: #341 was originally filed as a doc-only request. Writing a\nguide grounded in real code required the code to exist, so scope was\nexpanded to bundle the feature and the guide in one PR. User explicitly\napproved this in the planning phase; labels were updated from\n`documentation` to `enhancement` + `needs-adr`.\n\nAlso updates `docs/development/tooling-roles.md` to replace its two\n`#341` forward-references with direct links to the new CLI Guide, and\nupdates ADR-9002 to add #341 to its Related Issues, link to ADR-9014\nas a Related Decision, and link to the new CLI Guide as Related\nDocumentation — closing the loop on the dev/runtime tooling split.\n\nAddresses #341",
+          "timestamp": "2026-04-09T16:41:16+01:00",
+          "tree_id": "2cd1915a7da640cbe3aaacbc384432ff9308b45e",
+          "url": "https://github.com/endavis/pyproject-template/commit/8683c3fc8eb1b8e320979522159425a74f2bac2d"
+        },
+        "date": 1775749302070,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8617235.379328376,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1763653232805567e-8",
+            "extra": "mean: 116.04649936786798 nsec\nrounds: 85456"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8743655.479547612,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2518456434538744e-8",
+            "extra": "mean: 114.36864162124317 nsec\nrounds: 85683"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5334227.510044506,
+            "unit": "iter/sec",
+            "range": "stddev: 3.096654430351934e-8",
+            "extra": "mean: 187.4685693695987 nsec\nrounds: 197239"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1479066.9858821507,
+            "unit": "iter/sec",
+            "range": "stddev: 5.137784242543308e-7",
+            "extra": "mean: 676.101900417699 nsec\nrounds: 54514"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 469264.1564659617,
+            "unit": "iter/sec",
+            "range": "stddev: 6.968541140622664e-7",
+            "extra": "mean: 2.1309959139667116 usec\nrounds: 49437"
           }
         ]
       }
