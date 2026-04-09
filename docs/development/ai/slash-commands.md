@@ -123,6 +123,7 @@ The `.codex/` directory contains only `config.toml`, which configures command ap
 
 ## See also
 
+- [First 5 Minutes with an AI Agent](first-5-minutes.md) — narrative onboarding walkthrough showing the workflow end to end.
 - [AI Agent Setup Guide](../AI_SETUP.md) — per-CLI configuration and whitelists.
 - [Architectural Conventions](architectural-conventions.md) — imperative rules for AI-generated code.
 - [AI Enforcement Principles](enforcement-principles.md) — how this template enforces rules in code, not just instructions.

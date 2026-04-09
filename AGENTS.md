@@ -106,6 +106,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Security** | `.github/SECURITY.md` | Policy, sensitive data handling. |
 | **Architecture & Layering** | `docs/development/ai/architectural-conventions.md` | Imperative-form rules for AI agents. |
 | **Slash Commands & Workflows** | `docs/development/ai/slash-commands.md` | Reference for /plan-issue, /implement, /finalize, dual-agent workflow. |
+| **AI Agent Walkthrough** | `docs/development/ai/first-5-minutes.md` | Narrative onboarding for the AI agent workflow (plan → implement → review → PR → merge). |
 
 ## Common Pitfalls
 
