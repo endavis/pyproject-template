@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775727447317,
+  "lastUpdate": 1775730592674,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2124,6 +2124,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010477686301166854",
             "extra": "mean: 2.2865208801084616 usec\nrounds: 60129"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3bd06d1fc91ef7a5f7bdbc677883376f48fc4f65",
+          "message": "fix: bump pymdown-extensions to 10.21.2 to fix docs_build crash with pygments 2.20 (merges PR #355, addresses #349)\n\n`doit docs_build` was crashing on every branch with\n`AttributeError: 'NoneType' object has no attribute 'replace'` raised\nfrom `pymdownx/highlight.py` while rendering\n`docs/deployment/production.md`.\n\nRoot cause: `pygments 2.20.0` tightened its handling of a `None`\n`filename` option that `pymdownx.highlight` was passing through.\nUpstream fixed this in `pymdown-extensions 10.21.2`.\n\nFix: add an explicit `pymdown-extensions>=10.21.2` floor to the `dev`\nextra and refresh the lockfile, constrained to that single package via\n`uv lock --upgrade-package pymdown-extensions`. No other dependencies,\nsource code, docs, tests, or CI were touched.\n\nAddresses #349",
+          "timestamp": "2026-04-09T11:29:29+01:00",
+          "tree_id": "63a3796b22079c17c3ddf8c9b6d76ef9f72dd08d",
+          "url": "https://github.com/endavis/pyproject-template/commit/3bd06d1fc91ef7a5f7bdbc677883376f48fc4f65"
+        },
+        "date": 1775730592351,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9131003.268052824,
+            "unit": "iter/sec",
+            "range": "stddev: 1.265106393055153e-8",
+            "extra": "mean: 109.51699070120351 nsec\nrounds: 86678"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8812841.650818627,
+            "unit": "iter/sec",
+            "range": "stddev: 1.18042186886375e-8",
+            "extra": "mean: 113.47077816916293 nsec\nrounds: 87436"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6331669.98103603,
+            "unit": "iter/sec",
+            "range": "stddev: 1.589703518779121e-8",
+            "extra": "mean: 157.93621635288912 nsec\nrounds: 63304"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1799150.7034678424,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3300899608509555e-7",
+            "extra": "mean: 555.8178078537343 nsec\nrounds: 53482"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 507165.55339728453,
+            "unit": "iter/sec",
+            "range": "stddev: 4.775070757296934e-7",
+            "extra": "mean: 1.9717427441619977 usec\nrounds: 51338"
           }
         ]
       }
