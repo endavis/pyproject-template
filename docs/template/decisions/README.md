@@ -25,3 +25,5 @@ Template ADRs use the **9XXX** range to avoid conflicts with project-specific AD
 | [9011](9011-use-pytest-for-testing.md) | Use pytest for testing | Accepted |
 | [9012](9012-use-mkdocs-with-material-theme-for-documentation.md) | Use mkdocs with Material theme for documentation | Accepted |
 | [9013](9013-python-version-support-policy.md) | Python version support policy with bookend CI strategy | Accepted |
+| [9014](9014-use-click-for-application-cli.md) | Use click for application CLI | Accepted |
+| [9015](9015-install-tools-framework-archive-extraction-and-custom-urls.md) | install_tools framework: archive extraction and custom URLs | Accepted |

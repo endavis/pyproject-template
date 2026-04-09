@@ -113,6 +113,7 @@ nav:
           - ADR-9012 mkdocs: template/decisions/9012-use-mkdocs-with-material-theme-for-documentation.md
           - ADR-9013 Python versions: template/decisions/9013-python-version-support-policy.md
           - ADR-9014 click CLI: template/decisions/9014-use-click-for-application-cli.md
+          - ADR-9015 install_tools: template/decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md
   - Decisions:
       - Overview: decisions/README.md
   - Reference:

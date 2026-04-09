@@ -142,4 +142,4 @@ the download path on every OS.
 
 ## Related ADR
 
-- [ADR-0001: install_tools framework: archive extraction and custom URLs](../decisions/0001-install-tools-framework-archive-extraction-and-custom-urls.md)
+- [ADR-9015: install_tools framework: archive extraction and custom URLs](../template/decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md)
