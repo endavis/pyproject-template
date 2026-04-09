@@ -1,4 +1,4 @@
-# ADR-0001: install_tools framework: archive extraction and custom URLs
+# ADR-9015: install_tools framework: archive extraction and custom URLs
 
 ## Status
 
@@ -44,4 +44,4 @@ The three capabilities are intentionally orthogonal so simple cases stay simple 
 
 ## Related Documentation
 
-- [install_tools Framework](../development/install-tools-framework.md)
+- [install_tools Framework](../../development/install-tools-framework.md)
