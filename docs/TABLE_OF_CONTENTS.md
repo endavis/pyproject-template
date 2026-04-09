@@ -11,6 +11,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 <!-- BEGIN:audience=users -->
 - [API Development Guide](examples/api.md) - Building REST APIs with FastAPI - patterns, testing, and best practices
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
+- [CLI Guide](usage/cli.md) - The application's user-facing command-line interface and how to extend it
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
@@ -36,6 +37,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [API Reference](reference/api.md) - Complete API documentation for Package Name
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+- [CLI Guide](usage/cli.md) - The application's user-facing command-line interface and how to extend it
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [First 5 Minutes with an AI Agent](development/ai/first-5-minutes.md) - Narrative walkthrough of the AI agent workflow from issue to merge
@@ -79,6 +81,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [ADR-9011: Use pytest for testing](template/decisions/9011-use-pytest-for-testing.md)
 - [ADR-9012: Use mkdocs with Material theme for documentation](template/decisions/9012-use-mkdocs-with-material-theme-for-documentation.md)
 - [ADR-9013: Python version support policy with bookend CI strategy](template/decisions/9013-python-version-support-policy.md)
+- [ADR-9014: Use click for application CLI](template/decisions/9014-use-click-for-application-cli.md)
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Agent Sync Checklist](template/ai-sync-checklist.md) - Step-by-step checklist for AI agents synchronizing downstream projects with pyproject-template
@@ -90,6 +93,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Architecture Decision Records](decisions/README.md)
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
+- [CLI Guide](usage/cli.md) - The application's user-facing command-line interface and how to extend it
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package

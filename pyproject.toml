@@ -24,6 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
+    "click>=8.1",
     "rich>=13.0",
 ]
 
@@ -66,6 +67,7 @@ Documentation = "https://github.com/username/package_name/tree/main/docs"
 Issues = "https://github.com/username/package_name/issues"
 
 [project.scripts]
+package-name = "package_name.cli:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/package_name"]

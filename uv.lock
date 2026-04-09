@@ -1165,6 +1165,7 @@ wheels = [
 name = "package-name"
 source = { editable = "." }
 dependencies = [
+    { name = "click" },
     { name = "rich" },
 ]
 
@@ -1203,6 +1204,7 @@ security = [
 [package.metadata]
 requires-dist = [
     { name = "bandit", marker = "extra == 'security'", specifier = ">=1.7" },
+    { name = "click", specifier = ">=8.1" },
     { name = "codespell", marker = "extra == 'dev'", specifier = ">=2.2" },
     { name = "commitizen", marker = "extra == 'dev'", specifier = ">=3.0" },
     { name = "cyclonedx-bom", marker = "extra == 'security'", specifier = ">=4.0" },
