@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775734796223,
+  "lastUpdate": 1775742101503,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2242,6 +2242,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.755349057682827e-7",
             "extra": "mean: 1.9841770625188313 usec\nrounds: 57330"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ec84fb20ee3ce06c1e8b2af37d92fe3abfea1ff7",
+          "message": "refactor: move doit from runtime to dev dependencies (merges PR #357, addresses #340, #348)\n\n`doit` is a development task runner, not a runtime CLI surface of the\npublished package. Its prior placement in `[project] dependencies` (per\n#65, as a packaging convenience for template adopters) contradicted the\narchitectural boundary documented in `docs/development/tooling-roles.md`\n(addresses #340, added in PR #347) and in ADR-9002: end users of the\npublished package should never need `doit` installed to use it.\n\nChanges:\n- `pyproject.toml`: `doit>=0.36.0` removed from `[project] dependencies`\n  and added to `[project.optional-dependencies] dev`.\n- `uv.lock`: refreshed to reflect `doit`'s new group placement (now\n  listed under the `dev` extra; no version change).\n- `docs/template/decisions/9002-use-doit-for-task-automation.md`: Scope\n  rephrased so it no longer treats #65's runtime placement as\n  authoritative; #348 added to Related Issues.\n- `docs/development/tooling-roles.md`: \"Current vs Target State\" gap\n  callout replaced with a \"Dependency placement\" section documenting\n  the actual current state.\n\nNot changed: `rich` remains in `[project] dependencies`. Most CLIs\nbuilt on this template use `rich` for user-facing output, which is a\nlegitimate runtime concern.\n\nVerified locally with `doit check` and `doit docs_build`, and by\ninspecting the built wheel's `METADATA` — `Requires-Dist: rich>=13.0`\n(bare runtime) and `Requires-Dist: doit>=0.36.0; extra == 'dev'`, with\nno bare `doit` runtime requirement.\n\nAddresses #348\n\nBREAKING CHANGE: `doit` is no longer a transitive runtime dependency\nof this package. Downstream consumers who relied on `doit` being pulled\nin automatically must now install with the `[dev]` extra (e.g.\n`pip install package_name[dev]` or `uv add 'package_name[dev]'`) to\nget `doit`. In practice no such consumer is expected because this\nproject is a template — downstream users copy the template and manage\ntheir own dependency manifest rather than depending on `package_name`\nas a library.",
+          "timestamp": "2026-04-09T14:41:14+01:00",
+          "tree_id": "71cdc59a70f0a45b91d093e7300d7b1c4dc11d15",
+          "url": "https://github.com/endavis/pyproject-template/commit/ec84fb20ee3ce06c1e8b2af37d92fe3abfea1ff7"
+        },
+        "date": 1775742101015,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8730003.908370823,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1250668906963919e-8",
+            "extra": "mean: 114.54748594569854 nsec\nrounds: 87874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8318073.1716223,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1603572952905394e-8",
+            "extra": "mean: 120.22014947062158 nsec\nrounds: 85970"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5388282.23509291,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3881439822058083e-8",
+            "extra": "mean: 185.58790285467612 nsec\nrounds: 53034"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1682758.7725283615,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5435933917416617e-7",
+            "extra": "mean: 594.2622414604858 nsec\nrounds: 52894"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493192.7661335757,
+            "unit": "iter/sec",
+            "range": "stddev: 5.244643309267699e-7",
+            "extra": "mean: 2.027604759574193 usec\nrounds: 51055"
           }
         ]
       }
