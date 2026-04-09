@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775730592674,
+  "lastUpdate": 1775734796223,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2183,6 +2183,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.775070757296934e-7",
             "extra": "mean: 1.9717427441619977 usec\nrounds: 51338"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0bb725b7128aed0e873f242b538c634f4acdc6fe",
+          "message": "feat: add docs_build job to CI to catch mkdocs regressions at PR time (merges PR #356, addresses #354)\n\nPrior to this change, `doit docs_build` was not executed by any CI\nworkflow. That gap allowed the pymdown-extensions / pygments 2.20\nincompatibility tracked in #349 to land on `main` unnoticed until it\nwas reported manually; PR #355 shipped the immediate fix. This PR adds\nthe regression-protection gate that would have caught #349 at PR time.\n\nAdds a new `docs` job to `.github/workflows/ci.yml`, parallel to\n`test`, running on a single OS (`ubuntu-latest`) against the project's\nnewest supported Python version. The `setup` job now exposes a\n`newest` output sourced from `.github/python-versions.json`, which the\n`docs` job consumes so the Python version stays in sync with the rest\nof CI. The job runs `uv run doit docs_build` and is wired through\n`ci-complete`, so a failing docs build blocks the merge gate.\n\nScope: the job runs `mkdocs build` without `--strict`. `main` has an\nexisting backlog of non-fatal mkdocs warnings (unlisted nav files,\nbroken relative links in template/AI docs) that are out of scope here.\nTightening to `--strict` is a potential future improvement once that\nbacklog is cleared. The non-strict gate still catches hard crashes —\nplugin incompatibilities, broken macros, malformed configuration —\nwhich is exactly the class of failure that produced #349.\n\nAddresses #354",
+          "timestamp": "2026-04-09T12:39:32+01:00",
+          "tree_id": "268829c42a15f6e1b026396fca4d18315be48d13",
+          "url": "https://github.com/endavis/pyproject-template/commit/0bb725b7128aed0e873f242b538c634f4acdc6fe"
+        },
+        "date": 1775734795837,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8228367.802517649,
+            "unit": "iter/sec",
+            "range": "stddev: 1.188329217323679e-8",
+            "extra": "mean: 121.53078520554564 nsec\nrounds: 89518"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8765333.889598027,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0880275509670654e-8",
+            "extra": "mean: 114.0857852758715 nsec\nrounds: 86874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5447641.792919626,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6426992055184034e-8",
+            "extra": "mean: 183.56566712952997 nsec\nrounds: 52591"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1676802.781443462,
+            "unit": "iter/sec",
+            "range": "stddev: 3.091344260795183e-7",
+            "extra": "mean: 596.3730565494161 nsec\nrounds: 60972"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 503987.27960827295,
+            "unit": "iter/sec",
+            "range": "stddev: 4.755349057682827e-7",
+            "extra": "mean: 1.9841770625188313 usec\nrounds: 57330"
           }
         ]
       }
