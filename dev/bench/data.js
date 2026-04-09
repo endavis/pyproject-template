@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775749302442,
+  "lastUpdate": 1775750524895,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2360,6 +2360,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.968541140622664e-7",
             "extra": "mean: 2.1309959139667116 usec\nrounds: 49437"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8c2586c7a823b04d30ccb70780a4a200e60385b4",
+          "message": "refactor: move install_tools ADR to template decisions directory (merges PR #360, addresses #359)\n\nThe `0001-install-tools-framework-archive-extraction-and-custom-urls.md`\nADR was the only file in `docs/decisions/`, but its subject —\n`install_tools` framework — is template-meta tooling that lives under\n`tools/doit/install_tools.py` and is a feature of the template itself,\nnot of any project built from it. It belonged in the 9000-series\nalongside ADR-9001 through ADR-9014 in `docs/template/decisions/`.\n\nPer the design intent documented in `tests/test_doit_adr.py:66-67`,\n`docs/decisions/` is the scaffold for project-level ADRs (0001-series)\nthat downstream consumers will use after spawning a real project from\nthis template; `docs/template/decisions/` (9XXX series) is for\ntemplate-meta ADRs. The moved file is the only previously-misplaced\nADR — `docs/decisions/`, `tools/doit/adr.py`, and the test all stay\nunchanged because they correctly target project-level ADR creation.\n\nChanges:\n- Created `docs/template/decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md`\n  with `# ADR-9015` title and corrected relative link to the\n  install-tools-framework doc.\n- Deleted `docs/decisions/0001-install-tools-framework-archive-extraction-and-custom-urls.md`.\n- Updated the inbound reference in `docs/development/install-tools-framework.md`.\n- Added rows for ADR-9014 (leftover from PR #358) and ADR-9015 to the\n  index in `docs/template/decisions/README.md`.\n- Added the ADR-9015 nav entry to `mkdocs.yml`.\n\nAfter this PR, `_get_next_adr_number()` correctly returns `1` because\nthe project-level ADR directory is empty, exactly as the existing test\ndocstring describes.\n\nAddresses #359",
+          "timestamp": "2026-04-09T17:01:37+01:00",
+          "tree_id": "01947eb9aa10aebc830e61cea828afd977a20dc0",
+          "url": "https://github.com/endavis/pyproject-template/commit/8c2586c7a823b04d30ccb70780a4a200e60385b4"
+        },
+        "date": 1775750524389,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8595818.15381096,
+            "unit": "iter/sec",
+            "range": "stddev: 1.689819734777366e-8",
+            "extra": "mean: 116.33563927322608 nsec\nrounds: 199681"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9014337.511776775,
+            "unit": "iter/sec",
+            "range": "stddev: 9.27619054998702e-9",
+            "extra": "mean: 110.93438632551208 nsec\nrounds: 89510"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5400957.435628896,
+            "unit": "iter/sec",
+            "range": "stddev: 3.657579336127068e-8",
+            "extra": "mean: 185.15235713638955 nsec\nrounds: 54125"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1769818.5778400267,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6875189056836422e-7",
+            "extra": "mean: 565.0296660465892 nsec\nrounds: 57945"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 527772.1890050118,
+            "unit": "iter/sec",
+            "range": "stddev: 2.895847567981638e-7",
+            "extra": "mean: 1.89475690616677 usec\nrounds: 47747"
           }
         ]
       }
