@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775658412813,
+  "lastUpdate": 1775727447317,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2065,6 +2065,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.57349187828406e-7",
             "extra": "mean: 2.022414051270209 usec\nrounds: 47284"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dcfd4409c17d886258c1cb0440f436aa95b282f1",
+          "message": "docs: add AI agent first-5-minutes walkthrough and clarify Claude as primary agent (merges PR #353, addresses #346)\n\nAdds a narrative First 5 Minutes onboarding walkthrough at\ndocs/development/ai/first-5-minutes.md covering the plan → implement →\nreview → PR → merge loop, and wires it into the AI entry points via\nmkdocs.yml, docs/index.md, docs/development/AI_SETUP.md,\ndocs/development/ai/slash-commands.md, and the AGENTS.md Sources of\nTruth table.\n\nAlso clarifies template framing in README.md, AI_SETUP.md, and\ndocs/index.md to explicitly name Claude Code as the primary agent\n(the only one shipping the full slash-command workflow), with Gemini\nCLI and Codex CLI documented in their narrower supporting roles. This\nframing was added as an in-scope addendum so readers arriving from the\nREADME land on the walkthrough with the correct mental model.\n\nDocumentation-only change. No code, behavior, or APIs affected.\n\nAddresses #346",
+          "timestamp": "2026-04-09T10:36:54+01:00",
+          "tree_id": "4b8322322f4b5a35b7b3f07c395240d0cf70c8a1",
+          "url": "https://github.com/endavis/pyproject-template/commit/dcfd4409c17d886258c1cb0440f436aa95b282f1"
+        },
+        "date": 1775727446474,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8622254.99896309,
+            "unit": "iter/sec",
+            "range": "stddev: 5.970779072481284e-8",
+            "extra": "mean: 115.97894055792361 nsec\nrounds: 88254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8908120.049655348,
+            "unit": "iter/sec",
+            "range": "stddev: 3.832025730262343e-8",
+            "extra": "mean: 112.25713106983663 nsec\nrounds: 90654"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5002384.630271373,
+            "unit": "iter/sec",
+            "range": "stddev: 4.622150363408391e-8",
+            "extra": "mean: 199.9046602591515 nsec\nrounds: 52231"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1689085.1912128732,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4586600183855464e-7",
+            "extra": "mean: 592.0364497908687 nsec\nrounds: 59095"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 437345.66725345835,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010477686301166854",
+            "extra": "mean: 2.2865208801084616 usec\nrounds: 60129"
           }
         ]
       }
