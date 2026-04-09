@@ -207,6 +207,28 @@ security:
       run: uv run doit security
 ```
 
+#### Documentation Build Job
+
+Runs `doit docs_build` once on `ubuntu-latest` using the project's newest supported Python version (read dynamically from `.github/python-versions.json`). This job gates PRs against hard-crash regressions in the mkdocs build pipeline — for example, plugin incompatibilities, broken macros, or malformed configuration. See issue [#349](https://github.com/endavis/pyproject-template/issues/349) for the historical incident that motivated this gate.
+
+Note: This job does **not** currently run `mkdocs build --strict`, so doc-link warnings and other non-fatal mkdocs warnings do not fail the build. Tightening this to strict mode is a potential future improvement once the existing warning backlog is cleared.
+
+```yaml
+docs:
+  needs: setup
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
+      with:
+        python-version: ${{ needs.setup.outputs.newest }}
+    - uses: astral-sh/setup-uv@v7
+    - name: Install dependencies
+      run: uv sync --all-extras --dev
+    - name: Build documentation
+      run: uv run doit docs_build
+```
+
 ### Coverage Requirements
 
 - **Recommended threshold**: ≥70%
@@ -362,6 +384,7 @@ Before pushing to CI:
 - [ ] Run `doit type_check` to verify types
 - [ ] Run `doit test` to ensure tests pass
 - [ ] Run `doit coverage` to check coverage threshold
+- [ ] Run `doit docs_build` to verify the documentation build succeeds
 - [ ] Review changes and commit messages
 
 ## Testing Best Practices

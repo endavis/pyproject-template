@@ -17,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
+      newest: ${{ steps.set-matrix.outputs.newest }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -29,6 +30,7 @@ jobs:
           # Read config
           oldest=$(jq -r '.oldest' .github/python-versions.json)
           newest=$(jq -r '.newest' .github/python-versions.json)
+          echo "newest=$newest" >> $GITHUB_OUTPUT
 
           oldest_minor=${oldest#3.}
           newest_minor=${newest#3.}
@@ -125,19 +127,53 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  docs:
+    needs: setup
+    if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
+    runs-on: ubuntu-latest
+    env:
+      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ needs.setup.outputs.newest }}
+
+      - uses: astral-sh/setup-uv@v7
+        with:
+          version: "latest"
+
+      - name: Cache uv dependencies
+        uses: actions/cache@v5
+        with:
+          path: ${{ env.UV_CACHE_DIR }}
+          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
+      - name: Build documentation
+        run: uv run doit docs_build
+
   ci-complete:
     # Always run unless this is a non-full-matrix label event
     if: always() && (github.event.action != 'labeled' || github.event.label.name == 'full-matrix')
-    needs: [setup, test]
+    needs: [setup, test, docs]
     runs-on: ubuntu-latest
     steps:
       - name: Check CI status
         run: |
           setup_result="${{ needs.setup.result }}"
           test_result="${{ needs.test.result }}"
+          docs_result="${{ needs.docs.result }}"
 
           echo "Setup result: $setup_result"
           echo "Test result: $test_result"
+          echo "Docs result: $docs_result"
 
           # Setup must succeed
           if [[ "$setup_result" != "success" ]]; then
@@ -148,6 +184,12 @@ jobs:
           # Test must succeed or be skipped (skipped = no middle versions)
           if [[ "$test_result" != "success" && "$test_result" != "skipped" ]]; then
             echo "Test job failed"
+            exit 1
+          fi
+
+          # Docs must succeed or be skipped (skipped = no middle versions)
+          if [[ "$docs_result" != "success" && "$docs_result" != "skipped" ]]; then
+            echo "Docs job failed"
             exit 1
           fi
 
