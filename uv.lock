@@ -1165,7 +1165,6 @@ wheels = [
 name = "package-name"
 source = { editable = "." }
 dependencies = [
-    { name = "doit" },
     { name = "rich" },
 ]
 
@@ -1173,6 +1172,7 @@ dependencies = [
 dev = [
     { name = "codespell" },
     { name = "commitizen" },
+    { name = "doit" },
     { name = "hypothesis" },
     { name = "mkdocs-material" },
     { name = "mkdocstrings", extra = ["python"] },
@@ -1206,7 +1206,7 @@ requires-dist = [
     { name = "codespell", marker = "extra == 'dev'", specifier = ">=2.2" },
     { name = "commitizen", marker = "extra == 'dev'", specifier = ">=3.0" },
     { name = "cyclonedx-bom", marker = "extra == 'security'", specifier = ">=4.0" },
-    { name = "doit", specifier = ">=0.36.0" },
+    { name = "doit", marker = "extra == 'dev'", specifier = ">=0.36.0" },
     { name = "hypothesis", marker = "extra == 'dev'", specifier = ">=6.0" },
     { name = "mkdocs-material", marker = "extra == 'dev'", specifier = ">=9.5" },
     { name = "mkdocstrings", extras = ["python"], marker = "extra == 'dev'", specifier = ">=0.24" },

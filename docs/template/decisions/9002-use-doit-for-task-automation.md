@@ -21,9 +21,11 @@ and discoverable. It is not part of the published package's public API.
 - doit must **not** be used to front the application's user-facing CLI. The
   application's CLI is a console script under `src/package_name/`. End users
   of the published package should never need to install `doit` to use it.
-- The runtime-dependency status of `doit` (see #65) is a **packaging
-  convenience** for adopters of the template and does **not** make `doit` a
-  runtime CLI surface for the application.
+- `doit` is a **development dependency only**, declared under
+  `[project.optional-dependencies] dev` in `pyproject.toml`. It is not
+  installed when adopters install the published package. (Historical note:
+  it was briefly placed in `[project] dependencies` per #65 as a packaging
+  convenience; #348 moved it to dev to align with the boundary above.)
 
 For the broader layering rationale, see
 [Tooling Roles and Architectural Boundaries](../../development/tooling-roles.md).
@@ -35,6 +37,7 @@ For the broader layering rationale, see
 - Issue #80: Add doit issue and doit pr commands for GitHub workflow
 - Issue #65: Promote doit and rich to runtime dependencies
 - Issue #340: Document tooling roles and architectural boundaries
+- Issue #348: Move doit from runtime to dev dependencies
 
 ## Related Documentation
 

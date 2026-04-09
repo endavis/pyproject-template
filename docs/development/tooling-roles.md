@@ -77,17 +77,20 @@ The template is opinionated about a small number of things:
 - **ADRs document the *why*.** When a tooling decision is non-obvious, it
   gets an ADR under `docs/template/decisions/` or `docs/decisions/`.
 
-## Current vs Target State
+## Dependency placement
 
-> **Note — current state of doit and rich:**
-> The target state described above is that `doit` and `rich` are
-> **development-only** dependencies. As of this writing they are still
-> declared in `[project] dependencies` in `pyproject.toml` for historical
-> reasons (see [#65](https://github.com/endavis/pyproject-template/issues/65)).
-> A separate refactor will move them out of the runtime dependency set. The
-> rules on this page describe the intended architecture; the runtime-dependency
-> placement of `doit` is a packaging convenience for adopters and does **not**
-> make `doit` a runtime CLI surface for the application.
+`doit` is declared under `[project.optional-dependencies] dev` in
+`pyproject.toml` and is **not** installed when adopters install the
+published package. `rich` remains a runtime dependency because most CLIs
+built on this template use it for user-facing output, which is a
+legitimate runtime use.
+
+> **Historical note:** `doit` was briefly placed in `[project] dependencies`
+> per [#65](https://github.com/endavis/pyproject-template/issues/65) as a
+> packaging convenience for adopters of the template. That placement
+> contradicted the boundary documented above and was reversed in
+> [#348](https://github.com/endavis/pyproject-template/issues/348). Current
+> state matches target state.
 
 ## See also
 
