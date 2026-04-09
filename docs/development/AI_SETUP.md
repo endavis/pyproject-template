@@ -12,7 +12,9 @@ tags:
 
 # AI Agent Setup Guide
 
-This template includes pre-configured settings for multiple AI coding assistants.
+This template is designed primarily for **Claude Code**, which is the only agent that ships the full slash-command workflow and acts as the orchestrator in single-agent and dual-agent flows. **Gemini CLI** is supported in a narrower role (second-opinion planner/reviewer inside Claude-orchestrated commands), and **Codex CLI** is supported as a standalone alternative without slash commands. Support for additional primary agents is planned. See the comparison table below for the per-agent breakdown.
+
+> **New here?** Start with the [First 5 Minutes walkthrough](ai/first-5-minutes.md) for a narrative tour of the AI agent workflow. This page is the configuration reference.
 
 ## Supported AI Agents
 
