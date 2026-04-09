@@ -37,8 +37,14 @@ For the broader layering rationale, see
 - Issue #80: Add doit issue and doit pr commands for GitHub workflow
 - Issue #65: Promote doit and rich to runtime dependencies
 - Issue #340: Document tooling roles and architectural boundaries
+- Issue #341: Add application CLI guide (implements the runtime-CLI half of the split)
 - Issue #348: Move doit from runtime to dev dependencies
+
+## Related Decisions
+
+- [ADR-9014: Use click for application CLI](9014-use-click-for-application-cli.md) — defines the runtime CLI surface that complements doit's dev-only role.
 
 ## Related Documentation
 
 - [Tools Reference](../tools-reference.md)
+- [CLI Guide](../../usage/cli.md)

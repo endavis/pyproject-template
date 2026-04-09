@@ -12,6 +12,10 @@ tags:
 
 This guide covers both package usage and development workflows.
 
+> Looking for the `package-name` command-line interface? See the
+> [CLI Guide](cli.md) for the console script, subcommands, and how to
+> extend them.
+
 ## Package Usage
 
 ### Basic Usage

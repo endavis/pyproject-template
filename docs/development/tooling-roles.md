@@ -46,7 +46,7 @@ itself (and needs to be tested as runtime code).
 
 | Tool | Role | Audience | Never use for |
 | :--- | :--- | :--- | :--- |
-| **Application console script** | The package's user-facing command-line interface, defined as a `[project.scripts]` entry under `src/package_name/`. | End users of the published package. | Development workflow tasks. See [#341](https://github.com/endavis/pyproject-template/issues/341) for the application-CLI guide. |
+| **Application console script** | The package's user-facing command-line interface, defined as a `[project.scripts]` entry under `src/package_name/`. | End users of the published package. | Development workflow tasks. See the [CLI Guide](../usage/cli.md) for the application CLI. |
 | **`doit`** | Development task runner. Wraps tests, linting, type-checking, releases, issue and PR creation, and other contributor workflows. | Contributors and CI. | Fronting the application's user-facing CLI. doit is a *dev* surface, not a runtime surface. |
 | **`uv`** | Package and environment management. Installs dependencies, runs Python, manages the lockfile. | Contributors and CI. | Replacing the application's runtime entry point. |
 | **`gh`** | GitHub API access for operations not wrapped by `doit` (read-only queries, ad-hoc API calls). | Contributors and CI. | Write operations that already have a `doit` wrapper (e.g. use `doit pr` not `gh pr create`). |
@@ -71,9 +71,9 @@ The template is opinionated about a small number of things:
   not part of the package's public API.
 - **The application's user-facing CLI is a console script under
   `src/package_name/`, not a doit task.** End users should never need to
-  install `doit` to use the published package. See
-  [#341](https://github.com/endavis/pyproject-template/issues/341) for the
-  application-CLI guide.
+  install `doit` to use the published package. See the
+  [CLI Guide](../usage/cli.md) for how the CLI is structured and how to
+  add subcommands.
 - **ADRs document the *why*.** When a tooling decision is non-obvious, it
   gets an ADR under `docs/template/decisions/` or `docs/decisions/`.
 

@@ -57,6 +57,7 @@ print(message)  # Output: Hello, Python!
 
 - **[Installation](getting-started/installation.md)** - How to install the package
 - **[Usage Guide](usage/basics.md)** - How to use the package
+- **[CLI Guide](usage/cli.md)** - Command-line interface reference and how to add subcommands
 - **[API Reference](reference/api.md)** - Complete API documentation
 
 ### For Contributors
