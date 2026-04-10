@@ -62,6 +62,18 @@ Example of using the command-line interface (if available).
 - Options and arguments
 - Output formatting
 
+### Add a Feature (End-to-End Walkthrough)
+
+Narrative guide that walks through adding a hypothetical `farewell` feature from issue creation to merged PR.
+
+**What it covers:**
+- The full workflow: issue, branch, code, tests, docs, PR
+- Core module and CLI subcommand patterns
+- Thin-adapter pattern for CLI commands
+- Architectural boundaries (runtime vs dev tooling)
+
+See the [Add a Feature Walkthrough](add-a-feature.md) for the full guide.
+
 ### api/ (FastAPI Application)
 
 Complete REST API example demonstrating FastAPI best practices.

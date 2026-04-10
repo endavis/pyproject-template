@@ -191,8 +191,5 @@ What to cover for every new subcommand:
   why runtime CLI and dev tooling are kept separate.
 - [ADR-9014: Use click for application CLI](../template/decisions/9014-use-click-for-application-cli.md)
 
-<!--
-TODO(#342): When the end-to-end "add a feature" example lands, link to
-it here as the narrative counterpart to this reference page. This page
-is the cookbook; #342 will be the walkthrough.
--->
+- [Add a Feature End-to-End](../examples/add-a-feature.md) —
+  narrative walkthrough of adding a module, CLI subcommand, tests, and docs.

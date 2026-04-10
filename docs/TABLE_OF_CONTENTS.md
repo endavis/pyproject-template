@@ -29,6 +29,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 
 ### For Contributors
 <!-- BEGIN:audience=contributors -->
+- [Add a Feature: End-to-End Walkthrough](examples/add-a-feature.md) - Step-by-step example of adding a module, CLI subcommand, tests, and docs to the project
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, and Codex for this project
 - [AI Architectural Conventions](development/ai/architectural-conventions.md) - Imperative-form architectural rules AI agents must follow when generating code
 - [AI Command Blocking](development/ai/command-blocking.md) - Hooks that block dangerous commands from AI agents
@@ -67,6 +68,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 
 ## Complete Index
 <!-- BEGIN:all -->
+- [Add a Feature: End-to-End Walkthrough](examples/add-a-feature.md) - Step-by-step example of adding a module, CLI subcommand, tests, and docs to the project
 - [ADR-9001: Use uv for package management](template/decisions/9001-use-uv-for-package-management.md)
 - [ADR-9002: Use doit for task automation](template/decisions/9002-use-doit-for-task-automation.md)
 - [ADR-9003: Use ruff for linting and formatting](template/decisions/9003-use-ruff-for-linting-and-formatting.md)
