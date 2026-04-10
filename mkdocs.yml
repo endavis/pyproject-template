@@ -120,6 +120,7 @@ nav:
       - API Reference: reference/api.md
   - Examples:
       - Overview: examples/README.md
+      - Add a Feature: examples/add-a-feature.md
       - API Development: examples/api.md
   - All Documents: TABLE_OF_CONTENTS.md
 
