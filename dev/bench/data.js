@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775815850350,
+  "lastUpdate": 1775824793563,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2478,6 +2478,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.992388396060646e-7",
             "extra": "mean: 1.978753779262391 usec\nrounds: 59337"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2917df127540228b654e00655cbef4e814faf618",
+          "message": "feat: add Copilot CLI command-blocking hook integration (merges PR #363, addresses #362)\n\nfeat: add Copilot/Codex hook integration and fix chained-command detection\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-10T13:39:25+01:00",
+          "tree_id": "c95ec0da63dfcb8243d47bb50934db6ca1f3a43d",
+          "url": "https://github.com/endavis/pyproject-template/commit/2917df127540228b654e00655cbef4e814faf618"
+        },
+        "date": 1775824792919,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8196752.698065866,
+            "unit": "iter/sec",
+            "range": "stddev: 3.175518950237141e-8",
+            "extra": "mean: 121.99953284377648 nsec\nrounds: 87551"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9135167.360182611,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1107443565048612e-8",
+            "extra": "mean: 109.46706946592931 nsec\nrounds: 89598"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5348839.292335107,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5415728780303678e-8",
+            "extra": "mean: 186.95644893145345 nsec\nrounds: 53291"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1729845.7270249599,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4177181910523787e-7",
+            "extra": "mean: 578.0862329959502 nsec\nrounds: 60754"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 504013.1105152658,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1787599356382e-7",
+            "extra": "mean: 1.984075372518929 usec\nrounds: 49461"
           }
         ]
       }
