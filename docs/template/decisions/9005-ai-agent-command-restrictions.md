@@ -19,6 +19,7 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 - Issue #163: Add pre-commit hook to block pyproject.toml version changes
 - Issue #164: Block doit release in AI agent hooks
 - Issue #166: Block uv add in AI agent hooks
+- Issue #362: Add Copilot CLI command-blocking hook integration
 
 ## Related Documentation
 
