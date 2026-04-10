@@ -16,9 +16,11 @@ For full documentation, see: docs/development/ai/command-blocking.md
 """
 
 import json
+import os
 import shlex
 import subprocess  # nosec B404 - needed for git branch detection
 import sys
+from pathlib import Path
 
 # Protected branches - operations on these require extra scrutiny
 PROTECTED_BRANCHES = {"main", "master"}
@@ -135,7 +137,6 @@ def check_push_to_protected(tokens: list[str]) -> tuple[bool, str]:
 
     try:
         git_idx = tokens_lower.index("git")
-        push_idx = tokens_lower.index("push")
     except ValueError:
         return False, ""
 
@@ -146,6 +147,9 @@ def check_push_to_protected(tokens: list[str]) -> tuple[bool, str]:
 
     # Check if any force flag is present
     has_force_flag = any(flag in tokens for flag in FORCE_PUSH_FLAGS)
+
+    # Find the push index to look for branch/remote after it
+    push_idx = subcommand_idx
 
     # Look for branch name in tokens after 'push'
     # Skip flags (tokens starting with -)
@@ -241,13 +245,15 @@ def check_blocked_workflow_commands(tokens: list[str]) -> tuple[bool, str]:
     Check if command uses blocked workflow commands.
 
     These commands should use doit wrappers instead of direct gh commands.
+    Scans all positions to catch commands chained with && or ;.
     """
     tokens_lower = [t.lower() for t in tokens]
 
     for cmd_tuple, reason in BLOCKED_WORKFLOW_COMMANDS.items():
         cmd_len = len(cmd_tuple)
-        if len(tokens_lower) >= cmd_len and tuple(tokens_lower[:cmd_len]) == cmd_tuple:
-            return True, reason
+        for i in range(len(tokens_lower) - cmd_len + 1):
+            if tuple(tokens_lower[i : i + cmd_len]) == cmd_tuple:
+                return True, reason
     return False, ""
 
 
@@ -363,6 +369,52 @@ def check_command(command: str) -> tuple[bool, str]:
     return False, ""
 
 
+def _parse_input(input_data: dict) -> tuple[str, str]:
+    """
+    Parse tool name and command from hook input.
+
+    Handles two input formats:
+    - Claude/Gemini: {"tool_name": "Bash", "tool_input": {"command": "..."}}
+    - Copilot CLI:   {"toolName": "bash", "toolArgs": "{\"command\":\"...\"}"}
+
+    Returns:
+        (tool_name, command) tuple
+    """
+    # Copilot CLI format uses camelCase keys
+    if "toolName" in input_data:
+        tool_name = input_data.get("toolName", "")
+        tool_args_raw = input_data.get("toolArgs", "{}")
+        try:
+            tool_args = json.loads(tool_args_raw) if isinstance(tool_args_raw, str) else tool_args_raw
+        except json.JSONDecodeError:
+            tool_args = {}
+        return tool_name, tool_args.get("command", "")
+
+    # Claude/Gemini format uses snake_case keys
+    tool_name = input_data.get("tool_name", "")
+    tool_input = input_data.get("tool_input", {})
+    return tool_name, tool_input.get("command", "")
+
+
+def _is_copilot_format(input_data: dict) -> bool:
+    """Return True if input uses Copilot CLI hook format (camelCase keys)."""
+    return "toolName" in input_data
+
+
+LOG_FILE = Path(__file__).parent / "hook-debug.jsonl"
+
+
+def _log(entry: dict) -> None:
+    """Append a JSON log entry. Only active when HOOK_DEBUG=1 is set."""
+    if not os.environ.get("HOOK_BLOCKCOMMAND_DEBUG"):
+        return
+    try:
+        with LOG_FILE.open("a") as f:
+            f.write(json.dumps(entry) + "\n")
+    except OSError:
+        pass  # Never fail due to logging
+
+
 def main() -> int:
     """Main entry point."""
     try:
@@ -371,28 +423,44 @@ def main() -> int:
         print(f"Invalid JSON input: {e}", file=sys.stderr)
         return 1
 
-    tool_name = input_data.get("tool_name", "")
-    tool_input = input_data.get("tool_input", {})
+    tool_name, command = _parse_input(input_data)
+    copilot_format = _is_copilot_format(input_data)
 
-    # Only check shell commands (Bash for Claude, run_shell_command for Gemini)
-    if tool_name not in ("Bash", "run_shell_command"):
+    _log({"raw_input": input_data, "tool_name": tool_name, "command": command, "copilot_format": copilot_format})
+
+    # Only check shell commands:
+    # - "Bash" for Claude
+    # - "run_shell_command" for Gemini
+    # - "bash" for Copilot CLI
+    if tool_name not in ("Bash", "run_shell_command", "bash"):
         return 0
 
-    command = tool_input.get("command", "")
     if not command:
         return 0
 
     is_dangerous, reason = check_command(command)
     if is_dangerous:
-        print(
-            f"BLOCKED: Command contains dangerous pattern.\n"
-            f"Reason: {reason}\n"
-            f"Command: {command}\n"
-            f"\n"
-            f"If this is intentional, ask the user to run it manually.",
-            file=sys.stderr,
-        )
-        return 2  # Exit 2 = Block and show stderr to Claude
+        if copilot_format:
+            # Copilot CLI: deny via JSON output to stdout
+            output = json.dumps({
+                "permissionDecision": "deny",
+                "permissionDecisionReason": (
+                    f"Blocked: {reason}. If intentional, ask the user to run it manually."
+                ),
+            })
+            print(output)
+            return 0
+        else:
+            # Claude/Gemini: block via exit code 2 + stderr message
+            print(
+                f"BLOCKED: Command contains dangerous pattern.\n"
+                f"Reason: {reason}\n"
+                f"Command: {command}\n"
+                f"\n"
+                f"If this is intentional, ask the user to run it manually.",
+                file=sys.stderr,
+            )
+            return 2  # Exit 2 = Block and show stderr to Claude/Gemini
 
     return 0
 
