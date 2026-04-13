@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776090596476,
+  "lastUpdate": 1776090862164,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3068,6 +3068,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.135691589546185e-7",
             "extra": "mean: 1.979583446287464 usec\nrounds: 56809"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d8121f8010dae2aaaa70dbd2693a40d090d478b7",
+          "message": "chore(deps): bump types-pyyaml from 6.0.12.20250915 to 6.0.12.20260408 (merges PR #371)\n\nBumps [types-pyyaml](https://github.com/python/typeshed) from 6.0.12.20250915 to 6.0.12.20260408.\n- [Commits](https://github.com/python/typeshed/commits)\n\n---\nupdated-dependencies:\n- dependency-name: types-pyyaml\n  dependency-version: 6.0.12.20260408\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T15:33:55+01:00",
+          "tree_id": "b88640692fc5cc1b95b57fdbbc6777bdebf8733f",
+          "url": "https://github.com/endavis/pyproject-template/commit/d8121f8010dae2aaaa70dbd2693a40d090d478b7"
+        },
+        "date": 1776090861694,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8463254.571107358,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3195189676541752e-7",
+            "extra": "mean: 118.1578542389464 nsec\nrounds: 87321"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9513513.524663735,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8982747490861136e-8",
+            "extra": "mean: 105.11363624043894 nsec\nrounds: 88410"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5394854.604581663,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2329312320748446e-8",
+            "extra": "mean: 185.3618073693283 nsec\nrounds: 50615"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1641238.0553113031,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0539013645576225e-7",
+            "extra": "mean: 609.2961327357988 nsec\nrounds: 60456"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 509706.2179997606,
+            "unit": "iter/sec",
+            "range": "stddev: 5.05628700745553e-7",
+            "extra": "mean: 1.9619144610876018 usec\nrounds: 55390"
           }
         ]
       }
