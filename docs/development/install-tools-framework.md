@@ -71,6 +71,30 @@ def task_install_age():
 `extract_binaries` matches by **basename**, so any directory structure
 inside the archive (e.g., `age/age`, `age/age-keygen`) is ignored.
 
+### Multi-arch archive from GitHub releases via `url_template` (gh)
+
+```python
+from tools.doit.install_tools import create_install_task
+
+def task_install_gh():
+    return create_install_task(
+        name="gh",
+        repo="cli/cli",
+        asset_patterns={},
+        url_template=(
+            "https://github.com/cli/cli/releases/download/v{version}/"
+            "gh_{version}_{os}_{arch}.tar.gz"
+        ),
+        extract_binaries=["gh"],
+        version_cmd=["gh", "--version"],
+        prefer_brew=False,
+    )
+```
+
+When the release URL itself is on GitHub but includes architecture-specific
+filenames (e.g., `gh_2.45.0_linux_amd64.tar.gz`), `url_template` is the
+right choice because `asset_patterns` does not support `{arch}` placeholders.
+
 ### Zip from a non-GitHub URL (terraform)
 
 ```python
