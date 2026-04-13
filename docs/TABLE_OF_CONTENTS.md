@@ -15,6 +15,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
+- [GitHub Repository Settings](development/github-repository-settings.md) - Complete reference for all GitHub repository settings the template expects
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
 - [Migration Guide](template/migration.md) - Migrate existing Python projects to use this template
@@ -42,6 +43,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [First 5 Minutes with an AI Agent](development/ai/first-5-minutes.md) - Narrative walkthrough of the AI agent workflow from issue to merge
+- [GitHub Repository Settings](development/github-repository-settings.md) - Complete reference for all GitHub repository settings the template expects
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Optional Extensions](development/extensions.md) - Additional tools and extensions for testing, security, and more
 - [Package Name Documentation](index.md) - Welcome and overview of the project
@@ -100,6 +102,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
 - [First 5 Minutes with an AI Agent](development/ai/first-5-minutes.md) - Narrative walkthrough of the AI agent workflow from issue to merge
+- [GitHub Repository Settings](development/github-repository-settings.md) - Complete reference for all GitHub repository settings the template expects
 - [install_tools Framework](development/install-tools-framework.md)
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [Keeping Up to Date](template/updates.md) - Stay in sync with improvements to the pyproject-template
