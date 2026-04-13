@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776082937694,
+  "lastUpdate": 1776084419055,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2655,6 +2655,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000001038059049468629",
             "extra": "mean: 2.338965431841637 usec\nrounds: 47645"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c1f4ea82014e24025213d821a8fcaca5eba54848",
+          "message": "chore(deps): bump actions/github-script from 8 to 9 (merges PR #364)\n\nBumps [actions/github-script](https://github.com/actions/github-script) from 8 to 9.\n- [Release notes](https://github.com/actions/github-script/releases)\n- [Commits](https://github.com/actions/github-script/compare/v8...v9)\n\n---\nupdated-dependencies:\n- dependency-name: actions/github-script\n  dependency-version: '9'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T13:46:28+01:00",
+          "tree_id": "e05dc58d0f1e2595dc97cd3608e1e12bed71af61",
+          "url": "https://github.com/endavis/pyproject-template/commit/c1f4ea82014e24025213d821a8fcaca5eba54848"
+        },
+        "date": 1776084418219,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8984407.893298028,
+            "unit": "iter/sec",
+            "range": "stddev: 1.108519706178409e-8",
+            "extra": "mean: 111.30394032376424 nsec\nrounds: 88645"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8802027.288603568,
+            "unit": "iter/sec",
+            "range": "stddev: 2.262192070698328e-8",
+            "extra": "mean: 113.61019083578061 nsec\nrounds: 87405"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5193112.826131728,
+            "unit": "iter/sec",
+            "range": "stddev: 6.006916067018966e-8",
+            "extra": "mean: 192.56273327396298 nsec\nrounds: 53778"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1639555.1086799647,
+            "unit": "iter/sec",
+            "range": "stddev: 5.188025470826844e-7",
+            "extra": "mean: 609.9215541495998 nsec\nrounds: 55516"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493918.063249,
+            "unit": "iter/sec",
+            "range": "stddev: 5.1806659576737e-7",
+            "extra": "mean: 2.024627310493538 usec\nrounds: 51504"
           }
         ]
       }
