@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776088588954,
+  "lastUpdate": 1776090596476,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3009,6 +3009,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.891420131888762e-7",
             "extra": "mean: 2.0998537734989817 usec\nrounds: 50285"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "985f16799392d8ddf267cb9923c7622ac2f7294d",
+          "message": "chore(deps): update hatchling requirement from >=1.24 to >=1.29.0 (merges PR #370)\n\nUpdates the requirements on [hatchling](https://github.com/pypa/hatch) to permit the latest version.\n- [Release notes](https://github.com/pypa/hatch/releases)\n- [Commits](https://github.com/pypa/hatch/compare/hatchling-v1.24.0...hatchling-v1.29.0)\n\n---\nupdated-dependencies:\n- dependency-name: hatchling\n  dependency-version: 1.29.0\n  dependency-type: direct:development\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T15:29:30+01:00",
+          "tree_id": "0da92cdfb592de1780bba1b382dd2dc18d393dc2",
+          "url": "https://github.com/endavis/pyproject-template/commit/985f16799392d8ddf267cb9923c7622ac2f7294d"
+        },
+        "date": 1776090596141,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8881722.054540396,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2509536260288995e-8",
+            "extra": "mean: 112.59077843905206 nsec\nrounds: 86044"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8710192.776103461,
+            "unit": "iter/sec",
+            "range": "stddev: 2.756664088195535e-8",
+            "extra": "mean: 114.808021556482 nsec\nrounds: 198020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5475827.408410086,
+            "unit": "iter/sec",
+            "range": "stddev: 1.588388103804424e-8",
+            "extra": "mean: 182.62080328977194 nsec\nrounds: 52285"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1705775.3177450802,
+            "unit": "iter/sec",
+            "range": "stddev: 2.816259623910157e-7",
+            "extra": "mean: 586.2436802766806 nsec\nrounds: 56648"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505156.780268805,
+            "unit": "iter/sec",
+            "range": "stddev: 7.135691589546185e-7",
+            "extra": "mean: 1.979583446287464 usec\nrounds: 56809"
           }
         ]
       }
