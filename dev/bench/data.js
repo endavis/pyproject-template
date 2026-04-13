@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1775824793563,
+  "lastUpdate": 1776079092241,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2537,6 +2537,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.1787599356382e-7",
             "extra": "mean: 1.984075372518929 usec\nrounds: 49461"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd0ec7d430af5c9f758ebaeebd075d7fa5eadaa6",
+          "message": "feat: add doit task to install the gh CLI (merges PR #375, addresses #374)",
+          "timestamp": "2026-04-13T12:17:47+01:00",
+          "tree_id": "8b2fcac55310b114389b911400492747bd5927e4",
+          "url": "https://github.com/endavis/pyproject-template/commit/dd0ec7d430af5c9f758ebaeebd075d7fa5eadaa6"
+        },
+        "date": 1776079091920,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8581087.020602113,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5751190275901912e-8",
+            "extra": "mean: 116.53535240921408 nsec\nrounds: 88803"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9166862.643092392,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7998774122287644e-8",
+            "extra": "mean: 109.08857685934032 nsec\nrounds: 90490"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5449274.445959907,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5723793615936977e-8",
+            "extra": "mean: 183.51066915732244 nsec\nrounds: 54337"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1694514.6467584528,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0712950970230005e-7",
+            "extra": "mean: 590.1394844317015 nsec\nrounds: 47482"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494003.90267301217,
+            "unit": "iter/sec",
+            "range": "stddev: 5.652052109332794e-7",
+            "extra": "mean: 2.0242755059000284 usec\nrounds: 54213"
           }
         ]
       }
