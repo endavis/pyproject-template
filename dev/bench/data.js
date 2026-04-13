@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776088264426,
+  "lastUpdate": 1776088588954,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2950,6 +2950,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.893082626202253e-7",
             "extra": "mean: 2.0117834190087365 usec\nrounds: 53121"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b20d659896178f35c2139e06e6e693521011add5",
+          "message": "chore(deps): bump click from 8.3.1 to 8.3.2 (merges PR #369)\n\nBumps [click](https://github.com/pallets/click) from 8.3.1 to 8.3.2.\n- [Release notes](https://github.com/pallets/click/releases)\n- [Changelog](https://github.com/pallets/click/blob/main/CHANGES.rst)\n- [Commits](https://github.com/pallets/click/compare/8.3.1...8.3.2)\n\n---\nupdated-dependencies:\n- dependency-name: click\n  dependency-version: 8.3.2\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T14:55:57+01:00",
+          "tree_id": "07b763b080ab583825b6478479424adff953b6ae",
+          "url": "https://github.com/endavis/pyproject-template/commit/b20d659896178f35c2139e06e6e693521011add5"
+        },
+        "date": 1776088587945,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8814471.542569581,
+            "unit": "iter/sec",
+            "range": "stddev: 1.223978773394729e-8",
+            "extra": "mean: 113.44979618692847 nsec\nrounds: 86648"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8860395.882714724,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1413887618471705e-8",
+            "extra": "mean: 112.8617742634781 nsec\nrounds: 87704"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5217933.907867542,
+            "unit": "iter/sec",
+            "range": "stddev: 4.203881163845909e-8",
+            "extra": "mean: 191.64673559628864 nsec\nrounds: 55854"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1530836.7952308152,
+            "unit": "iter/sec",
+            "range": "stddev: 4.415160833904867e-7",
+            "extra": "mean: 653.2374993306996 nsec\nrounds: 57137"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 476223.6364362182,
+            "unit": "iter/sec",
+            "range": "stddev: 7.891420131888762e-7",
+            "extra": "mean: 2.0998537734989817 usec\nrounds: 50285"
           }
         ]
       }
