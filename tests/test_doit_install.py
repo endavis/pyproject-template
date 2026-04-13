@@ -1,6 +1,8 @@
 """Tests for install.py doit tasks."""
 
-from tools.doit.install import task_install, task_install_dev
+from unittest.mock import MagicMock, patch
+
+from tools.doit.install import task_install, task_install_dev, task_install_gh
 
 
 class TestTaskInstall:
@@ -49,3 +51,61 @@ class TestTaskInstallDev:
             "git update-index --assume-unchanged src/package_name/_version.py"
         )
         assert sync_idx < assume_idx
+
+
+class TestTaskInstallGh:
+    """Tests for task_install_gh function."""
+
+    def test_returns_valid_doit_task(self) -> None:
+        """Test that task_install_gh returns a valid doit task dict."""
+        result = task_install_gh()
+        assert isinstance(result, dict)
+        assert "actions" in result
+        assert "title" in result
+        assert len(result["actions"]) == 1
+        assert callable(result["actions"][0])
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_action_calls_install_tool_with_correct_args(self, mock_install: MagicMock) -> None:
+        """Test that the task action calls install_tool with gh-specific args."""
+        result = task_install_gh()
+        result["actions"][0]()
+
+        mock_install.assert_called_once_with(
+            name="gh",
+            repo="cli/cli",
+            asset_patterns={},
+            version_cmd=["gh", "--version"],
+            post_install_message=None,
+            extract_binaries=["gh"],
+            url_template="https://github.com/cli/cli/releases/download/v{version}/gh_{version}_{os}_{arch}.tar.gz",
+            prefer_brew=False,
+        )
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_uses_url_template_not_asset_patterns(self, mock_install: MagicMock) -> None:
+        """Test that gh uses url_template with empty asset_patterns."""
+        result = task_install_gh()
+        result["actions"][0]()
+
+        kwargs = mock_install.call_args.kwargs
+        assert kwargs["asset_patterns"] == {}
+        assert "{version}" in kwargs["url_template"]
+        assert "{os}" in kwargs["url_template"]
+        assert "{arch}" in kwargs["url_template"]
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_prefer_brew_is_false(self, mock_install: MagicMock) -> None:
+        """Test that prefer_brew is False for consistent cross-platform behavior."""
+        result = task_install_gh()
+        result["actions"][0]()
+
+        assert mock_install.call_args.kwargs["prefer_brew"] is False
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_extract_binaries_contains_gh(self, mock_install: MagicMock) -> None:
+        """Test that extract_binaries is set to extract the gh binary."""
+        result = task_install_gh()
+        result["actions"][0]()
+
+        assert mock_install.call_args.kwargs["extract_binaries"] == ["gh"]

@@ -39,6 +39,19 @@ def task_install_dev() -> dict[str, Any]:
     }
 
 
+def task_install_gh() -> dict[str, Any]:
+    """Install GitHub CLI for repository operations."""
+    return create_install_task(
+        name="gh",
+        repo="cli/cli",
+        asset_patterns={},
+        url_template="https://github.com/cli/cli/releases/download/v{version}/gh_{version}_{os}_{arch}.tar.gz",
+        extract_binaries=["gh"],
+        version_cmd=["gh", "--version"],
+        prefer_brew=False,
+    )
+
+
 def task_install_direnv() -> dict[str, Any]:
     """Install direnv for automatic environment loading."""
     return create_install_task(
