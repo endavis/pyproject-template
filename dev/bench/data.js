@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776091481181,
+  "lastUpdate": 1776091927307,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3186,6 +3186,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.110373799409082e-7",
             "extra": "mean: 2.124597830938745 usec\nrounds: 51451"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f118850932484f3f284328f55f3b63eeca0b12f2",
+          "message": "chore(deps): update mkdocstrings[python] requirement from >=0.24 to >=1.0.3 (merges PR #373)\n\nchore(deps): update mkdocstrings[python] requirement\n\nUpdates the requirements on [mkdocstrings[python]](https://github.com/mkdocstrings/mkdocstrings) to permit the latest version.\n- [Release notes](https://github.com/mkdocstrings/mkdocstrings/releases)\n- [Changelog](https://github.com/mkdocstrings/mkdocstrings/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/mkdocstrings/mkdocstrings/compare/0.24.0...1.0.3)\n\n---\nupdated-dependencies:\n- dependency-name: mkdocstrings[python]\n  dependency-version: 1.0.3\n  dependency-type: direct:production\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T15:51:38+01:00",
+          "tree_id": "c7dfa5fcd70cf79eb32fb83e8245c26943352d02",
+          "url": "https://github.com/endavis/pyproject-template/commit/f118850932484f3f284328f55f3b63eeca0b12f2"
+        },
+        "date": 1776091926719,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8808233.814440994,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1534542065206672e-8",
+            "extra": "mean: 113.53013794439836 nsec\nrounds: 87789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8969270.765271712,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3628254849522034e-8",
+            "extra": "mean: 111.49178413388061 nsec\nrounds: 91075"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5296789.109793993,
+            "unit": "iter/sec",
+            "range": "stddev: 1.598485894757639e-8",
+            "extra": "mean: 188.79362180966513 nsec\nrounds: 54031"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1685609.678239652,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7819099635460785e-7",
+            "extra": "mean: 593.257153722764 nsec\nrounds: 55146"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505585.32029916364,
+            "unit": "iter/sec",
+            "range": "stddev: 5.427884474115154e-7",
+            "extra": "mean: 1.9779055282069555 usec\nrounds: 34550"
           }
         ]
       }
