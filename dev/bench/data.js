@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776085436121,
+  "lastUpdate": 1776085646594,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -2832,6 +2832,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.754721477223457e-7",
             "extra": "mean: 1.9962651649996646 usec\nrounds: 50033"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b130283c770d37b261d5514fa80a5ba0d2d9bb5d",
+          "message": "chore(deps): update hatch-vcs requirement from >=0.4 to >=0.5.0 (merges PR #367)\n\nUpdates the requirements on [hatch-vcs](https://github.com/ofek/hatch-vcs) to permit the latest version.\n- [Release notes](https://github.com/ofek/hatch-vcs/releases)\n- [Changelog](https://github.com/ofek/hatch-vcs/blob/master/HISTORY.md)\n- [Commits](https://github.com/ofek/hatch-vcs/compare/v0.4.0...v0.5.0)\n\n---\nupdated-dependencies:\n- dependency-name: hatch-vcs\n  dependency-version: 0.5.0\n  dependency-type: direct:development\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-04-13T14:06:54+01:00",
+          "tree_id": "ce97b584e50e5b1a51d8d6e139b667ba3bfc3a55",
+          "url": "https://github.com/endavis/pyproject-template/commit/b130283c770d37b261d5514fa80a5ba0d2d9bb5d"
+        },
+        "date": 1776085645823,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8991397.454099983,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1944104450544388e-8",
+            "extra": "mean: 111.21741699272903 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8616626.583695898,
+            "unit": "iter/sec",
+            "range": "stddev: 3.6341585543239405e-8",
+            "extra": "mean: 116.05469847006806 nsec\nrounds: 89759"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5296641.638644942,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5153754646258106e-8",
+            "extra": "mean: 188.79887827484464 nsec\nrounds: 54541"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1659600.6196763178,
+            "unit": "iter/sec",
+            "range": "stddev: 3.474292419424923e-7",
+            "extra": "mean: 602.5546075025185 nsec\nrounds: 55670"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498695.5057528754,
+            "unit": "iter/sec",
+            "range": "stddev: 5.766625736403744e-7",
+            "extra": "mean: 2.0052316262411676 usec\nrounds: 48738"
           }
         ]
       }
