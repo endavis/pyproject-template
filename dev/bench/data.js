@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776162604333,
+  "lastUpdate": 1776164268330,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3304,6 +3304,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.350091877458823e-7",
             "extra": "mean: 2.0122275855033878 usec\nrounds: 57697"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "afb59ea36e298d1884ac15c8140f618dbd64f7a2",
+          "message": "feat: add --auto-close flag to doit pr_merge (merges PR #381, addresses #380)\n\nAdds an opt-in --auto-close flag on task_pr_merge. When set, the task\ncloses each linked issue parsed from \"Addresses #XX\" in the PR body via\n`gh issue close <n> --comment \"Addressed in PR #<pr>\"` after a\nsuccessful merge. Default behavior is unchanged: without the flag, the\ntask continues to print the `gh issue close` reminder commands.\n\nAdds TestCloseLinkedIssues (5 tests) covering multi-issue close, empty\nlists, per-issue failure isolation, comment format, and subprocess\nerrors. Updates AGENTS.md and the doit-tasks / release-and-automation\ndocs to document the new flag.\n\nAddresses #380",
+          "timestamp": "2026-04-14T11:57:17+01:00",
+          "tree_id": "8f9c45397cbe53db89cfc77477851069f69769f5",
+          "url": "https://github.com/endavis/pyproject-template/commit/afb59ea36e298d1884ac15c8140f618dbd64f7a2"
+        },
+        "date": 1776164267392,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8802938.783085313,
+            "unit": "iter/sec",
+            "range": "stddev: 7.862307896933996e-9",
+            "extra": "mean: 113.59842714361277 nsec\nrounds: 84941"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9015449.34942137,
+            "unit": "iter/sec",
+            "range": "stddev: 7.859209882906827e-9",
+            "extra": "mean: 110.92070525183327 nsec\nrounds: 86267"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5668441.359196727,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0420785495029767e-8",
+            "extra": "mean: 176.41533829710636 nsec\nrounds: 55203"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1594437.9093687679,
+            "unit": "iter/sec",
+            "range": "stddev: 1.777458425052325e-7",
+            "extra": "mean: 627.1802709431918 nsec\nrounds: 59344"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 524655.2294593357,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3524826228670216e-7",
+            "extra": "mean: 1.9060135949288328 usec\nrounds: 27069"
           }
         ]
       }
