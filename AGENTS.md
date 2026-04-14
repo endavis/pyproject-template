@@ -314,7 +314,7 @@ Where `<agent-type>` is one of: `claude`, `gemini`, `copilot`, `codex`, or the r
 - **No Speculation:** Don't read files you don't need.
 
 ## Critical Reminders
-- **Flow:** Issue (`doit issue`) -> **`git checkout main && git pull`** -> Branch -> Commit -> PR (`doit pr`) -> Merge (`doit pr_merge`). NEVER commit to main. Always pull `main` before branching — local `main` may be behind the remote (e.g., after dependabot PRs merged via the web UI).
+- **Flow:** Issue (`doit issue`) -> **`git checkout main && git pull`** -> Branch -> Commit -> PR (`doit pr`) -> Merge (`doit pr_merge`). NEVER commit to main. Pull `main` before branching — local `main` may be behind the remote (e.g., after dependabot PRs merged via the web UI). `doit pr` enforces this by aborting if the branch is behind `origin/main`; pass `--no-update-check` to override.
 - **Scope:** Never mix refactoring, features, and docs in one PR. Create separate branches.
 - **Verify:** Check file paths (`ls`) and branch (`git status`) before assuming they exist.
 - **Security:** NEVER bypass security checks (e.g., `--no-verify`, ignoring secrets).
