@@ -660,15 +660,21 @@ doit pr_merge
 
 # Merge specific PR
 doit pr_merge --pr=123
+
+# Merge and automatically close linked issues
+doit pr_merge --auto-close
 ```
 
 **What it does:**
 1. Finds PR associated with current branch (or uses `--pr`)
 2. Validates PR is approved and checks pass
 3. Merges with conventional commit format: `<type>: <subject> (merges PR #XX, addresses #YY)`
+4. If `--auto-close` is set, closes each linked issue with a `Addressed in PR #XX` comment; otherwise prints the `gh issue close` commands as a reminder.
 
 **Options:**
 - `--pr`: PR number to merge (defaults to PR for current branch)
+- `--delete-branch`: Delete the source branch after merge (default: `true`)
+- `--auto-close`: Close linked issues (parsed from `Addresses #XX` in the PR body) after a successful merge (default: `false`)
 
 ### `adr`
 

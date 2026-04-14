@@ -283,6 +283,9 @@ doit pr_merge --pr=123
 
 # Keep the branch after merge (default deletes it)
 doit pr_merge --delete-branch=false
+
+# Automatically close linked issues after merge
+doit pr_merge --auto-close
 ```
 
 ### What It Does
@@ -333,7 +336,7 @@ Addresses #99
 
 ### Closing Issues After Merge
 
-Issues are **not automatically closed** when using `Addresses`. After merging, manually close linked issues:
+By default, issues are **not automatically closed** when using `Addresses`. After merging, `doit pr_merge` prints the `gh issue close` commands so you can close linked issues manually:
 
 ```bash
 # The task displays these commands after merge
@@ -342,6 +345,17 @@ gh issue close 100 --comment "Addressed in PR #103"
 ```
 
 This ensures issues are explicitly closed with a reference to the PR that addressed them.
+
+#### Auto-closing linked issues
+
+Pass `--auto-close` to have `doit pr_merge` run the `gh issue close` commands itself after a successful merge:
+
+```bash
+doit pr_merge --auto-close
+doit pr_merge --pr=123 --auto-close
+```
+
+Each linked issue is closed with the comment `Addressed in PR #XX`, matching the format used in the manual reminder.
 
 ### Why Use `doit pr_merge`?
 
