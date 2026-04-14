@@ -22,6 +22,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 - **NEVER implement based on a question.** Wait for explicit "Do it" or "Proceed".
 - **Stop & Verify:** If the user says "Stop", "Wait", "Hold on", "Cancel", "Wrong", or "No", immediately halt and ask for clarification.
 - **Summary Before Commit:** At the end of any implementation (docs, fix, feature, chore, etc.), summarize what was changed for the user before committing and wait for the user's explicit instruction to commit the changes.
+- **Failing Tests:** Never modify a test to make it pass. Stop, explain *why* the test broke (what behavior changed, what the test was asserting), and discuss with the user whether the code or the test should change. A failing test is a signal, not a problem to silence.
 
 ### 2. Task Planning Protocol
 - **Plan First:** Before writing code, you MUST present a checklist:
@@ -319,7 +320,7 @@ Where `<agent-type>` is one of: `claude`, `gemini`, `copilot`, `codex`, or the r
 - **Integrity:** Respect architectural patterns (modularity) over "quick fixes".
 - **Local State:** Protect user config (e.g., `.envrc.local`, settings). Do not revert/delete without backup.
 - **Version:** Source of truth is Git tags. Never edit `pyproject.toml` version.
-- **Tests:** Creating code = Creating tests. No exceptions.
+- **Tests:** Creating code = Creating tests. No exceptions. Never modify a failing test to make it pass — stop, explain why it broke, and discuss with the user whether the code or the test should change.
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
 - **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format. Issues are not automatically closed. Ask the user if they would like the related issue closed.
