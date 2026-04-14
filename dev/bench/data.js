@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776091927307,
+  "lastUpdate": 1776162604333,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3245,6 +3245,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.427884474115154e-7",
             "extra": "mean: 1.9779055282069555 usec\nrounds: 34550"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b90cc93069f280fd4132a3d1359e96b9bf61bf0",
+          "message": "docs: forbid AI agents from silently fixing failing tests (merges PR #379, addresses #378)\n\ndoc: forbid AI agents from silently fixing failing tests\n\nA failing test is a signal — agents must stop, explain why it broke,\nand discuss with the user whether the code or test should change.\n\nAddresses #378",
+          "timestamp": "2026-04-14T11:29:32+01:00",
+          "tree_id": "9c4919d7ee31c84f63eadb8a495eb906ab7930e1",
+          "url": "https://github.com/endavis/pyproject-template/commit/8b90cc93069f280fd4132a3d1359e96b9bf61bf0"
+        },
+        "date": 1776162603512,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8123922.221813361,
+            "unit": "iter/sec",
+            "range": "stddev: 3.441296931510452e-8",
+            "extra": "mean: 123.09325135030494 nsec\nrounds: 83879"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8906942.176235404,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2214452257071995e-7",
+            "extra": "mean: 112.27197619718451 nsec\nrounds: 88645"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5285384.107913952,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0013168475042762e-7",
+            "extra": "mean: 189.20100783265158 nsec\nrounds: 53749"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1629995.0016616203,
+            "unit": "iter/sec",
+            "range": "stddev: 2.89935857279134e-7",
+            "extra": "mean: 613.4988137881392 nsec\nrounds: 62384"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496961.6792873036,
+            "unit": "iter/sec",
+            "range": "stddev: 5.350091877458823e-7",
+            "extra": "mean: 2.0122275855033878 usec\nrounds: 57697"
           }
         ]
       }
