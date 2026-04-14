@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776185045993,
+  "lastUpdate": 1776189742693,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3540,6 +3540,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.521646753665644e-7",
             "extra": "mean: 1.9775233444227276 usec\nrounds: 21397"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a21c34c7109169172fa678cfcc3075756a5cdc2a",
+          "message": "feat: add plan-mode state hook for sub-agent safety (merges PR #393, addresses #392)\n\nAdds two PostToolUse hooks that maintain .claude/.plan-mode-state on\ndisk so tooling can programmatically detect parent plan-mode state\nbefore spawning sub-agents. Parent plan-mode state propagates to\nspawned sub-agents after the sub-agent's first non-readonly action,\nfreezing it — confirmed via diagnostic probes during the #389 session.\n\n- plan-mode-enter.py writes `active` atomically on EnterPlanMode.\n- plan-mode-exit.py writes `inactive` on ExitPlanMode. PostToolUse\n  (not Pre) ensures rejected ExitPlanMode doesn't clear the flag.\n- .gitignore excludes the state file (transient per-session state).\n- 12 pytest cases cover write/overwrite/missing-dir/malformed-stdin/\n  no-trailing-newline/round-trip.\n- docs/development/ai/plan-mode-hook.md documents the contract, the\n  PostToolUse rationale, and the known stale-state limitation.\n\nFollow-up: #389 will be rebased and revised so /implement reads this\nstate file automatically instead of relying on the user to eyeball\nthe CLI status line.\n\nAddresses #392",
+          "timestamp": "2026-04-14T19:01:57+01:00",
+          "tree_id": "c537644574af2591aa31dfb3ccdc1b025d2dd104",
+          "url": "https://github.com/endavis/pyproject-template/commit/a21c34c7109169172fa678cfcc3075756a5cdc2a"
+        },
+        "date": 1776189742369,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8947067.611493945,
+            "unit": "iter/sec",
+            "range": "stddev: 1.040644878947395e-8",
+            "extra": "mean: 111.7684635260093 nsec\nrounds: 88254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8732632.985128624,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0405798927898115e-8",
+            "extra": "mean: 114.51299988250575 nsec\nrounds: 85310"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5164435.881043979,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6230323281371773e-8",
+            "extra": "mean: 193.6319906053035 nsec\nrounds: 194932"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1583349.9138575594,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6298772424966646e-7",
+            "extra": "mean: 631.5723335997614 nsec\nrounds: 55237"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494246.1635383285,
+            "unit": "iter/sec",
+            "range": "stddev: 4.82042685776247e-7",
+            "extra": "mean: 2.023283282243324 usec\nrounds: 49809"
           }
         ]
       }
