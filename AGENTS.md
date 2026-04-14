@@ -234,6 +234,8 @@ gh pr list --state open
 
 ### Dependabot PRs
 
+Dependabot PRs that pass CI are now auto-merged by `.github/workflows/dependabot-automerge.yml`. The manual workflow below applies only to PRs the bot skips (major bumps, sensitive deps, or PRs labeled `automerge-blocked`). See [docs/development/dependabot-automerge.md](docs/development/dependabot-automerge.md) for details.
+
 When merging dependabot PRs that are behind `main`, **never** use the GitHub API `update-branch` endpoint or local rebase to update the branch. This strips the verified commit signatures from dependabot commits, which are required by branch protection rules.
 
 Instead, use dependabot's own rebase command:
@@ -324,7 +326,7 @@ Where `<agent-type>` is one of: `claude`, `gemini`, `copilot`, `codex`, or the r
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
 - **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format. Issues are not automatically closed. Ask the user if they would like the related issue closed — pass `--auto-close` to `doit pr_merge` to close linked issues in one step.
-- **The Merge Gate action:** is a manual action for the user to add to a PR. It requires the ready-to-merge label and should never be added by automation.
+- **The Merge Gate action:** is a manual action for the user to add to a PR. It requires the ready-to-merge label and should never be added by automation. Exception: the dependabot auto-merge workflow (`.github/workflows/dependabot-automerge.yml`) applies the `ready-to-merge` label to qualifying dependabot PRs only.
 - **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Addressed in PR #XXX". Issues are not closed automatically when PRs are merged.
 - **ADRs:** When implementing architectural decisions (typically `feat` or `refactor`, rarely `fix`), update related ADRs in `docs/decisions/` to add the issue link. Create new ADRs for significant decisions using `doit adr`. Every ADR must link to the documentation in `docs/` that describes the implementation. Doc and chore issues do not need ADRs. Issues with the `needs-adr` label require an ADR before the PR can be merged.
 

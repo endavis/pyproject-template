@@ -96,7 +96,7 @@ All labels are replicated from the template by `replicate_labels()`.
 | `needs-adr` | `#d4c5f9` | This issue requires an Architecture Decision Record | PR merge gate |
 | `needs-triage` | `#FBCA04` | Needs review and prioritization | All issue templates |
 | `question` | `#d876e3` | Further information is requested | Manual triage |
-| `ready-to-merge` | `#0E8A16` | PR is reviewed and ready to merge | Merge Gate workflow |
+| `ready-to-merge` | `#0E8A16` | PR is reviewed and ready to merge. Exception: the `dependabot-automerge` workflow applies this label automatically to qualifying dependabot PRs. | Merge Gate workflow |
 | `refactor` | `#F9D0C4` | Code refactoring and cleanup | Issue template |
 | `security` | `#d73a4a` | Security vulnerability or fix | Manual triage |
 | `wontfix` | `#ffffff` | This will not be worked on | Manual triage |
