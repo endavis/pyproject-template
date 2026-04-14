@@ -322,10 +322,15 @@ def task_pr() -> dict[str, Any]:
     2. --body-file: Reads body from a file
     3. --title + --body: Provides content directly (for AI/scripts)
 
+    Before creating the PR, the task verifies that the current branch is up
+    to date with ``origin/main`` and aborts with a remediation message if
+    it is behind. Pass ``--no-update-check`` to skip this guard.
+
     Examples:
         Interactive:  doit pr
         From file:    doit pr --title="feat: add export" --body-file=pr.md
         Direct:       doit pr --title="feat: add export" --body="## Description\\n..."
+        Skip check:   doit pr --no-update-check
     """
 
     def create_pr(
@@ -333,6 +338,7 @@ def task_pr() -> dict[str, Any]:
         body: str | None = None,
         body_file: str | None = None,
         draft: bool = False,
+        no_update_check: bool = False,
     ) -> None:
         console = Console()
         console.print()
@@ -355,6 +361,11 @@ def task_pr() -> dict[str, Any]:
             sys.exit(1)
 
         console.print(f"[dim]Current branch: {current_branch}[/dim]")
+
+        if no_update_check:
+            console.print("[dim]Skipping up-to-date check (--no-update-check).[/dim]")
+        else:
+            _check_branch_up_to_date(current_branch, console)
 
         # Try to extract issue number from branch name (e.g., feat/42-description)
         detected_issue = None
@@ -448,6 +459,13 @@ def task_pr() -> dict[str, Any]:
                 "type": bool,
                 "default": False,
                 "help": "Create as draft PR",
+            },
+            {
+                "name": "no_update_check",
+                "long": "no-update-check",
+                "type": bool,
+                "default": False,
+                "help": "Skip check that branch is up to date with origin/main",
             },
         ],
         "title": title_with_actions,
@@ -558,6 +576,66 @@ def _close_linked_issues(issues: list[str], pr_number: int, console: Console) ->
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").strip()
             console.print(f"[yellow]Failed to close #{issue}: {stderr}[/yellow]")
+
+
+def _check_branch_up_to_date(current_branch: str, console: Console) -> None:
+    """Abort PR creation if the current branch is behind ``origin/main``.
+
+    Fetches ``origin/main`` and compares it to ``HEAD``. If the branch is
+    behind, prints the count, the missing commits, and the rebase command
+    to run, then calls ``sys.exit(1)``. If the fetch itself fails (network
+    down, unreachable remote), prints a warning and returns — a flaky
+    network should not block PR creation.
+
+    Args:
+        current_branch: Name of the feature branch (used in remediation message).
+        console: Rich console for output.
+    """
+    try:
+        subprocess.run(
+            ["git", "fetch", "origin", "main"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        console.print(f"[yellow]Warning: `git fetch origin main` failed: {stderr}[/yellow]")
+        console.print("[yellow]Skipping up-to-date check; proceeding.[/yellow]")
+        return
+
+    count_result = subprocess.run(
+        ["git", "rev-list", "--count", "HEAD..origin/main"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    behind = int(count_result.stdout.strip() or "0")
+
+    if behind == 0:
+        console.print("[green]Branch is up to date with origin/main.[/green]")
+        return
+
+    log_result = subprocess.run(
+        ["git", "log", "--oneline", "-n", "10", "HEAD..origin/main"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+
+    console.print()
+    console.print(f"[red]Branch is {behind} commit(s) behind origin/main.[/red]")
+    console.print("[dim]Missing commits:[/dim]")
+    for line in log_result.stdout.strip().splitlines():
+        console.print(f"  {line}")
+    console.print()
+    console.print("[yellow]Rebase and force-push, then re-run `doit pr`:[/yellow]")
+    console.print(
+        f"  git rebase origin/main && git push --force-with-lease origin {current_branch}"
+    )
+    console.print()
+    console.print("[dim]Use `doit pr --no-update-check` to skip this check.[/dim]")
+    sys.exit(1)
 
 
 def task_pr_merge() -> dict[str, Any]:

@@ -1,11 +1,14 @@
 """Tests for github.py doit tasks."""
 
+import io
 import subprocess
 from unittest.mock import MagicMock, patch
 
+import pytest
 from rich.console import Console
 
 from tools.doit.github import (
+    _check_branch_up_to_date,
     _close_linked_issues,
     _extract_linked_issues,
     _format_merge_subject,
@@ -177,3 +180,96 @@ class TestCloseLinkedIssues:
         cmd = mock_run.call_args.args[0]
         assert cmd[4] == "--comment"
         assert cmd[5] == "Addressed in PR #123"
+
+
+class TestCheckBranchUpToDate:
+    """Tests for _check_branch_up_to_date helper."""
+
+    @staticmethod
+    def _make_console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    def test_up_to_date_branch_passes(self) -> None:
+        """rev-list --count == 0 → helper returns cleanly."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "fetch"]:
+                return MagicMock(returncode=0, stdout="", stderr="")
+            if cmd[:3] == ["git", "rev-list", "--count"]:
+                return MagicMock(returncode=0, stdout="0\n", stderr="")
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with patch("tools.doit.github.subprocess.run", side_effect=side_effect):
+            _check_branch_up_to_date("feat/x", console)
+
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "up to date" in output.lower()
+
+    def test_behind_branch_aborts(self) -> None:
+        """rev-list --count > 0 → SystemExit(1) with remediation message."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "fetch"]:
+                return MagicMock(returncode=0, stdout="", stderr="")
+            if cmd[:3] == ["git", "rev-list", "--count"]:
+                return MagicMock(returncode=0, stdout="3\n", stderr="")
+            if cmd[:2] == ["git", "log"]:
+                return MagicMock(returncode=0, stdout="abc1 one\n", stderr="")
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with (
+            patch("tools.doit.github.subprocess.run", side_effect=side_effect),
+            pytest.raises(SystemExit) as excinfo,
+        ):
+            _check_branch_up_to_date("feat/x", console)
+
+        assert excinfo.value.code == 1
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "3 commit" in output
+        assert "git rebase origin/main" in output
+        assert "feat/x" in output
+
+    def test_fetch_failure_warns_and_proceeds(self) -> None:
+        """git fetch failure → warning printed, helper returns."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "fetch"]:
+                raise subprocess.CalledProcessError(
+                    returncode=128, cmd=cmd, stderr="could not resolve host"
+                )
+            raise AssertionError(f"unexpected cmd after fetch failed: {cmd}")
+
+        with patch("tools.doit.github.subprocess.run", side_effect=side_effect):
+            _check_branch_up_to_date("feat/x", console)
+
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "warning" in output.lower()
+        assert "could not resolve host" in output
+
+    def test_behind_branch_lists_missing_commits(self) -> None:
+        """Missing commit SHAs from `git log` appear in the output."""
+        console = self._make_console()
+
+        log_out = "abc1234 feat: one\ndef5678 fix: two\n"
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "fetch"]:
+                return MagicMock(returncode=0, stdout="", stderr="")
+            if cmd[:3] == ["git", "rev-list", "--count"]:
+                return MagicMock(returncode=0, stdout="2\n", stderr="")
+            if cmd[:2] == ["git", "log"]:
+                return MagicMock(returncode=0, stdout=log_out, stderr="")
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with (
+            patch("tools.doit.github.subprocess.run", side_effect=side_effect),
+            pytest.raises(SystemExit),
+        ):
+            _check_branch_up_to_date("feat/x", console)
+
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "abc1234" in output
+        assert "def5678" in output
