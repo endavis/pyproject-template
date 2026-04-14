@@ -10,6 +10,7 @@ from rich.console import Console
 from tools.doit.github import (
     _check_branch_up_to_date,
     _close_linked_issues,
+    _ensure_branch_pushed,
     _extract_linked_issues,
     _format_merge_subject,
 )
@@ -273,3 +274,104 @@ class TestCheckBranchUpToDate:
         output = console.file.getvalue()  # type: ignore[attr-defined]
         assert "abc1234" in output
         assert "def5678" in output
+
+
+class TestEnsureBranchPushed:
+    """Tests for _ensure_branch_pushed helper."""
+
+    @staticmethod
+    def _make_console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    def test_existing_upstream_is_noop(self) -> None:
+        """rev-parse @{u} succeeds → no push, helper returns."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(returncode=0, stdout="origin/feat/x\n", stderr="")
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with patch("tools.doit.github.subprocess.run", side_effect=side_effect) as run:
+            _ensure_branch_pushed("feat/x", console, no_push=False)
+
+        assert run.call_count == 1
+
+    def test_no_upstream_pushes(self) -> None:
+        """rev-parse @{u} fails → git push -u origin is called."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "rev-parse"]:
+                raise subprocess.CalledProcessError(
+                    returncode=128, cmd=cmd, stderr="no upstream configured"
+                )
+            if cmd[:3] == ["git", "push", "-u"]:
+                return MagicMock(returncode=0, stdout="", stderr="")
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with patch("tools.doit.github.subprocess.run", side_effect=side_effect) as run:
+            _ensure_branch_pushed("feat/x", console, no_push=False)
+
+        assert run.call_count == 2
+        push_cmd = run.call_args_list[1].args[0]
+        assert push_cmd == ["git", "push", "-u", "origin", "feat/x"]
+
+    def test_push_failure_aborts(self) -> None:
+        """rev-parse @{u} fails and git push fails → SystemExit(1)."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "rev-parse"]:
+                raise subprocess.CalledProcessError(returncode=128, cmd=cmd, stderr="no upstream")
+            if cmd[:3] == ["git", "push", "-u"]:
+                raise subprocess.CalledProcessError(
+                    returncode=1, cmd=cmd, stderr="remote rejected: protected branch"
+                )
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with (
+            patch("tools.doit.github.subprocess.run", side_effect=side_effect),
+            pytest.raises(SystemExit) as excinfo,
+        ):
+            _ensure_branch_pushed("feat/x", console, no_push=False)
+
+        assert excinfo.value.code == 1
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "Failed to push" in output
+        assert "remote rejected" in output
+
+    def test_no_push_flag_and_no_upstream_aborts(self) -> None:
+        """no_push=True with missing upstream → SystemExit(1), no push."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "rev-parse"]:
+                raise subprocess.CalledProcessError(returncode=128, cmd=cmd, stderr="no upstream")
+            raise AssertionError(f"unexpected cmd: {cmd} (push should not run)")
+
+        with (
+            patch("tools.doit.github.subprocess.run", side_effect=side_effect) as run,
+            pytest.raises(SystemExit) as excinfo,
+        ):
+            _ensure_branch_pushed("feat/x", console, no_push=True)
+
+        assert excinfo.value.code == 1
+        assert run.call_count == 1
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "no upstream" in output.lower()
+        assert "--no-push" in output
+
+    def test_no_push_flag_with_upstream_passes(self) -> None:
+        """no_push=True with an upstream → returns, no push."""
+        console = self._make_console()
+
+        def side_effect(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            if cmd[:2] == ["git", "rev-parse"]:
+                return MagicMock(returncode=0, stdout="origin/feat/x\n", stderr="")
+            raise AssertionError(f"unexpected cmd: {cmd}")
+
+        with patch("tools.doit.github.subprocess.run", side_effect=side_effect) as run:
+            _ensure_branch_pushed("feat/x", console, no_push=True)
+
+        assert run.call_count == 1
