@@ -363,6 +363,8 @@ doit pr --title="feat: add caching" --body="## Summary\nAdded caching support\n\
 doit pr --title="fix: handle null" --body-file=pr.md
 ```
 
+`doit pr` auto-pushes the current branch to `origin` if it has no upstream. Pass `--no-push` to skip the auto-push (the task aborts instead).
+
 ### PR Merge
 ```bash
 doit pr_merge                        # Merge PR for current branch

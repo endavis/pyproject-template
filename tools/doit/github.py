@@ -326,11 +326,16 @@ def task_pr() -> dict[str, Any]:
     to date with ``origin/main`` and aborts with a remediation message if
     it is behind. Pass ``--no-update-check`` to skip this guard.
 
+    If the current branch has no upstream, the task pushes it to ``origin``
+    automatically before calling ``gh pr create``. Pass ``--no-push`` to
+    skip the auto-push (the task will then abort if no upstream exists).
+
     Examples:
         Interactive:  doit pr
         From file:    doit pr --title="feat: add export" --body-file=pr.md
         Direct:       doit pr --title="feat: add export" --body="## Description\\n..."
         Skip check:   doit pr --no-update-check
+        No auto-push: doit pr --no-push
     """
 
     def create_pr(
@@ -339,6 +344,7 @@ def task_pr() -> dict[str, Any]:
         body_file: str | None = None,
         draft: bool = False,
         no_update_check: bool = False,
+        no_push: bool = False,
     ) -> None:
         console = Console()
         console.print()
@@ -366,6 +372,8 @@ def task_pr() -> dict[str, Any]:
             console.print("[dim]Skipping up-to-date check (--no-update-check).[/dim]")
         else:
             _check_branch_up_to_date(current_branch, console)
+
+        _ensure_branch_pushed(current_branch, console, no_push)
 
         # Try to extract issue number from branch name (e.g., feat/42-description)
         detected_issue = None
@@ -466,6 +474,13 @@ def task_pr() -> dict[str, Any]:
                 "type": bool,
                 "default": False,
                 "help": "Skip check that branch is up to date with origin/main",
+            },
+            {
+                "name": "no_push",
+                "long": "no-push",
+                "type": bool,
+                "default": False,
+                "help": "Do not auto-push a branch with no upstream (aborts instead)",
             },
         ],
         "title": title_with_actions,
@@ -636,6 +651,56 @@ def _check_branch_up_to_date(current_branch: str, console: Console) -> None:
     console.print()
     console.print("[dim]Use `doit pr --no-update-check` to skip this check.[/dim]")
     sys.exit(1)
+
+
+def _ensure_branch_pushed(current_branch: str, console: Console, no_push: bool) -> None:
+    """Ensure the current branch has an upstream on ``origin``.
+
+    If the branch already has an upstream, returns silently. Otherwise,
+    runs ``git push -u origin <branch>`` to create it. On push failure,
+    calls ``sys.exit(1)``.
+
+    When ``no_push`` is True and the branch has no upstream, aborts with
+    ``sys.exit(1)`` without attempting to push.
+
+    Args:
+        current_branch: Name of the branch to push.
+        console: Rich console for output.
+        no_push: If True, never push; abort if upstream is missing.
+    """
+    try:
+        subprocess.run(
+            ["git", "rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return
+    except subprocess.CalledProcessError:
+        pass
+
+    if no_push:
+        console.print(
+            f"[red]Branch '{current_branch}' has no upstream and --no-push was passed.[/red]"
+        )
+        console.print(f"[yellow]Push manually: git push -u origin {current_branch}[/yellow]")
+        sys.exit(1)
+
+    console.print(f"[dim]Pushing {current_branch} to origin...[/dim]")
+    try:
+        subprocess.run(
+            ["git", "push", "-u", "origin", current_branch],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        console.print(f"[red]Failed to push {current_branch}:[/red]")
+        console.print(f"[red]{stderr}[/red]")
+        sys.exit(1)
+
+    console.print(f"[dim]Pushed {current_branch} to origin.[/dim]")
 
 
 def task_pr_merge() -> dict[str, Any]:
