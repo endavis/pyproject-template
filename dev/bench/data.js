@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776182673320,
+  "lastUpdate": 1776185045993,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3481,6 +3481,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.9089351895934e-7",
             "extra": "mean: 1.973601636710634 usec\nrounds: 39592"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "adb60131a3eda062a20f624bc7254eece29638c1",
+          "message": "feat: have doit pr auto-push branch if needed (merges PR #391, addresses #386)\n\nFixes the `aborted: you must first push the current branch to a remote`\nerror that hit PR #385. After the up-to-date check (from PR #385) passes,\n`doit pr` now pushes the branch to origin if no upstream exists, then\ncontinues with the editor/title flow. Push failures surface before the\nuser invests time drafting a PR body.\n\n- `_ensure_branch_pushed()` helper in tools/doit/github.py\n- Wired into `create_pr`; adds `--no-push` opt-out\n- Push failures (protected branch, auth, network) exit 1 with stderr\n- `TestEnsureBranchPushed` covers noop, push, push-failure, --no-push\n- AGENTS.md PR Creation section notes the new behavior\n\nAddresses #386",
+          "timestamp": "2026-04-14T17:43:32+01:00",
+          "tree_id": "76d181d65019126702a067905c1ce11d756b0db1",
+          "url": "https://github.com/endavis/pyproject-template/commit/adb60131a3eda062a20f624bc7254eece29638c1"
+        },
+        "date": 1776185045020,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8991415.715005107,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0746578048643328e-8",
+            "extra": "mean: 111.21719111832122 nsec\nrounds: 90164"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9105955.463260544,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7400268969170677e-8",
+            "extra": "mean: 109.81823972615092 nsec\nrounds: 90253"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5394487.47378101,
+            "unit": "iter/sec",
+            "range": "stddev: 2.945190567360026e-8",
+            "extra": "mean: 185.37442247485603 nsec\nrounds: 55885"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1658362.6588808533,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1932391743191486e-7",
+            "extra": "mean: 603.0044119992731 nsec\nrounds: 57797"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505683.03166702535,
+            "unit": "iter/sec",
+            "range": "stddev: 5.521646753665644e-7",
+            "extra": "mean: 1.9775233444227276 usec\nrounds: 21397"
           }
         ]
       }
