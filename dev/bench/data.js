@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776180238444,
+  "lastUpdate": 1776182673320,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3422,6 +3422,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.84112978183128e-7",
             "extra": "mean: 2.0035146830527113 usec\nrounds: 52203"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0834c918f71d86923740590524b3cc0003e4804f",
+          "message": "feat: have doit pr check branch is up to date with origin/main (merges PR #385, addresses #383)\n\nAdds a pre-flight check in `doit pr` that fetches `origin/main` and aborts\nwith a clear remediation message if the current branch is behind. Prevents\nopening PRs from stale branches (see PR #379 which had to be rebased\npost-hoc after branching from a local `main` 10 commits behind origin).\n\n- `_check_branch_up_to_date()` helper in tools/doit/github.py\n- Wired into `create_pr`; adds `--no-update-check` opt-out\n- Network failures during `git fetch` warn and proceed (don't block)\n- `TestCheckBranchUpToDate` covers pass, abort, fetch-failure, commit-list\n- AGENTS.md Critical Reminders `**Flow:**` line notes the new enforcement\n\nAddresses #383",
+          "timestamp": "2026-04-14T17:04:06+01:00",
+          "tree_id": "fe94370823e70a68ae928f66a7e46f965fa7105f",
+          "url": "https://github.com/endavis/pyproject-template/commit/0834c918f71d86923740590524b3cc0003e4804f"
+        },
+        "date": 1776182672990,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9059096.137854002,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1892802962768423e-8",
+            "extra": "mean: 110.38628851960596 nsec\nrounds: 89630"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8851432.215457976,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2837244060657471e-8",
+            "extra": "mean: 112.97606711076867 nsec\nrounds: 84696"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6317179.404048325,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6053647378176864e-8",
+            "extra": "mean: 158.2984962179729 nsec\nrounds: 61219"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1733086.608852776,
+            "unit": "iter/sec",
+            "range": "stddev: 2.538096110714784e-7",
+            "extra": "mean: 577.0052084482692 nsec\nrounds: 38975"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506687.8651695293,
+            "unit": "iter/sec",
+            "range": "stddev: 4.9089351895934e-7",
+            "extra": "mean: 1.973601636710634 usec\nrounds: 39592"
           }
         ]
       }
