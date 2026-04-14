@@ -40,6 +40,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
 - [CLI Guide](usage/cli.md) - The application's user-facing command-line interface and how to extend it
+- [Dependabot Auto-merge](development/dependabot-automerge.md) - How the dependabot auto-merge workflow evaluates, enables, and skips PRs
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [First 5 Minutes with an AI Agent](development/ai/first-5-minutes.md) - Narrative walkthrough of the AI agent workflow from issue to merge
@@ -98,6 +99,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [CI/CD Testing Guide](development/ci-cd-testing.md) - GitHub Actions pipelines for testing, linting, and coverage
 - [Claude Code Statusline](development/ai/statusline.md) - Custom statusline showing git branch, Python version, and project info
 - [CLI Guide](usage/cli.md) - The application's user-facing command-line interface and how to extend it
+- [Dependabot Auto-merge](development/dependabot-automerge.md) - How the dependabot auto-merge workflow evaluates, enables, and skips PRs
 - [Development Deployment Guide](deployment/development.md) - Guide for setting up and running the application in development environments
 - [Doit Tasks Reference](development/doit-tasks-reference.md) - Complete reference for all doit automation tasks
 - [Examples](examples/README.md) - Example scripts demonstrating how to use the package
