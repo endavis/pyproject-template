@@ -529,6 +529,37 @@ def _format_merge_subject(title: str, pr_number: int, issues: list[str]) -> str:
     return f"{title} {suffix}"
 
 
+def _close_linked_issues(issues: list[str], pr_number: int, console: Console) -> None:
+    """Close each linked issue via `gh issue close` with a standard comment.
+
+    On per-issue failure, prints a yellow warning and continues. Does not
+    raise — the merge has already succeeded, partial failure is reported
+    but not fatal.
+
+    Args:
+        issues: List of issue numbers to close.
+        pr_number: PR number used in the close comment.
+        console: Rich console for output.
+    """
+    if not issues:
+        console.print("[dim]No linked issues to close.[/dim]")
+        return
+
+    comment = f"Addressed in PR #{pr_number}"
+    for issue in issues:
+        try:
+            subprocess.run(
+                ["gh", "issue", "close", issue, "--comment", comment],
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            console.print(f"[green]Closed issue #{issue}[/green]")
+        except subprocess.CalledProcessError as e:
+            stderr = (e.stderr or "").strip()
+            console.print(f"[yellow]Failed to close #{issue}: {stderr}[/yellow]")
+
+
 def task_pr_merge() -> dict[str, Any]:
     """Merge a PR with properly formatted commit message.
 
@@ -542,11 +573,13 @@ def task_pr_merge() -> dict[str, Any]:
         doit pr_merge                    # Merge PR for current branch
         doit pr_merge --pr=123           # Merge specific PR
         doit pr_merge --delete-branch    # Also delete the branch after merge
+        doit pr_merge --pr=123 --auto-close  # Close linked issues after merge
     """
 
     def merge_pr(
         pr: str | None = None,
         delete_branch: bool = True,
+        auto_close: bool = False,
     ) -> None:
         console = Console()
         console.print()
@@ -616,17 +649,21 @@ def task_pr_merge() -> dict[str, Any]:
                 )
             )
 
-            # Reminder to update linked issues
-            console.print()
-            console.print(
-                Panel.fit(
-                    "[bold yellow]Reminder: Update linked issues[/bold yellow]\n\n"
-                    "Examples:\n"
-                    f'  gh issue close <number> --comment "Addressed in PR #{pr_number}"\n'
-                    f'  gh issue comment <number> --body "Addressed in PR #{pr_number}"',
-                    border_style="yellow",
+            if auto_close:
+                console.print()
+                _close_linked_issues(issues, pr_number, console)
+            else:
+                # Reminder to update linked issues
+                console.print()
+                console.print(
+                    Panel.fit(
+                        "[bold yellow]Reminder: Update linked issues[/bold yellow]\n\n"
+                        "Examples:\n"
+                        f'  gh issue close <number> --comment "Addressed in PR #{pr_number}"\n'
+                        f'  gh issue comment <number> --body "Addressed in PR #{pr_number}"',
+                        border_style="yellow",
+                    )
                 )
-            )
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to merge PR.[/red]")
             if e.stderr:
@@ -648,6 +685,13 @@ def task_pr_merge() -> dict[str, Any]:
                 "type": bool,
                 "default": True,
                 "help": "Delete branch after merge (default: True)",
+            },
+            {
+                "name": "auto_close",
+                "long": "auto-close",
+                "type": bool,
+                "default": False,
+                "help": "Close linked issues after merge with a standard comment",
             },
         ],
         "title": title_with_actions,

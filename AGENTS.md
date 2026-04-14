@@ -323,7 +323,7 @@ Where `<agent-type>` is one of: `claude`, `gemini`, `copilot`, `codex`, or the r
 - **Tests:** Creating code = Creating tests. No exceptions. Never modify a failing test to make it pass — stop, explain why it broke, and discuss with the user whether the code or the test should change.
 - **Commits:** One logical change per commit. Use conventional commits.
 - **Releases:** Never run `doit release` without explicit command.
-- **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format. Issues are not automatically closed. Ask the user if they would like the related issue closed.
+- **PRs:** Use `doit pr` to create PRs and `doit pr_merge` to merge with proper commit format. Issues are not automatically closed. Ask the user if they would like the related issue closed — pass `--auto-close` to `doit pr_merge` to close linked issues in one step.
 - **The Merge Gate action:** is a manual action for the user to add to a PR. It requires the ready-to-merge label and should never be added by automation.
 - **Issues:** Use `doit issue --type=<type>` to create issues (types: feature, bug, refactor, doc, chore). Labels are auto-applied. Manually close after PR merge with comment "Addressed in PR #XXX". Issues are not closed automatically when PRs are merged.
 - **ADRs:** When implementing architectural decisions (typically `feat` or `refactor`, rarely `fix`), update related ADRs in `docs/decisions/` to add the issue link. Create new ADRs for significant decisions using `doit adr`. Every ADR must link to the documentation in `docs/` that describes the implementation. Doc and chore issues do not need ADRs. Issues with the `needs-adr` label require an ADR before the PR can be merged.
@@ -363,8 +363,9 @@ doit pr --title="fix: handle null" --body-file=pr.md
 
 ### PR Merge
 ```bash
-doit pr_merge                    # Merge PR for current branch
-doit pr_merge --pr=123           # Merge specific PR
+doit pr_merge                        # Merge PR for current branch
+doit pr_merge --pr=123               # Merge specific PR
+doit pr_merge --pr=123 --auto-close  # Also close linked issues after merge
 ```
 
 ### ADR Creation

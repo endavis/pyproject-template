@@ -1,6 +1,15 @@
 """Tests for github.py doit tasks."""
 
-from tools.doit.github import _extract_linked_issues, _format_merge_subject
+import subprocess
+from unittest.mock import MagicMock, patch
+
+from rich.console import Console
+
+from tools.doit.github import (
+    _close_linked_issues,
+    _extract_linked_issues,
+    _format_merge_subject,
+)
 
 
 class TestExtractLinkedIssues:
@@ -95,3 +104,76 @@ class TestFormatMergeSubject:
         title = "refactor: simplify complex logic"
         result = _format_merge_subject(title, 99, ["55"])
         assert result.startswith(title)
+
+
+class TestCloseLinkedIssues:
+    """Tests for _close_linked_issues helper."""
+
+    def test_closes_single_linked_issue(self) -> None:
+        """Single issue results in one gh issue close invocation."""
+        console = Console()
+        with patch("tools.doit.github.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            _close_linked_issues(["123"], 45, console)
+
+        assert mock_run.call_count == 1
+        args, kwargs = mock_run.call_args
+        assert args[0] == [
+            "gh",
+            "issue",
+            "close",
+            "123",
+            "--comment",
+            "Addressed in PR #45",
+        ]
+        assert kwargs["check"] is True
+        assert kwargs["capture_output"] is True
+        assert kwargs["text"] is True
+
+    def test_closes_multiple_linked_issues(self) -> None:
+        """Multiple issues result in multiple calls in order."""
+        console = Console()
+        with patch("tools.doit.github.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            _close_linked_issues(["10", "20", "30"], 7, console)
+
+        assert mock_run.call_count == 3
+        called_issues = [call.args[0][3] for call in mock_run.call_args_list]
+        assert called_issues == ["10", "20", "30"]
+
+    def test_no_issues_is_noop(self) -> None:
+        """Empty issue list results in no subprocess calls."""
+        console = Console()
+        with patch("tools.doit.github.subprocess.run") as mock_run:
+            _close_linked_issues([], 99, console)
+
+        mock_run.assert_not_called()
+
+    def test_partial_failure_continues(self) -> None:
+        """A failure on one issue does not stop subsequent closes."""
+        console = Console()
+
+        def side_effect(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            issue = cmd[3]
+            if issue == "20":
+                raise subprocess.CalledProcessError(returncode=1, cmd=cmd, stderr="boom")
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        with patch("tools.doit.github.subprocess.run", side_effect=side_effect) as mock_run:
+            # Should not raise.
+            _close_linked_issues(["10", "20", "30"], 7, console)
+
+        assert mock_run.call_count == 3
+        called_issues = [call.args[0][3] for call in mock_run.call_args_list]
+        assert called_issues == ["10", "20", "30"]
+
+    def test_close_comment_format(self) -> None:
+        """The close comment must be exactly 'Addressed in PR #<n>'."""
+        console = Console()
+        with patch("tools.doit.github.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0, stdout="", stderr="")
+            _close_linked_issues(["5"], 123, console)
+
+        cmd = mock_run.call_args.args[0]
+        assert cmd[4] == "--comment"
+        assert cmd[5] == "Addressed in PR #123"
