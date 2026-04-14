@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776164268330,
+  "lastUpdate": 1776180238444,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3363,6 +3363,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.3524826228670216e-7",
             "extra": "mean: 1.9060135949288328 usec\nrounds: 27069"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aff458619c6926cc0edc8eb53bbfa4880ee7d8d9",
+          "message": "feat: auto-merge dependabot PRs once required CI checks pass (merges PR #384, addresses #382)\n\nfeat: auto-merge qualifying dependabot PRs once CI passes\n\nAdd a workflow that evaluates each dependabot PR against a JSON\nconfig (update type, sensitive-dependency globs, blocking labels),\nenables native squash auto-merge and applies ready-to-merge for\nqualifying PRs, and posts a sticky status comment otherwise. A\nscheduled job nudges stale qualifying PRs via @dependabot rebase\nto preserve verified signatures. PR-checks is updated to exempt\ndependabot PRs from the issue-link rule. Docs updated in\nAGENTS.md, docs/development/dependabot-automerge.md, and the\nrepo-settings label table.\n\nAddresses #382",
+          "timestamp": "2026-04-14T16:23:31+01:00",
+          "tree_id": "d5feb9f1f970d1ac6f2c5ee670ff36cec8328335",
+          "url": "https://github.com/endavis/pyproject-template/commit/aff458619c6926cc0edc8eb53bbfa4880ee7d8d9"
+        },
+        "date": 1776180238129,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8936005.226447053,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3041761768174147e-8",
+            "extra": "mean: 111.90682801308063 nsec\nrounds: 87245"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9124274.738070171,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2315610987728757e-8",
+            "extra": "mean: 109.59775200845222 nsec\nrounds: 90245"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5297339.313118607,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4697599229165958e-8",
+            "extra": "mean: 188.77401293202945 nsec\nrounds: 55057"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1674691.5831269096,
+            "unit": "iter/sec",
+            "range": "stddev: 2.58991165804319e-7",
+            "extra": "mean: 597.1248736635104 nsec\nrounds: 56393"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 499122.8706526483,
+            "unit": "iter/sec",
+            "range": "stddev: 4.84112978183128e-7",
+            "extra": "mean: 2.0035146830527113 usec\nrounds: 52203"
           }
         ]
       }
