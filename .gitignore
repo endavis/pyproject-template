@@ -79,3 +79,6 @@ coverage.xml
 .nfs*
 .gemini/settings.json.orig
 tools/hooks/ai/hook-debug.jsonl
+
+# Claude Code local state
+.claude/.plan-mode-state
