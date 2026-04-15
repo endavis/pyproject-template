@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776294029364,
+  "lastUpdate": 1776296335171,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3894,6 +3894,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.389976968668891e-7",
             "extra": "mean: 2.0248544928844927 usec\nrounds: 50513"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6c3a7cebce8ee9cfc9af4784ebc300352fdbf15",
+          "message": "refactor: have /implement spawn a custom implement-worker subagent with permissionMode: default (merges PR #405, addresses #397)\n\nAddresses #397\n\n/implement currently spawns a sub-agent via the Task tool with\n`subagent_type: \"general-purpose\"`. When the parent session is\nin plan mode, the sub-agent inherits plan-mode constraints and\nfreezes on its first non-readonly action.\n\nThe prior hook-based workaround (PRs #393 / #394) was removed in\nPR #403 (see #402) because plan-mode entry via the `/plan` slash\ncommand or Esc-Esc keybinding does not fire the PostToolUse\nhooks (see #396 and the upstream observability gap).\n\nPer the Claude Code sub-agents precedence rules, parent\n`bypassPermissions` and `auto` override child `permissionMode`\nfrontmatter — but plan mode is NOT in that precedence list. A\nchild with `permissionMode: default` should escape parent plan\nmode and let the sub-agent write files without freezing.\n\nChanges:\n\n- .claude/agents/implement-worker.md (new, 67 lines): custom\n  Claude Code sub-agent. Frontmatter: `name: implement-worker`,\n  `tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite`\n  (minimum needed; `Task` omitted to prevent nested-subagent\n  recursion), and `permissionMode: default`. Body carries the\n  implementation prompt: project-rules reads, plan fetch via\n  `gh api`, implementation constraints (no branch switch, no\n  commit, no plan mode, type-annotated code), run `doit check`,\n  return summary.\n\n- .claude/commands/implement.md: Step 3 shrunk from ~30 lines\n  to a short paragraph invoking\n  `subagent_type: \"implement-worker\"`. The long inline prompt is\n  gone — the custom sub-agent carries those instructions\n  intrinsically. Step 0 preamble (plan-mode trap warning),\n  Step 1, Step 2, Step 4 preserved verbatim.\n\n- docs/development/ai/slash-commands.md: /implement design note\n  updated to mention the custom sub-agent, the `permissionMode:\n  default` override rationale, and that the status-line preamble\n  remains as belt-and-suspenders.\n\nThe status-line preamble warning is retained as\nbelt-and-suspenders until the override is empirically verified\non this Claude Code version. Claude Code loads sub-agents at\nsession start, so the empirical test requires a fresh session\nafter merge.\n\nIssue #4462 has a v2.1.90 Bedrock observation that the Agent\ntool's `mode` parameter had no effect against a settings.json\n`defaultMode: \"plan\"`. That's a different code path than\nfrontmatter `permissionMode`, but it is a counter-signal worth\nchecking post-merge. If the override turns out not to work on\nour version, the `tools` restriction and context hygiene of the\ncustom sub-agent are still useful on their own.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-16T00:38:25+01:00",
+          "tree_id": "e2a3284da2eab2ec19c7c1928208ad135a9c5907",
+          "url": "https://github.com/endavis/pyproject-template/commit/f6c3a7cebce8ee9cfc9af4784ebc300352fdbf15"
+        },
+        "date": 1776296334189,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8772015.544457098,
+            "unit": "iter/sec",
+            "range": "stddev: 8.457276408181708e-9",
+            "extra": "mean: 113.99888599512167 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8999254.724433258,
+            "unit": "iter/sec",
+            "range": "stddev: 7.965940390145962e-9",
+            "extra": "mean: 111.12031280601144 nsec\nrounds: 86859"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5622040.238530518,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0150084514848379e-8",
+            "extra": "mean: 177.8713701027118 nsec\nrounds: 54828"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1629027.5266648133,
+            "unit": "iter/sec",
+            "range": "stddev: 2.018390339596025e-7",
+            "extra": "mean: 613.863169057277 nsec\nrounds: 62442"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 511800.45779523876,
+            "unit": "iter/sec",
+            "range": "stddev: 3.735234916250816e-7",
+            "extra": "mean: 1.9538864898789916 usec\nrounds: 50762"
           }
         ]
       }
