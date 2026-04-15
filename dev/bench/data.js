@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776273658142,
+  "lastUpdate": 1776294029364,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3835,6 +3835,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.964391213785693e-7",
             "extra": "mean: 2.0356859996341528 usec\nrounds: 56777"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5050f50ba2d6e2081da72098d17901c33e112251",
+          "message": "feat: add PostToolUse hook to run ruff --fix on edited Python files (merges PR #404, addresses #390)\n\nAddresses #390\n\nClaude Code's Edit / Write / MultiEdit tools leave trivial ruff\nfindings (F401 unused imports, F841 unused locals, I import\nordering) to surface at `doit check` time — often many turns\nafter the edit. The agent then re-opens the file and fixes what\na single `ruff --fix` pass would have cleaned up automatically.\nThe stale diagnostics that result also confuse Pyright follow-up\nruns.\n\nAdds a PostToolUse hook wired in .claude/settings.json for\nmatcher `Edit|Write|MultiEdit`. After each such tool call the\nhook:\n\n- Reads the JSON payload from stdin.\n- Extracts tool_input.file_path and normalizes it against\n  $CLAUDE_PROJECT_DIR.\n- Returns early for non-Python files, paths outside\n  src/ / tests/ / tools/ / bootstrap.py, and missing files.\n- Otherwise runs `uv run ruff check --fix\n  --select F401,F841,I --quiet <path>` followed by\n  `uv run ruff format --quiet <path>`.\n- Always exits 0 — a broken hook must never block a tool call.\n\nScope of fixed rules is deliberately narrow: only the three\ncases where auto-fix requires no judgment. Other findings still\nsurface at `doit check` time.\n\nFiles:\n- tools/hooks/ai/ruff-fix-on-edit.py: new hook script\n  (143 LOC, mode 0755). Module-level run_ruff() so tests can\n  patch it. Every branch wraps in try/except and returns 0.\n  B110 suppressed with nosec + justification: by design the\n  hook swallows all exceptions because surfacing them would\n  block the originating tool call.\n- .claude/settings.json: added PostToolUse block matching\n  Edit|Write|MultiEdit. Existing PreToolUse Bash\n  block-dangerous-commands entry untouched.\n- tests/test_hook_ruff_fix.py: 12 pytest cases covering\n  in-scope / out-of-scope / missing file / malformed stdin /\n  ruff failure / ruff timeout / absolute path branches.\n  importlib loads the hyphen-named hook module.\n- docs/development/ai/ruff-fix-hook.md: scope, rules, how to\n  disable locally, consecutive-edit caveat.\n- docs/TABLE_OF_CONTENTS.md: auto-regenerated.\n\nActivation: the hook takes effect only in fresh Claude Code\nsessions started after merge. Restart existing sessions to pick\nup the new settings.\n\nKnown limitation: consecutive Edit calls on the same file may\nsee their `old_string` go stale if the hook reorders imports or\nremoves a line. Mitigation is editorial — use Write for large\nrewrites, or re-read between edits.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-15T23:59:58+01:00",
+          "tree_id": "daf74f07990f0c7238453cab31d67c6f04287e9f",
+          "url": "https://github.com/endavis/pyproject-template/commit/5050f50ba2d6e2081da72098d17901c33e112251"
+        },
+        "date": 1776294028515,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8950069.822632287,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0967895038956872e-8",
+            "extra": "mean: 111.73097191613778 nsec\nrounds: 87559"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8993958.650638746,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0648072396590221e-8",
+            "extra": "mean: 111.18574577046566 nsec\nrounds: 85529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5387959.673317242,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4400413724017465e-8",
+            "extra": "mean: 185.59901347300232 nsec\nrounds: 53663"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1637661.1896897177,
+            "unit": "iter/sec",
+            "range": "stddev: 3.265394027653474e-7",
+            "extra": "mean: 610.6269149539208 nsec\nrounds: 58748"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493862.647174937,
+            "unit": "iter/sec",
+            "range": "stddev: 5.389976968668891e-7",
+            "extra": "mean: 2.0248544928844927 usec\nrounds: 50513"
           }
         ]
       }
