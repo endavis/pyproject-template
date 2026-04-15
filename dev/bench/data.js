@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776252939031,
+  "lastUpdate": 1776255844745,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3658,6 +3658,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.264507681164416e-7",
             "extra": "mean: 1.9863795770723376 usec\nrounds: 49513"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c8c2dd9aefc11f99d799e470495b790c8912e9a6",
+          "message": "refactor: add mock_subprocess fixture for test_doit_github.py (merges PR #395, addresses #387)\n\nAddresses #387\n\nTests for helpers in tools.doit.github previously set up\npatch(\"tools.doit.github.subprocess.run\", side_effect=...) inline with\na hand-rolled dispatcher keyed by cmd[:N]. Each test spent ~10 lines on\n\"return X when command is Y\" boilerplate, and the pattern was about to\nspread as more subprocess.run callers get tested.\n\nAdd a mock_subprocess fixture in tests/conftest.py that:\n\n- Patches tools.doit.github.subprocess.run.\n- Dispatches by command prefix (first-registered wins).\n- Accepts dict specs ({stdout, stderr, returncode}), BaseException\n  instances to raise, or callables (cmd) -> MagicMock | Exception for\n  the rare case where behavior varies by a later argument.\n- Raises AssertionError on unknown prefixes, preserving the previous\n  safety net.\n- Yields the underlying MagicMock, so call_count / call_args_list /\n  kwargs assertions continue to work unchanged.\n\nMigrate all 14 tests across TestCloseLinkedIssues,\nTestCheckBranchUpToDate, and TestEnsureBranchPushed to the fixture.\nEvery existing assertion is preserved. Drop the now-unused patch\nimport; keep MagicMock (still referenced by one callable-spec return\ntype). Pure refactor — no behavior change in production code, no\ncoverage change.\n\ntests/test_doit_github.py: 377 -> 348 LOC (-29).\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-15T13:23:30+01:00",
+          "tree_id": "c86d536b8a199f5f78bda7480bbe045a6812a799",
+          "url": "https://github.com/endavis/pyproject-template/commit/c8c2dd9aefc11f99d799e470495b790c8912e9a6"
+        },
+        "date": 1776255843898,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9164940.398836277,
+            "unit": "iter/sec",
+            "range": "stddev: 1.163514130962163e-8",
+            "extra": "mean: 109.11145697433837 nsec\nrounds: 80626"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9022669.661208916,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1969633326292316e-8",
+            "extra": "mean: 110.83194193613129 nsec\nrounds: 86491"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5396249.855222565,
+            "unit": "iter/sec",
+            "range": "stddev: 1.782120418545406e-8",
+            "extra": "mean: 185.3138803482545 nsec\nrounds: 53405"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1647105.49579901,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7470205896761173e-7",
+            "extra": "mean: 607.1256531840424 nsec\nrounds: 65450"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 483311.95804501936,
+            "unit": "iter/sec",
+            "range": "stddev: 5.565427922483743e-7",
+            "extra": "mean: 2.069057020738668 usec\nrounds: 61767"
           }
         ]
       }
