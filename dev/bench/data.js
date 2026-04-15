@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776270470463,
+  "lastUpdate": 1776273658142,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3776,6 +3776,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.656888905986951e-7",
             "extra": "mean: 1.9614365930182656 usec\nrounds: 47479"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bd7f27d4ea0eb7c5a7ab8722512dc26cde836dae",
+          "message": "refactor: remove plan-mode state hook and /implement Step 0 pre-flight (merges PR #403, addresses #402)\n\nAddresses #402. Resolves #396 locally.\n\nPR #393 added a PostToolUse hook pair that wrote\n`.claude/.plan-mode-state` on `EnterPlanMode` / `ExitPlanMode`.\nPR #394 made `/implement`'s Step 0 read that file and abort on\n`active` as a guard against the sub-agent plan-mode-propagation\ntrap.\n\nIssue #396 documented that plan mode can also be toggled via the\n`/plan` slash command and the Esc-Esc keybinding. Neither path\nemits a tool call, so neither path fires the hooks — the state\nfile stays stale or missing while plan mode is genuinely active.\nStep 0 reading that file produced false-negative \"all clear\"\nsignals that caused the spawned sub-agent to freeze mid-execution\n(observed during work on #388). A signal that is wrong more than\nhalf the time is worse than no signal.\n\nThe long-term fix lives in #397 (custom sub-agent with\n`permissionMode: default`, which breaks propagation at the\nClaude Code layer). This commit clears the broken machinery so\nnothing in the repo trusts the unreliable file.\n\nDeleted:\n- tools/hooks/ai/plan-mode-enter.py\n- tools/hooks/ai/plan-mode-exit.py\n- tests/test_hooks_plan_mode.py\n- docs/development/ai/plan-mode-hook.md\n\nModified:\n- .claude/settings.json: drop the two PostToolUse entries for\n  EnterPlanMode / ExitPlanMode. PreToolUse block-dangerous-commands\n  is untouched.\n- .gitignore: drop the `.claude/.plan-mode-state` entry.\n- .claude/commands/implement.md: revert Step 0 to a single\n  preamble warning telling the user to glance at the CLI status\n  line before running. Drop the state-file `cat` snippet, the\n  Step 0 heading, and the link to the deleted plan-mode-hook.md.\n- docs/development/ai/slash-commands.md: update the /implement\n  design note to match.\n- docs/TABLE_OF_CONTENTS.md: drop Plan-Mode State Hook entries.\n\nPost-merge manual step for existing clones: delete any local\n`.claude/.plan-mode-state` file — it is now orphaned (no code\nwrites to it, no longer gitignored).\n\nHook scripts are resurrectable from git history if upstream ever\nfixes hook firing for the `/plan` command and Esc-Esc keybinding.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-15T18:20:32+01:00",
+          "tree_id": "1ec3785f07178128054e27631fc395639966f72e",
+          "url": "https://github.com/endavis/pyproject-template/commit/bd7f27d4ea0eb7c5a7ab8722512dc26cde836dae"
+        },
+        "date": 1776273657762,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9134072.84576081,
+            "unit": "iter/sec",
+            "range": "stddev: 1.197623547753114e-8",
+            "extra": "mean: 109.48018664686994 nsec\nrounds: 79347"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8942265.487730986,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2295340520161149e-8",
+            "extra": "mean: 111.82848478073316 nsec\nrounds: 86641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5016457.030482852,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6354575229330856e-8",
+            "extra": "mean: 199.34387834350622 nsec\nrounds: 197629"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1650759.7531544769,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9948205038382213e-7",
+            "extra": "mean: 605.7816699789753 nsec\nrounds: 64604"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491234.895843326,
+            "unit": "iter/sec",
+            "range": "stddev: 4.964391213785693e-7",
+            "extra": "mean: 2.0356859996341528 usec\nrounds: 56777"
           }
         ]
       }
