@@ -38,7 +38,7 @@ doit <task_name>
 | [Security](#security-tasks) | `security`, `audit`, `licenses`, `sbom` | Security scanning and SBOM |
 | [Documentation](#documentation-tasks) | `docs_serve`, `docs_build`, `docs_deploy`, `docs_toc` | Documentation management |
 | [Dependencies](#dependency-tasks) | `install`, `install_dev`, `update_deps` | Package management |
-| [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr` | Issue and PR management |
+| [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync` | Issue and PR management |
 | [Release](#release-tasks) | `release`, `release_dev`, `release_pr`, `release_tag`, `publish` | Version and release management |
 | [Version](#version-tasks) | `bump`, `changelog` | Version bumping and changelog |
 | [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv` | Development environment |
@@ -700,6 +700,39 @@ doit adr --title="Use Redis" --body-file=adr.md
 - `--body-file`: File containing ADR body (non-interactive)
 
 See [ADR Documentation](../decisions/README.md) for more information.
+
+---
+
+### `labels_sync`
+
+Reconcile GitHub labels with `.github/labels.yml` (idempotent).
+
+```bash
+# Preview changes without touching GitHub
+doit labels_sync --dry-run
+
+# Create missing labels and update drift (no deletion)
+doit labels_sync
+
+# Also delete labels present on GitHub but absent from the file
+doit labels_sync --prune
+
+# Use a different labels file
+doit labels_sync --file=.github/labels.custom.yml
+```
+
+**What it does:**
+- Reads `.github/labels.yml` (flat list of `{name, color, description}` entries).
+- Fetches current labels from GitHub via `gh label list`.
+- Creates, updates, or (with `--prune`) deletes labels to match the file.
+- Color comparison is case-insensitive; running twice is a no-op.
+
+**Options:**
+- `--dry-run`: Print planned changes, make no API calls.
+- `--prune`: Also delete labels on GitHub that are missing from the file (off by default).
+- `--file=<path>`: Path to the labels file (default `.github/labels.yml`).
+
+See [GitHub Repository Settings → Labels](github-repository-settings.md#labels) for the canonical label list and the file schema.
 
 ---
 

@@ -77,7 +77,18 @@ to the default branch.
 ## Labels
 
 Labels are used by issue templates, workflows, release notes, and Dependabot.
-All labels are replicated from the template by `replicate_labels()`.
+
+**Source of truth:** `.github/labels.yml`. The file is a flat list of entries with `name`, `color` (6-char hex, no leading `#`), and `description`. Run `doit labels_sync` to reconcile the repository's labels with the file.
+
+```bash
+doit labels_sync --dry-run   # Preview changes
+doit labels_sync             # Create missing labels, update drift
+doit labels_sync --prune     # Also delete labels not in the file
+```
+
+The task is idempotent — running it twice in a row is a no-op the second time. Color comparison is case-insensitive. `--prune` is off by default because deletion is destructive.
+
+To add a label: edit `.github/labels.yml`, run `doit labels_sync --dry-run` to preview, then `doit labels_sync` to apply.
 
 | Label | Color | Description | Used By |
 | :--- | :--- | :--- | :--- |

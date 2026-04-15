@@ -1,7 +1,9 @@
 """Tests for github.py doit tasks."""
 
 import io
+import json
 import subprocess
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import pytest
@@ -12,7 +14,11 @@ from tools.doit.github import (
     _close_linked_issues,
     _ensure_branch_pushed,
     _extract_linked_issues,
+    _fetch_github_labels,
     _format_merge_subject,
+    _load_labels_file,
+    _reconcile_labels,
+    task_labels_sync,
 )
 
 
@@ -346,3 +352,303 @@ class TestEnsureBranchPushed:
         _ensure_branch_pushed("feat/x", console, no_push=True)
 
         assert mock_subprocess.call_count == 1
+
+
+class TestLabelsSync:
+    """Tests for the ``labels_sync`` doit task and its helpers."""
+
+    @staticmethod
+    def _make_console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    @staticmethod
+    def _labels_file(tmp_path: Path, body: str) -> Path:
+        path = tmp_path / "labels.yml"
+        path.write_text(body)
+        return path
+
+    @staticmethod
+    def _register_list(mock_subprocess: MagicMock, current: list[dict[str, str]]) -> None:
+        """Wire `gh label list` to return ``current`` as JSON."""
+        mock_subprocess.register({("gh", "label", "list"): {"stdout": json.dumps(current)}})
+
+    def _run_task(
+        self,
+        dry_run: bool = False,
+        prune: bool = False,
+        file: str = "",
+    ) -> None:
+        action = task_labels_sync()["actions"][0]
+        action(dry_run=dry_run, prune=prune, file=file)
+
+    def test_creates_missing_labels(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """File has 'foo', GH has none → one gh label create call."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: foo\n  color: aaa111\n  description: Foo label\n",
+        )
+        self._register_list(mock_subprocess, [])
+        mock_subprocess.register({("gh", "label", "create"): {}})
+
+        self._run_task(file=str(labels_file))
+
+        create_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:3] == ["gh", "label", "create"]
+        ]
+        assert len(create_calls) == 1
+        assert create_calls[0].args[0] == [
+            "gh",
+            "label",
+            "create",
+            "foo",
+            "--color",
+            "aaa111",
+            "--description",
+            "Foo label",
+        ]
+
+    def test_updates_mismatched_labels(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """File has 'foo' color aaa111, GH has color bbb222 → one gh label edit call."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: foo\n  color: aaa111\n  description: Foo label\n",
+        )
+        self._register_list(
+            mock_subprocess,
+            [{"name": "foo", "color": "bbb222", "description": "Foo label"}],
+        )
+        mock_subprocess.register({("gh", "label", "edit"): {}})
+
+        self._run_task(file=str(labels_file))
+
+        edit_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:3] == ["gh", "label", "edit"]
+        ]
+        assert len(edit_calls) == 1
+        assert edit_calls[0].args[0] == [
+            "gh",
+            "label",
+            "edit",
+            "foo",
+            "--color",
+            "aaa111",
+            "--description",
+            "Foo label",
+        ]
+
+    def test_no_change_when_match(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """File and GH identical → no mutating calls."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: foo\n  color: aaa111\n  description: Foo label\n",
+        )
+        self._register_list(
+            mock_subprocess,
+            [{"name": "foo", "color": "aaa111", "description": "Foo label"}],
+        )
+
+        self._run_task(file=str(labels_file))
+
+        mutating = [
+            c
+            for c in mock_subprocess.call_args_list
+            if c.args[0][:3]
+            in (["gh", "label", "create"], ["gh", "label", "edit"], ["gh", "label", "delete"])
+        ]
+        assert mutating == []
+
+    def test_prune_deletes_extras(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """With --prune, GH has a label not in file → gh label delete is called."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: foo\n  color: aaa111\n  description: Foo label\n",
+        )
+        self._register_list(
+            mock_subprocess,
+            [
+                {"name": "foo", "color": "aaa111", "description": "Foo label"},
+                {"name": "old-label", "color": "cccccc", "description": "legacy"},
+            ],
+        )
+        mock_subprocess.register({("gh", "label", "delete"): {}})
+
+        self._run_task(file=str(labels_file), prune=True)
+
+        delete_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:3] == ["gh", "label", "delete"]
+        ]
+        assert len(delete_calls) == 1
+        assert delete_calls[0].args[0] == ["gh", "label", "delete", "old-label", "--yes"]
+
+    def test_no_prune_by_default(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """GH has extra label, no --prune → no delete call; extra is reported as skipped."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: foo\n  color: aaa111\n  description: Foo label\n",
+        )
+        self._register_list(
+            mock_subprocess,
+            [
+                {"name": "foo", "color": "aaa111", "description": "Foo label"},
+                {"name": "old-label", "color": "cccccc", "description": "legacy"},
+            ],
+        )
+
+        self._run_task(file=str(labels_file))
+
+        delete_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:3] == ["gh", "label", "delete"]
+        ]
+        assert delete_calls == []
+
+    def test_dry_run_makes_no_mutations(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """With --dry-run, only gh label list is called; no create/edit/delete."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: foo\n  color: aaa111\n  description: Foo label\n"
+            "- name: bar\n  color: bbb222\n  description: Bar label\n",
+        )
+        self._register_list(
+            mock_subprocess,
+            [
+                {"name": "bar", "color": "999999", "description": "Bar label"},
+                {"name": "legacy", "color": "cccccc", "description": "to prune"},
+            ],
+        )
+
+        self._run_task(file=str(labels_file), prune=True, dry_run=True)
+
+        mutating = [
+            c
+            for c in mock_subprocess.call_args_list
+            if c.args[0][:3]
+            in (["gh", "label", "create"], ["gh", "label", "edit"], ["gh", "label", "delete"])
+        ]
+        assert mutating == []
+
+    def test_malformed_yaml_raises_clear_error(
+        self, tmp_path: Path, mock_subprocess: MagicMock
+    ) -> None:
+        """Entry without a 'name' field → SystemExit(1) naming the offending entry."""
+        labels_file = self._labels_file(tmp_path, "- color: red\n")
+
+        with pytest.raises(SystemExit) as excinfo:
+            self._run_task(file=str(labels_file))
+
+        assert excinfo.value.code == 1
+        mock_subprocess.assert_not_called()
+
+    def test_missing_file_raises(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """--file pointing at a nonexistent path → SystemExit(1)."""
+        missing = tmp_path / "does-not-exist.yml"
+
+        with pytest.raises(SystemExit) as excinfo:
+            self._run_task(file=str(missing))
+
+        assert excinfo.value.code == 1
+        mock_subprocess.assert_not_called()
+
+    def test_color_comparison_case_insensitive(
+        self, tmp_path: Path, mock_subprocess: MagicMock
+    ) -> None:
+        """File 'FBCA04', GH 'fbca04' → no update."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "- name: needs-triage\n  color: FBCA04\n  description: triage\n",
+        )
+        self._register_list(
+            mock_subprocess,
+            [{"name": "needs-triage", "color": "fbca04", "description": "triage"}],
+        )
+
+        self._run_task(file=str(labels_file))
+
+        mutating = [
+            c
+            for c in mock_subprocess.call_args_list
+            if c.args[0][:3]
+            in (["gh", "label", "create"], ["gh", "label", "edit"], ["gh", "label", "delete"])
+        ]
+        assert mutating == []
+
+    def test_empty_description_handled(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """File entry with empty description → create call uses --description ''."""
+        labels_file = self._labels_file(
+            tmp_path,
+            '- name: foo\n  color: aaa111\n  description: ""\n',
+        )
+        self._register_list(mock_subprocess, [])
+        mock_subprocess.register({("gh", "label", "create"): {}})
+
+        self._run_task(file=str(labels_file))
+
+        create_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:3] == ["gh", "label", "create"]
+        ]
+        assert len(create_calls) == 1
+        cmd = create_calls[0].args[0]
+        assert cmd[-2:] == ["--description", ""]
+
+    def test_summary_counts_correct(self, tmp_path: Path, mock_subprocess: MagicMock) -> None:
+        """Mixed scenario (create + update + no-change + skipped) → counters correct."""
+        labels_file = self._labels_file(
+            tmp_path,
+            "\n".join(
+                [
+                    "- name: new-one",
+                    "  color: aaa111",
+                    "  description: new",
+                    "- name: updated",
+                    "  color: bbb222",
+                    "  description: updated desc",
+                    "- name: same",
+                    "  color: cccccc",
+                    "  description: same",
+                    "",
+                ]
+            ),
+        )
+        self._register_list(
+            mock_subprocess,
+            [
+                {"name": "updated", "color": "999999", "description": "old"},
+                {"name": "same", "color": "cccccc", "description": "same"},
+                {"name": "extra", "color": "111111", "description": "extra"},
+            ],
+        )
+        mock_subprocess.register(
+            {
+                ("gh", "label", "create"): {},
+                ("gh", "label", "edit"): {},
+            }
+        )
+
+        counters = _reconcile_labels(
+            _load_labels_file(labels_file, self._make_console()),
+            _fetch_github_labels(self._make_console()),
+            prune=False,
+            dry_run=False,
+            console=self._make_console(),
+        )
+
+        assert counters["created"] == 1
+        assert counters["updated"] == 1
+        assert counters["unchanged"] == 1
+        assert counters["deleted"] == 0
+        assert counters["skipped"] == 1
+
+    def test_labels_file_parses(self) -> None:
+        """The actual .github/labels.yml parses and has non-empty entries."""
+        repo_labels = Path(__file__).resolve().parent.parent / ".github" / "labels.yml"
+        assert repo_labels.exists(), f"{repo_labels} is missing"
+
+        entries = _load_labels_file(repo_labels, self._make_console())
+        assert entries, "labels.yml should not be empty"
+
+        names = {entry["name"] for entry in entries}
+        # Two labels the issue highlighted as missing on the repo must be present.
+        assert "automerge-blocked" in names
+        assert "do-not-merge" in names
+        # Every entry must have a 6-char hex color.
+        for entry in entries:
+            assert len(entry["color"]) == 6, f"bad color for {entry['name']}: {entry['color']!r}"
