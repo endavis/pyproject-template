@@ -185,6 +185,7 @@ The tool hierarchy (prefer higher over lower):
 | Create PRs | `doit pr` | `gh pr create` |
 | Merge PRs | `doit pr_merge` | `gh pr merge` |
 | Create ADRs | `doit adr` | Manual file creation |
+| Sync GitHub labels | `doit labels_sync` | `gh label create` / `gh label edit` manually |
 | Commit (interactive) | `doit commit` | `git commit` without format |
 | Install/add packages | `uv add <pkg>` | `pip install` |
 | Sync dependencies | `uv sync` | `pip install -r` |

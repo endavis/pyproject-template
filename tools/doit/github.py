@@ -1,12 +1,15 @@
 """GitHub issue and PR creation doit tasks."""
 
+import json
 import os
 import re
 import subprocess  # nosec B404 - subprocess is required for doit tasks
 import sys
 import tempfile
+from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import yaml
 from doit.tools import title_with_actions
 from rich.console import Console
 from rich.panel import Panel
@@ -15,6 +18,9 @@ from tools.doit.templates import get_issue_template, get_pr_template, get_requir
 
 if TYPE_CHECKING:
     from rich.console import Console as ConsoleType
+
+DEFAULT_LABELS_FILE = ".github/labels.yml"
+DEFAULT_LABEL_COLOR = "ededed"
 
 
 def _get_editor() -> str:
@@ -835,6 +841,344 @@ def task_pr_merge() -> dict[str, Any]:
                 "type": bool,
                 "default": False,
                 "help": "Close linked issues after merge with a standard comment",
+            },
+        ],
+        "title": title_with_actions,
+    }
+
+
+def _load_labels_file(path: Path, console: Console) -> list[dict[str, str]]:
+    """Parse a YAML labels file into a list of normalized label dicts.
+
+    Each entry must be a mapping with a required ``name`` field. ``color``
+    defaults to :data:`DEFAULT_LABEL_COLOR` and ``description`` defaults to
+    an empty string. Extra fields are ignored. Malformed entries cause
+    ``sys.exit(1)`` with a message naming the offending index.
+
+    Args:
+        path: Path to the labels YAML file.
+        console: Rich console for error output.
+
+    Returns:
+        List of ``{"name": str, "color": str, "description": str}`` dicts.
+    """
+    if not path.exists():
+        console.print(f"[red]Labels file not found: {path}[/red]")
+        sys.exit(1)
+
+    try:
+        raw = yaml.safe_load(path.read_text())
+    except yaml.YAMLError as e:
+        console.print(f"[red]Failed to parse {path}: {e}[/red]")
+        sys.exit(1)
+
+    if raw is None:
+        return []
+
+    if not isinstance(raw, list):
+        console.print(f"[red]Labels file must be a YAML list, got {type(raw).__name__}.[/red]")
+        sys.exit(1)
+
+    labels: list[dict[str, str]] = []
+    for index, entry in enumerate(raw):
+        if not isinstance(entry, dict):
+            console.print(
+                f"[red]Labels file entry #{index} must be a mapping, "
+                f"got {type(entry).__name__}.[/red]"
+            )
+            sys.exit(1)
+
+        name = entry.get("name")
+        if not isinstance(name, str) or not name.strip():
+            console.print(
+                f"[red]Labels file entry #{index} is missing a 'name' field "
+                f"(entry: {entry!r}).[/red]"
+            )
+            sys.exit(1)
+
+        color_raw = entry.get("color", DEFAULT_LABEL_COLOR)
+        if not isinstance(color_raw, str):
+            console.print(
+                f"[red]Labels file entry '{name}' has a non-string 'color' "
+                f"(got {type(color_raw).__name__}).[/red]"
+            )
+            sys.exit(1)
+
+        description = entry.get("description", "")
+        if description is None:
+            description = ""
+        if not isinstance(description, str):
+            console.print(
+                f"[red]Labels file entry '{name}' has a non-string 'description' "
+                f"(got {type(description).__name__}).[/red]"
+            )
+            sys.exit(1)
+
+        labels.append(
+            {
+                "name": name.strip(),
+                "color": color_raw.strip().lstrip("#").lower(),
+                "description": description,
+            }
+        )
+
+    return labels
+
+
+def _fetch_github_labels(console: Console) -> dict[str, dict[str, str]]:
+    """Fetch the current label set from GitHub via ``gh label list``.
+
+    Parses the returned JSON into a ``{name: {color, description}}`` map
+    with colors lowercased for case-insensitive comparison.
+
+    Args:
+        console: Rich console for error output.
+
+    Returns:
+        Dict keyed by label name.
+    """
+    try:
+        result = subprocess.run(
+            ["gh", "label", "list", "--limit", "200", "--json", "name,color,description"],
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        console.print("[red]Failed to fetch labels from GitHub:[/red]")
+        console.print(f"[red]{stderr}[/red]")
+        sys.exit(1)
+
+    try:
+        data = json.loads(result.stdout or "[]")
+    except json.JSONDecodeError as e:
+        console.print(f"[red]Could not parse `gh label list` output: {e}[/red]")
+        sys.exit(1)
+
+    if not isinstance(data, list):
+        console.print("[red]Unexpected `gh label list` output (not a list).[/red]")
+        sys.exit(1)
+
+    labels: dict[str, dict[str, str]] = {}
+    for entry in data:
+        if not isinstance(entry, dict):
+            continue
+        name = entry.get("name")
+        if not isinstance(name, str):
+            continue
+        color = entry.get("color", "") or ""
+        description = entry.get("description", "") or ""
+        labels[name] = {
+            "name": name,
+            "color": str(color).lower(),
+            "description": str(description),
+        }
+    return labels
+
+
+def _reconcile_labels(
+    desired: list[dict[str, str]],
+    current: dict[str, dict[str, str]],
+    *,
+    prune: bool,
+    dry_run: bool,
+    console: Console,
+) -> dict[str, int]:
+    """Reconcile desired labels with the current GitHub state.
+
+    Performs create/edit/delete operations (or prints the planned actions
+    in ``dry_run`` mode). Colors are compared case-insensitively.
+
+    Args:
+        desired: Normalized list of labels from the YAML file.
+        current: Map of current GitHub labels keyed by name.
+        prune: If True, delete labels present on GitHub but absent from the file.
+        dry_run: If True, print planned actions and make no mutating API calls.
+        console: Rich console for output.
+
+    Returns:
+        Dict of counters: ``created``, ``updated``, ``unchanged``, ``deleted``, ``skipped``.
+    """
+    counters = {"created": 0, "updated": 0, "unchanged": 0, "deleted": 0, "skipped": 0}
+    desired_names = {entry["name"] for entry in desired}
+
+    for entry in desired:
+        name = entry["name"]
+        color = entry["color"]
+        description = entry["description"]
+        existing = current.get(name)
+
+        if existing is None:
+            prefix = "would create" if dry_run else "created"
+            console.print(f"[green]+ {prefix}[/green] {name} (color={color})")
+            counters["created"] += 1
+            if not dry_run:
+                _run_label_cmd(
+                    [
+                        "gh",
+                        "label",
+                        "create",
+                        name,
+                        "--color",
+                        color,
+                        "--description",
+                        description,
+                    ],
+                    console,
+                )
+            continue
+
+        if existing["color"] == color and existing["description"] == description:
+            console.print(f"[dim]= no change[/dim] {name}")
+            counters["unchanged"] += 1
+            continue
+
+        prefix = "would update" if dry_run else "updated"
+        console.print(f"[yellow]~ {prefix}[/yellow] {name} (color={color})")
+        counters["updated"] += 1
+        if not dry_run:
+            _run_label_cmd(
+                [
+                    "gh",
+                    "label",
+                    "edit",
+                    name,
+                    "--color",
+                    color,
+                    "--description",
+                    description,
+                ],
+                console,
+            )
+
+    extras = sorted(set(current) - desired_names)
+    for name in extras:
+        if prune:
+            prefix = "would delete" if dry_run else "deleted"
+            console.print(f"[red]- {prefix}[/red] {name}")
+            counters["deleted"] += 1
+            if not dry_run:
+                _run_label_cmd(["gh", "label", "delete", name, "--yes"], console)
+        else:
+            console.print(f"[dim]? skipped[/dim] {name} (not in file; use --prune to delete)")
+            counters["skipped"] += 1
+
+    return counters
+
+
+def _run_label_cmd(cmd: list[str], console: Console) -> None:
+    """Invoke a ``gh label`` subcommand and abort on failure.
+
+    Args:
+        cmd: Full command argument list.
+        console: Rich console for error output.
+    """
+    try:
+        subprocess.run(cmd, check=True, capture_output=True, text=True)
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        console.print(f"[red]Command failed: {' '.join(cmd)}[/red]")
+        console.print(f"[red]{stderr}[/red]")
+        sys.exit(1)
+
+
+def task_labels_sync() -> dict[str, Any]:
+    """Sync GitHub labels with ``.github/labels.yml`` (idempotent).
+
+    Reads the labels file and reconciles the repository's GitHub labels:
+
+    - Missing labels are created.
+    - Labels whose color or description differ are updated.
+    - Labels present on GitHub but absent from the file are left alone
+      unless ``--prune`` is passed (then they are deleted).
+
+    Color comparison is case-insensitive.
+
+    Examples:
+        doit labels_sync                        # Reconcile, do not prune.
+        doit labels_sync --dry-run              # Preview changes only.
+        doit labels_sync --prune                # Also delete extra labels.
+        doit labels_sync --file=custom/labels.yml
+    """
+
+    def sync_labels(
+        dry_run: bool = False,
+        prune: bool = False,
+        file: str = DEFAULT_LABELS_FILE,
+    ) -> None:
+        console = Console()
+        console.print()
+        mode = "(dry run)" if dry_run else ""
+        console.print(
+            Panel.fit(
+                f"[bold cyan]Syncing GitHub Labels[/bold cyan] {mode}".rstrip(),
+                border_style="cyan",
+            )
+        )
+        console.print()
+
+        try:
+            desired = _load_labels_file(Path(file), console)
+            if not desired:
+                console.print(f"[yellow]No labels defined in {file}; nothing to sync.[/yellow]")
+                return
+
+            console.print(f"[dim]Loaded {len(desired)} label(s) from {file}[/dim]")
+            current = _fetch_github_labels(console)
+            console.print(f"[dim]Fetched {len(current)} label(s) from GitHub[/dim]")
+            console.print()
+
+            counters = _reconcile_labels(
+                desired,
+                current,
+                prune=prune,
+                dry_run=dry_run,
+                console=console,
+            )
+
+            console.print()
+            summary = (
+                f"{counters['created']} created, "
+                f"{counters['updated']} updated, "
+                f"{counters['unchanged']} unchanged, "
+                f"{counters['deleted']} deleted, "
+                f"{counters['skipped']} skipped"
+            )
+            console.print(
+                Panel.fit(
+                    f"[bold green]Label sync complete[/bold green]\n\n{summary}",
+                    border_style="green",
+                )
+            )
+        except SystemExit:
+            raise
+        except Exception as e:  # pragma: no cover - defensive catch-all
+            console.print(f"[red]Unexpected error during label sync: {e}[/red]")
+            sys.exit(1)
+
+    return {
+        "actions": [sync_labels],
+        "params": [
+            {
+                "name": "dry_run",
+                "long": "dry-run",
+                "type": bool,
+                "default": False,
+                "help": "Print planned changes without calling gh label create/edit/delete",
+            },
+            {
+                "name": "prune",
+                "long": "prune",
+                "type": bool,
+                "default": False,
+                "help": "Delete labels present on GitHub but absent from the file",
+            },
+            {
+                "name": "file",
+                "long": "file",
+                "default": DEFAULT_LABELS_FILE,
+                "help": f"Path to labels YAML file (default: {DEFAULT_LABELS_FILE})",
             },
         ],
         "title": title_with_actions,
