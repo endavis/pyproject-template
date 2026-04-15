@@ -6,19 +6,7 @@ Implement the plan for GitHub issue #$ARGUMENTS.
 
 The implementation is delegated to a sub-agent (Task tool) so raw tool output stays out of the main conversation context. The agent does the coding; you receive the summary for user review.
 
-**Plan-mode trap:** parent plan-mode state propagates to the spawned sub-agent mid-execution and freezes it after its first non-readonly action (typically the first `Write`). Step 0 guards against this programmatically; the status-line check is a backup for the stale-state case documented in [plan-mode-hook.md](../../docs/development/ai/plan-mode-hook.md).
-
-### Step 0: Verify plan mode is not active
-
-1. **Programmatic check** — read the plan-mode state file:
-   ```bash
-   cat "$CLAUDE_PROJECT_DIR/.claude/.plan-mode-state" 2>/dev/null
-   ```
-   If the output is exactly `active`, stop immediately. Do not create a branch, do not spawn a sub-agent. Tell the user:
-   > "Parent session is in plan mode (`.claude/.plan-mode-state` = `active`). Exit plan mode, then re-run `/implement $ARGUMENTS`."
-   If the output is `inactive` or the file is missing, continue.
-
-2. **Status-line backup check** — the state file can be stale (plan mode can exit without firing `ExitPlanMode`, leaving the file at `active`; conversely, an out-of-band clear leaves no trace). If the programmatic check passes, still glance at your Claude Code status line. If it shows "plan mode" despite the file saying otherwise, treat the status line as authoritative, exit plan mode, and re-run `/implement`.
+**Plan-mode trap:** parent plan-mode state propagates to the spawned sub-agent mid-execution and freezes it after its first non-readonly action (typically the first `Write`). Check your Claude Code status line before running — if it shows "plan mode", exit before invoking.
 
 ### Step 1: Validate preconditions
 
