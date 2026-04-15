@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776189742693,
+  "lastUpdate": 1776252939031,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3599,6 +3599,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.82042685776247e-7",
             "extra": "mean: 2.023283282243324 usec\nrounds: 49809"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8897c6e270272c58b0e298f47e96d76ca6c1bc9d",
+          "message": "docs: add plan-mode pre-flight check to /implement (merges PR #394, addresses #389)\n\nAddresses #389\n\nThe /implement command spawns a sub-agent via Task to keep raw tool\noutput out of the main conversation context. Earlier sessions (#382,\n#383) showed the sub-agent freezing mid-execution on its first Write.\nInvestigation during #392 established the cause: parent plan-mode state\npropagates into spawned sub-agents and surfaces as a \"Plan mode is\nactive\" reminder after the first readonly tool call, halting further\nwrites.\n\n#392 landed a PostToolUse hook pair that writes parent plan-mode state\nto .claude/.plan-mode-state. This commit consumes that signal:\n\n- Add Step 0 to .claude/commands/implement.md:\n  - Programmatic check: read .claude/.plan-mode-state and abort with a\n    clear user-facing message if the value is `active`.\n  - Status-line backup check: retained for the stale-state case\n    documented in docs/development/ai/plan-mode-hook.md (plan mode can\n    exit without firing ExitPlanMode, or be entered out-of-band).\n- Update the /implement design note in slash-commands.md to describe\n  the pre-flight check and link to plan-mode-hook.md.\n\nThis supersedes the original #389 proposal to inline the sub-agent;\nthe context-hygiene benefit of the sub-agent hop is preserved while\neliminating the reliability trap.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-15T12:35:10+01:00",
+          "tree_id": "cf410640f0ba38de546dd96fbd699b42d5cd439a",
+          "url": "https://github.com/endavis/pyproject-template/commit/8897c6e270272c58b0e298f47e96d76ca6c1bc9d"
+        },
+        "date": 1776252938504,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8864759.8964713,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2170950021100751e-8",
+            "extra": "mean: 112.80621378116054 nsec\nrounds: 83244"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8994834.7287268,
+            "unit": "iter/sec",
+            "range": "stddev: 1.167172665340785e-8",
+            "extra": "mean: 111.1749165113952 nsec\nrounds: 91150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5659638.366590746,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3221151164962315e-8",
+            "extra": "mean: 176.6897344365803 nsec\nrounds: 57764"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1693059.5053543008,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5190568904819206e-7",
+            "extra": "mean: 590.6466942464219 nsec\nrounds: 47599"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 503428.4542302175,
+            "unit": "iter/sec",
+            "range": "stddev: 5.264507681164416e-7",
+            "extra": "mean: 1.9863795770723376 usec\nrounds: 49513"
           }
         ]
       }
