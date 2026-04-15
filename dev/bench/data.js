@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776255844745,
+  "lastUpdate": 1776270470463,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -3717,6 +3717,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.565427922483743e-7",
             "extra": "mean: 2.069057020738668 usec\nrounds: 61767"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "11fea6c386040eb9b1d765693fc3bd386a68b8cb",
+          "message": "feat: add doit labels_sync and declarative .github/labels.yml (merges PR #401, addresses #388)\n\nAddresses #388\n\nIntroduce .github/labels.yml as the source of truth for the\nrepository's GitHub labels, plus a doit labels_sync task that\nreconciles the live label set with it.\n\nMotivation: .github/workflows/dependabot-automerge.yml references\nautomerge-blocked and do-not-merge labels that did not actually\nexist on the repo — applying them via gh pr edit failed with\n\"label does not exist\". More broadly, the repo's active label set\nlived only in the GitHub UI with no way for contributors or forks\nto replicate it.\n\nChanges:\n\n- .github/labels.yml: 15-entry flat list of {name, color,\n  description} covering every label used by issue templates,\n  workflows, release notes, and dependabot automation.\n  automerge-blocked and do-not-merge added in red (B60205).\n\n- tools/doit/github.py: new _load_labels_file, _fetch_github_labels,\n  _reconcile_labels helpers and task_labels_sync task. Options:\n  --dry-run (preview, no API calls), --prune (also delete labels\n  on GitHub absent from the file; off by default because deletion\n  is destructive), --file=<path> (default .github/labels.yml).\n  Color comparison is case-insensitive; running twice is a no-op.\n  All subprocess calls use the existing pattern so tests mock via\n  the mock_subprocess fixture from #387.\n\n- tests/test_doit_github.py: new TestLabelsSync class with 12\n  tests covering create / update / no-change / prune / no-prune /\n  dry-run / malformed YAML / missing file / case-insensitive\n  color comparison / empty description / summary counts / file\n  smoke parse. All use the mock_subprocess fixture.\n\n- AGENTS.md, docs/development/github-repository-settings.md,\n  docs/development/doit-tasks-reference.md: document the new\n  task and point contributors at .github/labels.yml as the\n  declarative source.\n\nADR not required (ops/automation task, not an architectural\ndecision; issue has no needs-adr label).\n\nGitHub default labels (duplicate, good first issue, help wanted,\ninvalid, question, wontfix) are intentionally omitted from\nlabels.yml so --prune removes them from a fresh repo sync.\n\nCo-authored-by: Claude Opus 4.6 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-15T17:27:23+01:00",
+          "tree_id": "1fee6dea81336aae33c1d43e2c571ae22a4f6de5",
+          "url": "https://github.com/endavis/pyproject-template/commit/11fea6c386040eb9b1d765693fc3bd386a68b8cb"
+        },
+        "date": 1776270470034,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8892783.888055557,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3856552185441612e-8",
+            "extra": "mean: 112.45072550825857 nsec\nrounds: 87897"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9187846.34872229,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2720355000467426e-8",
+            "extra": "mean: 108.83943440554654 nsec\nrounds: 86829"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6282431.646922494,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4831705582674631e-8",
+            "extra": "mean: 159.17403581937245 nsec\nrounds: 61866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1719378.3207410173,
+            "unit": "iter/sec",
+            "range": "stddev: 2.677481725141494e-7",
+            "extra": "mean: 581.6055651841767 nsec\nrounds: 56638"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 509830.3985759726,
+            "unit": "iter/sec",
+            "range": "stddev: 4.656888905986951e-7",
+            "extra": "mean: 1.9614365930182656 usec\nrounds: 47479"
           }
         ]
       }
