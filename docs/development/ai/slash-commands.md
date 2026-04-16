@@ -114,9 +114,21 @@ Invoked by Claude's `/review-both` and `/gemini-review` commands via `gemini -p 
 
 The `.codex/` directory contains only `config.toml`, which configures command approval policies for the Codex CLI. No slash commands ship for Codex. The dual-agent workflow in this template targets Claude and Gemini.
 
+## Copilot
+
+GitHub Copilot CLI automatically discovers project skills from `.claude/commands/`. All workflow commands (`/plan-issue`, `/implement`, `/finalize`, `/close-issue`, `/where-am-i`, etc.) are available in Copilot sessions without any additional files.
+
+**Config directory:** `.copilot/` — established as the Copilot CLI config directory for this repo, parallel to `.claude/`, `.gemini/`, and `.codex/`.
+
+**Dangerous command hook:** Already wired in `.github/hooks/copilot-hooks.json`. It invokes `tools/hooks/ai/block-dangerous-commands.py` as a `preToolUse` hook, blocking dangerous shell commands before they execute. See [AI Command Blocking](command-blocking.md) for details.
+
+**Implement-worker subagent:** Shared with Claude — defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when `/implement` spawns the subagent.
+
+**No parallel command files needed:** Because Copilot CLI discovers skills from `.claude/commands/` directly, you do not need to maintain a separate `.copilot/commands/` directory unless you need to override Claude-specific behavior for Copilot sessions.
+
 ## Adding a new slash command
 
-1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Gemini commands live in `.gemini/commands/<name>.md` and become `/<name>` in Gemini CLI.
+1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Gemini commands live in `.gemini/commands/<name>.md` and become `/<name>` in Gemini CLI. Copilot CLI auto-discovers skills from `.claude/commands/` — no separate `.copilot/commands/<name>.md` is needed unless you want to override Claude-specific behaviour for Copilot sessions.
 2. **Use the CLI file format** — not the `docs/` frontmatter format. Start with a top-level `# Title` heading, follow with a one-line description (which may include the `$ARGUMENTS` placeholder if the command takes arguments), then a `## Instructions` section containing the step-by-step body. **Do not add YAML frontmatter.** The CLIs expect plain markdown; frontmatter would appear verbatim in the rendered prompt.
 3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For commands that take no arguments (like `/finalize` or `/where-am-i`), omit the placeholder.
 4. **Decide: subagent or main context?** Delegate to a general-purpose subagent via the Task tool when the command does heavy codebase exploration, writes files, or runs long commands whose output would bloat the main conversation — `.claude/commands/implement.md` is the canonical example. Run in the main context when the user needs to interact step by step (plan mode, iteration, explicit approvals) — `.claude/commands/plan-issue.md` is the canonical example.
