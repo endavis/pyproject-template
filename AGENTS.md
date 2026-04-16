@@ -290,6 +290,19 @@ AI agents with native file tools (Read, Grep, Glob, Edit, Write) **must** prefer
 
 Native tools provide better visibility, review capabilities, and error handling for the user.
 
+### AI Config Directories
+
+Each supported AI CLI has a dedicated config directory at the repo root:
+
+| CLI | Config Directory | Notes |
+| :--- | :--- | :--- |
+| Claude Code | `.claude/` | Commands, agents, settings. Primary source of slash commands. |
+| Gemini CLI | `.gemini/` | Commands and settings. Output-only commands (orchestrated by Claude). |
+| GitHub Copilot CLI | `.copilot/` | Config directory. Skills auto-discovered from `.claude/commands/`. Hook wired in `.github/hooks/copilot-hooks.json`. |
+| Codex CLI | `.codex/` | `config.toml` only (command approval policies). No slash commands. |
+
+Copilot CLI does **not** need a `commands/` subdirectory: it discovers skills from `.claude/commands/` automatically, so the full workflow (`/plan-issue`, `/implement`, `/finalize`, etc.) works out of the box.
+
 ### Temporary Files
 
 AI agents **must never** write temporary files to generic locations like `/tmp/`. Instead, use the project-scoped directory:
