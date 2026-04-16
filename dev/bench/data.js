@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776348780718,
+  "lastUpdate": 1776356999152,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4012,6 +4012,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.002397451136699e-7",
             "extra": "mean: 2.0143926332932742 usec\nrounds: 46751"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a6bf552d514f036fa962d8b32b2e8a3e901a9001",
+          "message": "docs: add GitHub Copilot CLI workflow support and .copilot/ config directory (merges PR #408, addresses #400)\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-04-16T17:29:24+01:00",
+          "tree_id": "ff57abb31c77b00dfc0a77ec36fd800ad4daa944",
+          "url": "https://github.com/endavis/pyproject-template/commit/a6bf552d514f036fa962d8b32b2e8a3e901a9001"
+        },
+        "date": 1776356998528,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8365566.114254826,
+            "unit": "iter/sec",
+            "range": "stddev: 1.521422887107587e-8",
+            "extra": "mean: 119.5376363466917 nsec\nrounds: 196156"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8543677.621701593,
+            "unit": "iter/sec",
+            "range": "stddev: 9.380139184867386e-9",
+            "extra": "mean: 117.04561481345266 nsec\nrounds: 84977"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6249117.407714756,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2489807655211146e-8",
+            "extra": "mean: 160.02259755361047 nsec\nrounds: 61889"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2276694.074892107,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8164184321949347e-7",
+            "extra": "mean: 439.23336517990026 nsec\nrounds: 59649"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 657667.7604501287,
+            "unit": "iter/sec",
+            "range": "stddev: 3.899036468606324e-7",
+            "extra": "mean: 1.5205245872407798 usec\nrounds: 50636"
           }
         ]
       }
