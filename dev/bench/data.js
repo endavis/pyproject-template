@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776356999152,
+  "lastUpdate": 1776422770521,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4071,6 +4071,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.899036468606324e-7",
             "extra": "mean: 1.5205245872407798 usec\nrounds: 50636"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "64c7aca0128313e98b49143f4d91e00346f8847b",
+          "message": "docs: complete Copilot CLI coverage in AI_SETUP, enforcement-principles, first-5-minutes (merges PR #410, addresses #409)\n\nPR #408 landed the initial Copilot CLI integration, but three AI agent\ndocs still described a three-CLI world (Claude, Gemini, Codex). Update\nAI_SETUP.md, enforcement-principles.md, and first-5-minutes.md so they\ndescribe the four-CLI reality already shipped on main. Also link issue\n#409 from ADR 9005.\n\nAddresses #409\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-17T11:45:40+01:00",
+          "tree_id": "c844871422974bb8919882ef30140f420387c6d1",
+          "url": "https://github.com/endavis/pyproject-template/commit/64c7aca0128313e98b49143f4d91e00346f8847b"
+        },
+        "date": 1776422769587,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8562836.129519502,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3121431647969108e-8",
+            "extra": "mean: 116.78373670524911 nsec\nrounds: 87628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9027041.071723886,
+            "unit": "iter/sec",
+            "range": "stddev: 9.471719171650841e-9",
+            "extra": "mean: 110.77827075943844 nsec\nrounds: 86431"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5900646.806512897,
+            "unit": "iter/sec",
+            "range": "stddev: 1.932018124509351e-8",
+            "extra": "mean: 169.47294640584832 nsec\nrounds: 58831"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1631491.227704628,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4245850200897705e-7",
+            "extra": "mean: 612.9361795018148 nsec\nrounds: 57176"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 529619.2333146837,
+            "unit": "iter/sec",
+            "range": "stddev: 3.5796758218488573e-7",
+            "extra": "mean: 1.8881489513539444 usec\nrounds: 51970"
           }
         ]
       }
