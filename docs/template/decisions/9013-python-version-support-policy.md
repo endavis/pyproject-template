@@ -38,6 +38,7 @@ Testing every Python version on every PR creates excessive CI load without propo
 ## Related Issues
 
 - Issue #168: Add Python 3.14 to CI testing matrix
+- Issue #413: Extract python-versions.json readers into a reusable composite action
 
 ## Related Documentation
 
