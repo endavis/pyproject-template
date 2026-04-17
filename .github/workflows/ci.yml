@@ -117,7 +117,7 @@ jobs:
         run: uv run pytest --cov=package_name --cov-report=xml:tmp/coverage.xml --cov-report=term -v
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == '3.12' && matrix.os == 'ubuntu-latest'
+        if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v6
         with:
           file: ./tmp/coverage.xml
