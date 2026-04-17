@@ -17,20 +17,27 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
-      newest: ${{ steps.set-matrix.outputs.newest }}
+      oldest: ${{ steps.pv.outputs.oldest }}
+      newest: ${{ steps.pv.outputs.newest }}
     steps:
       - uses: actions/checkout@v6
         with:
-          sparse-checkout: .github/python-versions.json
+          sparse-checkout: |
+            .github/python-versions.json
+            .github/actions/python-versions
           sparse-checkout-cone-mode: false
+
+      - id: pv
+        uses: ./.github/actions/python-versions
 
       - name: Set matrix based on config and label
         id: set-matrix
+        env:
+          OLDEST: ${{ steps.pv.outputs.oldest }}
+          NEWEST: ${{ steps.pv.outputs.newest }}
         run: |
-          # Read config
-          oldest=$(jq -r '.oldest' .github/python-versions.json)
-          newest=$(jq -r '.newest' .github/python-versions.json)
-          echo "newest=$newest" >> $GITHUB_OUTPUT
+          oldest="$OLDEST"
+          newest="$NEWEST"
 
           oldest_minor=${oldest#3.}
           newest_minor=${newest#3.}

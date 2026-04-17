@@ -30,10 +30,14 @@ jobs:
             echo "::notice::No benchmark tests found at tests/benchmarks/; skipping benchmark workflow."
           fi
 
+      - id: pv
+        if: steps.check-benchmarks.outputs.exists == 'true'
+        uses: ./.github/actions/python-versions
+
       - uses: actions/setup-python@v6
         if: steps.check-benchmarks.outputs.exists == 'true'
         with:
-          python-version: "3.14"
+          python-version: ${{ steps.pv.outputs.newest }}
 
       - uses: astral-sh/setup-uv@v7
         if: steps.check-benchmarks.outputs.exists == 'true'

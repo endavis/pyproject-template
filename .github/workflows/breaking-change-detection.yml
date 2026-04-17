@@ -21,9 +21,12 @@ jobs:
       - name: Fetch base branch
         run: git fetch origin ${{ github.base_ref }}
 
+      - id: pv
+        uses: ./.github/actions/python-versions
+
       - uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: ${{ steps.pv.outputs.newest }}
 
       - name: Install griffe
         run: pip install griffe
