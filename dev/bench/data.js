@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776437872932,
+  "lastUpdate": 1776439479579,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4189,6 +4189,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.935421592857859e-7",
             "extra": "mean: 2.0010911561490716 usec\nrounds: 51878"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "574ccb9da0a0c49ae55c009485ebd5641fc410fe",
+          "message": "refactor: extract python-versions.json reader into a reusable composite action (merges PR #414, addresses #413)\n\nIntroduce .github/actions/python-versions/action.yml so every workflow\nthat selects a Python version reads .github/python-versions.json through\na single composite action instead of hardcoding literals. Builds on the\none-shot fix from #411/#412 and generalizes it across the remaining five\nworkflows.\n\nThree workflows flip from the hardcoded oldest (3.12) to newest\n(breaking-change-detection, testpypi, release) — consistency cleanup\nconfirmed during planning; build/analyze jobs converge on newest.\n\nAlso dogfoods the action in ci.yml's setup job, replacing the inline\njq parsing and binding OLDEST/NEWEST as env vars for the matrix script.\nADR-9013's Related Issues section updated to link #413.\n\nAddresses #413\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-17T16:24:06+01:00",
+          "tree_id": "70ecb5d433a9c246a06461360c3aa471c7af4aa3",
+          "url": "https://github.com/endavis/pyproject-template/commit/574ccb9da0a0c49ae55c009485ebd5641fc410fe"
+        },
+        "date": 1776439478594,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8610009.53336079,
+            "unit": "iter/sec",
+            "range": "stddev: 5.94529197632741e-8",
+            "extra": "mean: 116.14388998355321 nsec\nrounds: 82224"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8562673.617469797,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8872380019441372e-8",
+            "extra": "mean: 116.78595315834217 nsec\nrounds: 194175"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5250127.64033907,
+            "unit": "iter/sec",
+            "range": "stddev: 2.597458034379573e-8",
+            "extra": "mean: 190.4715596467702 nsec\nrounds: 53666"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1521370.1325201516,
+            "unit": "iter/sec",
+            "range": "stddev: 4.109523105223309e-7",
+            "extra": "mean: 657.3022426459094 nsec\nrounds: 47667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 484241.6411644701,
+            "unit": "iter/sec",
+            "range": "stddev: 6.969525422532025e-7",
+            "extra": "mean: 2.065084691178707 usec\nrounds: 47195"
           }
         ]
       }
