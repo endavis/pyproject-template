@@ -20,6 +20,7 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 - Issue #164: Block doit release in AI agent hooks
 - Issue #166: Block uv add in AI agent hooks
 - Issue #362: Add Copilot CLI command-blocking hook integration
+- Issue #409: Complete Copilot CLI coverage in AI_SETUP, enforcement-principles, first-5-minutes
 
 ## Related Documentation
 
