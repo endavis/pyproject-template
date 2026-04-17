@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776422770521,
+  "lastUpdate": 1776437872932,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4130,6 +4130,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.5796758218488573e-7",
             "extra": "mean: 1.8881489513539444 usec\nrounds: 51970"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "52a8b95de44a160810309368a0908b5763d5eb24",
+          "message": "refactor: gate codecov upload on needs.setup.outputs.newest in ci.yml (merges PR #412, addresses #411)\n\nSwitch the Codecov upload `if:` expression from the hardcoded\n`'3.12'` (the current oldest Python) to the dynamic\n`needs.setup.outputs.newest` output from the setup job, matching the\npattern already used by the docs job at ci.yml:142.\n\nThis makes the filter self-updating: future bumps to\n.github/python-versions.json automatically move the upload to the\nnewest row without a CI edit, and coverage uploads now come from the\nnewest supported Python (conventional) rather than the oldest.\n\nAddresses #411\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-17T15:57:29+01:00",
+          "tree_id": "ba4c72e35a22406e2f41bd2bf8be8f3535d26c23",
+          "url": "https://github.com/endavis/pyproject-template/commit/52a8b95de44a160810309368a0908b5763d5eb24"
+        },
+        "date": 1776437872614,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8909728.057664638,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2150521351866817e-8",
+            "extra": "mean: 112.23687115116212 nsec\nrounds: 85092"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8952175.698749807,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0400991245146157e-8",
+            "extra": "mean: 111.70468874283293 nsec\nrounds: 87789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5370011.620782972,
+            "unit": "iter/sec",
+            "range": "stddev: 2.928742298191984e-8",
+            "extra": "mean: 186.21933631015037 nsec\nrounds: 55764"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1646371.5898317238,
+            "unit": "iter/sec",
+            "range": "stddev: 2.676404276087878e-7",
+            "extra": "mean: 607.396292657243 nsec\nrounds: 56428"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 499727.3597092969,
+            "unit": "iter/sec",
+            "range": "stddev: 4.935421592857859e-7",
+            "extra": "mean: 2.0010911561490716 usec\nrounds: 51878"
           }
         ]
       }
