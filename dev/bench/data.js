@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776439479579,
+  "lastUpdate": 1776534432709,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4248,6 +4248,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.969525422532025e-7",
             "extra": "mean: 2.065084691178707 usec\nrounds: 47195"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "652bb6ea675d1a6e359cced3ae2c872cbf7c0914",
+          "message": "chore: add actionlint pre-commit hook for GitHub Actions workflows (merges PR #416, addresses #415)\n\nAdds rhysd/actionlint@v1.7.12 as a pre-commit hook to catch workflow\nerrors locally before they reach CI. Running it across the 9 workflows\nplus the composite action surfaced one real issue, fixed here:\ncodecov/codecov-action@v6 renamed its input from `file:` to `files:`,\nand the stale name was being silently ignored.\n\nUpdates ADR-9009 and the pre-commit hook tables in the dev docs.\n\nAddresses #415\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-18T18:46:42+01:00",
+          "tree_id": "9fdf723202bbef1604ad3c52a7e36771943cb0c4",
+          "url": "https://github.com/endavis/pyproject-template/commit/652bb6ea675d1a6e359cced3ae2c872cbf7c0914"
+        },
+        "date": 1776534432032,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8698299.482443815,
+            "unit": "iter/sec",
+            "range": "stddev: 5.6679509711642024e-8",
+            "extra": "mean: 114.96500000009736 nsec\nrounds: 86874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8888175.824147947,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1568306428415912e-8",
+            "extra": "mean: 112.50902544964715 nsec\nrounds: 88410"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5421544.912571362,
+            "unit": "iter/sec",
+            "range": "stddev: 1.744927005745406e-8",
+            "extra": "mean: 184.4492697425085 nsec\nrounds: 55857"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1672994.839887419,
+            "unit": "iter/sec",
+            "range": "stddev: 3.237958521199245e-7",
+            "extra": "mean: 597.7304748096492 nsec\nrounds: 55390"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496559.7363908004,
+            "unit": "iter/sec",
+            "range": "stddev: 6.704978981253124e-7",
+            "extra": "mean: 2.0138563937310137 usec\nrounds: 46147"
           }
         ]
       }
