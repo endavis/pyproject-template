@@ -199,6 +199,7 @@ These patterns are blocked across all AI agents. Claude, Gemini, and Copilot all
 | Type checking | `mypy` | Blocks commits with type errors |
 | Security scan | `bandit` | Blocks commits with security issues |
 | Spelling | `codespell` | Blocks commits with spelling errors |
+| GitHub Actions linting | `actionlint` | Blocks commits with invalid workflow syntax |
 | Private key detection | `detect-private-key` | Blocks commits containing secrets |
 | Large file prevention | `check-added-large-files` | Blocks commits with large files |
 

@@ -127,7 +127,7 @@ jobs:
         if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest'
         uses: codecov/codecov-action@v6
         with:
-          file: ./tmp/coverage.xml
+          files: ./tmp/coverage.xml
           flags: unittests
           name: codecov-umbrella
           fail_ci_if_error: false
