@@ -357,6 +357,7 @@ uv run pre-commit autoupdate
 | `mypy` | Type checking (strict mode, `src/` only) |
 | `bandit` | Security scanning (skipped if not installed) |
 | `codespell` | Spell checking |
+| `actionlint` | Lint GitHub Actions workflow files |
 | `check-branch-name` | Enforce branch naming convention |
 | `generate-doc-toc` | Update documentation TOC when docs change |
 | `no-commit-to-main` | Prevent direct commits to main branch |

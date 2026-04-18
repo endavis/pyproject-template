@@ -17,6 +17,7 @@ Ensures bad code never enters the repository, provides fast feedback loop (secon
 - Issue #184: Use project's tool versions in pre-commit hooks
 - Issue #128: Align pre-commit, CI, and doit check to use consistent checks
 - Issue #19: Fix resolve pre-commit hook failures in template files
+- Issue #415: Add actionlint hook for GitHub Actions workflow validation
 
 ## Related Documentation
 
