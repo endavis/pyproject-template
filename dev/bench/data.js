@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776689083544,
+  "lastUpdate": 1776692998234,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4366,6 +4366,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.98060405853557e-7",
             "extra": "mean: 1.9824292012726212 usec\nrounds: 48080"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b07184a52b3ac96530a6dca0f778ae57f8ef8d60",
+          "message": "refactor: convert CodeQL from default setup to advanced workflow (merges PR #433, addresses #431)\n\nAddresses #431\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-20T14:49:30+01:00",
+          "tree_id": "b85bd8cddde2ad934e6458918e0a21eb27a95e69",
+          "url": "https://github.com/endavis/pyproject-template/commit/b07184a52b3ac96530a6dca0f778ae57f8ef8d60"
+        },
+        "date": 1776692997679,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8809796.912887633,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3286389640671801e-8",
+            "extra": "mean: 113.5099945989816 nsec\nrounds: 88874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8617973.138311788,
+            "unit": "iter/sec",
+            "range": "stddev: 3.373552708883145e-8",
+            "extra": "mean: 116.036564973083 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5500613.986733156,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2398901936495137e-8",
+            "extra": "mean: 181.79788700168461 nsec\nrounds: 54160"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1674778.85693059,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9759259132657126e-7",
+            "extra": "mean: 597.0937571021917 nsec\nrounds: 57297"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 459421.20678077126,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000022073206101613806",
+            "extra": "mean: 2.17665180718831 usec\nrounds: 49194"
           }
         ]
       }
