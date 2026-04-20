@@ -28,9 +28,16 @@ A dependabot PR qualifies when **all** of the following are true:
 
 Qualifying PRs receive:
 
-- GitHub's native auto-merge enabled with the **squash** strategy.
 - The `ready-to-merge` label applied automatically (satisfying the Merge Gate).
-- A sticky status comment confirming auto-merge is enabled.
+  This happens first and is **unconditional** for qualifying PRs.
+- GitHub's native auto-merge attempted with the **squash** strategy. This step
+  can fail for reasons outside the workflow (e.g. the repository does not have
+  `allow_auto_merge` enabled), in which case the run is marked as a failure but
+  the label above is already applied.
+- A sticky status comment describing the outcome. If auto-merge was enabled, it
+  confirms that; if the auto-merge step failed, it notes that the label was
+  applied anyway and points at the workflow logs so a maintainer can investigate
+  and/or merge manually.
 
 ## What gets skipped
 
