@@ -67,7 +67,7 @@ to the default branch.
 | | Allowed merge methods: squash only |
 | **Required status checks** | `require-label` (from the Merge Gate workflow) |
 | | Strict policy: Yes (branch must be up to date) |
-| **Code scanning** | CodeQL -- errors threshold, high-or-higher security alerts |
+| **Required status checks** | `CodeQL` check-run emitted by `.github/workflows/codeql.yml` |
 | **Code quality** | Errors severity threshold |
 | **Bypass actors** | Repository admin role (always) |
 
@@ -132,6 +132,7 @@ each workflow, its trigger, and required permissions.
 | Workflow | File | Trigger | Permissions |
 | :--- | :--- | :--- | :--- |
 | **CI** | `ci.yml` | PR to `main` (opened, synchronize, reopened, labeled), `workflow_dispatch`, `workflow_call` | `contents: read` |
+| **CodeQL** | `codeql.yml` | Push to `main`, PR to `main`, Scheduled (Monday 04:27 UTC) | `contents: read`, `security-events: write`, `actions: read` |
 | **Merge Gate** | `merge-gate.yml` | PR to `main` (opened, labeled, unlabeled, synchronize, reopened) | `contents: read` |
 | **PR Validation** | `pr-checks.yml` | PR (opened, edited, synchronize) | Default |
 | **Breaking Change Detection** | `breaking-change-detection.yml` | PR (opened, synchronize, edited) | `contents: read`, `issues: write`, `pull-requests: write` |
@@ -199,14 +200,16 @@ Security features are configured by `_configure_security_settings()` in
 | **Secret scanning** | Enabled | Detects accidentally committed secrets |
 | **Secret scanning push protection** | Enabled | Blocks pushes containing secrets |
 | **Dependabot security updates** | Enabled | Automatic PRs for vulnerable dependencies |
-| **CodeQL analysis** | Configured | Static analysis for security vulnerabilities |
+| **CodeQL analysis** | Workflow-driven | Runs from `.github/workflows/codeql.yml` on every push to `main`, PR to `main`, and weekly schedule |
 
 !!! note
     Secret scanning and push protection are available for free on public
     repositories. Private repositories require GitHub Advanced Security (GHAS).
 
-**Automated:** Yes, security settings are copied from the template. CodeQL is
-configured separately by `configure_codeql()`.
+**Automated:** Yes, security settings are copied from the template. CodeQL
+runs as a committed GitHub Actions workflow (`.github/workflows/codeql.yml`)
+and is replicated automatically when the template generator copies workflow
+files into a new repository — no extra API call is required.
 
 ## Dependabot
 
@@ -307,6 +310,5 @@ configuration:
 3. **Secrets** -- Add `CODECOV_TOKEN` and optional release app credentials
 4. **CODEOWNERS** -- Replace `@username` with the actual owner
 5. **Dependabot** -- Verify Dependabot is enabled in repository settings
-6. **CodeQL** -- Verify CodeQL is active after initial setup
 
 For the full post-setup checklist, see the [New Project Setup](../template/new-project.md) guide.

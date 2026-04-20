@@ -36,7 +36,6 @@ if str(_script_dir) not in sys.path:
 # Import repo settings functions (aliased to avoid shadowing class methods)
 from repo_settings import (  # noqa: E402
     configure_branch_protection as _configure_branch_protection,
-    configure_codeql as _configure_codeql,
     configure_repository_settings as _configure_repository_settings,
     enable_github_pages as _enable_github_pages,
     replicate_labels as _replicate_labels,
@@ -614,13 +613,6 @@ chore: apply code formatting
         """Enable GitHub Pages."""
         _enable_github_pages(repo_full=self.config["repo_full"])
 
-    def configure_codeql(self) -> None:
-        """Configure CodeQL code scanning to match template."""
-        _configure_codeql(
-            repo_full=self.config["repo_full"],
-            template_repo=self.TEMPLATE_FULL,
-        )
-
     def print_manual_steps(self) -> None:
         """Print manual steps that need to be completed."""
         print()
@@ -702,13 +694,15 @@ chore: apply code formatting
         self.gather_inputs()
 
         # Create repository on GitHub and configure all GitHub settings
-        # BEFORE cloning to avoid partial setup if GitHub operations fail
+        # BEFORE cloning to avoid partial setup if GitHub operations fail.
+        # CodeQL scanning is NOT set up here: it runs from the committed
+        # .github/workflows/codeql.yml workflow that the template generator
+        # copies into the new repo automatically.
         self.create_github_repository()
         self.configure_repository_settings()
         self.configure_branch_protection()
         self.replicate_labels()
         self.enable_github_pages()
-        self.configure_codeql()
 
         # Now clone and configure locally
         self.clone_repository()
