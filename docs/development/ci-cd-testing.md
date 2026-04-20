@@ -586,6 +586,13 @@ Use this label to trigger comprehensive compatibility testing across all support
 gh pr edit <PR-NUMBER> --add-label "full-matrix"
 ```
 
+Adding the label triggers the dedicated `.github/workflows/ci-full-matrix.yml`
+workflow. That workflow is a thin dispatcher: it fires only on the `labeled`
+event, confirms the label name is `full-matrix`, and then calls `ci.yml` via
+`workflow_call` with `full_matrix: true`. The main `ci.yml` no longer fires on
+label events itself, which keeps the per-push `CI` check from being duplicated
+every time a label is added to a PR.
+
 ### Branch Protection Integration
 
 Configure branch protection rules to require the merge gate:
