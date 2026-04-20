@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776534432709,
+  "lastUpdate": 1776689083544,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4307,6 +4307,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.704978981253124e-7",
             "extra": "mean: 2.0138563937310137 usec\nrounds: 46147"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "78c96cd4670b78f887cd7a36b7b1f988829e3794",
+          "message": "fix: label dependabot PRs before calling gh pr merge (merges PR #432, addresses #423)\n\n* fix: apply ready-to-merge label before gh pr merge in dependabot auto-merge workflow\n\nAddresses #423\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n* fix: use utf-8 encoding when reading workflow yaml in test\n\nWindows defaults Path.read_text() to cp1252, which cannot decode the\nemoji bytes (✅ ⏸️ 🛑 ⚠️) in the sticky-comment bodies. Explicit utf-8\nmakes the test cross-platform.\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-20T13:44:12+01:00",
+          "tree_id": "04cff33908303057e2cfdaa0adcb563fc72e040f",
+          "url": "https://github.com/endavis/pyproject-template/commit/78c96cd4670b78f887cd7a36b7b1f988829e3794"
+        },
+        "date": 1776689082773,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8894663.591378309,
+            "unit": "iter/sec",
+            "range": "stddev: 8.655709562989438e-9",
+            "extra": "mean: 112.42696137145765 nsec\nrounds: 46883"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8933784.919181269,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1507718538183237e-8",
+            "extra": "mean: 111.9346401381291 nsec\nrounds: 89840"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5523907.428409524,
+            "unit": "iter/sec",
+            "range": "stddev: 1.579743607630602e-8",
+            "extra": "mean: 181.03127414065406 nsec\nrounds: 54366"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1629016.364461375,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4991434255433115e-7",
+            "extra": "mean: 613.8673753167877 nsec\nrounds: 53150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 504431.6333506637,
+            "unit": "iter/sec",
+            "range": "stddev: 4.98060405853557e-7",
+            "extra": "mean: 1.9824292012726212 usec\nrounds: 48080"
           }
         ]
       }
