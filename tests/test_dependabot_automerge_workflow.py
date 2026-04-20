@@ -19,7 +19,7 @@ WORKFLOW_PATH = Path(__file__).parent.parent / ".github" / "workflows" / "depend
 
 def _load_workflow() -> dict[str, Any]:
     """Load and parse the dependabot auto-merge workflow YAML."""
-    return yaml.safe_load(WORKFLOW_PATH.read_text())
+    return yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
 
 
 def _enable_automerge_steps() -> list[dict[str, Any]]:
