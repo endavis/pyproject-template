@@ -114,21 +114,28 @@ jobs:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ needs.evaluate.outputs.pr_number }}
     steps:
-      - name: Enable auto-merge (squash)
-        run: gh pr merge --auto --squash "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"
-
       - name: Add ready-to-merge label
         run: gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --add-label ready-to-merge
 
+      - name: Enable auto-merge (squash)
+        id: automerge
+        run: gh pr merge --auto --squash "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"
+
       - name: Post sticky status comment
+        if: always()
         uses: actions/github-script@v9
+        env:
+          AUTOMERGE_OUTCOME: ${{ steps.automerge.outcome }}
         with:
           script: |
             const prNumber = Number(process.env.PR_NUMBER);
             const marker = '<!-- dependabot-automerge:status -->';
-            const body =
-              marker +
-              '\n✅ **Auto-merge enabled.** This PR will merge automatically when required CI checks pass. To block, add label `automerge-blocked`.';
+            const succeeded = process.env.AUTOMERGE_OUTCOME === 'success';
+            const body = succeeded
+              ? marker +
+                '\n✅ **Auto-merge enabled.** This PR will merge automatically when required CI checks pass. To block, add label `automerge-blocked`.'
+              : marker +
+                '\n⚠️ **Auto-merge could not be enabled**, but the `ready-to-merge` label has been applied so the Merge Gate is satisfied. A maintainer will need to merge this PR manually (or re-run the workflow once the underlying issue is resolved). See the workflow run logs for details. To opt this PR out of auto-merge entirely, add the `automerge-blocked` label.';
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,
