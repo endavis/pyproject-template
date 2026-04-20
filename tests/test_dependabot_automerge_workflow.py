@@ -5,6 +5,11 @@ workflow — they only verify its shape. The most important guarantee here is th
 step ordering inside the ``enable-automerge`` job (see issue #423): the
 ``ready-to-merge`` label must be applied *before* ``gh pr merge --auto`` is
 invoked so that a failure of the merge call cannot skip the label.
+
+Issue #424 split the blocked-label handler out into a sibling workflow
+(``dependabot-blocked-label.yml``) so this workflow no longer fires on
+``labeled`` events. The ``TestOnTriggers`` and ``TestConcurrency`` classes
+below guard that split.
 """
 
 from __future__ import annotations
@@ -17,8 +22,12 @@ import yaml
 WORKFLOW_PATH = Path(__file__).parent.parent / ".github" / "workflows" / "dependabot-automerge.yml"
 
 
-def _load_workflow() -> dict[str, Any]:
-    """Load and parse the dependabot auto-merge workflow YAML."""
+def _load_workflow() -> dict[Any, Any]:
+    """Load and parse the dependabot auto-merge workflow YAML.
+
+    Return type is ``dict[Any, Any]`` (not ``dict[str, Any]``) because
+    PyYAML parses the ``on`` key as the boolean ``True`` (YAML 1.1 alias).
+    """
     return yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
 
 
@@ -160,3 +169,79 @@ class TestStickyCommentStep:
         script: str = steps[2]["with"]["script"]
         assert "deleteComment" in script
         assert "listComments" in script
+
+
+class TestOnTriggers:
+    """Trigger configuration: the ``labeled`` event is handled elsewhere.
+
+    Issue #424 moved label-driven handling to ``dependabot-blocked-label.yml``.
+    Leaving ``labeled`` in the trigger list here would re-introduce the
+    duplicate-run problem on dependabot PRs (each auto-applied label fires a
+    separate workflow run).
+    """
+
+    def test_labeled_not_in_pull_request_target_types(self) -> None:
+        """The ``labeled`` event type must NOT appear in ``pull_request_target.types``.
+
+        This is the core regression guard for issue #424.
+        """
+        workflow = _load_workflow()
+        triggers = workflow.get("on") or workflow.get(True)
+        assert triggers is not None, "workflow has no triggers block"
+        types = triggers["pull_request_target"]["types"]
+        assert "labeled" not in types, (
+            f"'labeled' must not be in pull_request_target.types; got {types}. "
+            "Label-driven handling is in dependabot-blocked-label.yml (issue #424)."
+        )
+
+    def test_pull_request_target_types_cover_core_lifecycle(self) -> None:
+        """The PR trigger must still cover the core lifecycle events so the
+        main evaluate/enable-automerge flow still runs on every open/sync."""
+        workflow = _load_workflow()
+        triggers = workflow.get("on") or workflow.get(True)
+        assert triggers is not None
+        types = triggers["pull_request_target"]["types"]
+        for required in ("opened", "reopened", "synchronize", "ready_for_review"):
+            assert required in types, f"pull_request_target.types missing '{required}': {types}"
+
+    def test_schedule_and_workflow_dispatch_retained(self) -> None:
+        """``schedule`` and ``workflow_dispatch`` drive the rebase-requester job,
+        so they must remain triggers on this workflow."""
+        workflow = _load_workflow()
+        triggers = workflow.get("on") or workflow.get(True)
+        assert triggers is not None
+        assert "schedule" in triggers
+        assert "workflow_dispatch" in triggers
+
+
+class TestConcurrency:
+    """Workflow-level concurrency block dedupes in-flight runs per PR.
+
+    The concurrency block is only safe to add after the ``labeled`` trigger
+    split in issue #424: prior to the split, a labeled event arriving shortly
+    after an ``opened`` event would cancel the in-flight ``evaluate`` job
+    mid-run. With label events routed to ``dependabot-blocked-label.yml``,
+    cancelling stale runs on this workflow is safe.
+    """
+
+    def test_concurrency_block_exists(self) -> None:
+        """The workflow must declare a top-level ``concurrency`` block."""
+        workflow = _load_workflow()
+        assert "concurrency" in workflow, "workflow must declare a concurrency block"
+
+    def test_concurrency_group_keyed_on_pr_number_or_ref(self) -> None:
+        """The group key must reference ``pull_request.number`` and ``github.ref``.
+
+        ``pull_request.number`` isolates PR runs from each other;
+        ``github.ref`` is the fallback for schedule/workflow_dispatch runs
+        that have no PR context.
+        """
+        workflow = _load_workflow()
+        group: str = workflow["concurrency"]["group"]
+        assert "pull_request.number" in group or "github.event.pull_request.number" in group
+        assert "github.ref" in group
+
+    def test_concurrency_cancel_in_progress(self) -> None:
+        """``cancel-in-progress: true`` supersedes stale runs on a new PR push."""
+        workflow = _load_workflow()
+        assert workflow["concurrency"]["cancel-in-progress"] is True

@@ -99,7 +99,7 @@ To add a label: edit `.github/labels.yml`, run `doit labels_sync --dry-run` to p
 | `documentation` | `#0075ca` | Improvements or additions to documentation | Issue template, release notes |
 | `duplicate` | `#cfd3d7` | This issue or pull request already exists | Manual triage |
 | `enhancement` | `#a2eeef` | New feature or request | Issue template, release notes |
-| `full-matrix` | `#1D76DB` | Run CI on all supported Python versions | CI workflow (triggers full matrix) |
+| `full-matrix` | `#1D76DB` | Run CI on all supported Python versions | `CI (full matrix)` workflow (dispatches `ci.yml` with `full_matrix: true`) |
 | `github_actions` | `#000000` | Pull requests that update GitHub Actions code | Dependabot PRs |
 | `good first issue` | `#7057ff` | Good for newcomers | Manual triage |
 | `help wanted` | `#008672` | Extra attention is needed | Manual triage |
@@ -131,7 +131,8 @@ each workflow, its trigger, and required permissions.
 
 | Workflow | File | Trigger | Permissions |
 | :--- | :--- | :--- | :--- |
-| **CI** | `ci.yml` | PR to `main` (opened, synchronize, reopened, labeled), `workflow_dispatch`, `workflow_call` | `contents: read` |
+| **CI** | `ci.yml` | PR to `main` (opened, synchronize, reopened), `workflow_dispatch`, `workflow_call` | `contents: read` |
+| **CI (full matrix)** | `ci-full-matrix.yml` | PR to `main` (labeled with `full-matrix`) -- dispatches `ci.yml` with `full_matrix: true` | `contents: read` |
 | **CodeQL** | `codeql.yml` | Push to `main`, PR to `main`, Scheduled (Monday 04:27 UTC) | `contents: read`, `security-events: write`, `actions: read` |
 | **Merge Gate** | `merge-gate.yml` | PR to `main` (opened, labeled, unlabeled, synchronize, reopened) | `contents: read` |
 | **PR Validation** | `pr-checks.yml` | PR (opened, edited, synchronize) | Default |
@@ -144,8 +145,10 @@ each workflow, its trigger, and required permissions.
 ### Key workflow details
 
 - **CI** uses a matrix strategy with Python versions from
-  `.github/python-versions.json`. Adding the `full-matrix` label to a PR runs
-  all versions; otherwise, only the bookend versions are tested.
+  `.github/python-versions.json`; only the bookend versions are tested on
+  every push. Adding the `full-matrix` label to a PR triggers the dedicated
+  `CI (full matrix)` workflow, which calls `ci.yml` with
+  `full_matrix: true` to cover the middle versions.
 - **Merge Gate** requires the `ready-to-merge` label on a PR before the
   `require-label` status check passes. This is a manual gate added by a reviewer.
 - **Release** publishes to TestPyPI first, then PyPI, then creates a GitHub

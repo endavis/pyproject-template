@@ -3,17 +3,25 @@ name: CI
 on:
   pull_request:
     branches: [main]
-    types: [opened, synchronize, reopened, labeled]
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
   workflow_call:
+    inputs:
+      full_matrix:
+        description: 'Run the full Python-version matrix (middle versions) instead of the bookend versions.'
+        required: false
+        type: boolean
+        default: false
 
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
 jobs:
   setup:
-    # Skip CI if triggered by a label event that isn't 'full-matrix'
-    if: github.event.action != 'labeled' || github.event.label.name == 'full-matrix'
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
@@ -42,7 +50,7 @@ jobs:
           oldest_minor=${oldest#3.}
           newest_minor=${newest#3.}
 
-          if [[ "${{ github.event.label.name }}" == "full-matrix" ]]; then
+          if [[ "${{ inputs.full_matrix }}" == "true" ]]; then
             # Middle versions only (bookends already tested)
             versions=""
             for ((i=oldest_minor+1; i<newest_minor; i++)); do
@@ -167,8 +175,7 @@ jobs:
         run: uv run doit docs_build
 
   ci-complete:
-    # Always run unless this is a non-full-matrix label event
-    if: always() && (github.event.action != 'labeled' || github.event.label.name == 'full-matrix')
+    if: always()
     needs: [setup, test, docs]
     runs-on: ubuntu-latest
     steps:

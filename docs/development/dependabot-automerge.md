@@ -17,6 +17,13 @@ dependabot PR and enables GitHub's native auto-merge for PRs that meet the
 project's safety criteria. Qualifying PRs are merged automatically once the
 required CI checks pass.
 
+The label-driven opt-out path lives in a sibling workflow,
+`.github/workflows/dependabot-blocked-label.yml`, which fires only on
+`pull_request_target: labeled` events. Splitting label handling out of the
+main workflow keeps the `Dependabot Auto-merge` check clean (it runs once per
+PR open/sync, not once per auto-applied label) and lets the main workflow use
+`concurrency: cancel-in-progress: true` safely.
+
 ## What gets auto-merged
 
 A dependabot PR qualifies when **all** of the following are true:
@@ -53,12 +60,16 @@ Skipped PRs require a human reviewer to merge them using the normal workflow.
 ## The `automerge-blocked` opt-out
 
 To stop auto-merge on a PR that already qualified, add the label
-`automerge-blocked` (or `do-not-merge`). The workflow reacts to the `labeled`
-event:
+`automerge-blocked` (or `do-not-merge`). The `dependabot-blocked-label.yml`
+workflow reacts to the `labeled` event:
 
 - Disables GitHub's auto-merge on the PR.
 - Removes the `ready-to-merge` label.
 - Posts a sticky comment recording the block.
+
+Both workflows share the same `<!-- dependabot-automerge:status -->` sticky
+comment marker, so toggling the block updates the existing comment instead of
+producing a thread of status messages.
 
 ## Configuration
 
@@ -96,4 +107,5 @@ does not spam the bot while a rebase is in progress.
 
 - `AGENTS.md` section [Dependabot PRs](../../AGENTS.md#dependabot-prs)
 - `.github/workflows/dependabot-automerge.yml`
+- `.github/workflows/dependabot-blocked-label.yml`
 - `.github/automerge-config.json`
