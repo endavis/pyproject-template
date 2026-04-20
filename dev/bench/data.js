@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776692998234,
+  "lastUpdate": 1776711810592,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4425,6 +4425,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000022073206101613806",
             "extra": "mean: 2.17665180718831 usec\nrounds: 49194"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2e3c9d0d0da7b001f25fa7d7a54868582785cca7",
+          "message": "refactor: dedupe dependabot workflow runs via concurrency and label-split (merges PR #434, addresses #424)\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-20T20:02:56+01:00",
+          "tree_id": "b0bb86ecbb40622f612d4325bb6138296dc6ba03",
+          "url": "https://github.com/endavis/pyproject-template/commit/2e3c9d0d0da7b001f25fa7d7a54868582785cca7"
+        },
+        "date": 1776711809574,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8949110.113471191,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3196404498810181e-8",
+            "extra": "mean: 111.7429540278747 nsec\nrounds: 87704"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8933340.856427992,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1363258155747303e-8",
+            "extra": "mean: 111.94020423842322 nsec\nrounds: 87789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5411543.180164302,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5376208110788467e-8",
+            "extra": "mean: 184.7901729150831 nsec\nrounds: 54304"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1702212.1825420493,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1718594305358155e-7",
+            "extra": "mean: 587.4708278180809 nsec\nrounds: 52533"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498378.06859427475,
+            "unit": "iter/sec",
+            "range": "stddev: 5.067175388519256e-7",
+            "extra": "mean: 2.0065088394049924 usec\nrounds: 45309"
           }
         ]
       }
