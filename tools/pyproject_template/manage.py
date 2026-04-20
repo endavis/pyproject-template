@@ -430,11 +430,12 @@ def action_create_project(manager: SettingsManager, dry_run: bool, *, yes: bool 
             )
             subprocess.run(["git", "push"], cwd=project_dir, check=True)
 
-        # Now configure branch protection and other GitHub settings
+        # Now configure branch protection and other GitHub settings.
+        # CodeQL scanning is NOT set up here: it runs from the committed
+        # .github/workflows/codeql.yml workflow that was cloned with the repo.
         setup.configure_branch_protection()
         setup.replicate_labels()
         setup.enable_github_pages()
-        setup.configure_codeql()
 
         setup.print_manual_steps()
 
@@ -524,7 +525,6 @@ def action_repo_settings(manager: SettingsManager, dry_run: bool) -> int:
         Logger.info("  - Branch protection rulesets")
         Logger.info("  - Labels")
         Logger.info("  - GitHub Pages")
-        Logger.info("  - CodeQL code scanning")
         return 0
 
     # Import repo_settings module for repository configuration

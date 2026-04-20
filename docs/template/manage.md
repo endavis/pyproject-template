@@ -71,7 +71,12 @@ Configures GitHub repository settings:
 - Branch protection rulesets
 - Labels
 - GitHub Pages
-- CodeQL code scanning
+
+CodeQL code scanning is configured via the committed workflow file
+`.github/workflows/codeql.yml` rather than an API call, so it replicates
+automatically when the template generator copies workflow files into a new
+repository. No explicit "update repository settings" step is required to
+enable it.
 
 **When to use:** You want to update GitHub settings to match the latest template configuration.
 

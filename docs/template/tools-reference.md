@@ -368,8 +368,15 @@ Internal module providing functions to configure GitHub repository settings. Use
 | `configure_branch_protection()` | Set up branch protection rulesets |
 | `replicate_labels()` | Copy labels from template repository |
 | `enable_github_pages()` | Enable GitHub Pages for documentation |
-| `configure_codeql()` | Configure CodeQL code scanning |
 | `update_all_repo_settings()` | Convenience function to run all configuration steps |
+
+!!! note "CodeQL scanning is workflow-driven"
+    CodeQL code scanning is configured via the committed
+    `.github/workflows/codeql.yml` workflow rather than an API call. It is
+    replicated automatically when the template generator copies workflow
+    files into a new repository, so no dedicated function (or manual setup
+    step) is required. See issue #431 for the migration from default setup
+    to this advanced workflow file.
 
 ### Usage
 

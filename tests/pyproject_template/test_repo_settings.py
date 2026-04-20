@@ -200,42 +200,14 @@ class TestEnableGithubPages:
             assert result is False
 
 
-class TestConfigureCodeql:
-    """Tests for configure_codeql function."""
-
-    def test_configure_codeql_success(self) -> None:
-        """Test successful CodeQL configuration."""
-        from tools.pyproject_template.repo_settings import configure_codeql
-
-        mock_template_codeql = {
-            "state": "configured",
-            "query_suite": "extended",
-            "languages": ["python"],
-        }
-
-        with patch(
-            "tools.pyproject_template.repo_settings.GitHubCLI.api",
-            side_effect=[mock_template_codeql, None],
-        ):
-            result = configure_codeql(repo_full="user/repo")
-            assert result is True
-
-    def test_configure_codeql_not_configured(self) -> None:
-        """Test CodeQL when template doesn't have it configured."""
-        from tools.pyproject_template.repo_settings import configure_codeql
-
-        mock_template_codeql = {"state": "not-configured"}
-
-        with patch(
-            "tools.pyproject_template.repo_settings.GitHubCLI.api",
-            return_value=mock_template_codeql,
-        ):
-            result = configure_codeql(repo_full="user/repo")
-            assert result is True  # Not configured is not a failure
-
-
 class TestUpdateAllRepoSettings:
-    """Tests for update_all_repo_settings convenience function."""
+    """Tests for update_all_repo_settings convenience function.
+
+    CodeQL scanning is intentionally NOT part of this orchestration: it runs
+    from the committed ``.github/workflows/codeql.yml`` workflow file that
+    the template generator copies into every new repository. See issue #431
+    for the migration from the default-setup API to the workflow file.
+    """
 
     def test_update_all_repo_settings_success(self) -> None:
         """Test that update_all_repo_settings calls all configuration functions."""
@@ -258,10 +230,6 @@ class TestUpdateAllRepoSettings:
                 "tools.pyproject_template.repo_settings.enable_github_pages",
                 return_value=True,
             ) as mock_pages,
-            patch(
-                "tools.pyproject_template.repo_settings.configure_codeql",
-                return_value=True,
-            ) as mock_codeql,
         ):
             result = update_all_repo_settings(
                 repo_full="user/repo",
@@ -273,7 +241,6 @@ class TestUpdateAllRepoSettings:
             mock_branch.assert_called_once()
             mock_labels.assert_called_once()
             mock_pages.assert_called_once()
-            mock_codeql.assert_called_once()
 
     def test_update_all_repo_settings_partial_failure(self) -> None:
         """Test that update_all_repo_settings returns False if any step fails."""
@@ -294,10 +261,6 @@ class TestUpdateAllRepoSettings:
             ),
             patch(
                 "tools.pyproject_template.repo_settings.enable_github_pages",
-                return_value=True,
-            ),
-            patch(
-                "tools.pyproject_template.repo_settings.configure_codeql",
                 return_value=True,
             ),
         ):
