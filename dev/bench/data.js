@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776743944783,
+  "lastUpdate": 1776745042299,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4661,6 +4661,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.5816479844215253e-7",
             "extra": "mean: 1.9357361585419681 usec\nrounds: 55901"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f0752ba555d9dbb02017cf8c961f2ec473c11bfe",
+          "message": "fix: bound validate_merge_commits walk when no tags exist (merges PR #438, addresses #437)\n\nThe no-tag fallback walked full HEAD, surfacing merges inherited from\npre-project ancestor repos and blocking doit release on any repo\nbefore its first tag. Mirror the sibling validate_issue_links helper:\nfall back to HEAD~10..HEAD so only the last 10 commits are scanned.\n\nAdds regression tests using monkeypatched subprocess.run.\n\nAddresses #437.\n\nCross-repo port from endavis/pynetappfoundry#640.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T05:16:57+01:00",
+          "tree_id": "75fa2b2a48ea55eb568479e08d8dbb268909a9a1",
+          "url": "https://github.com/endavis/pyproject-template/commit/f0752ba555d9dbb02017cf8c961f2ec473c11bfe"
+        },
+        "date": 1776745041932,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8769592.49110437,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2430702936154748e-8",
+            "extra": "mean: 114.03038408162888 nsec\nrounds: 87169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8892754.298293255,
+            "unit": "iter/sec",
+            "range": "stddev: 1.219666876008844e-8",
+            "extra": "mean: 112.45109967694995 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5164361.847766708,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8505976445353168e-8",
+            "extra": "mean: 193.63476640050754 nsec\nrounds: 51905"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1626479.3575383446,
+            "unit": "iter/sec",
+            "range": "stddev: 3.089471284283661e-7",
+            "extra": "mean: 614.8248948658575 nsec\nrounds: 59450"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 487895.4510412123,
+            "unit": "iter/sec",
+            "range": "stddev: 5.930579059963296e-7",
+            "extra": "mean: 2.0496194376600787 usec\nrounds: 50181"
           }
         ]
       }
