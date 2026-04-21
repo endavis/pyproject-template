@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776745042299,
+  "lastUpdate": 1776745674496,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4720,6 +4720,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.930579059963296e-7",
             "extra": "mean: 2.0496194376600787 usec\nrounds: 50181"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bdfe2041c213aefdfc8efa7632fceb8644332a80",
+          "message": "fix: complete release task wiring (cz --yes, action params, gh search) (merges PR #440, addresses #439)\n\nThree task-internal wiring bugs in the PR-based release flow, all\ndiscovered downstream in sequence as end-to-end TestPyPI verification\ngot further into the chain. Combined here as one upstream PR because\neach bug only became visible after the prior one was fixed.\n\n1. cz bump --get-next interactivity + version pollution. The command\n   prompts on a tagless repo and (with capture_output) the prompt can't\n   reach stdin — cz dumps diagnostic text + Cancelled by user into\n   stdout and the task interpolates the whole blob into the\n   release/v<version> branch name. Pass --yes; add a defensive\n   _extract_next_version_from_cz_output helper that scans stdout from\n   the last line backward and returns only lines fully matching the\n   version pattern.\n\n2. --prerelease and --increment CLI flags silently dropped. doit's\n   params parsing populates the action function's kwargs, not the outer\n   task-creator's parameters. task_release(increment, prerelease) had\n   the values on the wrong function and create_release_pr() took no\n   args, so doit had nowhere to deliver parsed values. Move the kwargs\n   onto create_release_pr matching params[n][\"name\"]. Adds two\n   regression tests pinning the action signature.\n\n3. release_tag gh search uses colon qualifier syntax. The search\n   \"release: v in:title\" is parsed by GitHub as the qualifier \"release:\"\n   followed by \"v in:title\" and returns zero matches even when a\n   merged release PR exists. Swap to \"head:release/\" — GitHub's built-in\n   head-branch prefix qualifier.\n\nAdds 12 new test cases across TestExtractNextVersionFromCzOutput (9),\nTestTaskReleaseActionSignature (2), and TestReleaseTagGhSearch (1).\n\nAddresses #439.\n\nCross-repo port from endavis/pynetappfoundry#642 (cz --yes), #651\n(action params), #658 (gh search).\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T05:27:28+01:00",
+          "tree_id": "5baff66ce7546252aa383f0056c0c7bd8680c9a6",
+          "url": "https://github.com/endavis/pyproject-template/commit/bdfe2041c213aefdfc8efa7632fceb8644332a80"
+        },
+        "date": 1776745673874,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8530334.497524159,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1425306829706481e-8",
+            "extra": "mean: 117.22869722051809 nsec\nrounds: 87321"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8937174.282605726,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2563543862264797e-8",
+            "extra": "mean: 111.89218967635928 nsec\nrounds: 86716"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5199403.847253671,
+            "unit": "iter/sec",
+            "range": "stddev: 3.545258203983522e-8",
+            "extra": "mean: 192.3297419045841 nsec\nrounds: 177905"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1666265.843590178,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6707923144754335e-7",
+            "extra": "mean: 600.1443310182575 nsec\nrounds: 55054"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 500762.07211209903,
+            "unit": "iter/sec",
+            "range": "stddev: 5.791727735232755e-7",
+            "extra": "mean: 1.9969563505123908 usec\nrounds: 26667"
           }
         ]
       }
