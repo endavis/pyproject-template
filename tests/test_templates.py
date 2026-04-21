@@ -37,7 +37,7 @@ class TestIssueTypeMapping:
 
     def test_all_issue_types_have_mapping(self) -> None:
         """All expected issue types should have file mappings."""
-        expected_types = {"feature", "bug", "refactor", "doc", "chore"}
+        expected_types = {"feature", "bug", "refactor", "docs", "chore"}
         assert set(ISSUE_TYPE_TO_FILE.keys()) == expected_types
 
     def test_mapping_files_exist(self) -> None:
@@ -51,7 +51,7 @@ class TestIssueTypeMapping:
 class TestGetIssueTemplate:
     """Test get_issue_template function."""
 
-    @pytest.mark.parametrize("issue_type", ["feature", "bug", "refactor", "doc", "chore"])
+    @pytest.mark.parametrize("issue_type", ["feature", "bug", "refactor", "docs", "chore"])
     def test_get_template_for_valid_types(self, issue_type: str) -> None:
         """Should return IssueTemplate for all valid types."""
         result = get_issue_template(issue_type)
@@ -81,10 +81,15 @@ class TestGetIssueTemplate:
         result = get_issue_template("refactor")
         assert "refactor" in result.labels
 
-    def test_doc_template_has_expected_labels(self) -> None:
-        """Doc template should have documentation label."""
-        result = get_issue_template("doc")
+    def test_docs_template_has_expected_labels(self) -> None:
+        """Docs template should have documentation label."""
+        result = get_issue_template("docs")
         assert "documentation" in result.labels
+
+    def test_legacy_doc_type_raises_value_error(self) -> None:
+        """Legacy 'doc' type should raise ValueError after rename to 'docs'."""
+        with pytest.raises(ValueError, match="Invalid issue type"):
+            get_issue_template("doc")
 
     def test_chore_template_has_expected_labels(self) -> None:
         """Chore template should have chore label."""
@@ -126,9 +131,9 @@ class TestGetRequiredSections:
         assert "Current Code Issue" in sections
         assert "Proposed Improvement" in sections
 
-    def test_doc_required_sections(self) -> None:
-        """Doc type should require type and description."""
-        sections = get_required_sections("doc")
+    def test_docs_required_sections(self) -> None:
+        """Docs type should require type and description."""
+        sections = get_required_sections("docs")
         assert "Documentation Type" in sections
         assert "Description" in sections
 
@@ -148,7 +153,7 @@ class TestGetIssueLabels:
             ("feature", "enhancement"),
             ("bug", "bug"),
             ("refactor", "refactor"),
-            ("doc", "documentation"),
+            ("docs", "documentation"),
             ("chore", "chore"),
         ],
     )

@@ -129,7 +129,7 @@ def _validate_issue_content(
 
     Args:
         sections: Parsed markdown sections
-        issue_type: Type of issue (feature, bug, refactor, doc, chore)
+        issue_type: Type of issue (feature, bug, refactor, docs, chore)
         console: Rich console for output
 
     Returns:
@@ -194,7 +194,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
 
 
 def task_issue() -> dict[str, Any]:
-    """Create issue from .github/ISSUE_TEMPLATE/<type>.yml (feature/bug/refactor/doc/chore).
+    """Create issue from .github/ISSUE_TEMPLATE/<type>.yml (feature/bug/refactor/docs/chore).
 
     Labels are automatically applied based on the issue type.
 
@@ -205,7 +205,7 @@ def task_issue() -> dict[str, Any]:
 
     Examples:
         Interactive:  doit issue --type=feature
-        From file:    doit issue --type=doc --title="Add guide" --body-file=issue.md
+        From file:    doit issue --type=docs --title="Add guide" --body-file=issue.md
         Direct:       doit issue --type=chore --title="Update CI" --body="## Description\\n..."
     """
 
@@ -313,7 +313,7 @@ def task_issue() -> dict[str, Any]:
                 "short": "t",
                 "long": "type",
                 "default": "feature",
-                "help": "Issue type: feature, bug, refactor, doc, chore",
+                "help": "Issue type: feature, bug, refactor, docs, chore",
             },
             {"name": "title", "long": "title", "default": None, "help": "Issue title"},
             {"name": "body", "long": "body", "default": None, "help": "Issue body (markdown)"},
