@@ -20,9 +20,14 @@ import sys
 from typing import TYPE_CHECKING
 
 import pytest
+from rich.console import Console
 
 from tools.doit.base import run_streamed, run_teed
-from tools.doit.release import _build_cz_get_next_cmd, _extract_version_from_release_pr
+from tools.doit.release import (
+    _build_cz_get_next_cmd,
+    _extract_version_from_release_pr,
+    validate_merge_commits,
+)
 
 if TYPE_CHECKING:
     from _pytest.monkeypatch import MonkeyPatch
@@ -433,3 +438,97 @@ class TestBuildCzGetNextCmd:
     ) -> None:
         """The emitted list matches the expected base + flags in order."""
         assert _build_cz_get_next_cmd(increment, prerelease) == expected
+
+
+class TestValidateMergeCommits:
+    """Tests for ``validate_merge_commits`` (issue #639).
+
+    The helper shells out to ``git describe`` and ``git log --merges``; the
+    tests monkeypatch ``subprocess.run`` inside ``tools.doit.release`` so the
+    git calls return canned results and the ``range_spec`` argument to the
+    second call can be asserted on.
+    """
+
+    @staticmethod
+    def _silent_console() -> Console:
+        return Console(file=io.StringIO(), force_terminal=False)
+
+    @staticmethod
+    def _fake_run(
+        describe_returncode: int,
+        describe_stdout: str,
+        log_stdout: str,
+    ) -> tuple[list[list[str]], object]:
+        """Build a fake ``subprocess.run`` that captures calls.
+
+        Returns ``(captured_calls, fake_run)``. The first git-describe call
+        yields a ``CompletedProcess`` with the given ``describe_returncode``
+        and ``describe_stdout``; the second git-log call yields ``log_stdout``
+        with returncode 0. ``captured_calls`` is appended to on each call.
+        """
+        calls: list[list[str]] = []
+
+        def fake(
+            cmd: list[str],
+            *_args: object,
+            **_kwargs: object,
+        ) -> subprocess.CompletedProcess[str]:
+            calls.append(cmd)
+            if "describe" in cmd:
+                return subprocess.CompletedProcess(
+                    args=cmd, returncode=describe_returncode, stdout=describe_stdout, stderr=""
+                )
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=log_stdout, stderr="")
+
+        return calls, fake
+
+    def test_no_tags_falls_back_to_last_10_commits(self, monkeypatch: MonkeyPatch) -> None:
+        """When ``git describe`` fails (no tags), range_spec is ``HEAD~10..HEAD``.
+
+        Regression test for #639: the previous fallback was ``HEAD``, which
+        walked full history and surfaced merges from unrelated pre-project
+        ancestors on any fresh repo.
+        """
+        calls, fake = self._fake_run(describe_returncode=128, describe_stdout="", log_stdout="")
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
+
+        assert validate_merge_commits(self._silent_console()) is True
+
+        log_cmds = [c for c in calls if "log" in c]
+        assert len(log_cmds) == 1
+        assert log_cmds[0][-1] == "HEAD~10..HEAD"
+
+    def test_with_tag_uses_tag_range(self, monkeypatch: MonkeyPatch) -> None:
+        """When a tag exists, range_spec is ``<last_tag>..HEAD``."""
+        calls, fake = self._fake_run(
+            describe_returncode=0, describe_stdout="v0.1.0\n", log_stdout=""
+        )
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
+
+        assert validate_merge_commits(self._silent_console()) is True
+
+        log_cmds = [c for c in calls if "log" in c]
+        assert len(log_cmds) == 1
+        assert log_cmds[0][-1] == "v0.1.0..HEAD"
+
+    def test_valid_merge_commit_passes(self, monkeypatch: MonkeyPatch) -> None:
+        """A merge commit matching the convention returns True."""
+        _, fake = self._fake_run(
+            describe_returncode=0,
+            describe_stdout="v0.1.0\n",
+            log_stdout="abc1234 fix: handle null (merges PR #42, addresses #41)",
+        )
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
+
+        assert validate_merge_commits(self._silent_console()) is True
+
+    def test_invalid_merge_commit_fails(self, monkeypatch: MonkeyPatch) -> None:
+        """A merge commit not matching the convention returns False."""
+        _, fake = self._fake_run(
+            describe_returncode=0,
+            describe_stdout="v0.1.0\n",
+            log_stdout="abc1234 Merge branch 'master' of https://example.com/repo",
+        )
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
+
+        assert validate_merge_commits(self._silent_console()) is False

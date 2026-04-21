@@ -32,7 +32,10 @@ def validate_merge_commits(console: "ConsoleType") -> bool:
             text=True,
         )
         last_tag = result.stdout.strip() if result.returncode == 0 else ""
-        range_spec = f"{last_tag}..HEAD" if last_tag else "HEAD"
+        # When no tag exists yet (first release), bound the walk to the last
+        # 10 commits — matches validate_issue_links below. Walking full HEAD
+        # can surface merges from unrelated pre-project history.
+        range_spec = f"{last_tag}..HEAD" if last_tag else "HEAD~10..HEAD"
 
         result = subprocess.run(
             ["git", "log", "--merges", "--pretty=format:%h %s", range_spec],
