@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776789151941,
+  "lastUpdate": 1776790053974,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5251,6 +5251,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.204472556737453e-7",
             "extra": "mean: 2.0254781930012533 usec\nrounds: 47416"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3a8caa73b34617ab1afcf7e8dcd04b2ad629c2a9",
+          "message": "docs: document allow_auto_merge as a required repository setting (merges PR #454, addresses #427)\n\ndoc: document allow_auto_merge as a required repository setting\n\nThe setting is required by the dependabot auto-merge workflow's\n`Enable auto-merge (squash)` step but was only copied implicitly via\n`configure_repository_settings()` and absent from the Repository\nSettings table, so operators discovered it via a workflow failure\n(\"Pull request Auto merge is not allowed for this repository\") rather\nthan the docs. Bugs #419 and #423 both traced to this gap.\n\nAdd an explicit \"Allow auto-merge | Yes\" row to the settings table,\nturn the inline `allow_auto_merge` reference in dependabot-automerge.md\ninto a bidirectional link, and add a header comment to\n`.github/workflows/dependabot-automerge.yml` so readers of the YAML can\nfind the setting requirement.\n\nAddresses #427\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T17:47:07+01:00",
+          "tree_id": "0e005dcc9b71b6bff43a6459f85c46a03f831f74",
+          "url": "https://github.com/endavis/pyproject-template/commit/3a8caa73b34617ab1afcf7e8dcd04b2ad629c2a9"
+        },
+        "date": 1776790053423,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9075472.76435698,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1935341756584096e-8",
+            "extra": "mean: 110.18709724163361 nsec\nrounds: 88285"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8844583.930798218,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1385372435499374e-8",
+            "extra": "mean: 113.06354350008986 nsec\nrounds: 89310"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6349358.859343391,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4427901787757871e-8",
+            "extra": "mean: 157.49621688628474 nsec\nrounds: 62097"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1779456.4174981783,
+            "unit": "iter/sec",
+            "range": "stddev: 2.705714423782453e-7",
+            "extra": "mean: 561.9693689413012 nsec\nrounds: 56348"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505147.0828181149,
+            "unit": "iter/sec",
+            "range": "stddev: 5.073156767397916e-7",
+            "extra": "mean: 1.9796214489079087 usec\nrounds: 44916"
           }
         ]
       }
