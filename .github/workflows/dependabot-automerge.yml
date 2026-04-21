@@ -114,14 +114,25 @@ jobs:
     needs: evaluate
     if: needs.evaluate.outputs.qualifies == 'true'
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       PR_NUMBER: ${{ needs.evaluate.outputs.pr_number }}
     steps:
+      - name: Generate App token
+        id: app-token
+        if: ${{ vars.RELEASE_APP_ID != '' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Add ready-to-merge label
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
         run: gh pr edit "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --add-label ready-to-merge
 
       - name: Enable auto-merge (squash)
         id: automerge
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: gh pr merge --auto --squash "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"
 
       - name: Post sticky status comment
@@ -129,16 +140,25 @@ jobs:
         uses: actions/github-script@v9
         env:
           AUTOMERGE_OUTCOME: ${{ steps.automerge.outcome }}
+          APP_TOKEN_CONFIGURED: ${{ steps.app-token.outputs.token != '' }}
         with:
           script: |
             const prNumber = Number(process.env.PR_NUMBER);
             const marker = '<!-- dependabot-automerge:status -->';
             const succeeded = process.env.AUTOMERGE_OUTCOME === 'success';
-            const body = succeeded
-              ? marker +
-                '\n✅ **Auto-merge enabled.** This PR will merge automatically when required CI checks pass. To block, add label `automerge-blocked`.'
-              : marker +
+            const appTokenConfigured = process.env.APP_TOKEN_CONFIGURED === 'true';
+
+            let body;
+            if (succeeded) {
+              body = marker +
+                '\n✅ **Auto-merge enabled.** This PR will merge automatically when required CI checks pass. To block, add label `automerge-blocked`.';
+            } else if (!appTokenConfigured) {
+              body = marker +
+                '\n⚠️ **Auto-merge could not be enabled, and the App token is not configured.** The `ready-to-merge` label has been applied with `GITHUB_TOKEN`, which does not trigger downstream workflows — so the Merge Gate will **not** re-run automatically. To unstick this PR, either remove and re-add the `ready-to-merge` label manually (which will trigger the Merge Gate as your user), or configure the `RELEASE_APP_ID` variable and `RELEASE_APP_PRIVATE_KEY` secret so future runs can apply the label with an App token. See `docs/development/dependabot-automerge.md` for details.';
+            } else {
+              body = marker +
                 '\n⚠️ **Auto-merge could not be enabled**, but the `ready-to-merge` label has been applied so the Merge Gate is satisfied. A maintainer will need to merge this PR manually (or re-run the workflow once the underlying issue is resolved). See the workflow run logs for details. To opt this PR out of auto-merge entirely, add the `automerge-blocked` label.';
+            }
 
             const { data: comments } = await github.rest.issues.listComments({
               owner: context.repo.owner,

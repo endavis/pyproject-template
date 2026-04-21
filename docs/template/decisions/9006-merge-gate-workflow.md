@@ -19,6 +19,7 @@ PRs could be merged while CI was still running or without explicit human approva
 - Issue #149: Add merge-gate workflow to require ready-to-merge label
 - Issue #154: Fix merge-gate to wait for CI completion before allowing merge
 - Issue #168: Add Python 3.14 to CI testing matrix (changed ready-to-merge to pure gate)
+- Issue #428: Use GitHub App token for label application so Merge Gate re-runs on auto-applied labels
 
 ## Related Documentation
 
