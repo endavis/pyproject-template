@@ -1090,6 +1090,223 @@ def _run_label_cmd(cmd: list[str], console: Console) -> None:
         sys.exit(1)
 
 
+def _gh_repo_slug() -> str:
+    """Return the ``owner/repo`` slug (nameWithOwner) for the current repository.
+
+    Shells out to ``gh repo view --json nameWithOwner --jq .nameWithOwner`` so
+    the helper picks up whichever remote ``gh`` is authenticated against —
+    avoiding a hand-rolled parse of ``git remote get-url origin``.
+
+    Returns:
+        The ``owner/repo`` slug (for example ``endavis/pyproject-template``).
+
+    Raises:
+        subprocess.CalledProcessError: If ``gh repo view`` fails.
+    """
+    result = subprocess.run(
+        ["gh", "repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+def _gh_env_exists(repo_slug: str, name: str) -> bool:
+    """Return True when the environment already exists on GitHub.
+
+    Issues ``gh api repos/{repo_slug}/environments/{name} --silent`` with
+    ``check=False``; the API returns 200 for an existing environment and 404
+    otherwise. Only the exit code is inspected — the response body is
+    discarded — so this works for any environment configuration.
+
+    Args:
+        repo_slug: ``owner/repo`` slug.
+        name: Environment name.
+
+    Returns:
+        ``True`` if the environment exists, ``False`` otherwise.
+    """
+    result = subprocess.run(
+        ["gh", "api", f"repos/{repo_slug}/environments/{name}", "--silent"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def _gh_env_create(repo_slug: str, name: str) -> None:
+    """Create a GitHub environment with no protection rules.
+
+    Issues ``gh api -X PUT repos/{repo_slug}/environments/{name}``. The
+    GitHub API treats PUT on this endpoint as idempotent — a PUT to an
+    existing environment returns 200 without resetting protection rules —
+    but callers typically guard with :func:`_gh_env_exists` so the CLI can
+    print a distinct ``created`` vs ``already exists`` message.
+
+    Args:
+        repo_slug: ``owner/repo`` slug.
+        name: Environment name.
+
+    Raises:
+        subprocess.CalledProcessError: If the API call fails.
+    """
+    subprocess.run(
+        ["gh", "api", "-X", "PUT", f"repos/{repo_slug}/environments/{name}"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+
+
+def _gh_env_list(repo_slug: str) -> list[str]:
+    """Return the names of environments configured on the repository, sorted.
+
+    Uses ``gh api repos/{repo_slug}/environments --jq .environments[].name``
+    and returns the names in case-insensitive alphabetical order. An empty
+    response yields an empty list.
+
+    Args:
+        repo_slug: ``owner/repo`` slug.
+
+    Returns:
+        Sorted list of environment names (may be empty).
+
+    Raises:
+        subprocess.CalledProcessError: If the API call fails.
+    """
+    result = subprocess.run(
+        ["gh", "api", f"repos/{repo_slug}/environments", "--jq", ".environments[].name"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return sorted(line.strip() for line in result.stdout.splitlines() if line.strip())
+
+
+def task_env_create() -> dict[str, Any]:
+    """Create a GitHub environment by name (idempotent).
+
+    Creates a repository environment via the GitHub API with no protection
+    rules. If the environment already exists, prints a ``skipped`` message
+    and returns without mutating anything.
+
+    Examples:
+        doit env_create --name=pypi
+        doit env_create --name=testpypi
+    """
+
+    def create(name: str = "") -> None:
+        console = Console()
+        if not name:
+            console.print("[red]--name is required[/red]")
+            sys.exit(1)
+
+        repo_slug = _gh_repo_slug()
+        if _gh_env_exists(repo_slug, name):
+            console.print(
+                f"[dim]Environment '{name}' already exists in {repo_slug} — skipped[/dim]"
+            )
+            return
+
+        _gh_env_create(repo_slug, name)
+        console.print(f"[green]✓ Created environment '{name}' in {repo_slug}[/green]")
+
+    return {
+        "actions": [create],
+        "params": [
+            {
+                "name": "name",
+                "long": "name",
+                "default": "",
+                "help": "Environment name (for example 'pypi' or 'testpypi')",
+            },
+        ],
+        "title": title_with_actions,
+        "verbosity": 2,
+    }
+
+
+def task_env_list() -> dict[str, Any]:
+    """List GitHub environments for the current repository.
+
+    Prints a bulleted list of environment names (alphabetical). Prints a
+    friendly warning and returns cleanly when the repository has none.
+
+    Example:
+        doit env_list
+    """
+
+    def list_envs() -> None:
+        console = Console()
+        repo_slug = _gh_repo_slug()
+        names = _gh_env_list(repo_slug)
+        if not names:
+            console.print(f"[yellow]No environments in {repo_slug}[/yellow]")
+            return
+
+        console.print(f"[bold]Environments in {repo_slug}:[/bold]")
+        for name in names:
+            console.print(f"  • {name}")
+
+    return {
+        "actions": [list_envs],
+        "title": title_with_actions,
+        "verbosity": 2,
+    }
+
+
+def task_publish_setup() -> dict[str, Any]:
+    """Bootstrap GitHub environments for PyPI/TestPyPI trusted publishing.
+
+    Creates the ``testpypi`` and ``pypi`` environments (idempotent) and
+    prints follow-up instructions for registering the project as a trusted
+    publisher on TestPyPI and PyPI — a step that can only be done from the
+    user's own PyPI session and is therefore explicitly out of scope for
+    automation.
+
+    Example:
+        doit publish_setup
+    """
+
+    def setup() -> None:
+        console = Console()
+        repo_slug = _gh_repo_slug()
+        for env_name in ("testpypi", "pypi"):
+            if _gh_env_exists(repo_slug, env_name):
+                console.print(f"[dim]• {env_name}: already exists[/dim]")
+            else:
+                _gh_env_create(repo_slug, env_name)
+                console.print(f"[green]• {env_name}: created[/green]")
+
+        owner, _, repo = repo_slug.partition("/")
+        console.print()
+        console.print(
+            Panel.fit(
+                "[bold]Next steps (manual, outside this tool):[/bold]\n\n"
+                "  1. Register the TestPyPI trusted publisher:\n"
+                "     https://test.pypi.org/manage/account/publishing/\n"
+                "  2. Register the PyPI trusted publisher:\n"
+                "     https://pypi.org/manage/account/publishing/\n\n"
+                "  When filling the forms, use:\n"
+                "     PyPI project name: (your pypi-name from pyproject.toml)\n"
+                f"     Repository owner:  {owner}\n"
+                f"     Repository name:   {repo}\n"
+                "     Workflow filename: release.yml (for pypi) /\n"
+                "                        testpypi.yml (for testpypi)\n"
+                "     Environment name:  pypi / testpypi",
+                border_style="cyan",
+            )
+        )
+
+    return {
+        "actions": [setup],
+        "title": title_with_actions,
+        "verbosity": 2,
+    }
+
+
 def task_labels_sync() -> dict[str, Any]:
     """Sync GitHub labels with ``.github/labels.yml`` (idempotent).
 

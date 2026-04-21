@@ -17,6 +17,7 @@ This guide covers automated versioning, release management, governance validatio
 ## Table of Contents
 - [Automated Versioning](#automated-versioning)
 - [Release Management](#release-management)
+- [GitHub Environments & Trusted Publishing](#github-environments-trusted-publishing)
 - [Release Notes](#release-notes)
 - [PR Merging](#pr-merging)
 - [Security & Quality Tasks](#security-quality-tasks)
@@ -209,6 +210,90 @@ uv run doit release
 uv run doit release_tag
 # --> Tag v0.2.0 pushed; publish workflow runs TestPyPI → PyPI
 ```
+
+## GitHub Environments & Trusted Publishing
+
+The release and TestPyPI publish workflows (`.github/workflows/release.yml`
+and `.github/workflows/testpypi.yml`) authenticate to PyPI and TestPyPI via
+**OpenID Connect trusted publishing**. That flow requires two GitHub
+Environments to exist on the repository before the first publish can
+succeed:
+
+| Environment | Used by | Purpose |
+| --- | --- | --- |
+| `testpypi` | `release.yml` (pre-release step), `testpypi.yml` | OIDC identity for TestPyPI |
+| `pypi` | `release.yml` (production step) | OIDC identity for PyPI |
+
+The environments are created empty — no protection rules, reviewers, or
+tag patterns are applied. The release workflows already restrict
+publishing on the Git-tag level (only `v*` tags trigger them), so layered
+tag-pattern protection on the environment itself is a reasonable future
+enhancement but not a blocker for publishing.
+
+### One-step bootstrap: `doit publish_setup`
+
+New projects adopting this template should run `doit publish_setup` once
+after first push:
+
+```bash
+doit publish_setup
+```
+
+The task:
+
+1. Uses `gh` to determine the current repository's `owner/repo` slug.
+2. For each of `testpypi` and `pypi`: checks whether the environment
+   exists. Missing environments are created via `gh api -X PUT
+   repos/<owner>/<repo>/environments/<name>`.
+3. Prints follow-up instructions for registering the project as a
+   trusted publisher on TestPyPI and PyPI — a manual step that can only
+   be completed from the user's own PyPI session.
+
+Running the task twice is a no-op: existing environments are reported
+as `already exists` and skipped.
+
+### Managing individual environments
+
+The same helpers are available as standalone tasks:
+
+```bash
+# Create a single environment by name (idempotent)
+doit env_create --name=pypi
+doit env_create --name=testpypi
+
+# List all environments on the current repository
+doit env_list
+```
+
+See [Doit Tasks Reference](doit-tasks-reference.md#env_create) for the
+full option matrix.
+
+### Trusted-publisher registration (manual)
+
+Creating the GitHub Environment is only half the setup. The other half
+is registering this project as a trusted publisher on PyPI and TestPyPI,
+which must be done by the project owner through the PyPI web UI:
+
+- TestPyPI: <https://test.pypi.org/manage/account/publishing/>
+- PyPI: <https://pypi.org/manage/account/publishing/>
+
+For both forms, supply:
+
+- **PyPI project name** — the distribution name from `pyproject.toml`.
+- **Owner** — the GitHub user or organization that owns the repository.
+- **Repository name** — the repository name on GitHub.
+- **Workflow filename** — `release.yml` for PyPI, `testpypi.yml` for
+  TestPyPI.
+- **Environment name** — `pypi` for PyPI, `testpypi` for TestPyPI.
+
+Once both sides are registered, pushing a `v*` tag (via `doit release`
+followed by `doit release_tag`) triggers the publish workflow, which
+authenticates via OIDC and uploads the built distribution.
+
+**Further reading**
+
+- [PyPI docs: Trusted Publishing](https://docs.pypi.org/trusted-publishers/)
+- [GitHub docs: Configuring OpenID Connect in PyPI](https://docs.github.com/en/actions/security-for-github-actions/security-hardening-your-deployments/configuring-openid-connect-in-pypi)
 
 ## Release Notes
 

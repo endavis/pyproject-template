@@ -3,6 +3,7 @@
 import io
 import json
 import subprocess
+from collections.abc import Callable
 from pathlib import Path
 from unittest.mock import MagicMock
 
@@ -17,9 +18,16 @@ from tools.doit.github import (
     _extract_linked_issues,
     _fetch_github_labels,
     _format_merge_subject,
+    _gh_env_create,
+    _gh_env_exists,
+    _gh_env_list,
+    _gh_repo_slug,
     _load_labels_file,
     _reconcile_labels,
+    task_env_create,
+    task_env_list,
     task_labels_sync,
+    task_publish_setup,
 )
 
 
@@ -698,3 +706,300 @@ class TestPrTitlePattern:
     )
     def test_invalid_titles_reject(self, title: str) -> None:
         assert not _PR_TITLE_PATTERN.match(title), f"should not match: {title!r}"
+
+
+class TestGhRepoSlug:
+    """Tests for the ``_gh_repo_slug`` helper."""
+
+    def test_returns_name_with_owner(self, mock_subprocess: MagicMock) -> None:
+        """gh repo view output is stripped and returned verbatim."""
+        mock_subprocess.register({("gh", "repo", "view"): {"stdout": "acme/widgets\n"}})
+        assert _gh_repo_slug() == "acme/widgets"
+
+    def test_uses_json_and_jq(self, mock_subprocess: MagicMock) -> None:
+        """The command uses ``--json nameWithOwner`` and ``--jq .nameWithOwner``."""
+        mock_subprocess.register({("gh", "repo", "view"): {"stdout": "o/r\n"}})
+        _gh_repo_slug()
+
+        cmd = mock_subprocess.call_args.args[0]
+        assert cmd == [
+            "gh",
+            "repo",
+            "view",
+            "--json",
+            "nameWithOwner",
+            "--jq",
+            ".nameWithOwner",
+        ]
+
+
+class TestGhEnvExists:
+    """Tests for the ``_gh_env_exists`` helper."""
+
+    def test_returns_true_on_200(self, mock_subprocess: MagicMock) -> None:
+        """HTTP 200 (returncode 0) → True."""
+        mock_subprocess.register(
+            {("gh", "api", "repos/acme/widgets/environments/pypi"): {"returncode": 0}}
+        )
+        assert _gh_env_exists("acme/widgets", "pypi") is True
+
+    def test_returns_false_on_404(self, mock_subprocess: MagicMock) -> None:
+        """Non-zero exit (e.g., 404) → False."""
+        mock_subprocess.register(
+            {
+                ("gh", "api", "repos/acme/widgets/environments/pypi"): {
+                    "returncode": 1,
+                    "stderr": "HTTP 404: Not Found",
+                }
+            }
+        )
+        assert _gh_env_exists("acme/widgets", "pypi") is False
+
+    def test_uses_silent_flag(self, mock_subprocess: MagicMock) -> None:
+        """The GET includes ``--silent`` so the response body is discarded."""
+        mock_subprocess.register(
+            {("gh", "api", "repos/acme/widgets/environments/pypi"): {"returncode": 0}}
+        )
+        _gh_env_exists("acme/widgets", "pypi")
+
+        cmd = mock_subprocess.call_args.args[0]
+        assert cmd == ["gh", "api", "repos/acme/widgets/environments/pypi", "--silent"]
+        # The helper must not raise on a non-zero exit code.
+        assert mock_subprocess.call_args.kwargs["check"] is False
+
+
+class TestGhEnvCreate:
+    """Tests for the ``_gh_env_create`` helper."""
+
+    def test_sends_put(self, mock_subprocess: MagicMock) -> None:
+        """The call is a ``PUT`` to the environments endpoint."""
+        mock_subprocess.register({("gh", "api", "-X", "PUT"): {}})
+        _gh_env_create("acme/widgets", "pypi")
+
+        cmd = mock_subprocess.call_args.args[0]
+        assert cmd == ["gh", "api", "-X", "PUT", "repos/acme/widgets/environments/pypi"]
+        assert mock_subprocess.call_args.kwargs["check"] is True
+
+    def test_propagates_failure(self, mock_subprocess: MagicMock) -> None:
+        """A failed API call propagates as CalledProcessError."""
+        mock_subprocess.register(
+            {
+                ("gh", "api", "-X", "PUT"): subprocess.CalledProcessError(
+                    returncode=1, cmd=["gh"], stderr="boom"
+                )
+            }
+        )
+        with pytest.raises(subprocess.CalledProcessError):
+            _gh_env_create("acme/widgets", "pypi")
+
+
+class TestGhEnvList:
+    """Tests for the ``_gh_env_list`` helper."""
+
+    def test_parses_and_sorts(self, mock_subprocess: MagicMock) -> None:
+        """Newline-separated names are parsed and sorted alphabetically."""
+        mock_subprocess.register(
+            {("gh", "api", "repos/acme/widgets/environments"): {"stdout": "testpypi\npypi\n"}}
+        )
+        result = _gh_env_list("acme/widgets")
+        assert result == ["pypi", "testpypi"]
+
+    def test_handles_empty(self, mock_subprocess: MagicMock) -> None:
+        """Empty output yields an empty list."""
+        mock_subprocess.register({("gh", "api", "repos/acme/widgets/environments"): {"stdout": ""}})
+        assert _gh_env_list("acme/widgets") == []
+
+    def test_ignores_blank_lines(self, mock_subprocess: MagicMock) -> None:
+        """Blank lines and extra whitespace are ignored."""
+        mock_subprocess.register(
+            {
+                ("gh", "api", "repos/acme/widgets/environments"): {
+                    "stdout": "  pypi\n\n  testpypi  \n"
+                }
+            }
+        )
+        assert _gh_env_list("acme/widgets") == ["pypi", "testpypi"]
+
+
+class TestTaskEnvCreate:
+    """Tests for the ``env_create`` doit task."""
+
+    @staticmethod
+    def _action() -> "Callable[..., None]":
+        action = task_env_create()["actions"][0]
+        return action  # type: ignore[no-any-return]
+
+    def test_empty_name_exits(self, mock_subprocess: MagicMock) -> None:
+        """Empty ``--name`` aborts with exit 1 and no API calls."""
+        with pytest.raises(SystemExit) as excinfo:
+            self._action()(name="")
+
+        assert excinfo.value.code == 1
+        mock_subprocess.assert_not_called()
+
+    def test_shortcircuits_on_existing(self, mock_subprocess: MagicMock) -> None:
+        """Existing environment → no PUT is issued."""
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments/pypi"): {"returncode": 0},
+            }
+        )
+
+        self._action()(name="pypi")
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert put_calls == []
+
+    def test_creates_when_missing(self, mock_subprocess: MagicMock) -> None:
+        """Missing environment → exactly one PUT is issued to the right path."""
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments/pypi"): {
+                    "returncode": 1,
+                    "stderr": "HTTP 404",
+                },
+                ("gh", "api", "-X", "PUT"): {},
+            }
+        )
+
+        self._action()(name="pypi")
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert len(put_calls) == 1
+        assert put_calls[0].args[0] == [
+            "gh",
+            "api",
+            "-X",
+            "PUT",
+            "repos/acme/widgets/environments/pypi",
+        ]
+
+
+class TestTaskEnvList:
+    """Tests for the ``env_list`` doit task."""
+
+    @staticmethod
+    def _action() -> "Callable[..., None]":
+        action = task_env_list()["actions"][0]
+        return action  # type: ignore[no-any-return]
+
+    def test_lists_environments(self, mock_subprocess: MagicMock) -> None:
+        """A populated repo prints a bulleted list and issues no writes."""
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments"): {"stdout": "pypi\ntestpypi\n"},
+            }
+        )
+
+        self._action()()
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert put_calls == []
+        assert mock_subprocess.call_count == 2
+
+    def test_handles_empty_repo(self, mock_subprocess: MagicMock) -> None:
+        """No environments → helper returns cleanly (no SystemExit, no writes)."""
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments"): {"stdout": ""},
+            }
+        )
+
+        # Must not raise.
+        self._action()()
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert put_calls == []
+
+
+class TestTaskPublishSetup:
+    """Tests for the ``publish_setup`` doit task."""
+
+    @staticmethod
+    def _action() -> "Callable[..., None]":
+        action = task_publish_setup()["actions"][0]
+        return action  # type: ignore[no-any-return]
+
+    def test_creates_both_when_missing(self, mock_subprocess: MagicMock) -> None:
+        """Both ``testpypi`` and ``pypi`` are PUT when neither exists."""
+
+        def api_spec(cmd: list[str]) -> MagicMock:
+            # PUT requests succeed with 200.
+            if cmd[:4] == ["gh", "api", "-X", "PUT"]:
+                return MagicMock(returncode=0, stdout="", stderr="")
+            # GET environment-exists checks always 404 for this test.
+            return MagicMock(returncode=1, stdout="", stderr="HTTP 404")
+
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api"): api_spec,
+            }
+        )
+
+        self._action()()
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert len(put_calls) == 2
+        put_paths = [c.args[0][4] for c in put_calls]
+        assert put_paths == [
+            "repos/acme/widgets/environments/testpypi",
+            "repos/acme/widgets/environments/pypi",
+        ]
+
+    def test_idempotent_when_both_exist(self, mock_subprocess: MagicMock) -> None:
+        """When both environments exist, no PUT is issued."""
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments/testpypi"): {"returncode": 0},
+                ("gh", "api", "repos/acme/widgets/environments/pypi"): {"returncode": 0},
+            }
+        )
+
+        self._action()()
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert put_calls == []
+
+    def test_creates_only_missing(self, mock_subprocess: MagicMock) -> None:
+        """Only the missing environment is PUT; existing one is skipped."""
+
+        def api_spec(cmd: list[str]) -> MagicMock:
+            if cmd[:4] == ["gh", "api", "-X", "PUT"]:
+                return MagicMock(returncode=0, stdout="", stderr="")
+            # testpypi exists, pypi does not.
+            if cmd[2] == "repos/acme/widgets/environments/testpypi":
+                return MagicMock(returncode=0, stdout="", stderr="")
+            return MagicMock(returncode=1, stdout="", stderr="HTTP 404")
+
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api"): api_spec,
+            }
+        )
+
+        self._action()()
+
+        put_calls = [
+            c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
+        ]
+        assert len(put_calls) == 1
+        assert put_calls[0].args[0][4] == "repos/acme/widgets/environments/pypi"
