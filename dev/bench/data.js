@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776774418070,
+  "lastUpdate": 1776774942174,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5015,6 +5015,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.244431709792189e-7",
             "extra": "mean: 2.0246624718096067 usec\nrounds: 49584"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4934019344dc1fc28f7fbf221ed6705c9647d77b",
+          "message": "fix: refuse doit release --prerelease on tagless repos (merges PR #450, addresses #448)\n\ncz bump --get-next --yes --prerelease alpha on a tagless repo silently\nreturns the first-version default (0.1.0) and drops --prerelease entirely\nbecause it has no anchor to bump from. The task then happily creates\nrelease/v0.1.0 and opens a production release PR when an alpha was\nrequested — if the user doesn't notice, running release_tag would push\nstraight to PyPI instead of TestPyPI.\n\nAdd a pre-flight guard in task_release: if --prerelease is set and the\nrepo has no v* tags, exit 1 with a red error banner plus two-option\nguidance (seed a baseline tag and retry, or drop --prerelease for a\nproduction first release). New helper _repo_has_version_tags() shells\nout to git tag --list v* and powers the check.\n\nFour new tests in TestRepoHasVersionTags cover empty output,\nwhitespace-only output, single tag, and multiple tags using the\nsubprocess monkeypatch pattern from #437.\n\nAddresses #448.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T13:35:12+01:00",
+          "tree_id": "425c57d7e6ba411de2120b776e0fd67d2d70c2fd",
+          "url": "https://github.com/endavis/pyproject-template/commit/4934019344dc1fc28f7fbf221ed6705c9647d77b"
+        },
+        "date": 1776774941277,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8682927.088663163,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5905944834902313e-8",
+            "extra": "mean: 115.16853588528309 nsec\nrounds: 87459"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8945130.447594747,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3407270487440015e-8",
+            "extra": "mean: 111.7926681850559 nsec\nrounds: 89574"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5725190.520709826,
+            "unit": "iter/sec",
+            "range": "stddev: 9.703123758972309e-9",
+            "extra": "mean: 174.6666763983982 nsec\nrounds: 56174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1574408.3153830986,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4026412215422724e-7",
+            "extra": "mean: 635.1592469560042 nsec\nrounds: 62626"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 526865.0531751502,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9016578602814746e-7",
+            "extra": "mean: 1.8980192251763595 usec\nrounds: 48114"
           }
         ]
       }
