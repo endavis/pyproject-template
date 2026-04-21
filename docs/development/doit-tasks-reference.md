@@ -38,7 +38,7 @@ doit <task_name>
 | [Security](#security-tasks) | `security`, `audit`, `licenses`, `sbom` | Security scanning and SBOM |
 | [Documentation](#documentation-tasks) | `docs_serve`, `docs_build`, `docs_deploy`, `docs_toc` | Documentation management |
 | [Dependencies](#dependency-tasks) | `install`, `install_dev`, `update_deps` | Package management |
-| [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync` | Issue and PR management |
+| [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync`, `env_create`, `env_list`, `publish_setup` | Issue, PR, and environment management |
 | [Release](#release-tasks) | `release`, `release_tag`, `publish` | Version and release management |
 | [Version](#version-tasks) | `bump`, `changelog` | Version bumping and changelog |
 | [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv` | Development environment |
@@ -733,6 +733,70 @@ doit labels_sync --file=.github/labels.custom.yml
 - `--file=<path>`: Path to the labels file (default `.github/labels.yml`).
 
 See [GitHub Repository Settings → Labels](github-repository-settings.md#labels) for the canonical label list and the file schema.
+
+---
+
+### `env_create`
+
+Create a GitHub environment by name (idempotent).
+
+```bash
+doit env_create --name=pypi
+doit env_create --name=testpypi
+```
+
+**What it does:**
+- Determines the current repository's `owner/repo` slug via `gh repo view`.
+- Checks whether the environment already exists; if so, prints a `skipped` message and returns.
+- Otherwise, creates the environment with no protection rules via `gh api -X PUT repos/<owner>/<repo>/environments/<name>`.
+
+**Options:**
+- `--name`: Environment name (required; the task aborts with a red error and exit 1 if empty).
+
+**Requirements:**
+- `gh` installed and authenticated with repo-admin permissions on the target repository.
+
+See [GitHub Environments & Trusted Publishing](release-and-automation.md#github-environments-trusted-publishing) for the common use case (bootstrapping `testpypi` and `pypi` for OIDC publishing).
+
+---
+
+### `env_list`
+
+List GitHub environments for the current repository.
+
+```bash
+doit env_list
+```
+
+**What it does:**
+- Resolves the current `owner/repo` slug via `gh repo view`.
+- Fetches environment names via `gh api repos/<owner>/<repo>/environments --jq .environments[].name`.
+- Prints a bulleted list (alphabetical), or `No environments in <owner>/<repo>` when empty.
+
+**Requirements:**
+- `gh` installed and authenticated.
+
+See [GitHub Environments & Trusted Publishing](release-and-automation.md#github-environments-trusted-publishing) for context on which environments should exist for a release-ready repository.
+
+---
+
+### `publish_setup`
+
+Bootstrap GitHub environments for PyPI/TestPyPI trusted publishing.
+
+```bash
+doit publish_setup
+```
+
+**What it does:**
+1. Resolves the `owner/repo` slug.
+2. Creates (idempotently) the `testpypi` and `pypi` environments used by the release workflows for OIDC authentication.
+3. Prints follow-up instructions for registering the project as a trusted publisher on TestPyPI (`https://test.pypi.org/manage/account/publishing/`) and PyPI (`https://pypi.org/manage/account/publishing/`). That registration must be completed manually through the PyPI web UI.
+
+**Requirements:**
+- `gh` installed and authenticated with repo-admin permissions.
+
+See [GitHub Environments & Trusted Publishing](release-and-automation.md#github-environments-trusted-publishing) for the rationale and the list of form fields to fill in during PyPI registration.
 
 ---
 
