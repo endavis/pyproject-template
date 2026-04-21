@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776743524351,
+  "lastUpdate": 1776743944783,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4602,6 +4602,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.95333572533975e-7",
             "extra": "mean: 2.038052923895528 usec\nrounds: 52925"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1778be083cb493b2cf3e7d7c1b774c65f2f7e563",
+          "message": "fix: enable PR-based pre-releases via regex widen and --prerelease flag (merges PR #436, addresses #426)\n\n* fix: enable PR-based pre-releases via regex widen and --prerelease flag\n\nTwo phases of #426 ported as one PR. Phase C (consolidation + ADR)\ndeferred for a dedicated upstream rewrite.\n\nPhase A — task_release_tag's inline version regex only matched production\nversions, silently failing on pre-release tags (v0.1.0a0 PEP440 or\nv0.1.0-alpha.0 semver). Widen to a module-level _VERSION_PATTERN covering\nboth shapes; extract _extract_version_from_release_pr(pr_title,\nbranch_name) as a named helper.\n\nPhase B — task_release_pr had no way to request a pre-release. Add a\n--prerelease=alpha|beta|rc parameter validated at task entry (mutual-\nexclusion with --increment, allowed-values check). Extract pure helper\n_build_cz_get_next_cmd(increment, prerelease) so the flag flow through\nto cz bump --get-next is testable.\n\nAdds 18 parametrized regression tests across TestExtractVersionFromReleasePR\n(11) and TestBuildCzGetNextCmd (7).\n\nAddresses #426 (Phases A and B).\n\nCross-repo port from endavis/pynetappfoundry#634 (Phase A) and\nendavis/pynetappfoundry#637 (Phase B). Phase C (downstream #638) deferred.\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n* refactor: consolidate release tasks around the PR-based flow\n\nPhase C of the #426 fix. Phase A widened the release_tag version regex,\nPhase B added --prerelease to task_release_pr (both folded into the\nprior commit on this branch). This phase consolidates the release task\nsurface from three to one:\n\n- Delete task_release_dev (direct-to-main, blocked by no-commit-to-main).\n- Delete the old task_release (also direct-to-main).\n- Rename task_release_pr -> task_release. The PR-based flow is now the\n  single supported entry point.\n\nUpdates the prose-heavy docs (CONTRIBUTING, AGENTS, release-and-automation,\ndoit-tasks-reference, template/migration) and the configure.py template\nhint to match. Drops the now-stale release_dev / release_pr entries from\nthe AI command-blocking hook and its tests.\n\nRecords the architectural decision in ADR-0001 (PR-based release is the\nonly supported flow). Note: downstream pynetappfoundry numbered this\nADR-0016 in their own ADR sequence; renumbered to 0001 here as upstream\nhas no prior ADRs.\n\nAddresses #426 (Phase C; Phases A and B are in the prior commit).\n\nCross-repo port from endavis/pynetappfoundry#638. Phases A and B in\nthis same branch from endavis/pynetappfoundry#634 and #637.\n\nBREAKING CHANGE: doit release no longer commits directly to main; it\nopens a release PR that a reviewer merges, after which doit release_tag\ntags main. doit release_dev and doit release_pr are removed.\nMigration:\n  - doit release (old direct-to-main) -> doit release + merge PR +\n    doit release_tag\n  - doit release_dev --type=alpha      -> doit release --prerelease=alpha\n  - doit release_pr                    -> doit release\n  - doit release_tag                   -> doit release_tag (unchanged)\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T04:58:36+01:00",
+          "tree_id": "171e2581f288eee03bbbd633784eb0e48d7956bd",
+          "url": "https://github.com/endavis/pyproject-template/commit/1778be083cb493b2cf3e7d7c1b774c65f2f7e563"
+        },
+        "date": 1776743943991,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8815004.370061753,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5816645392603842e-8",
+            "extra": "mean: 113.44293865540018 nsec\nrounds: 87033"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9015453.232700862,
+            "unit": "iter/sec",
+            "range": "stddev: 8.278895643703203e-9",
+            "extra": "mean: 110.92065747430189 nsec\nrounds: 88551"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 4961403.068271944,
+            "unit": "iter/sec",
+            "range": "stddev: 6.495226661240218e-8",
+            "extra": "mean: 201.55588776791316 nsec\nrounds: 54316"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1524610.6522481872,
+            "unit": "iter/sec",
+            "range": "stddev: 3.288529180075144e-7",
+            "extra": "mean: 655.9051640662502 nsec\nrounds: 65007"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 516599.3286777358,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5816479844215253e-7",
+            "extra": "mean: 1.9357361585419681 usec\nrounds: 55901"
           }
         ]
       }
