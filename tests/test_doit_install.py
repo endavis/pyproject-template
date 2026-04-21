@@ -36,21 +36,19 @@ class TestTaskInstallDev:
         result = task_install_dev()
         assert "uv sync --all-extras --dev" in result["actions"]
 
-    def test_actions_contain_assume_unchanged(self) -> None:
-        """Test that actions include git update-index --assume-unchanged for _version.py."""
-        result = task_install_dev()
-        expected = "git update-index --assume-unchanged src/package_name/_version.py"
-        assert expected in result["actions"]
+    def test_no_assume_unchanged_action(self) -> None:
+        """Test that the assume-unchanged workaround for _version.py is not present.
 
-    def test_uv_sync_runs_before_assume_unchanged(self) -> None:
-        """Test that uv sync runs before git update-index."""
+        Regression for the bug fixed in this PR: ``_version.py`` is gitignored
+        and untracked upstream, so ``git update-index --assume-unchanged`` would
+        fail (cannot mark an untracked file). The previous workaround dated to
+        when the file was incorrectly tracked.
+        """
         result = task_install_dev()
-        actions = result["actions"]
-        sync_idx = actions.index("uv sync --all-extras --dev")
-        assume_idx = actions.index(
-            "git update-index --assume-unchanged src/package_name/_version.py"
-        )
-        assert sync_idx < assume_idx
+        for action in result["actions"]:
+            assert "assume-unchanged" not in str(action), (
+                f"obsolete assume-unchanged action present: {action!r}"
+            )
 
 
 class TestTaskInstallGh:
