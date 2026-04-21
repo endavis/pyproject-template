@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776746380728,
+  "lastUpdate": 1776746610298,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4897,6 +4897,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.378189702529362e-7",
             "extra": "mean: 2.0361406592276987 usec\nrounds: 54337"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "446866f4f628a39672861ed3662f4e6d2842dc76",
+          "message": "fix: drop obsolete assume-unchanged step from install_dev (merges PR #446, addresses #445)\n\ntask_install_dev ran git update-index --assume-unchanged on\nsrc/package_name/_version.py after uv sync. That command requires the\nfile to be tracked, but _version.py is correctly gitignored and\nuntracked in this template (its own header says \"don't track in\nversion control\"). doit install_dev fails on a fresh clone with:\n\n    fatal: Unable to mark file src/package_name/_version.py\n\nThe assume-unchanged step dates to when _version.py was incorrectly\ntracked. Now that it isn't, the workaround is obsolete and breaks the\ninstall task.\n\nRemove the action from task_install_dev. Drop the matching docstring\nsentence. Sync doit-tasks-reference.md's install_dev entry to remove\nthe assume-unchanged description and add a note explaining _version.py\nis a build-time artifact that's gitignored and untracked.\n\nReplace the two existing tests\n(test_actions_contain_assume_unchanged, test_uv_sync_runs_before_assume_unchanged)\nwith a single regression test asserting assume-unchanged does NOT\nappear in the action list.\n\nAddresses #445.\n\nCross-repo context: downstream endavis/pynetappfoundry had the inverse\nbug — _version.py was incorrectly tracked, the workaround silenced its\ndirty-tree symptom, and TestPyPI eventually rejected the resulting\nlocal-version suffix. Downstream PR #662 untracked the file and\nremoved the install_dev workaround in one commit. Upstream already has\nthe file untracked, so only the install_dev cleanup applies here.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T05:43:07+01:00",
+          "tree_id": "292c64b89a34e3b945ddcf36ef4fd1879cc09c42",
+          "url": "https://github.com/endavis/pyproject-template/commit/446866f4f628a39672861ed3662f4e6d2842dc76"
+        },
+        "date": 1776746609966,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9044830.16403809,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1147328270965212e-8",
+            "extra": "mean: 110.56039548160486 nsec\nrounds: 85339"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8775985.448193187,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1401400352016784e-8",
+            "extra": "mean: 113.9473174725787 nsec\nrounds: 84905"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6476256.154160645,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5371286809218592e-8",
+            "extra": "mean: 154.41019876237507 nsec\nrounds: 63040"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1776134.263822376,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1812781953261713e-7",
+            "extra": "mean: 563.020499276853 nsec\nrounds: 57124"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 504933.1704986517,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3799604030312266e-7",
+            "extra": "mean: 1.9804601052698523 usec\nrounds: 47124"
           }
         ]
       }
