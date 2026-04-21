@@ -9,6 +9,7 @@ Optional: skip final confirmation with --yes.
 
 import argparse
 import shutil
+import subprocess  # nosec B404
 import sys
 from pathlib import Path
 
@@ -157,6 +158,78 @@ def require(value: str, label: str) -> str:
     raise SystemExit(
         f"❌ Missing required value for {label} (supply in pyproject.toml or via prompt)."
     )
+
+
+def _git_has_version_tag() -> bool:
+    """Return ``True`` if the current repo has at least one ``v*`` tag."""
+    result = subprocess.run(  # nosec B603 B607
+        ["git", "tag", "--list", "v*"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return bool(result.stdout.strip())
+
+
+def _git_root_commit() -> str | None:
+    """Return the root commit SHA of the current repo, or ``None`` if unavailable.
+
+    Returns ``None`` if not inside a git repo, the repo has no commits, or the
+    ``git rev-list`` call fails for any other reason.
+    """
+    result = subprocess.run(  # nosec B603 B607
+        ["git", "rev-list", "--max-parents=0", "HEAD"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        return None
+    lines = [line.strip() for line in result.stdout.splitlines() if line.strip()]
+    return lines[0] if lines else None
+
+
+def seed_baseline_tag() -> None:
+    """Seed a ``v0.0.0`` tag on the root commit if no ``v*`` tag exists.
+
+    Gives commitizen an anchor to compute pre-release versions against. Without
+    it, ``doit release --prerelease=alpha`` refuses on a tagless repo (guard
+    from issue #448). Idempotent: skips if any ``v*`` tag already exists. Skips
+    silently (with a visible message) if not inside a git repo or if there are
+    no commits yet, so the user can run ``git init && git commit`` first and
+    seed manually with ``git tag v0.0.0 <root-commit>``.
+    """
+    if not Path(".git").exists():
+        Logger.info(
+            "Skipping v0.0.0 baseline tag: not a git repo yet (run `git init` "
+            "and commit first, then seed manually: "
+            "`git tag v0.0.0 <root-commit>`)"
+        )
+        return
+
+    if _git_has_version_tag():
+        Logger.info("Skipping v0.0.0 baseline tag: a v* tag already exists")
+        return
+
+    root = _git_root_commit()
+    if root is None:
+        Logger.info(
+            "Skipping v0.0.0 baseline tag: no commits yet "
+            "(seed manually after your first commit: `git tag v0.0.0 <root-commit>`)"
+        )
+        return
+
+    result = subprocess.run(  # nosec B603 B607
+        ["git", "tag", "v0.0.0", root],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        print(f"  ✓ Seeded baseline tag v0.0.0 on root commit {root[:7]}")
+        Logger.info("   → push with `git push origin v0.0.0` when ready")
+    else:
+        Logger.warning(f"Could not create v0.0.0 tag: {result.stderr.strip() or 'unknown error'}")
 
 
 def run_configure(
@@ -367,6 +440,11 @@ def run_configure(
     if enable_dependabot and dependabot_example.exists():
         print("  ✓ Enabling Dependabot")
         shutil.copy(dependabot_example, dependabot_config)
+
+    # Seed v0.0.0 baseline tag so `doit release --prerelease=alpha` works on the
+    # first release (see issue #447). Idempotent and skipped gracefully when
+    # there is no git repo or no commits yet.
+    seed_baseline_tag()
 
     Logger.success("Configuration complete!")
     Logger.header("Next Steps")
