@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776774942174,
+  "lastUpdate": 1776776293589,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5074,6 +5074,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.9016578602814746e-7",
             "extra": "mean: 1.8980192251763595 usec\nrounds: 48114"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3ded4082f90788b12930fca329d647c2bad845b3",
+          "message": "feat: auto-seed v0.0.0 baseline tag in template bootstrap (merges PR #451, addresses #447)\n\ndoit release --prerelease=alpha|beta|rc requires a v* anchor tag so\ncommitizen can compute the pre-release version. After #448 landed, the\ntask refuses on a tagless repo instead of silently producing a\nproduction version — closing the footgun but leaving a one-time\npapercut for anyone bootstrapping a new project that wants to cut a\npre-release before their first production release.\n\nShip the papercut fix in two layers:\n\n1. tools/pyproject_template/configure.py now auto-seeds v0.0.0 on the\n   root commit. Helpers _git_has_version_tag and _git_root_commit check\n   preconditions; seed_baseline_tag is idempotent (skips if any v* tag\n   exists) and degrades gracefully (with a visible Logger message) when\n   outside a git repo or with no commits yet — the user can then seed\n   manually with `git tag v0.0.0 <root-commit>` after the first commit.\n\n2. docs/development/release-and-automation.md gets a new \"Before your\n   first pre-release\" subsection with the manual seeding commands for\n   existing projects that predate the auto-seed. The release task entry\n   in doit-tasks-reference.md cross-links there under Requirements.\n\nThree tests in TestSeedBaselineTag cover the two AC cases (no tags, tag\nexists) plus a safe-no-op fall-through for the not-a-git-repo case.\nUses real tmp_path git repos with env-seeded author/committer so no\nuser git config is assumed.\n\nAddresses #447.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T13:57:46+01:00",
+          "tree_id": "e518477f4b270c42c68b95600dc1bf48ab98e15e",
+          "url": "https://github.com/endavis/pyproject-template/commit/3ded4082f90788b12930fca329d647c2bad845b3"
+        },
+        "date": 1776776293063,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8677717.344655903,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2266883872817205e-8",
+            "extra": "mean: 115.23767832975582 nsec\nrounds: 82768"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8518083.069478335,
+            "unit": "iter/sec",
+            "range": "stddev: 1.633459570914269e-8",
+            "extra": "mean: 117.39730545516295 nsec\nrounds: 82693"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 4840672.706715344,
+            "unit": "iter/sec",
+            "range": "stddev: 6.736563436043743e-8",
+            "extra": "mean: 206.58285750505812 nsec\nrounds: 191205"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1656058.7148774636,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8033982243068255e-7",
+            "extra": "mean: 603.8433245248751 nsec\nrounds: 54131"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 477604.36346452456,
+            "unit": "iter/sec",
+            "range": "stddev: 7.694173400848157e-7",
+            "extra": "mean: 2.093783215768877 usec\nrounds: 48057"
           }
         ]
       }
