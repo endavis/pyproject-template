@@ -487,6 +487,9 @@ Create a dedicated GitHub App that can bypass branch protection:
 4. Set **Repository Permissions:**
    - **Contents:** Read and write (to push commits/tags)
    - **Metadata:** Read-only (required)
+   - **Pull requests:** Write (required for the dependabot auto-merge
+     workflow to apply the `ready-to-merge` label via the App — see
+     [Dependabot Auto-merge → Required GitHub App configuration](../docs/development/dependabot-automerge.md#required-github-app-configuration))
 5. Click **Create GitHub App**
 6. Note the **App ID** displayed on the app page
 7. Scroll down → **Generate a private key** → saves a `.pem` file
@@ -517,7 +520,7 @@ In your repo **Settings** → **Secrets and variables** → **Actions**:
 ```yaml
 - name: Generate release token
   id: app-token
-  uses: actions/create-github-app-token@v1
+  uses: actions/create-github-app-token@v3
   with:
     app-id: ${{ vars.RELEASE_APP_ID }}
     private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}

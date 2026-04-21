@@ -184,17 +184,34 @@ printed by `doit publish_setup` and the
 
 ## Secrets and Variables
 
-| Secret/Variable | Required | Purpose |
-| :--- | :--- | :--- |
-| `GITHUB_TOKEN` | Automatic | Provided by GitHub Actions; used by most workflows |
-| `CODECOV_TOKEN` | Optional | Upload coverage reports to Codecov |
-| `RELEASE_APP_ID` | Optional | GitHub App ID for release automation |
-| `RELEASE_APP_PRIVATE_KEY` | Optional | GitHub App private key for release automation |
+| Secret/Variable | Kind | Required | Purpose |
+| :--- | :--- | :--- | :--- |
+| `GITHUB_TOKEN` | Secret | Automatic | Provided by GitHub Actions; used by most workflows |
+| `CODECOV_TOKEN` | Secret | Optional | Upload coverage reports to Codecov |
+| `RELEASE_APP_ID` | **Variable** | Recommended | GitHub App ID used by release automation and the dependabot auto-merge workflow |
+| `RELEASE_APP_PRIVATE_KEY` | Secret | Recommended | GitHub App private key matching `RELEASE_APP_ID` |
 
 PyPI publishing uses OIDC (trusted publishers), so no `PYPI_TOKEN` secret is
 needed.
 
-**Automated:** No. Secrets must be added manually in repository settings.
+!!! note "App credentials are strongly recommended"
+    `RELEASE_APP_ID` and `RELEASE_APP_PRIVATE_KEY` are technically optional,
+    but the dependabot auto-merge workflow degrades gracefully without them:
+    the `ready-to-merge` label is still applied (via `GITHUB_TOKEN`), but the
+    Merge Gate will **not** re-run automatically on the `labeled` event — a
+    consequence of GitHub's workflow-triggering
+    [loop-prevention rule](https://docs.github.com/en/actions/using-workflows/triggering-a-workflow#triggering-a-workflow-from-a-workflow).
+    Configure the App for fully automated dependabot merges. See
+    [Dependabot Auto-merge → Required GitHub App configuration](dependabot-automerge.md#required-github-app-configuration).
+
+!!! warning "`RELEASE_APP_ID` is a Variable, not a Secret"
+    `RELEASE_APP_ID` is stored as a **repository Variable**
+    (`vars.RELEASE_APP_ID`), not a Secret. Workflows reference it as
+    `${{ vars.RELEASE_APP_ID }}`. Storing it as a Secret would silently
+    produce an empty string at runtime.
+
+**Automated:** No. Secrets and variables must be added manually in
+repository settings.
 
 ## Security Settings
 
