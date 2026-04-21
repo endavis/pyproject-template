@@ -209,6 +209,24 @@ def _build_cz_get_next_cmd(increment: str, prerelease: str) -> list[str]:
     return cmd
 
 
+def _repo_has_version_tags() -> bool:
+    """Return ``True`` if the repo has at least one ``v*`` tag.
+
+    Used by ``task_release`` to refuse the ``--prerelease`` combination on
+    a fresh repo: without an anchor tag, ``cz bump --get-next --yes
+    --prerelease alpha`` silently returns the production first-version
+    (``0.1.0``) and drops the ``--prerelease`` flag, producing a
+    production PR when a pre-release was requested (issue #448).
+    """
+    result = subprocess.run(  # nosec B603 B607
+        ["git", "tag", "--list", "v*"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return bool(result.stdout.strip())
+
+
 def _extract_next_version_from_cz_output(stdout: str) -> str | None:
     """Extract the next version from ``cz bump --get-next`` stdout.
 
@@ -287,6 +305,26 @@ def task_release() -> dict[str, Any]:
             console.print(
                 "[bold red]❌ Error: --prerelease and --increment "
                 "are mutually exclusive.[/bold red]"
+            )
+            sys.exit(1)
+
+        # prerelease on a tagless repo silently produces a production version
+        # because cz has no anchor to bump from. Refuse loudly instead.
+        if prerelease and not _repo_has_version_tags():
+            console.print(
+                "[bold red]❌ Error: --prerelease requested but this repo has "
+                "no version tags yet.[/bold red]"
+            )
+            console.print(
+                "[yellow]cz bump cannot compute a pre-release without an anchor "
+                "tag. Pick one of:[/yellow]\n"
+                "  [cyan]1.[/cyan] Seed a baseline tag and retry:\n"
+                "     [dim]git tag v0.0.0 <commit>[/dim]\n"
+                "     [dim]git push origin v0.0.0[/dim]\n"
+                "     [dim]doit release --prerelease=" + prerelease + "[/dim]\n"
+                "  [cyan]2.[/cyan] Drop --prerelease to cut a production first "
+                "release (v0.1.0):\n"
+                "     [dim]doit release[/dim]"
             )
             sys.exit(1)
 
