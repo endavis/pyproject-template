@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776746610298,
+  "lastUpdate": 1776774418070,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4956,6 +4956,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.3799604030312266e-7",
             "extra": "mean: 1.9804601052698523 usec\nrounds: 47124"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "302da19556f12b9b1c79497c1b93f427accecb36",
+          "message": "refactor: enforce explicit UTF-8 encoding for all text-mode file I/O (merges PR #449, addresses #430)\n\n* refactor: add encoding=\"utf-8\" to production text-mode file I/O\n\nText-mode file I/O in tools/, examples/, and bootstrap.py relied on\nlocale.getpreferredencoding() for decoding. On Windows this is cp1252,\nwhich raises UnicodeDecodeError on any non-cp1252 character (emoji,\ncurly quotes, em dashes) the moment such content lands in a file these\ncallers read or write.\n\nAdd encoding=\"utf-8\" to every text-mode read_text(), write_text(), and\nopen() call in production code. Binary-mode calls (.open(\"rb\"),\ntarfile.open(), urlopen()) are intentionally untouched.\n\nsrc/ was already clean. This is the first of a three-part sweep;\ntests follow in the next commit and a ruff guardrail prevents\nregression in the one after.\n\nAddresses #430\n\n* refactor: add encoding=\"utf-8\" to test text-mode file I/O\n\nMirror the production-code pass across the test suite. Every\ntext-mode read_text(), write_text(), and open() call in tests/ now\nspecifies encoding=\"utf-8\".\n\nThe highlighted site is tests/test_benchmark_workflow.py: it reads\n.github/workflows/benchmark.yml with no encoding, so a single emoji\nadded to that workflow would silently break this test on Windows CI.\nReuse the inline comment pattern from tests/test_doit_release.py:665\nso a future reader immediately sees why encoding=\"utf-8\" is not\noptional there.\n\nAddresses #430\n\n* refactor: enable ruff PLW1514 to require explicit encoding\n\nAdd PLW1514 (unspecified-encoding) to the [tool.ruff.lint] select\nlist so every future text-mode read_text(), write_text(), open(), and\ntempfile.NamedTemporaryFile() call must pass encoding= explicitly.\n\nPLW1514 is a preview rule, so enable preview mode and pair it with\nexplicit-preview-rules = true; that combination pulls in only the\nexact codes listed in select, keeping the rest of the preview\nruleset out of CI.\n\nEnabling the rule also surfaced two tempfile.NamedTemporaryFile sites\nmissed by the pathlib-focused audit — tools/doit/adr.py and\ntools/doit/github.py — which are fixed here so doit check stays\ngreen.\n\nAddresses #430\n\n* docs: document explicit UTF-8 file I/O convention\n\nRecord the repo convention of always passing encoding=\"utf-8\" to\ntext-mode file I/O under the Python Standards section of\nCONTRIBUTING.md, and note that ruff's PLW1514 enforces it. Include\nthe list of binary-mode calls that are exempt (and cannot accept an\nencoding kwarg) so readers do not get tripped up when PLW1514\nappears clean.\n\nAddresses #430\n\n* docs: propagate utf-8 encoding convention to code examples\n\nUpdate the two code snippets in docs/ that illustrate file I/O so they\nmodel the project convention codified in CONTRIBUTING.md and enforced\nby ruff PLW1514: the open() example in coding-standards.md and the\ntmp_path.write_text() example in ci-cd-testing.md now pass\nencoding=\"utf-8\".\n\nAddresses #430",
+          "timestamp": "2026-04-21T13:26:27+01:00",
+          "tree_id": "ec8ae147aec3fa8d4b515a087bcd2227e5e6336e",
+          "url": "https://github.com/endavis/pyproject-template/commit/302da19556f12b9b1c79497c1b93f427accecb36"
+        },
+        "date": 1776774417067,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8869193.446969496,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1177602913765396e-8",
+            "extra": "mean: 112.74982398108466 nsec\nrounds: 87093"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9022416.46785514,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1176429782284787e-8",
+            "extra": "mean: 110.83505217951058 nsec\nrounds: 88637"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5276552.456157744,
+            "unit": "iter/sec",
+            "range": "stddev: 1.491488264915281e-8",
+            "extra": "mean: 189.51768381133002 nsec\nrounds: 53778"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1686048.1087935392,
+            "unit": "iter/sec",
+            "range": "stddev: 2.73613106991902e-7",
+            "extra": "mean: 593.1028864387241 nsec\nrounds: 57199"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493909.48561723385,
+            "unit": "iter/sec",
+            "range": "stddev: 5.244431709792189e-7",
+            "extra": "mean: 2.0246624718096067 usec\nrounds: 49584"
           }
         ]
       }
