@@ -237,7 +237,7 @@ class TestSetupLogging:
         logger.info("Test file message")
 
         # Read and parse the log file
-        content = log_file.read_text().strip()
+        content = log_file.read_text(encoding="utf-8").strip()
         data = json.loads(content)
 
         assert data["level"] == "INFO"
@@ -259,7 +259,7 @@ class TestSetupLogging:
         logger.error("Error message")
 
         # Read all log entries
-        lines = log_file.read_text().strip().split("\n")
+        lines = log_file.read_text(encoding="utf-8").strip().split("\n")
         assert len(lines) == 4
 
         # Parse each line and verify

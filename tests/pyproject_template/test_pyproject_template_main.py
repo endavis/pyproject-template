@@ -124,7 +124,7 @@ class TestSettingsManager:
     def test_init_creates_default_context(self, tmp_path: Path) -> None:
         """Test that SettingsManager initializes with detected context."""
         # Create a minimal directory structure
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
         (tmp_path / ".git").mkdir()
 
         with patch("subprocess.run") as mock_run:
@@ -147,7 +147,7 @@ authors = [{name = "Test Author", email = "test@example.com"}]
 [project.urls]
 Repository = "https://github.com/testuser/test-project"
 """
-        (tmp_path / "pyproject.toml").write_text(pyproject_content)
+        (tmp_path / "pyproject.toml").write_text(pyproject_content, encoding="utf-8")
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
@@ -181,8 +181,8 @@ github_repo = "my-project"
 commit = "abc123def456"
 commit_date = "2025-01-15"
 """
-        (settings_dir / "settings.toml").write_text(settings_content)
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "other"')
+        (settings_dir / "settings.toml").write_text(settings_content, encoding="utf-8")
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "other"', encoding="utf-8")
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
@@ -197,7 +197,7 @@ commit_date = "2025-01-15"
 
     def test_save_creates_settings_file(self, tmp_path: Path) -> None:
         """Test that save creates the settings file with template state."""
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
@@ -210,12 +210,12 @@ commit_date = "2025-01-15"
 
             settings_file = tmp_path / ".config" / "pyproject_template" / "settings.toml"
             assert settings_file.exists()
-            content = settings_file.read_text()
+            content = settings_file.read_text(encoding="utf-8")
             assert "abc123" in content
 
     def test_update_template_state(self, tmp_path: Path) -> None:
         """Test updating template state."""
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
 
         with patch("subprocess.run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="")
@@ -228,7 +228,7 @@ commit_date = "2025-01-15"
 
             # Verify it was saved
             settings_file = tmp_path / ".config" / "pyproject_template" / "settings.toml"
-            content = settings_file.read_text()
+            content = settings_file.read_text(encoding="utf-8")
             assert "newcommit123" in content
 
 
@@ -443,9 +443,9 @@ class TestCopyTemplateAdrs:
 
         template_dir = tmp_path / "template_decisions"
         template_dir.mkdir()
-        (template_dir / "9001-use-uv.md").write_text("# ADR-9001")
-        (template_dir / "9002-use-doit.md").write_text("# ADR-9002")
-        (template_dir / "README.md").write_text("# Template ADRs")
+        (template_dir / "9001-use-uv.md").write_text("# ADR-9001", encoding="utf-8")
+        (template_dir / "9002-use-doit.md").write_text("# ADR-9002", encoding="utf-8")
+        (template_dir / "README.md").write_text("# Template ADRs", encoding="utf-8")
 
         project_dir = tmp_path / "project_decisions"
         project_dir.mkdir()
@@ -463,9 +463,9 @@ class TestCopyTemplateAdrs:
 
         template_dir = tmp_path / "template_decisions"
         template_dir.mkdir()
-        (template_dir / "9001-test.md").write_text("# ADR-9001")
-        (template_dir / "9002-test.md").write_text("# ADR-9002")
-        (template_dir / "9003-test.md").write_text("# ADR-9003")
+        (template_dir / "9001-test.md").write_text("# ADR-9001", encoding="utf-8")
+        (template_dir / "9002-test.md").write_text("# ADR-9002", encoding="utf-8")
+        (template_dir / "9003-test.md").write_text("# ADR-9003", encoding="utf-8")
 
         project_dir = tmp_path / "project_decisions"
         project_dir.mkdir()
@@ -479,7 +479,7 @@ class TestCopyTemplateAdrs:
 
         template_dir = tmp_path / "template_decisions"
         template_dir.mkdir()
-        (template_dir / "README.md").write_text("# Empty template ADRs")
+        (template_dir / "README.md").write_text("# Empty template ADRs", encoding="utf-8")
 
         project_dir = tmp_path / "project_decisions"
         project_dir.mkdir()
@@ -511,16 +511,17 @@ class TestConfigureModule:
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
-        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
         # Create issue template with {owner}/{repo} placeholders
         issue_template_dir = tmp_path / ".github" / "ISSUE_TEMPLATE"
         issue_template_dir.mkdir(parents=True)
         config_yml = issue_template_dir / "config.yml"
         config_yml.write_text(
-            "contact_links:\n  - url: https://github.com/{owner}/{repo}/discussions\n"
+            "contact_links:\n  - url: https://github.com/{owner}/{repo}/discussions\n",
+            encoding="utf-8",
         )
 
         import os
@@ -546,7 +547,7 @@ class TestConfigureModule:
             assert result == 0
 
             # Verify {owner} and {repo} were replaced
-            content = config_yml.read_text()
+            content = config_yml.read_text(encoding="utf-8")
             assert "{owner}" not in content
             assert "{repo}" not in content
             assert "testuser" in content
@@ -559,15 +560,15 @@ class TestConfigureModule:
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
-        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
         # Create SECURITY.md with placeholder email
         github_dir = tmp_path / ".github"
         github_dir.mkdir(parents=True)
         security_md = github_dir / "SECURITY.md"
-        security_md.write_text("Contact: security@example.com\n")
+        security_md.write_text("Contact: security@example.com\n", encoding="utf-8")
 
         import os
 
@@ -592,7 +593,7 @@ class TestConfigureModule:
             assert result == 0
 
             # Verify security@example.com was replaced
-            content = security_md.read_text()
+            content = security_md.read_text(encoding="utf-8")
             assert "security@example.com" not in content
             assert "author@myproject.com" in content
         finally:
@@ -603,15 +604,15 @@ class TestConfigureModule:
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
-        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
         # Create CODE_OF_CONDUCT.md with placeholder
         github_dir = tmp_path / ".github"
         github_dir.mkdir(parents=True)
         coc_md = github_dir / "CODE_OF_CONDUCT.md"
-        coc_md.write_text("Report issues to [INSERT CONTACT EMAIL].\n")
+        coc_md.write_text("Report issues to [INSERT CONTACT EMAIL].\n", encoding="utf-8")
 
         import os
 
@@ -636,7 +637,7 @@ class TestConfigureModule:
             assert result == 0
 
             # Verify [INSERT CONTACT EMAIL] was replaced
-            content = coc_md.read_text()
+            content = coc_md.read_text(encoding="utf-8")
             assert "[INSERT CONTACT EMAIL]" not in content
             assert "contact@myproject.com" in content
         finally:
@@ -647,14 +648,15 @@ class TestConfigureModule:
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
-        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
         # Create mkdocs.yml with placeholders
         mkdocs_yml = tmp_path / "mkdocs.yml"
         mkdocs_yml.write_text(
-            "site_url: https://username.github.io/package_name\nrepo_name: username/package_name\n"
+            "site_url: https://username.github.io/package_name\nrepo_name: username/package_name\n",
+            encoding="utf-8",
         )
 
         import os
@@ -680,7 +682,7 @@ class TestConfigureModule:
             assert result == 0
 
             # Verify mkdocs.yml placeholders were replaced
-            content = mkdocs_yml.read_text()
+            content = mkdocs_yml.read_text(encoding="utf-8")
             assert "username.github.io" not in content
             assert "https://myuser.github.io/test_pkg" in content
             assert "username/package_name" not in content
@@ -693,15 +695,15 @@ class TestConfigureModule:
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
-        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"')
+        (tmp_path / "pyproject.toml").write_text('[project]\nname = "test"', encoding="utf-8")
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
-        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("")
+        (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
         # Create tool tests directory that should be removed
         tool_tests_dir = tmp_path / "tests" / "pyproject_template"
         tool_tests_dir.mkdir(parents=True)
-        (tool_tests_dir / "__init__.py").write_text("")
-        (tool_tests_dir / "test_utils.py").write_text("# test file")
+        (tool_tests_dir / "__init__.py").write_text("", encoding="utf-8")
+        (tool_tests_dir / "test_utils.py").write_text("# test file", encoding="utf-8")
 
         import os
 
@@ -780,7 +782,7 @@ class TestYesFlagBehavior:
         template_dir = tmp_path / "tmp" / "extracted" / "pyproject-template-main"
         template_dir.mkdir(parents=True)
         commit_file = template_dir / ".template_commit"
-        commit_file.write_text("abc123newcommit\n2025-06-15\n")
+        commit_file.write_text("abc123newcommit\n2025-06-15\n", encoding="utf-8")
 
         mock_manager = MagicMock()
         mock_manager.template_state.commit = "oldcommit000"

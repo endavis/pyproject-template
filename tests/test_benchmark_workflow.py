@@ -11,7 +11,9 @@ WORKFLOW_PATH = Path(__file__).parent.parent / ".github" / "workflows" / "benchm
 
 def _load_workflow() -> dict:
     """Load and parse the benchmark workflow YAML."""
-    return yaml.safe_load(WORKFLOW_PATH.read_text())
+    # Windows read_text() defaults to cp1252 which can't decode non-ASCII
+    # characters like ✅ in workflow files — always specify utf-8.
+    return yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
 
 
 class TestBenchmarkWorkflowExists:

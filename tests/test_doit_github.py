@@ -365,7 +365,7 @@ class TestLabelsSync:
     @staticmethod
     def _labels_file(tmp_path: Path, body: str) -> Path:
         path = tmp_path / "labels.yml"
-        path.write_text(body)
+        path.write_text(body, encoding="utf-8")
         return path
 
     @staticmethod
