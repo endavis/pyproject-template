@@ -384,7 +384,7 @@ This project uses **semantic versioning** derived automatically from git tags vi
 
 - **No manual version editing** - Version is determined by git tags
 - **Tag format:** `v<major>.<minor>.<patch>` (e.g., `v1.2.3`)
-- **Pre-release format:** `v<version>-<type><n>` (e.g., `v1.2.3-alpha0`, `v1.2.3-beta1`, `v1.2.3-rc0`)
+- **Pre-release format:** PEP440 `v<version><type><n>` (e.g., `v1.2.3a0`, `v1.2.3b1`, `v1.2.3rc0`, `v1.2.3.dev0`) — emitted by commitizen via `doit release --prerelease=...`
 
 Version bumping is handled by [commitizen](https://commitizen-tools.github.io/commitizen/) based on conventional commit history:
 
@@ -456,7 +456,7 @@ pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://
 
 | Workflow | Trigger | Destination |
 |----------|---------|-------------|
-| `testpypi.yml` | Tag matching `v*-[a-zA-Z]*` (e.g., `v1.0.0-alpha0`) | TestPyPI only |
+| `testpypi.yml` | PEP440 pre-release tags: `v*a[0-9]*`, `v*b[0-9]*`, `v*rc[0-9]*`, `v*.dev[0-9]*` (e.g., `v1.0.0a0`) | TestPyPI only |
 | `release.yml` | Tag matching `v[0-9]+.[0-9]+.[0-9]+` (e.g., `v1.0.0`) | TestPyPI → PyPI |
 
 ### Setting Up Release Permissions

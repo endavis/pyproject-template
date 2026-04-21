@@ -42,10 +42,11 @@ v1.0.0         # Major release
 v1.1.0         # Minor release (new features)
 v1.1.1         # Patch release (bug fixes)
 
-# Pre-releases (for TestPyPI)
-v1.0.0-alpha.1   # Alpha release
-v1.0.0-beta.1    # Beta release
-v1.0.0-rc.1      # Release candidate
+# Pre-releases (for TestPyPI) — PEP440 format emitted by commitizen
+v1.0.0a0         # Alpha release
+v1.0.0b1         # Beta release
+v1.0.0rc0        # Release candidate
+v1.0.0.dev2      # Development release
 ```
 
 ### Checking Current Version
@@ -146,8 +147,9 @@ Pass `--prerelease=<type>` to `doit release` to open a pre-release PR:
 | `beta` | Feature-complete but not yet stable |
 | `rc` | Release candidate; only fixes expected before the final release |
 
-Pre-release tags (e.g. `v1.2.0a0`, `v1.2.0-rc.1`) trigger the TestPyPI publish
-workflow; production tags (e.g. `v1.2.0`) trigger TestPyPI followed by PyPI.
+Pre-release tags (e.g. `v1.2.0a0`, `v1.2.0b1`, `v1.2.0rc0`, `v1.2.0.dev2`)
+trigger the TestPyPI publish workflow; production tags (e.g. `v1.2.0`) trigger
+TestPyPI followed by PyPI.
 See the [Workflow Triggers](../../.github/CONTRIBUTING.md#workflow-triggers)
 table in `CONTRIBUTING.md` for the full mapping.
 
@@ -474,8 +476,8 @@ This produces two files in the `tmp/` directory:
 SBOMs are automatically generated and attached to every GitHub release:
 
 1. During the **build** job, `cyclonedx-py` generates both JSON and XML SBOMs
-2. The SBOM files are included in the `dist/` artifact alongside wheel and sdist packages
-3. After publishing to PyPI, the **github-release** job creates a GitHub release with auto-generated notes and attaches the SBOMs as release assets
+2. The SBOM files are uploaded as a separate `sbom` artifact (the `dist` artifact is wheels + sdist only, so twine in the publish jobs does not reject the SBOM files as `InvalidDistribution`)
+3. After publishing to PyPI, the **github-release** job downloads the `sbom` artifact and attaches both SBOMs to the GitHub release as downloadable assets
 
 Users can download the SBOM from the GitHub release page for any version.
 
