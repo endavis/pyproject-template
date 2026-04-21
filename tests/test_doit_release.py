@@ -27,10 +27,13 @@ from tools.doit.release import (
     _build_cz_get_next_cmd,
     _extract_next_version_from_cz_output,
     _extract_version_from_release_pr,
+    _repo_has_version_tags,
     validate_merge_commits,
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from _pytest.monkeypatch import MonkeyPatch
 
 
@@ -598,6 +601,54 @@ class TestExtractNextVersionFromCzOutput:
         """
         stdout = "0.0.1\n0.0.2\n0.0.3\n"
         assert _extract_next_version_from_cz_output(stdout) == "0.0.3"
+
+
+class TestRepoHasVersionTags:
+    """Tests for ``_repo_has_version_tags`` (issue #448).
+
+    The helper shells out to ``git tag --list v*``. These tests monkeypatch
+    ``subprocess.run`` inside ``tools.doit.release`` so the git call returns
+    canned stdout.
+    """
+
+    @staticmethod
+    def _fake_tag_list(
+        stdout: str, returncode: int = 0
+    ) -> Callable[..., subprocess.CompletedProcess[str]]:
+        def fake(
+            cmd: list[str],
+            *_args: object,
+            **_kwargs: object,
+        ) -> subprocess.CompletedProcess[str]:
+            assert cmd[:3] == ["git", "tag", "--list"]
+            return subprocess.CompletedProcess(
+                args=cmd, returncode=returncode, stdout=stdout, stderr=""
+            )
+
+        return fake
+
+    def test_no_tags_returns_false(self, monkeypatch: MonkeyPatch) -> None:
+        """Empty ``git tag --list v*`` output → no tags → ``False``."""
+        monkeypatch.setattr("tools.doit.release.subprocess.run", self._fake_tag_list(""))
+        assert _repo_has_version_tags() is False
+
+    def test_whitespace_only_returns_false(self, monkeypatch: MonkeyPatch) -> None:
+        """Whitespace-only output counts as no tags."""
+        monkeypatch.setattr("tools.doit.release.subprocess.run", self._fake_tag_list("\n\n  \n"))
+        assert _repo_has_version_tags() is False
+
+    def test_one_tag_returns_true(self, monkeypatch: MonkeyPatch) -> None:
+        """A single ``v*`` tag present → ``True``."""
+        monkeypatch.setattr("tools.doit.release.subprocess.run", self._fake_tag_list("v0.0.0\n"))
+        assert _repo_has_version_tags() is True
+
+    def test_multiple_tags_returns_true(self, monkeypatch: MonkeyPatch) -> None:
+        """Multiple ``v*`` tags present → ``True``."""
+        monkeypatch.setattr(
+            "tools.doit.release.subprocess.run",
+            self._fake_tag_list("v0.0.0\nv0.1.0a0\nv0.1.0\n"),
+        )
+        assert _repo_has_version_tags() is True
 
 
 class TestTaskReleaseActionSignature:
