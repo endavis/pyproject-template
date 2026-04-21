@@ -74,6 +74,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 ## Complete Index
 <!-- BEGIN:all -->
 - [Add a Feature: End-to-End Walkthrough](examples/add-a-feature.md) - Step-by-step example of adding a module, CLI subcommand, tests, and docs to the project
+- [ADR-0001: PR-based release is the only supported flow](decisions/0001-pr-based-release-is-the-only-supported-flow.md)
 - [ADR-9001: Use uv for package management](template/decisions/9001-use-uv-for-package-management.md)
 - [ADR-9002: Use doit for task automation](template/decisions/9002-use-doit-for-task-automation.md)
 - [ADR-9003: Use ruff for linting and formatting](template/decisions/9003-use-ruff-for-linting-and-formatting.md)

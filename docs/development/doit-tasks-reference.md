@@ -39,7 +39,7 @@ doit <task_name>
 | [Documentation](#documentation-tasks) | `docs_serve`, `docs_build`, `docs_deploy`, `docs_toc` | Documentation management |
 | [Dependencies](#dependency-tasks) | `install`, `install_dev`, `update_deps` | Package management |
 | [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync` | Issue and PR management |
-| [Release](#release-tasks) | `release`, `release_dev`, `release_pr`, `release_tag`, `publish` | Version and release management |
+| [Release](#release-tasks) | `release`, `release_tag`, `publish` | Version and release management |
 | [Version](#version-tasks) | `bump`, `changelog` | Version bumping and changelog |
 | [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv` | Development environment |
 | [Maintenance](#maintenance-tasks) | `cleanup`, `template_clean` | Project cleanup |
@@ -738,79 +738,68 @@ See [GitHub Repository Settings → Labels](github-repository-settings.md#labels
 
 ## Release Tasks
 
+Releases follow a single PR-based flow: `doit release` opens a release PR,
+and `doit release_tag` tags `main` once the PR is merged.
+
 ### `release`
 
-Create a production release (full workflow).
+Open a release PR with the version bump and changelog updates.
 
 ```bash
+# Auto-detect the next version from conventional commits
 doit release
+
+# Force a specific increment (mutually exclusive with --prerelease)
+doit release --increment=major   # 1.0.0 → 2.0.0
+doit release --increment=minor
+doit release --increment=patch
+
+# Cut a pre-release PR (TestPyPI)
+doit release --prerelease=alpha  # 1.0.0 → 1.0.1a0
+doit release --prerelease=beta
+doit release --prerelease=rc
 ```
 
 **What it does:**
-1. Verifies you're on `main` branch
-2. Checks for uncommitted changes
-3. Pulls latest changes
-4. Runs governance validations (merge commit format, issue links)
-5. Runs all quality checks (`doit check`)
-6. Uses commitizen to bump version and update CHANGELOG.md
-7. Creates git tag
-8. Pushes commits and tags to trigger CI/CD
+1. Verifies you're on `main` with a clean working tree
+2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
+3. Rejects `--prerelease` combined with `--increment` (mutually exclusive)
+4. Pulls latest changes
+5. Runs governance validations (merge commit format, issue links)
+6. Runs all quality checks (`doit check`)
+7. Asks commitizen for the next version (`cz bump --get-next`)
+8. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
+9. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
+
+**Options:**
+- `--increment`: Force `MAJOR`, `MINOR`, or `PATCH` bump (auto-detects if empty).
+- `--prerelease`: `alpha`, `beta`, or `rc`. Empty means a production release.
+  Mutually exclusive with `--increment`.
 
 **Requirements:**
 - Must be on `main` branch
 - No uncommitted changes
 - All checks must pass
 
-See [Release Automation](release-and-automation.md) for details.
-
-### `release_dev`
-
-Create a pre-release for TestPyPI testing.
-
-```bash
-# Create alpha (default)
-doit release_dev
-
-# Create beta
-doit release_dev --type=beta
-
-# Create release candidate
-doit release_dev --type=rc
-```
-
-**What it does:**
-1. Verifies branch (warns if not on main)
-2. Runs quality checks
-3. Creates pre-release tag (e.g., `v1.0.0-alpha.1`)
-4. Pushes to trigger TestPyPI publish
-
-**Options:**
-- `--type`: Pre-release type (`alpha`, `beta`, `rc`)
-
-### `release_pr`
-
-Create a release PR with changelog updates.
-
-```bash
-doit release_pr
-```
-
-**What it does:**
-- Creates a PR that includes version bump and changelog updates
-- Used for PR-based release workflows
-- Alternative to direct `doit release`
+See [Release Automation](release-and-automation.md) for the full flow.
 
 ### `release_tag`
 
-Tag a release after a release PR is merged.
+Tag `main` after the release PR is merged and trigger the publish workflow.
 
 ```bash
+git checkout main
+git pull
 doit release_tag
 ```
 
 **What it does:**
-- Creates the release tag after `release_pr` is merged
-- Triggers CI/CD to build and publish
+1. Verifies you're on `main`
+2. Pulls latest changes
+3. Finds the most recently merged `release: vX.Y.Z` PR
+4. Extracts the version from the PR title (falls back to the branch name)
+5. Creates the git tag `vX.Y.Z` on `main`
+6. Pushes the tag, which triggers the publish workflow
 
 ### `publish`
 

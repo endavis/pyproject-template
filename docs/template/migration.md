@@ -77,8 +77,8 @@ See [Template Management](manage.md) for full documentation on the management sc
 - Run tests: `doit test`
 
 ### 11) Release Flow
-- **Prerelease:** `doit release_dev` → bumps version (e.g., alpha) → tags → triggers `testpypi.yml`.
-- **Production:** `doit release` → bumps version (stable) → tags → triggers `release.yml`.
+- **All releases go through a PR.** `doit release [--prerelease=alpha|beta|rc]` opens a release PR with the version bump and changelog updates.
+- **Tag after merge.** Once the release PR is merged, run `doit release_tag` to tag `main` and trigger the publish workflow (`testpypi.yml` for pre-releases, `release.yml` for production tags).
 - **Important:** No manual edits to `pyproject.toml` version or `_version.py`; the git tag is the source of truth.
 
 ### 12) Clean Up & Commit
