@@ -86,6 +86,10 @@ target-version = "py312"
 extend-exclude = ["**/_version.py"]
 
 [tool.ruff.lint]
+# Enable preview mode but require rules to be listed by exact code so we
+# opt into PLW1514 without pulling in every other unstable preview rule.
+preview = true
+explicit-preview-rules = true
 select = [
     "E",    # pycodestyle errors
     "F",    # pyflakes
@@ -99,6 +103,7 @@ select = [
     "RUF",  # Ruff-specific rules
     "SIM",  # flake8-simplify
     "ASYNC", # flake8-async
+    "PLW1514",  # require explicit encoding on text-mode file I/O (preview rule)
 ]
 ignore = []
 

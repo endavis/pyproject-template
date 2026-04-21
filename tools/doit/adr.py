@@ -87,7 +87,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
     editor = _get_editor()
 
     # Create temp file with template
-    with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False, encoding="utf-8") as f:
         f.write(template)
         temp_path = f.name
 
