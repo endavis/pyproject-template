@@ -36,6 +36,7 @@ These are the general repository-level settings applied by
 | **Allow squash merge** | Yes | Only merge strategy allowed (linear history) |
 | **Allow merge commit** | No | Enforces squash-only policy |
 | **Allow rebase merge** | No | Enforces squash-only policy |
+| **Allow auto-merge** | Yes | Required by the [Dependabot Auto-merge](dependabot-automerge.md) workflow so it can call `gh pr merge --auto` |
 | **Delete branch on merge** | Yes | Cleans up feature branches automatically |
 | **Visibility** | Public | Template default; private repos may lack some security features |
 

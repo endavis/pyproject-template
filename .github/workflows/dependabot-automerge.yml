@@ -1,3 +1,7 @@
+# Requires the `allow_auto_merge` repository setting to be enabled.
+# See docs/development/github-repository-settings.md for the full list
+# of required repository settings, and docs/development/dependabot-automerge.md
+# for how this workflow uses it.
 name: Dependabot Auto-merge
 
 on:
