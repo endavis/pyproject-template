@@ -52,9 +52,11 @@ def validate_merge_commits(console: "ConsoleType") -> bool:
         console.print("[green]✓ No merge commits to validate.[/green]")
         return True
 
-    # Pattern: <type>: <subject> (merges PR #XX, addresses #YY) or (merges PR #XX)
+    # Pattern: <type>: <subject> (merges PR #XX, addresses #YY) or (merges PR #XX).
+    # `release` is an allowed type so release-PR merges (e.g. "release: v0.1.0a0
+    # (merges PR #652)") pass governance validation on the next release cut.
     merge_pattern = re.compile(
-        r"^[a-f0-9]+\s+(feat|fix|refactor|docs|test|chore|ci|perf):\s.+\s"
+        r"^[a-f0-9]+\s+(feat|fix|refactor|docs|test|chore|ci|perf|release):\s.+\s"
         r"\(merges PR #\d+(?:, addresses #\d+(?:, #\d+)*)?\)$"
     )
 
