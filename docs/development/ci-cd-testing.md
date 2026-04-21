@@ -416,7 +416,7 @@ from myproject import Config, ConfigError
 def temp_config_file(tmp_path):
     """Create a temporary config file."""
     config_file = tmp_path / "config.json"
-    config_file.write_text('{"key": "value"}')
+    config_file.write_text('{"key": "value"}', encoding="utf-8")
     return config_file
 
 def test_config_load_success(temp_config_file):

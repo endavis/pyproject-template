@@ -50,7 +50,7 @@ class ConfigError(Exception):
 
 def load_config(path: str) -> dict[str, Any]:
     try:
-        with open(path) as f:
+        with open(path, encoding="utf-8") as f:
             return json.load(f)
     except FileNotFoundError as exc:
         raise ConfigError(f"Config file not found: {path}") from exc
