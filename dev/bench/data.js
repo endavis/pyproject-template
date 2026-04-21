@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776784414517,
+  "lastUpdate": 1776789151941,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5192,6 +5192,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.6768400892726994e-7",
             "extra": "mean: 1.988916097128769 usec\nrounds: 51798"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4c1d3a9b6d7afe70f9bfea461786d310ef98058d",
+          "message": "refactor: use App token for ready-to-merge label to trigger Merge Gate (merges PR #453, addresses #428)\n\nGitHub's loop-prevention rule suppresses downstream workflows for events\nproduced by GITHUB_TOKEN, so the labeled event never fired the Merge Gate\nafter dependabot-automerge applied the ready-to-merge label. The gate\nstayed red and auto-merge never fired.\n\nGenerate a GitHub App token (conditional on vars.RELEASE_APP_ID) and use\nit for the label step, falling back to GITHUB_TOKEN when the App is not\nconfigured. Expose APP_TOKEN_CONFIGURED to the sticky comment so the\nuser sees a distinct message when falling back, pointing at the manual\nrelabel workaround. Keep the merge step on GITHUB_TOKEN (it does not\ntrigger downstream workflows). Drop the job-level GH_TOKEN so the token\nchoice is explicit on each step.\n\nAddresses #428\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T17:32:06+01:00",
+          "tree_id": "0b4a65ce9ec049fc7a6ff999ff3c829400a3d76e",
+          "url": "https://github.com/endavis/pyproject-template/commit/4c1d3a9b6d7afe70f9bfea461786d310ef98058d"
+        },
+        "date": 1776789151557,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8155846.227839877,
+            "unit": "iter/sec",
+            "range": "stddev: 4.017715073377181e-8",
+            "extra": "mean: 122.61143381866528 nsec\nrounds: 198847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8864543.6181714,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5014532593671498e-8",
+            "extra": "mean: 112.80896604198588 nsec\nrounds: 88021"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5298893.190022371,
+            "unit": "iter/sec",
+            "range": "stddev: 1.903004471342153e-8",
+            "extra": "mean: 188.71865579079133 nsec\nrounds: 53206"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1670140.32883412,
+            "unit": "iter/sec",
+            "range": "stddev: 2.570944367985483e-7",
+            "extra": "mean: 598.7520825259475 nsec\nrounds: 52340"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493710.5733625546,
+            "unit": "iter/sec",
+            "range": "stddev: 5.204472556737453e-7",
+            "extra": "mean: 2.0254781930012533 usec\nrounds: 47416"
           }
         ]
       }
