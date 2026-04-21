@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776790053974,
+  "lastUpdate": 1776793353261,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5310,6 +5310,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.073156767397916e-7",
             "extra": "mean: 1.9796214489079087 usec\nrounds: 44916"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2745e5d7262fcdd17944b489f84e8937931cdc68",
+          "message": "refactor: normalize \"doc\" to \"docs\" across tooling, tests, and docs (merges PR #456, addresses #455)\n\nRename the doit issue-type flag from \"doc\" to \"docs\" so a single\nspelling is used everywhere the word acts as a type identifier or\nConventional Commits prefix. Also fix the AGENTS.md documentation\nexample that was using an invalid `doc:` title prefix (the PR-title\nvalidator requires `docs:`).\n\nThe ISSUE_TYPE_TO_FILE mapping key changes from \"doc\" to \"docs\" and\ndownstream docstrings, help strings, tests, and documentation are\nflipped to match. A new regression test asserts that the legacy \"doc\"\nkey now raises ValueError.\n\nThe `.github/ISSUE_TEMPLATE/documentation.yml` filename is kept as-is\nbecause it is user-visible in the GitHub \"New Issue\" picker, where the\nfull word is appropriate.\n\nBREAKING CHANGE: `doit issue --type=doc` no longer works. Use\n`doit issue --type=docs` instead. The CLI now raises\n`ValueError: Invalid issue type` for the old flag value. Update any\nlocal scripts, shell aliases, or automation that invoke\n`doit issue --type=doc`.\n\nAddresses #455\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T18:42:08+01:00",
+          "tree_id": "984eac8a1d2c2a97c77bd13972ae039ee2dd26bc",
+          "url": "https://github.com/endavis/pyproject-template/commit/2745e5d7262fcdd17944b489f84e8937931cdc68"
+        },
+        "date": 1776793352845,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8808605.533461247,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2350109211215638e-8",
+            "extra": "mean: 113.52534702584879 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8906534.710612835,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1366374784499495e-8",
+            "extra": "mean: 112.27711253495947 nsec\nrounds: 87866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5485771.76086242,
+            "unit": "iter/sec",
+            "range": "stddev: 1.747681410571193e-8",
+            "extra": "mean: 182.289756773036 nsec\nrounds: 55298"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1667361.3642500413,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1866558971115554e-7",
+            "extra": "mean: 599.7500130691752 nsec\nrounds: 57003"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496042.06837297144,
+            "unit": "iter/sec",
+            "range": "stddev: 5.370697505935341e-7",
+            "extra": "mean: 2.01595804823575 usec\nrounds: 55826"
           }
         ]
       }
