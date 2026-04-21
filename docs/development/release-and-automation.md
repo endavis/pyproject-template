@@ -550,7 +550,11 @@ This template enforces governance rules to ensure code quality and traceability.
 
 See [PR Merging](#pr-merging) for details.
 
-**Valid Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`
+**Valid Types**: `feat`, `fix`, `refactor`, `docs`, `test`, `chore`, `ci`, `perf`, `release`
+
+`release` is included so that merge commits from the release PRs that
+`doit release` opens (e.g. `release: v0.1.0a0 (merges PR #652)`) pass
+governance validation on the next release cut.
 
 **When It Runs**: During `doit release` (blocks on failure)
 

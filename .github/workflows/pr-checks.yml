@@ -14,7 +14,7 @@ jobs:
         with:
           script: |
             const title = context.payload.pull_request.title;
-            const pattern = /^(feat|fix|refactor|docs|test|chore|ci|perf)(\(.+\))?:\s.+$/;
+            const pattern = /^(feat|fix|refactor|docs|test|chore|ci|perf|release)(\(.+\))?:\s.+$/;
 
             if (!pattern.test(title)) {
               core.setFailed(
@@ -22,11 +22,12 @@ jobs:
                 '   <type>: <subject>\n' +
                 '   or\n' +
                 '   <type>(<scope>): <subject>\n\n' +
-                'Valid types: feat, fix, refactor, docs, test, chore, ci, perf\n\n' +
+                'Valid types: feat, fix, refactor, docs, test, chore, ci, perf, release\n\n' +
                 'Examples:\n' +
                 '  ✅ feat: add user authentication\n' +
                 '  ✅ fix(api): handle null response\n' +
-                '  ✅ docs: update installation guide\n\n' +
+                '  ✅ docs: update installation guide\n' +
+                '  ✅ release: v0.1.0a0\n\n' +
                 `Current title: "${title}"`
               );
             } else {
