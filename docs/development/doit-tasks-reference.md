@@ -614,7 +614,7 @@ doit issue --type=bug --title="Fix bug" --body-file=issue.md
 - `feature` - New feature request
 - `bug` - Bug report
 - `refactor` - Code refactoring
-- `doc` - Documentation improvement
+- `docs` - Documentation improvement
 - `chore` - Maintenance task
 
 **Options:**

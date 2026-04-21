@@ -673,12 +673,12 @@ Every code change must be linked to a GitHub Issue. This ensures:
 doit issue --type=feature    # For new features
 doit issue --type=bug        # For bugs and defects
 doit issue --type=refactor   # For code refactoring
-doit issue --type=doc        # For documentation
+doit issue --type=docs       # For documentation
 doit issue --type=chore      # For maintenance tasks
 
 # Non-interactive: For AI agents or scripts
 doit issue --type=feature --title="Add export" --body-file=issue.md
-doit issue --type=doc --title="Add guide" --body="## Description\n..."
+doit issue --type=docs --title="Add guide" --body="## Description\n..."
 ```
 
 **Or use gh CLI directly:**
@@ -690,7 +690,7 @@ gh issue create --title "<description>" --label "enhancement" --body "..."
 - `feature` → `enhancement, needs-triage`
 - `bug` → `bug, needs-triage`
 - `refactor` → `refactor, needs-triage`
-- `doc` → `documentation, needs-triage`
+- `docs` → `documentation, needs-triage`
 - `chore` → `chore, needs-triage`
 
 **Required fields ensure complete information** - Fill all fields to provide context.
