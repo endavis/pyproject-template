@@ -82,6 +82,34 @@ uv run doit release_tag
 Both commands must be run from `main` with a clean working tree.
 `--prerelease` and `--increment` are mutually exclusive on `doit release`.
 
+### Before your first pre-release
+
+`doit release --prerelease=alpha|beta|rc` requires a baseline `v*` tag so
+commitizen has an anchor version to bump from. Without one the task refuses
+and prints guidance (see [issue #448](https://github.com/endavis/pyproject-template/issues/448)).
+
+**New projects (bootstrap flow).** `tools/pyproject_template/configure.py`
+auto-seeds a `v0.0.0` tag on the root commit, so nothing else is required —
+only push it when you're ready:
+
+```bash
+git push origin v0.0.0
+```
+
+**Existing projects (synced from the template before the auto-seed
+landed).** Seed the baseline tag manually, once per project:
+
+```bash
+# From the project root:
+git tag v0.0.0 "$(git rev-list --max-parents=0 HEAD | head -1)"
+git push origin v0.0.0
+```
+
+After that, `doit release --prerelease=alpha` produces the expected
+`v0.1.0a0` PR. Skip this step entirely if your first release is a
+production release (`doit release` without `--prerelease` works on a
+tagless repo — commitizen defaults to `v0.1.0`).
+
 ### Step 1: Create the release PR (`doit release`)
 
 `doit release` determines the next version, creates a `release/vX.Y.Z`

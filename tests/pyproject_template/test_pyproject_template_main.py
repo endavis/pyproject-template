@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -731,6 +733,118 @@ class TestConfigureModule:
             assert not tool_tests_dir.exists()
             # But tests directory itself should still exist
             assert (tmp_path / "tests").exists()
+        finally:
+            os.chdir(old_cwd)
+
+
+class TestSeedBaselineTag:
+    """Tests for ``seed_baseline_tag`` (issue #447).
+
+    Exercises the auto-seed of ``v0.0.0`` on the bootstrap root commit. The
+    function powers the fix for the papercut introduced by the ``--prerelease``
+    guard from issue #448: without a baseline tag, cz bump refuses to compute
+    a pre-release on a fresh repo.
+    """
+
+    @staticmethod
+    def _init_repo(repo: Path) -> str:
+        """Initialize a git repo in ``repo`` with one empty root commit.
+
+        Returns the SHA of the root commit.
+        """
+        env = {
+            **os.environ,
+            "GIT_AUTHOR_NAME": "Test",
+            "GIT_AUTHOR_EMAIL": "test@example.com",
+            "GIT_COMMITTER_NAME": "Test",
+            "GIT_COMMITTER_EMAIL": "test@example.com",
+        }
+        subprocess.run(["git", "init", "-b", "main"], cwd=repo, check=True, capture_output=True)
+        subprocess.run(
+            ["git", "commit", "--allow-empty", "-m", "root", "--no-verify"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            env=env,
+        )
+        result = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return result.stdout.strip()
+
+    @staticmethod
+    def _list_tags(repo: Path) -> list[str]:
+        result = subprocess.run(
+            ["git", "tag", "--list"],
+            cwd=repo,
+            check=True,
+            capture_output=True,
+            text=True,
+        )
+        return [line.strip() for line in result.stdout.splitlines() if line.strip()]
+
+    def test_no_tags_creates_v0_0_0_on_root_commit(self, tmp_path: Path) -> None:
+        """With no existing v* tags, seed_baseline_tag creates v0.0.0 on the root commit."""
+        from tools.pyproject_template.configure import seed_baseline_tag
+
+        root_sha = self._init_repo(tmp_path)
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            seed_baseline_tag()
+
+            assert self._list_tags(tmp_path) == ["v0.0.0"]
+
+            # Verify the tag points at the root commit
+            tagged_sha = subprocess.run(
+                ["git", "rev-list", "-n", "1", "v0.0.0"],
+                cwd=tmp_path,
+                check=True,
+                capture_output=True,
+                text=True,
+            ).stdout.strip()
+            assert tagged_sha == root_sha
+        finally:
+            os.chdir(old_cwd)
+
+    def test_existing_version_tag_is_preserved(self, tmp_path: Path) -> None:
+        """When a v* tag already exists, seed_baseline_tag is a no-op (idempotent)."""
+        from tools.pyproject_template.configure import seed_baseline_tag
+
+        self._init_repo(tmp_path)
+        subprocess.run(
+            ["git", "tag", "v0.1.0"],
+            cwd=tmp_path,
+            check=True,
+            capture_output=True,
+        )
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            seed_baseline_tag()
+
+            # v0.1.0 preserved, v0.0.0 NOT added.
+            assert self._list_tags(tmp_path) == ["v0.1.0"]
+        finally:
+            os.chdir(old_cwd)
+
+    def test_not_a_git_repo_is_safe_no_op(self, tmp_path: Path) -> None:
+        """Outside a git repo, seed_baseline_tag skips without raising."""
+        from tools.pyproject_template.configure import seed_baseline_tag
+
+        old_cwd = os.getcwd()
+        os.chdir(tmp_path)
+        try:
+            seed_baseline_tag()  # Must not raise.
+            # No .git, no tags, nothing to observe — just reaching this line
+            # proves the function returned cleanly.
+            assert not (tmp_path / ".git").exists()
         finally:
             os.chdir(old_cwd)
 

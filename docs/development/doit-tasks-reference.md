@@ -780,6 +780,10 @@ doit release --prerelease=rc
 - Must be on `main` branch
 - No uncommitted changes
 - All checks must pass
+- `--prerelease` additionally requires a baseline `v*` tag so commitizen
+  has an anchor to bump from. Existing projects that predate the bootstrap
+  auto-seed should seed one manually — see
+  [Before your first pre-release](release-and-automation.md#before-your-first-pre-release).
 
 See [Release Automation](release-and-automation.md) for the full flow.
 
