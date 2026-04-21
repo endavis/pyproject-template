@@ -196,7 +196,10 @@ def _build_cz_get_next_cmd(increment: str, prerelease: str) -> list[str]:
     Returns:
         The command list ready to hand to ``subprocess.run``.
     """
-    cmd = ["uv", "run", "cz", "bump", "--get-next"]
+    # --yes auto-answers cz's interactive prompts (e.g. "Is this the first
+    # tag created?" on a tagless repo). Without it, cz hangs or prints
+    # "Cancelled by user" into the stdout we capture for version parsing.
+    cmd = ["uv", "run", "cz", "bump", "--get-next", "--yes"]
     if increment:
         cmd.extend(["--increment", increment.upper()])
     if prerelease:
@@ -204,7 +207,35 @@ def _build_cz_get_next_cmd(increment: str, prerelease: str) -> list[str]:
     return cmd
 
 
-def task_release(increment: str = "", prerelease: str = "") -> dict[str, Any]:
+def _extract_next_version_from_cz_output(stdout: str) -> str | None:
+    """Extract the next version from ``cz bump --get-next`` stdout.
+
+    On a tagless repo, cz emits diagnostic lines before the version (e.g.
+    ``"No tag matching configuration could be found."``). Scan from the
+    last line backward and return the first line that matches
+    ``_VERSION_PATTERN``. The match must cover the entire line so noisy
+    diagnostics that happen to contain a version substring don't fool it.
+
+    Args:
+        stdout: The captured stdout from ``cz bump --get-next``.
+
+    Returns:
+        The bare version string (no leading ``v``) from the last
+        version-looking line, or ``None`` if no line matches.
+    """
+    # Anchor the pattern so it must span the whole (stripped) line.
+    whole_line = re.compile(rf"^{_VERSION_PATTERN}$")
+    for line in reversed(stdout.splitlines()):
+        stripped = line.strip()
+        if not stripped:
+            continue
+        match = whole_line.match(stripped)
+        if match:
+            return match.group(1)
+    return None
+
+
+def task_release() -> dict[str, Any]:
     """Create a release PR with changelog updates (PR-based release flow).
 
     This is the single supported release entry point. It creates a release
@@ -212,13 +243,14 @@ def task_release(increment: str = "", prerelease: str = "") -> dict[str, Any]:
     reviewer merges the PR, run ``doit release_tag`` to tag ``main`` and
     trigger the publish workflow.
 
-    Args:
-        increment (str): Force version increment type (MAJOR, MINOR, PATCH). Auto-detects if empty.
-        prerelease (str): Pre-release type (alpha, beta, rc). Empty for a production release.
-            Mutually exclusive with ``increment``.
+    CLI params (see the ``params`` entry in the returned dict): ``--increment``
+    forces a version increment type; ``--prerelease`` produces a pre-release
+    (alpha/beta/rc). The action function ``create_release_pr`` accepts these
+    as keyword arguments so doit's param parsing reaches them — see #650 for
+    why the closure approach was wrong.
     """
 
-    def create_release_pr() -> None:
+    def create_release_pr(increment: str = "", prerelease: str = "") -> None:
         console = Console()
         console.print("=" * 70)
         console.print("[bold green]Starting PR-based release process...[/bold green]")
@@ -319,7 +351,15 @@ def task_release(increment: str = "", prerelease: str = "") -> dict[str, Any]:
                 capture_output=True,
                 text=True,
             )
-            next_version = result.stdout.strip()
+            next_version = _extract_next_version_from_cz_output(result.stdout)
+            if next_version is None:
+                console.print(
+                    "[bold red]❌ Could not extract a version from "
+                    "cz bump --get-next output.[/bold red]"
+                )
+                console.print(f"[red]Stdout: {result.stdout}[/red]")
+                console.print(f"[red]Stderr: {result.stderr}[/red]")
+                sys.exit(1)
             console.print(f"[green]✓ Next version: {next_version}[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Failed to determine next version.[/bold red]")
@@ -501,6 +541,12 @@ def task_release_tag() -> dict[str, Any]:
         # Find the most recently merged release PR
         console.print("\n[cyan]Finding merged release PR...[/cyan]")
         try:
+            # Match PRs whose head branch starts with ``release/`` — the naming
+            # convention ``doit release`` uses. Do NOT use a title-substring
+            # search that includes the literal "release" prefix plus a colon
+            # and space: GitHub's search parses the colon as a qualifier
+            # separator (like ``head:``, ``author:``) and returns zero
+            # results. See #657.
             result = subprocess.run(
                 [
                     "gh",
@@ -509,7 +555,7 @@ def task_release_tag() -> dict[str, Any]:
                     "--state",
                     "merged",
                     "--search",
-                    "release: v in:title",
+                    "head:release/",
                     "--limit",
                     "1",
                     "--json",

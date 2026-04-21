@@ -25,6 +25,7 @@ from rich.console import Console
 from tools.doit.base import run_streamed, run_teed
 from tools.doit.release import (
     _build_cz_get_next_cmd,
+    _extract_next_version_from_cz_output,
     _extract_version_from_release_pr,
     validate_merge_commits,
 )
@@ -382,36 +383,36 @@ class TestBuildCzGetNextCmd:
         ("increment", "prerelease", "expected"),
         [
             # No flags: base command only.
-            ("", "", ["uv", "run", "cz", "bump", "--get-next"]),
+            ("", "", ["uv", "run", "cz", "bump", "--get-next", "--yes"]),
             # Increment alone (lowercase input is uppercased).
             (
                 "minor",
                 "",
-                ["uv", "run", "cz", "bump", "--get-next", "--increment", "MINOR"],
+                ["uv", "run", "cz", "bump", "--get-next", "--yes", "--increment", "MINOR"],
             ),
             # Increment alone (already uppercase stays uppercase).
             (
                 "PATCH",
                 "",
-                ["uv", "run", "cz", "bump", "--get-next", "--increment", "PATCH"],
+                ["uv", "run", "cz", "bump", "--get-next", "--yes", "--increment", "PATCH"],
             ),
             # Prerelease alone: alpha.
             (
                 "",
                 "alpha",
-                ["uv", "run", "cz", "bump", "--get-next", "--prerelease", "alpha"],
+                ["uv", "run", "cz", "bump", "--get-next", "--yes", "--prerelease", "alpha"],
             ),
             # Prerelease alone: beta.
             (
                 "",
                 "beta",
-                ["uv", "run", "cz", "bump", "--get-next", "--prerelease", "beta"],
+                ["uv", "run", "cz", "bump", "--get-next", "--yes", "--prerelease", "beta"],
             ),
             # Prerelease alone: rc.
             (
                 "",
                 "rc",
-                ["uv", "run", "cz", "bump", "--get-next", "--prerelease", "rc"],
+                ["uv", "run", "cz", "bump", "--get-next", "--yes", "--prerelease", "rc"],
             ),
             # Both set: helper does NOT validate; the task is responsible for
             # rejecting this combination. Helper just emits both flags in
@@ -425,6 +426,7 @@ class TestBuildCzGetNextCmd:
                     "cz",
                     "bump",
                     "--get-next",
+                    "--yes",
                     "--increment",
                     "MINOR",
                     "--prerelease",
@@ -532,3 +534,141 @@ class TestValidateMergeCommits:
         monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
 
         assert validate_merge_commits(self._silent_console()) is False
+
+
+class TestExtractNextVersionFromCzOutput:
+    """Tests for ``_extract_next_version_from_cz_output`` (issue #641).
+
+    Scans the captured stdout of ``cz bump --get-next --yes`` and returns
+    the last line that matches a semver-ish version pattern. Must tolerate
+    leading diagnostic noise (on a tagless repo, cz prints a multi-line
+    "No tag matching configuration could be found" block before emitting
+    the version) and reject strings that merely contain a version substring.
+    """
+
+    @pytest.mark.parametrize(
+        ("stdout", "expected"),
+        [
+            # Clean production-release output.
+            ("1.2.3\n", "1.2.3"),
+            # Clean pre-release output (PEP440).
+            ("0.1.0a0\n", "0.1.0a0"),
+            ("0.1.0b1\n", "0.1.0b1"),
+            ("0.1.0rc0\n", "0.1.0rc0"),
+            # Clean pre-release output (semver style).
+            ("0.1.0-alpha.0\n", "0.1.0-alpha.0"),
+            # Leading 'v' accepted and stripped.
+            ("v0.2.0\n", "0.2.0"),
+            # Tagless-repo case: diagnostic noise precedes the version.
+            # Regression case that this helper exists to fix.
+            (
+                "No tag matching configuration could be found.\n"
+                "Possible causes:\n"
+                "- version in configuration is not the current version\n"
+                "- tag_format or legacy_tag_formats is missing\n"
+                "\n"
+                "0.1.0a0\n",
+                "0.1.0a0",
+            ),
+            # Trailing blank lines are ignored; the version is still found.
+            ("0.1.0\n\n\n", "0.1.0"),
+        ],
+    )
+    def test_returns_trailing_version_line(self, stdout: str, expected: str) -> None:
+        assert _extract_next_version_from_cz_output(stdout) == expected
+
+    def test_returns_none_when_no_version_line(self) -> None:
+        """Output with zero version-shaped lines returns ``None``."""
+        assert _extract_next_version_from_cz_output("totally unrelated output\n") is None
+
+    def test_rejects_line_that_only_contains_a_version_substring(self) -> None:
+        """The pattern is anchored to the whole line.
+
+        A diagnostic line like ``"error at 1.2.3 somewhere"`` must not
+        be mistaken for the version output.
+        """
+        stdout = "something broke near 1.2.3 in the build\n"
+        assert _extract_next_version_from_cz_output(stdout) is None
+
+    def test_returns_last_version_when_multiple(self) -> None:
+        """When multiple version-shaped lines are present, take the last.
+
+        cz may print intermediate version hints in diagnostic output; the
+        trailing line is the authoritative one.
+        """
+        stdout = "0.0.1\n0.0.2\n0.0.3\n"
+        assert _extract_next_version_from_cz_output(stdout) == "0.0.3"
+
+
+class TestTaskReleaseActionSignature:
+    """Regression tests for ``task_release`` CLI-param wiring (issue #650).
+
+    doit's ``params`` parsing populates values for the **action function**,
+    not the outer task-creator function. If the action doesn't accept the
+    param names as kwargs, doit silently drops the CLI values and the action
+    runs with closure-captured defaults. These tests pin the action signature
+    so a future refactor can't re-introduce the silent drop.
+    """
+
+    def test_action_accepts_params(self) -> None:
+        """The first action must accept ``increment`` and ``prerelease`` kwargs."""
+        import inspect
+
+        from tools.doit.release import task_release
+
+        result = task_release()
+        actions = result["actions"]
+        assert actions, "task_release must return at least one action"
+        action = actions[0]
+        sig = inspect.signature(action)
+        assert "increment" in sig.parameters, (
+            "create_release_pr must accept 'increment' for --increment CLI flag to reach it"
+        )
+        assert "prerelease" in sig.parameters, (
+            "create_release_pr must accept 'prerelease' for --prerelease CLI flag to reach it"
+        )
+
+    def test_params_names_match_action_signature(self) -> None:
+        """Every ``params[n]['name']`` must be a parameter of the action function.
+
+        Without this match, doit's parsed CLI values can't reach the action.
+        """
+        import inspect
+
+        from tools.doit.release import task_release
+
+        result = task_release()
+        action = result["actions"][0]
+        sig_params = set(inspect.signature(action).parameters)
+        cli_param_names = {p["name"] for p in result["params"]}
+        missing = cli_param_names - sig_params
+        assert not missing, (
+            f"params names {missing} have no matching kwarg in the action signature; "
+            "doit will silently drop their CLI values"
+        )
+
+
+class TestReleaseTagGhSearch:
+    """Regression test for ``task_release_tag``'s gh pr list search (issue #657).
+
+    GitHub's search parses ``release: v in:title`` with the colon as a
+    qualifier separator (like ``head:``, ``author:``), returning zero results
+    for literal title substrings containing colons. ``head:release/`` is
+    GitHub's intended syntax and matches the head-branch naming convention
+    ``doit release`` uses for release branches.
+    """
+
+    def test_gh_search_uses_head_prefix_not_title_colon_substring(self) -> None:
+        """Source must use head:release/ and not the broken title-colon search."""
+        import pathlib
+
+        # Windows read_text() defaults to cp1252 which can't decode non-ASCII
+        # characters like ❌ in release.py's error banners — always specify utf-8.
+        src = pathlib.Path("tools/doit/release.py").read_text(encoding="utf-8")
+        assert "release: v in:title" not in src, (
+            "The broken colon-in-search pattern returns zero results from gh "
+            "pr list and must not recur"
+        )
+        assert '"head:release/"' in src, (
+            "task_release_tag must use head:release/ to find merged release PRs"
+        )
