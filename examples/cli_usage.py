@@ -55,7 +55,7 @@ def main() -> None:
     print("Example 3: Process File")
     print("-" * 60)
     temp_file = Path("temp_input.txt")
-    temp_file.write_text("Sample input data")
+    temp_file.write_text("Sample input data", encoding="utf-8")
 
     print(f"Command: {cli_cmd} process {temp_file}")
     print()

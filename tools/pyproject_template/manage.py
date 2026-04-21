@@ -474,7 +474,7 @@ def action_check_updates(manager: SettingsManager, dry_run: bool) -> int:
         template_dir = Path("tmp/extracted/pyproject-template-main")
         if template_dir.exists():
             commit_file = template_dir / ".template_commit"
-            commit_file.write_text(f"{latest[0]}\n{latest[1]}\n")
+            commit_file.write_text(f"{latest[0]}\n{latest[1]}\n", encoding="utf-8")
             print()
             Logger.info("After reviewing changes, use option [5] to mark as synced.")
 
@@ -567,7 +567,7 @@ def action_mark_synced(manager: SettingsManager, dry_run: bool, *, yes: bool = F
         return 1
 
     # Read commit info from the reviewed template
-    lines = commit_file.read_text().strip().split("\n")
+    lines = commit_file.read_text(encoding="utf-8").strip().split("\n")
     if len(lines) < 2:
         Logger.error("Invalid commit file format")
         return 1

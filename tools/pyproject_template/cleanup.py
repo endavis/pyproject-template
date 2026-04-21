@@ -156,7 +156,7 @@ def update_mkdocs_nav(root: Path | None = None, dry_run: bool = False) -> bool:
     if not mkdocs_file.exists():
         return False
 
-    content = mkdocs_file.read_text()
+    content = mkdocs_file.read_text(encoding="utf-8")
 
     # Pattern to match the Template section in nav
     # Matches from "  - Template:" to the next "  - " at the same indent level or end of nav
@@ -170,7 +170,7 @@ def update_mkdocs_nav(root: Path | None = None, dry_run: bool = False) -> bool:
         return True
 
     new_content = re.sub(pattern, "", content)
-    mkdocs_file.write_text(new_content)
+    mkdocs_file.write_text(new_content, encoding="utf-8")
     Logger.success("Removed Template section from mkdocs.yml")
     return True
 

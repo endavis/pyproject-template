@@ -47,7 +47,7 @@ class AdvancedExample:
 
         try:
             if file_path.exists():
-                content = file_path.read_text()
+                content = file_path.read_text(encoding="utf-8")
                 stats["lines"] = len(content.splitlines())
                 stats["words"] = len(content.split())
                 stats["chars"] = len(content)
@@ -100,7 +100,7 @@ def main() -> None:
     print("-" * 60)
     # Create a temporary file for demonstration
     temp_file = Path("temp_example.txt")
-    temp_file.write_text("Hello, World!\nThis is a test file.")
+    temp_file.write_text("Hello, World!\nThis is a test file.", encoding="utf-8")
 
     stats = example.process_file(temp_file)
     print(f"File statistics: {stats}")
@@ -116,7 +116,7 @@ def main() -> None:
     files = []
     for i in range(3):
         file_path = Path(f"temp_{i}.txt")
-        file_path.write_text(f"File {i}\n" * (i + 1))
+        file_path.write_text(f"File {i}\n" * (i + 1), encoding="utf-8")
         files.append(file_path)
 
     results = example.batch_process(files)

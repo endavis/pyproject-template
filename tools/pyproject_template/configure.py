@@ -88,7 +88,7 @@ def guess_github_user(pyproject_data: dict[str, object]) -> str:
 def read_readme_title(readme_path: Path) -> str:
     if not readme_path.exists():
         return ""
-    for line in readme_path.read_text().splitlines():
+    for line in readme_path.read_text(encoding="utf-8").splitlines():
         if line.startswith("#"):
             return line.lstrip("#").strip()
     return ""
