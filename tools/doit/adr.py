@@ -87,7 +87,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
     editor = _get_editor()
 
     # Create temp file with template
-    with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False, encoding="utf-8") as f:
         f.write(template)
         temp_path = f.name
 
@@ -101,7 +101,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
             return None
 
         # Read the edited content
-        with open(temp_path) as f:
+        with open(temp_path, encoding="utf-8") as f:
             content = f.read()
 
         # Remove HTML comments <!-- ... -->
@@ -134,7 +134,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
         return None
 
     try:
-        return path.read_text()
+        return path.read_text(encoding="utf-8")
     except Exception as e:
         console.print(f"[red]Error reading file: {e}[/red]")
         return None
@@ -316,7 +316,7 @@ def task_adr() -> dict[str, Any]:
             sys.exit(1)
 
         # Write ADR file
-        adr_path.write_text(body_content + "\n")
+        adr_path.write_text(body_content + "\n", encoding="utf-8")
 
         console.print()
         console.print(

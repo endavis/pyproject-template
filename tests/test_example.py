@@ -23,9 +23,9 @@ def test_greet_with_fixture(tmp_path: Path) -> None:
     # tmp_path is a pytest fixture that provides a temporary directory
     output_file = tmp_path / "greeting.txt"
     message = greet("File System")
-    output_file.write_text(message)
+    output_file.write_text(message, encoding="utf-8")
 
-    assert output_file.read_text() == "Hello, File System!"
+    assert output_file.read_text(encoding="utf-8") == "Hello, File System!"
 
 
 class TestExampleClass:

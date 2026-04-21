@@ -50,7 +50,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
     editor = _get_editor()
 
     # Create temp file with template
-    with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False) as f:
+    with tempfile.NamedTemporaryFile(mode="w", suffix=suffix, delete=False, encoding="utf-8") as f:
         f.write(template)
         temp_path = f.name
 
@@ -64,7 +64,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
             return None
 
         # Read the edited content
-        with open(temp_path) as f:
+        with open(temp_path, encoding="utf-8") as f:
             content = f.read()
 
         # Remove comment lines (starting with #) and HTML comments
@@ -187,7 +187,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
         return None
 
     try:
-        return path.read_text()
+        return path.read_text(encoding="utf-8")
     except Exception as e:
         console.print(f"[red]Error reading file: {e}[/red]")
         return None
@@ -874,7 +874,7 @@ def _load_labels_file(path: Path, console: Console) -> list[dict[str, str]]:
         sys.exit(1)
 
     try:
-        raw = yaml.safe_load(path.read_text())
+        raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as e:
         console.print(f"[red]Failed to parse {path}: {e}[/red]")
         sys.exit(1)

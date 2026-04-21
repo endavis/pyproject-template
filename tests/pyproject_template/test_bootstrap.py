@@ -82,7 +82,7 @@ class TestDownloadFile:
         with patch("bootstrap.urllib.request.urlopen", return_value=mock_response):
             download_file("https://example.com/test.py", dest)
 
-        assert dest.read_text() == "print('hello')"
+        assert dest.read_text(encoding="utf-8") == "print('hello')"
 
     def test_download_file_exits_on_error(self, tmp_path: Path) -> None:
         """Test that download_file exits on network error."""
@@ -106,7 +106,7 @@ class TestDetectProjectSettings:
     def test_detects_project_name(self, tmp_path: Path) -> None:
         """Test that project name is detected from pyproject.toml."""
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nname = "my-cool-project"\n')
+        pyproject.write_text('[project]\nname = "my-cool-project"\n', encoding="utf-8")
 
         result = detect_project_settings(tmp_path)
         assert result["project_name"] == "my-cool-project"
@@ -116,7 +116,9 @@ class TestDetectProjectSettings:
     def test_detects_description(self, tmp_path: Path) -> None:
         """Test that description is detected."""
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nname = "test"\ndescription = "A test project"\n')
+        pyproject.write_text(
+            '[project]\nname = "test"\ndescription = "A test project"\n', encoding="utf-8"
+        )
 
         result = detect_project_settings(tmp_path)
         assert result["description"] == "A test project"
@@ -126,7 +128,8 @@ class TestDetectProjectSettings:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
             '[project]\nname = "test"\n'
-            '[[project.authors]]\nname = "John Doe"\nemail = "john@example.com"\n'
+            '[[project.authors]]\nname = "John Doe"\nemail = "john@example.com"\n',
+            encoding="utf-8",
         )
 
         result = detect_project_settings(tmp_path)
@@ -138,7 +141,8 @@ class TestDetectProjectSettings:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
             '[project]\nname = "test"\n'
-            '[project.urls]\nRepository = "https://github.com/myuser/myrepo"\n'
+            '[project.urls]\nRepository = "https://github.com/myuser/myrepo"\n',
+            encoding="utf-8",
         )
 
         result = detect_project_settings(tmp_path)
@@ -150,7 +154,8 @@ class TestDetectProjectSettings:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
             '[project]\nname = "test"\n'
-            '[project.urls]\nRepository = "https://github.com/user/repo.git"\n'
+            '[project.urls]\nRepository = "https://github.com/user/repo.git"\n',
+            encoding="utf-8",
         )
 
         result = detect_project_settings(tmp_path)
@@ -159,7 +164,7 @@ class TestDetectProjectSettings:
     def test_handles_malformed_pyproject(self, tmp_path: Path) -> None:
         """Test that malformed pyproject.toml doesn't crash."""
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text("this is not valid toml [[[")
+        pyproject.write_text("this is not valid toml [[[", encoding="utf-8")
 
         result = detect_project_settings(tmp_path)
         assert result == {}
@@ -167,7 +172,7 @@ class TestDetectProjectSettings:
     def test_handles_empty_project_section(self, tmp_path: Path) -> None:
         """Test that empty [project] section returns empty settings."""
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text("[project]\n")
+        pyproject.write_text("[project]\n", encoding="utf-8")
 
         result = detect_project_settings(tmp_path)
         assert result == {}
@@ -177,7 +182,8 @@ class TestDetectProjectSettings:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
             '[project]\nname = "test"\n'
-            '[project.urls]\nRepository = "https://evil.com/github.com/user/repo"\n'
+            '[project.urls]\nRepository = "https://evil.com/github.com/user/repo"\n',
+            encoding="utf-8",
         )
 
         result = detect_project_settings(tmp_path)
@@ -189,7 +195,8 @@ class TestDetectProjectSettings:
         pyproject = tmp_path / "pyproject.toml"
         pyproject.write_text(
             '[project]\nname = "test"\n'
-            '[project.urls]\nRepository = "https://www.github.com/myuser/myrepo"\n'
+            '[project.urls]\nRepository = "https://www.github.com/myuser/myrepo"\n',
+            encoding="utf-8",
         )
 
         result = detect_project_settings(tmp_path)
@@ -199,7 +206,7 @@ class TestDetectProjectSettings:
     def test_underscore_name_converted_to_hyphen_for_pypi(self, tmp_path: Path) -> None:
         """Test that underscores in name become hyphens for pypi_name."""
         pyproject = tmp_path / "pyproject.toml"
-        pyproject.write_text('[project]\nname = "my_project"\n')
+        pyproject.write_text('[project]\nname = "my_project"\n', encoding="utf-8")
 
         result = detect_project_settings(tmp_path)
         assert result["pypi_name"] == "my-project"
@@ -232,7 +239,7 @@ class TestCreateSettingsFile:
         }
         result = create_settings_file(tmp_path, settings)
 
-        content = result.read_text()
+        content = result.read_text(encoding="utf-8")
         assert "[project]" in content
         assert 'project_name = "my-project"' in content
         assert 'package_name = "my_project"' in content
@@ -242,7 +249,7 @@ class TestCreateSettingsFile:
         """Test that [template] section is written with empty values."""
         result = create_settings_file(tmp_path, {})
 
-        content = result.read_text()
+        content = result.read_text(encoding="utf-8")
         assert "[template]" in content
         assert 'commit = ""' in content
         assert 'commit_date = ""' in content
@@ -251,7 +258,7 @@ class TestCreateSettingsFile:
         """Test that missing settings are written as empty strings."""
         result = create_settings_file(tmp_path, {})
 
-        content = result.read_text()
+        content = result.read_text(encoding="utf-8")
         assert 'project_name = ""' in content
         assert 'author_email = ""' in content
 
@@ -260,7 +267,7 @@ class TestCreateSettingsFile:
         settings = {"description": 'A "quoted" project\\path'}
         result = create_settings_file(tmp_path, settings)
 
-        content = result.read_text()
+        content = result.read_text(encoding="utf-8")
         assert 'description = "A \\"quoted\\" project\\\\path"' in content
 
     def test_returns_path_to_created_file(self, tmp_path: Path) -> None:
@@ -329,7 +336,7 @@ class TestRunSync:
 
         pkg_dir = tmp_path / "tools" / "pyproject_template"
         pkg_dir.mkdir(parents=True)
-        (pkg_dir / "manage.py").write_text("# existing")
+        (pkg_dir / "manage.py").write_text("# existing", encoding="utf-8")
 
         with (
             patch("builtins.input", return_value="n"),
@@ -345,7 +352,7 @@ class TestRunSync:
 
         pkg_dir = tmp_path / "tools" / "pyproject_template"
         pkg_dir.mkdir(parents=True)
-        (pkg_dir / "manage.py").write_text("# old")
+        (pkg_dir / "manage.py").write_text("# old", encoding="utf-8")
 
         mock_response = MagicMock()
         mock_response.read.return_value = b"# new content"
@@ -360,7 +367,7 @@ class TestRunSync:
             mock_subprocess.return_value = MagicMock(returncode=0, stderr="")
             run_sync(tmp_path)
 
-        assert (pkg_dir / "manage.py").read_text() == "# new content"
+        assert (pkg_dir / "manage.py").read_text(encoding="utf-8") == "# new content"
 
     def test_creates_settings_file(self, tmp_path: Path) -> None:
         """Test that settings.toml is created during sync."""

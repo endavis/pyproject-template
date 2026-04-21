@@ -116,12 +116,12 @@ nav:
       - Setup: development/setup.md
 """
         mkdocs_file = tmp_path / "mkdocs.yml"
-        mkdocs_file.write_text(mkdocs_content)
+        mkdocs_file.write_text(mkdocs_content, encoding="utf-8")
 
         result = update_mkdocs_nav(tmp_path, dry_run=False)
 
         assert result is True
-        new_content = mkdocs_file.read_text()
+        new_content = mkdocs_file.read_text(encoding="utf-8")
         assert "Template:" not in new_content
         assert "template/index.md" not in new_content
         assert "Development:" in new_content
@@ -137,7 +137,7 @@ nav:
       - Setup: development/setup.md
 """
         mkdocs_file = tmp_path / "mkdocs.yml"
-        mkdocs_file.write_text(mkdocs_content)
+        mkdocs_file.write_text(mkdocs_content, encoding="utf-8")
 
         result = update_mkdocs_nav(tmp_path, dry_run=False)
         assert result is False
@@ -153,13 +153,13 @@ nav:
       - Overview: template/index.md
 """
         mkdocs_file = tmp_path / "mkdocs.yml"
-        mkdocs_file.write_text(mkdocs_content)
+        mkdocs_file.write_text(mkdocs_content, encoding="utf-8")
 
         result = update_mkdocs_nav(tmp_path, dry_run=True)
 
         assert result is True
         # Content should be unchanged
-        assert mkdocs_file.read_text() == mkdocs_content
+        assert mkdocs_file.read_text(encoding="utf-8") == mkdocs_content
 
     def test_update_mkdocs_nav_no_file(self, tmp_path: Path) -> None:
         """Test update_mkdocs_nav when mkdocs.yml doesn't exist."""
@@ -216,7 +216,7 @@ nav:
   - Template:
       - Overview: template/index.md
 """
-        (tmp_path / "mkdocs.yml").write_text(mkdocs_content)
+        (tmp_path / "mkdocs.yml").write_text(mkdocs_content, encoding="utf-8")
 
         result = cleanup_template_files(CleanupMode.ALL, tmp_path)
 

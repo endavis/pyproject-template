@@ -76,7 +76,7 @@ def _touch(tmp_path: Path, rel: str, contents: str = "x = 1\n") -> Path:
     """Create *rel* under *tmp_path* with *contents* and return the absolute path."""
     target = tmp_path / rel
     target.parent.mkdir(parents=True, exist_ok=True)
-    target.write_text(contents)
+    target.write_text(contents, encoding="utf-8")
     return target
 
 

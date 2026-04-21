@@ -104,6 +104,12 @@ We welcome many types of contributions:
 - **Docstrings:** Google-style for all public APIs
 - **Type hints:** Required for all public functions/methods
 - **Naming:** `snake_case` for functions/variables, `PascalCase` for classes
+- **File I/O:** Always pass `encoding="utf-8"` to `Path.read_text()`,
+  `Path.write_text()`, text-mode `open()`, and `tempfile.NamedTemporaryFile()`.
+  Omitting the kwarg falls back to `locale.getpreferredencoding()`, which is
+  `cp1252` on Windows and breaks silently on non-ASCII content. Binary-mode
+  calls (`"rb"`, `"wb"`, `"ab"`) and `tarfile.open(...)` do not take an
+  encoding kwarg. Enforced by ruff's `PLW1514` rule.
 
 ### Type Hints
 

@@ -223,7 +223,7 @@ class TestLoadTomlFile:
     def test_loads_valid_toml(self, tmp_path: Path) -> None:
         """Test loading a valid TOML file."""
         toml_file = tmp_path / "test.toml"
-        toml_file.write_text('[section]\nkey = "value"\nnumber = 42')
+        toml_file.write_text('[section]\nkey = "value"\nnumber = 42', encoding="utf-8")
 
         result = load_toml_file(toml_file)
         assert result == {"section": {"key": "value", "number": 42}}
@@ -236,7 +236,7 @@ class TestLoadTomlFile:
     def test_returns_empty_dict_for_invalid_toml(self, tmp_path: Path) -> None:
         """Test that invalid TOML returns empty dict."""
         toml_file = tmp_path / "invalid.toml"
-        toml_file.write_text("this is not valid toml [[[")
+        toml_file.write_text("this is not valid toml [[[", encoding="utf-8")
 
         result = load_toml_file(toml_file)
         assert result == {}
@@ -287,20 +287,23 @@ class TestUpdateFile:
     def test_replaces_strings(self, tmp_path: Path) -> None:
         """Test basic string replacement."""
         test_file = tmp_path / "test.txt"
-        test_file.write_text("Hello old_value, goodbye old_value")
+        test_file.write_text("Hello old_value, goodbye old_value", encoding="utf-8")
 
         update_file(test_file, {"old_value": "new_value"})
 
-        assert test_file.read_text() == "Hello new_value, goodbye new_value"
+        assert test_file.read_text(encoding="utf-8") == "Hello new_value, goodbye new_value"
 
     def test_package_name_preserves_kwargs(self, tmp_path: Path) -> None:
         """Test that package_name replacement preserves keyword arguments."""
         test_file = tmp_path / "test.py"
-        test_file.write_text('from package_name import module\nfunc(package_name="value")\n')
+        test_file.write_text(
+            'from package_name import module\nfunc(package_name="value")\n',
+            encoding="utf-8",
+        )
 
         update_file(test_file, {"package_name": "my_pkg"})
 
-        content = test_file.read_text()
+        content = test_file.read_text(encoding="utf-8")
         assert "from my_pkg import module" in content
         # The kwarg should be preserved
         assert 'package_name="value"' in content
@@ -308,11 +311,11 @@ class TestUpdateFile:
     def test_package_name_preserves_toml_keys(self, tmp_path: Path) -> None:
         """Test that package_name replacement preserves TOML keys."""
         test_file = tmp_path / "settings.toml"
-        test_file.write_text('package_name = "value"\nname = "package_name"\n')
+        test_file.write_text('package_name = "value"\nname = "package_name"\n', encoding="utf-8")
 
         update_file(test_file, {"package_name": "my_pkg"})
 
-        content = test_file.read_text()
+        content = test_file.read_text(encoding="utf-8")
         assert 'package_name = "value"' in content
         assert 'name = "my_pkg"' in content
 
@@ -338,11 +341,11 @@ class TestUpdateTestFiles:
         test_dir = tmp_path / "tests"
         test_dir.mkdir()
         test_file = test_dir / "test_example.py"
-        test_file.write_text("from package_name import core\n")
+        test_file.write_text("from package_name import core\n", encoding="utf-8")
 
         update_test_files(test_dir, "my_package")
 
-        assert "from my_package import core" in test_file.read_text()
+        assert "from my_package import core" in test_file.read_text(encoding="utf-8")
 
     def test_skips_missing_directory(self, tmp_path: Path) -> None:
         """Test that missing directory is handled gracefully."""
