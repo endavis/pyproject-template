@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776746016294,
+  "lastUpdate": 1776746380728,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4838,6 +4838,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.762828868059498e-7",
             "extra": "mean: 2.2006469061770284 usec\nrounds: 54334"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0400ae95831060066688c38e4bf35d0eb1ff74a9",
+          "message": "fix: align release pipeline workflows with PEP440 tags and twine (merges PR #444, addresses #443)\n\nTwo workflow-YAML defects in the release pipeline that block actual\npublish to PyPI/TestPyPI.\n\n1. testpypi.yml tag trigger uses semver glob (v*-[a-zA-Z]*), which\n   requires a literal dash before the pre-release type. commitizen\n   (used by doit release --prerelease=...) emits PEP440 tags with no\n   dash: v0.1.0a0, v0.1.0b1, v0.1.0rc0, v0.1.0.dev2. Pushing a PEP440\n   pre-release tag does nothing; no workflow triggers.\n\n   Replace the semver glob with four PEP440 globs covering alpha, beta,\n   rc, dev. PEP440-only chosen over both-formats because PyPI expects\n   PEP440 natively and commitizen is the only tag source.\n\n2. release.yml builds SBOMs into dist/ alongside the wheels and uploads\n   the entire directory as one artifact. The publish jobs hand\n   packages-dir: dist to pypa/gh-action-pypi-publish, which calls twine.\n   Twine inspects every file in packages-dir and rejects sbom.json with\n   \"InvalidDistribution: Unknown distribution format\". publish-testpypi\n   and publish both fail; github-release is skipped.\n\n   Split the build output into two artifacts: dist (wheels + sdist\n   only, consumed by the publish jobs) and sbom (consumed by\n   github-release). Publish jobs are unchanged; github-release\n   downloads sbom into dist/ so the existing gh release upload line\n   keeps working.\n\nAdds 6 structural-YAML regression tests (4 in TestPushTagTriggers, 3 in\nTestBuildArtifactsSeparation, minus 1 since one was a delta) plus\nsynced docs in release-and-automation.md and CONTRIBUTING.md.\n\nAddresses #443.\n\nCross-repo port from endavis/pynetappfoundry#660 (testpypi.yml PEP440)\nand #666 (release.yml split SBOMs).\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T05:39:14+01:00",
+          "tree_id": "0bd2f397767679a01bea0141cdcc8059557a5ebc",
+          "url": "https://github.com/endavis/pyproject-template/commit/0400ae95831060066688c38e4bf35d0eb1ff74a9"
+        },
+        "date": 1776746380246,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8340996.136511147,
+            "unit": "iter/sec",
+            "range": "stddev: 3.171310020032765e-8",
+            "extra": "mean: 119.88975700668263 nsec\nrounds: 83459"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8820633.514706725,
+            "unit": "iter/sec",
+            "range": "stddev: 2.255810761077298e-8",
+            "extra": "mean: 113.37054173407054 nsec\nrounds: 87866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5405985.679874709,
+            "unit": "iter/sec",
+            "range": "stddev: 9.735174908044425e-8",
+            "extra": "mean: 184.9801422380343 nsec\nrounds: 53291"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1666165.9526902956,
+            "unit": "iter/sec",
+            "range": "stddev: 4.884092102891794e-7",
+            "extra": "mean: 600.180311202097 nsec\nrounds: 56042"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491125.20565219526,
+            "unit": "iter/sec",
+            "range": "stddev: 5.378189702529362e-7",
+            "extra": "mean: 2.0361406592276987 usec\nrounds: 54337"
           }
         ]
       }
