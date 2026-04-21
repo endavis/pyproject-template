@@ -68,10 +68,15 @@ The script will ask for:
 
 After the script completes, you'll need to:
 
-1. **Add PyPI tokens** (for package publishing):
-   - Go to Settings → Secrets → Actions
-   - Add `PYPI_API_TOKEN` for production releases
-   - Add `TEST_PYPI_API_TOKEN` for test releases
+1. **Bootstrap PyPI publishing environments** (one step):
+   ```bash
+   doit publish_setup
+   ```
+   This creates the `testpypi` and `pypi` GitHub environments used for OIDC
+   trusted publishing and prints the manual trusted-publisher registration
+   instructions. See the
+   [release automation guide](../development/release-and-automation.md#github-environments-trusted-publishing)
+   for background.
 
 2. **Add Codecov token** (optional, for coverage reports):
    - Sign up at [codecov.io](https://codecov.io)
@@ -203,12 +208,16 @@ Manually configure what the automated setup does automatically:
    - Require pull request reviews
    - Require status checks
 
-3. **Secrets** (Settings → Secrets → Actions):
-   - Add `PYPI_API_TOKEN`
-   - Add `TEST_PYPI_API_TOKEN`
-   - Add `CODECOV_TOKEN` (optional)
+3. **PyPI publishing environments**:
+   - Run `doit publish_setup` to create the `testpypi` and `pypi`
+     environments and print the trusted-publisher registration steps.
+   - Follow the links in the printed output to register the project as a
+     trusted publisher on TestPyPI and PyPI.
 
-4. **Labels**:
+4. **Secrets** (Settings → Secrets → Actions):
+   - Add `CODECOV_TOKEN` (optional, for coverage uploads)
+
+5. **Labels**:
    - The template includes standard labels
    - Add custom labels as needed via Settings → Labels
 

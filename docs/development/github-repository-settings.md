@@ -176,8 +176,11 @@ Configure the trusted publisher on PyPI and TestPyPI:
 - **Workflow:** `release.yml` (for PyPI) or `testpypi.yml` (for TestPyPI)
 - **Environment:** `pypi` or `testpypi` respectively
 
-**Automated:** No. Environments must be created manually in the repository
-settings, and trusted publishers must be configured on PyPI/TestPyPI.
+**Automated:** Partial. Run `doit publish_setup` to create the `testpypi`
+and `pypi` environments in one step (idempotent). Trusted publishers must
+still be configured manually on PyPI and TestPyPI — see the instructions
+printed by `doit publish_setup` and the
+[release automation guide](release-and-automation.md#github-environments-trusted-publishing).
 
 ## Secrets and Variables
 
@@ -308,7 +311,7 @@ PRs with these labels are excluded from auto-generated notes:
 After creating a new repository from the template, these items require manual
 configuration:
 
-1. **Environments** -- Create `testpypi` and `pypi` environments
+1. **Environments** -- Run `doit publish_setup` to create the `testpypi` and `pypi` environments in one step
 2. **OIDC Trusted Publishers** -- Configure on PyPI and TestPyPI
 3. **Secrets** -- Add `CODECOV_TOKEN` and optional release app credentials
 4. **CODEOWNERS** -- Replace `@username` with the actual owner
