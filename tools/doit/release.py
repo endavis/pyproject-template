@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Any
 from doit.tools import title_with_actions
 from rich.console import Console
 
-from .base import UV_CACHE_DIR
+from .base import UV_CACHE_DIR, run_streamed, run_teed
 
 if TYPE_CHECKING:
     from rich.console import Console as ConsoleType
@@ -183,64 +183,48 @@ def task_release_dev(type: str = "alpha") -> dict[str, Any]:
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
-            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+            run_streamed(["git", "pull"])
             console.print("[green]✓ Git pull successful.[/green]")
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
+        except subprocess.CalledProcessError:
+            console.print("[bold red]❌ Error pulling latest changes.[/bold red]")
             sys.exit(1)
 
         # Run checks
         console.print("\n[cyan]Running all pre-release checks...[/cyan]")
         try:
-            subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
+            run_streamed(["doit", "check"])
             console.print("[green]✓ All checks passed.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print(
                 "[bold red]❌ Pre-release checks failed! "
                 "Please fix issues before tagging.[/bold red]"
             )
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         # Automated version bump and tagging
         console.print(f"\n[cyan]Bumping version ({type}) and updating changelog...[/cyan]")
         try:
-            # Use cz bump --prerelease <type> --changelog
-            result = subprocess.run(
+            # Use cz bump --prerelease <type> --changelog; tee so we can still
+            # parse the printed "Bumping to version X.Y.Z" line.
+            result = run_teed(
                 ["uv", "run", "cz", "bump", "--prerelease", type, "--changelog"],
                 env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
-                check=True,
-                capture_output=True,
-                text=True,
             )
             console.print(f"[green]✓ Version bumped to {type}.[/green]")
-            console.print(f"[dim]{result.stdout}[/dim]")
             # Extract new version
             version_match = re.search(r"Bumping to version (\d+\.\d+\.\d+[^\s]*)", result.stdout)
             new_version = version_match.group(1) if version_match else "unknown"
 
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print("[bold red]❌ commitizen bump failed![/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         console.print(f"\n[cyan]Pushing tag v{new_version} to origin...[/cyan]")
         try:
-            subprocess.run(
-                ["git", "push", "--follow-tags", "origin", current_branch],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
+            run_streamed(["git", "push", "--follow-tags", "origin", current_branch])
             console.print("[green]✓ Tags pushed to origin.[/green]")
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pushing tag to origin:[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
+        except subprocess.CalledProcessError:
+            console.print("[bold red]❌ Error pushing tag to origin.[/bold red]")
             sys.exit(1)
 
         console.print("\n" + "=" * 70)
@@ -311,12 +295,10 @@ def task_release(increment: str = "") -> dict[str, Any]:
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
-            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+            run_streamed(["git", "pull"])
             console.print("[green]✓ Git pull successful.[/green]")
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
+        except subprocess.CalledProcessError:
+            console.print("[bold red]❌ Error pulling latest changes.[/bold red]")
             sys.exit(1)
 
         # Governance validation
@@ -337,15 +319,13 @@ def task_release(increment: str = "") -> dict[str, Any]:
         # Run all checks
         console.print("\n[cyan]Running all pre-release checks...[/cyan]")
         try:
-            subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
+            run_streamed(["doit", "check"])
             console.print("[green]✓ All checks passed.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print(
                 "[bold red]❌ Pre-release checks failed! "
                 "Please fix issues before releasing.[/bold red]"
             )
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         # Automated version bump and CHANGELOG generation using commitizen
@@ -353,34 +333,29 @@ def task_release(increment: str = "") -> dict[str, Any]:
         try:
             # Use cz bump --changelog --merge-prerelease to update version,
             # changelog, commit, and tag. This consolidates pre-release changes
-            # into the final release entry
+            # into the final release entry. Tee so we can still parse the
+            # "Bumping to version X.Y.Z" line.
             bump_cmd = ["uv", "run", "cz", "bump", "--changelog", "--merge-prerelease"]
             if increment:
                 bump_cmd.extend(["--increment", increment.upper()])
                 console.print(f"[dim]Forcing {increment.upper()} version bump[/dim]")
-            result = subprocess.run(
+            result = run_teed(
                 bump_cmd,
                 env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
-                check=True,
-                capture_output=True,
-                text=True,
             )
             console.print(
                 "[green]✓ Version bumped and CHANGELOG updated (merged pre-releases).[/green]"
             )
-            console.print(f"[dim]{result.stdout}[/dim]")
             # Extract new version from cz output (example: "Bumping to version 1.0.0")
             version_match = re.search(r"Bumping to version (\d+\.\d+\.\d+)", result.stdout)
             # Fallback to "unknown" if regex fails
             new_version = version_match.group(1) if version_match else "unknown"
 
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print(
                 "[bold red]❌ commitizen bump failed! "
                 "Ensure your commit history is conventional.[/bold red]"
             )
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
         except Exception as e:
             console.print(
@@ -391,17 +366,10 @@ def task_release(increment: str = "") -> dict[str, Any]:
         # Push commits and tags to GitHub
         console.print("\n[cyan]Pushing commits and tags to GitHub...[/cyan]")
         try:
-            subprocess.run(
-                ["git", "push", "--follow-tags", "origin", current_branch],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
+            run_streamed(["git", "push", "--follow-tags", "origin", current_branch])
             console.print("[green]✓ Pushed new commits and tags to GitHub.[/green]")
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pushing to GitHub:[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
+        except subprocess.CalledProcessError:
+            console.print("[bold red]❌ Error pushing to GitHub.[/bold red]")
             sys.exit(1)
 
         console.print("\n" + "=" * 70)
@@ -478,12 +446,10 @@ def task_release_pr(increment: str = "") -> dict[str, Any]:
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
-            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+            run_streamed(["git", "pull"])
             console.print("[green]✓ Git pull successful.[/green]")
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
+        except subprocess.CalledProcessError:
+            console.print("[bold red]❌ Error pulling latest changes.[/bold red]")
             sys.exit(1)
 
         # Governance validation
@@ -504,15 +470,13 @@ def task_release_pr(increment: str = "") -> dict[str, Any]:
         # Run all checks
         console.print("\n[cyan]Running all pre-release checks...[/cyan]")
         try:
-            subprocess.run(["doit", "check"], check=True, capture_output=True, text=True)
+            run_streamed(["doit", "check"])
             console.print("[green]✓ All checks passed.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print(
                 "[bold red]❌ Pre-release checks failed! "
                 "Please fix issues before releasing.[/bold red]"
             )
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         # Get next version using commitizen
@@ -557,18 +521,13 @@ def task_release_pr(increment: str = "") -> dict[str, Any]:
         console.print("\n[cyan]Updating CHANGELOG.md...[/cyan]")
         try:
             changelog_cmd = ["uv", "run", "cz", "changelog", "--incremental"]
-            subprocess.run(
+            run_streamed(
                 changelog_cmd,
                 env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
-                check=True,
-                capture_output=True,
-                text=True,
             )
             console.print("[green]✓ CHANGELOG.md updated.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print("[bold red]❌ Failed to update changelog.[/bold red]")
-            console.print(f"[red]Stdout: {e.stdout}[/red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             # Cleanup: go back to main
             subprocess.run(["git", "checkout", "main"], capture_output=True)
             subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
@@ -583,16 +542,12 @@ def task_release_pr(increment: str = "") -> dict[str, Any]:
                 capture_output=True,
                 text=True,
             )
-            subprocess.run(
+            run_streamed(
                 ["git", "commit", "-m", f"chore: update changelog for v{next_version}"],
-                check=True,
-                capture_output=True,
-                text=True,
             )
             console.print("[green]✓ Changelog committed.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print("[bold red]❌ Failed to commit changelog.[/bold red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             # Cleanup
             subprocess.run(["git", "checkout", "main"], capture_output=True)
             subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
@@ -601,16 +556,10 @@ def task_release_pr(increment: str = "") -> dict[str, Any]:
         # Push branch
         console.print(f"\n[cyan]Pushing branch {branch_name}...[/cyan]")
         try:
-            subprocess.run(
-                ["git", "push", "-u", "origin", branch_name],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
+            run_streamed(["git", "push", "-u", "origin", branch_name])
             console.print("[green]✓ Branch pushed.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print("[bold red]❌ Failed to push branch.[/bold red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         # Create PR using doit pr
@@ -641,7 +590,7 @@ After this PR is merged, run `doit release_tag` to create the version tag
 and trigger the release workflow.
 """
             # Use gh CLI directly since we're in a non-interactive context
-            subprocess.run(
+            run_streamed(
                 [
                     "gh",
                     "pr",
@@ -651,14 +600,10 @@ and trigger the release workflow.
                     "--body",
                     pr_body,
                 ],
-                check=True,
-                capture_output=True,
-                text=True,
             )
             console.print("[green]✓ Pull request created.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print("[bold red]❌ Failed to create PR.[/bold red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         console.print("\n" + "=" * 70)
@@ -714,11 +659,10 @@ def task_release_tag() -> dict[str, Any]:
         # Pull latest changes
         console.print("\n[cyan]Pulling latest changes...[/cyan]")
         try:
-            subprocess.run(["git", "pull"], check=True, capture_output=True, text=True)
+            run_streamed(["git", "pull"])
             console.print("[green]✓ Git pull successful.[/green]")
-        except subprocess.CalledProcessError as e:
-            console.print("[bold red]❌ Error pulling latest changes:[/bold red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
+        except subprocess.CalledProcessError:
+            console.print("[bold red]❌ Error pulling latest changes.[/bold red]")
             sys.exit(1)
 
         # Find the most recently merged release PR
@@ -804,16 +748,10 @@ def task_release_tag() -> dict[str, Any]:
         # Push tag
         console.print(f"\n[cyan]Pushing tag {tag_name}...[/cyan]")
         try:
-            subprocess.run(
-                ["git", "push", "origin", tag_name],
-                check=True,
-                capture_output=True,
-                text=True,
-            )
+            run_streamed(["git", "push", "origin", tag_name])
             console.print(f"[green]✓ Tag {tag_name} pushed.[/green]")
-        except subprocess.CalledProcessError as e:
+        except subprocess.CalledProcessError:
             console.print("[bold red]❌ Failed to push tag.[/bold red]")
-            console.print(f"[red]Stderr: {e.stderr}[/red]")
             sys.exit(1)
 
         console.print("\n" + "=" * 70)

@@ -1,0 +1,315 @@
+"""Tests for the ``run_streamed`` / ``run_teed`` helpers in tools.doit.base.
+
+The helpers back the live-streaming output changes for the release tasks
+(issue #631). The task functions themselves (``task_release``, etc.) have no
+existing test coverage and are out of scope per the plan. These tests exercise
+the two helpers only, using real child processes so the tee / streaming
+behavior is actually verified.
+"""
+
+from __future__ import annotations
+
+import io
+import os
+import subprocess
+import sys
+from typing import TYPE_CHECKING
+
+import pytest
+
+from tools.doit.base import run_streamed, run_teed
+
+if TYPE_CHECKING:
+    from _pytest.monkeypatch import MonkeyPatch
+
+
+class TestRunStreamed:
+    """Tests for ``run_streamed``."""
+
+    def test_success_returns_none(self) -> None:
+        """A zero-exit command returns ``None`` and does not raise."""
+        result = run_streamed([sys.executable, "-c", "print('hi')"])
+        assert result is None
+
+    def test_failure_with_check_true_raises(self) -> None:
+        """Non-zero exit with ``check=True`` raises ``CalledProcessError``."""
+        with pytest.raises(subprocess.CalledProcessError) as excinfo:
+            run_streamed([sys.executable, "-c", "import sys; sys.exit(2)"])
+        assert excinfo.value.returncode == 2
+
+    def test_failure_with_check_false_does_not_raise(self) -> None:
+        """Non-zero exit with ``check=False`` returns without raising."""
+        # Must not raise.
+        result = run_streamed(
+            [sys.executable, "-c", "import sys; sys.exit(3)"],
+            check=False,
+        )
+        assert result is None
+
+    def test_env_is_threaded_through(self, capfd: pytest.CaptureFixture[str]) -> None:
+        """The ``env`` mapping is forwarded to the child process."""
+        # Use a sentinel env var the child will echo to stdout.
+        run_streamed(
+            [
+                sys.executable,
+                "-c",
+                "import os; print(os.environ.get('RUN_STREAMED_TEST', ''))",
+            ],
+            env={"RUN_STREAMED_TEST": "threaded-value"},
+        )
+        out = capfd.readouterr().out
+        assert "threaded-value" in out
+
+    def test_empty_env_isolates_child(self, capfd: pytest.CaptureFixture[str]) -> None:
+        """Passing a tightly-scoped env actually replaces (not extends) the parent env."""
+        # A var the parent likely has — confirm the child doesn't see it when
+        # we pass a minimal env. We still need PATH for the interpreter lookup
+        # on some platforms; use the interpreter's absolute path to avoid that.
+        run_streamed(
+            [
+                sys.executable,
+                "-c",
+                "import os; print(os.environ.get('PATH', 'NO_PATH'))",
+            ],
+            env={"OTHER": "x"},
+        )
+        out = capfd.readouterr().out
+        assert "NO_PATH" in out
+
+    def test_pythonunbuffered_is_set_by_default(self, capfd: pytest.CaptureFixture[str]) -> None:
+        """``PYTHONUNBUFFERED=1`` is injected into the child env so Python
+        descendants flush stdout line-by-line to pipes, not on process exit."""
+        run_streamed(
+            [
+                sys.executable,
+                "-c",
+                "import os; print(os.environ.get('PYTHONUNBUFFERED', 'unset'))",
+            ]
+        )
+        assert capfd.readouterr().out.strip() == "1"
+
+
+class TestRunTeed:
+    """Tests for ``run_teed``."""
+
+    def test_streams_and_captures_stdout(self, monkeypatch: MonkeyPatch) -> None:
+        """Each line of stdout is both written live and captured in the buffer.
+
+        The child deliberately does NOT call ``sys.stdout.flush()`` — real
+        tools (cz, pytest, mypy) don't, and an earlier version of this test
+        did which masked a PYTHONUNBUFFERED bug. We rely on the helper's
+        ``PYTHONUNBUFFERED=1`` env override for the child to line-buffer.
+        """
+        fake_stdout = io.StringIO()
+        monkeypatch.setattr(sys, "stdout", fake_stdout)
+
+        result = run_teed(
+            [
+                sys.executable,
+                "-c",
+                "for i in (1, 2, 3):\n    print(i)\n",
+            ]
+        )
+
+        streamed = fake_stdout.getvalue()
+        # All three lines must appear in the live-streamed output.
+        assert "1\n" in streamed
+        assert "2\n" in streamed
+        assert "3\n" in streamed
+        # And also in the returned captured stdout.
+        assert result.stdout == "1\n2\n3\n"
+        assert result.stderr == ""
+        assert result.returncode == 0
+
+    def test_stderr_merges_into_stdout(self, monkeypatch: MonkeyPatch) -> None:
+        """Content written to stderr is captured in ``.stdout`` (merged stream)."""
+        fake_stdout = io.StringIO()
+        monkeypatch.setattr(sys, "stdout", fake_stdout)
+
+        result = run_teed(
+            [
+                sys.executable,
+                "-c",
+                "import sys; sys.stderr.write('err-line\\n'); sys.stderr.flush()",
+            ]
+        )
+
+        assert "err-line" in result.stdout
+        assert "err-line" in fake_stdout.getvalue()
+        assert result.stderr == ""
+        assert result.returncode == 0
+
+    def test_returncode_reflects_success(self, monkeypatch: MonkeyPatch) -> None:
+        """A zero-exit command returns a ``CompletedProcess`` with ``returncode=0``."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+        result = run_teed([sys.executable, "-c", "print('ok')"])
+        assert result.returncode == 0
+        assert "ok" in result.stdout
+
+    def test_failure_with_check_true_raises_with_stdout(self, monkeypatch: MonkeyPatch) -> None:
+        """Non-zero exit under ``check=True`` raises with captured ``stdout``.
+
+        This preserves the old error-path semantics — callers that logged
+        ``e.stdout`` still see output even though live streaming already
+        showed it to the user.
+        """
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+
+        with pytest.raises(subprocess.CalledProcessError) as excinfo:
+            run_teed(
+                [
+                    sys.executable,
+                    "-c",
+                    "import sys; print('partial output'); sys.exit(5)",
+                ]
+            )
+
+        err = excinfo.value
+        assert err.returncode == 5
+        assert err.stdout is not None
+        assert "partial output" in err.stdout
+
+    def test_failure_with_check_false_returns_completedprocess(
+        self, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Non-zero exit under ``check=False`` returns a ``CompletedProcess``."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+
+        result = run_teed(
+            [
+                sys.executable,
+                "-c",
+                "import sys; print('still captured'); sys.exit(7)",
+            ],
+            check=False,
+        )
+
+        assert result.returncode == 7
+        assert "still captured" in result.stdout
+        assert result.stderr == ""
+
+    def test_env_is_threaded_through(self, monkeypatch: MonkeyPatch) -> None:
+        """The ``env`` mapping is forwarded to the child process."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+
+        result = run_teed(
+            [
+                sys.executable,
+                "-c",
+                "import os; print(os.environ.get('RUN_TEED_TEST', ''))",
+            ],
+            env={"RUN_TEED_TEST": "teed-value"},
+        )
+
+        assert "teed-value" in result.stdout
+
+    def test_cwd_is_threaded_through(self, monkeypatch: MonkeyPatch, tmp_path: object) -> None:
+        """The ``cwd`` parameter is forwarded to the child process."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+
+        # tmp_path is a pathlib.Path fixture; reify to str for the child.
+        from pathlib import Path
+
+        assert isinstance(tmp_path, Path)
+        result = run_teed(
+            [sys.executable, "-c", "import os; print(os.getcwd())"],
+            cwd=str(tmp_path),
+        )
+
+        # getcwd() in the child should resolve to tmp_path.
+        captured = result.stdout.strip()
+        assert Path(captured).resolve() == tmp_path.resolve()
+
+    def test_pythonunbuffered_is_set_by_default(self, monkeypatch: MonkeyPatch) -> None:
+        """``PYTHONUNBUFFERED=1`` is injected into the child env so Python
+        descendants flush stdout line-by-line to pipes, not on process exit."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+        result = run_teed(
+            [
+                sys.executable,
+                "-c",
+                "import os; print(os.environ.get('PYTHONUNBUFFERED', 'unset'))",
+            ]
+        )
+        assert result.stdout.strip() == "1"
+
+    def test_pythonunbuffered_caller_override_respected(self, monkeypatch: MonkeyPatch) -> None:
+        """A caller-supplied ``PYTHONUNBUFFERED`` wins; the helper only
+        provides it as a default."""
+        monkeypatch.setattr(sys, "stdout", io.StringIO())
+        result = run_teed(
+            [
+                sys.executable,
+                "-c",
+                "import os; print(os.environ.get('PYTHONUNBUFFERED', 'unset'))",
+            ],
+            env={**os.environ, "PYTHONUNBUFFERED": "0"},
+        )
+        assert result.stdout.strip() == "0"
+
+    def test_streams_line_by_line_without_child_flush(self, monkeypatch: MonkeyPatch) -> None:
+        """Regression test for PR #633 review Issue 2: a Python child that
+        does NOT call ``sys.stdout.flush()`` after each print (which is what
+        real tools do) still delivers lines to the parent as they are
+        printed — not batched at process exit — thanks to
+        ``PYTHONUNBUFFERED=1``. Without that env override, all three writes
+        would arrive together at ~0.45s when the child terminates.
+        """
+        import time
+
+        received: list[tuple[float, str]] = []
+        start = time.monotonic()
+
+        class TimestampingStdout:
+            def write(self, s: str) -> int:
+                received.append((time.monotonic() - start, s))
+                return len(s)
+
+            def flush(self) -> None:
+                pass
+
+        monkeypatch.setattr(sys, "stdout", TimestampingStdout())
+
+        # Child prints 3 lines with 150ms gaps. Total runtime ~0.45s. No flush.
+        run_teed(
+            [
+                sys.executable,
+                "-c",
+                "import time\nfor i in (1, 2, 3):\n    print(i)\n    time.sleep(0.15)\n",
+            ]
+        )
+
+        content_writes = [(t, s) for t, s in received if s.strip()]
+        assert len(content_writes) >= 3, f"expected >=3 content writes, got {content_writes}"
+
+        first_write_time = content_writes[0][0]
+        # Generous threshold: first line should arrive by ~0.15s under live
+        # streaming; child's full runtime is ~0.45s. 0.3s gives margin for
+        # slow CI without masking a regression where everything arrives at
+        # process exit.
+        assert first_write_time < 0.3, (
+            f"first content write at {first_write_time:.3f}s "
+            f"(child runs ~0.45s). Output appears buffered — "
+            f"regression of PR #633 review Issue 2 fix (PYTHONUNBUFFERED)."
+        )
+
+    def test_raising_write_triggers_child_cleanup(self, monkeypatch: MonkeyPatch) -> None:
+        """Regression test for PR #633 review Issue 1: if the stdout-write
+        loop raises, the helper still calls ``process.kill()`` and
+        ``wait()`` so the child is reaped and the pipe is closed — no
+        lingering child, no deadlock on a full pipe."""
+
+        class FailingStdout:
+            def write(self, s: str) -> int:
+                raise OSError(f"broken stdout (refused {len(s)} chars)")
+
+            def flush(self) -> None:
+                pass
+
+        monkeypatch.setattr(sys, "stdout", FailingStdout())
+
+        # The child prints a line; our write will raise on the first line.
+        # Primary assertion: the exception propagates out (rather than the
+        # helper swallowing it and hanging on wait()).
+        with pytest.raises(OSError, match="broken stdout"):
+            run_teed([sys.executable, "-c", "print('hi')"])
