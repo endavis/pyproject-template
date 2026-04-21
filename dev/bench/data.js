@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776745674496,
+  "lastUpdate": 1776746016294,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4779,6 +4779,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.791727735232755e-7",
             "extra": "mean: 1.9969563505123908 usec\nrounds: 26667"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b1a5a2e9c2766ed44a83bab3257877f54cb2d06",
+          "message": "fix: accept release as a conventional type in all three validators (merges PR #442, addresses #441)\n\nThree validators in this template rejected release as a conventional-\ncommit type, blocking the release flow at multiple gates:\n\n1. CI title check (.github/workflows/pr-checks.yml) — Validate PR\n   Title Format regex was the 8 standard types only. Release PRs\n   titled \"release: v<version>\" failed the check.\n2. Governance check (validate_merge_commits in release.py) — same\n   regex. Merge commits of release PRs failed the next release's\n   governance validation.\n3. doit pr_merge title check (github.py) — same regex. Release PRs\n   couldn't be merged through the doit wrapper.\n\nExtend the regex in all three to accept release. Hoist pr_merge's\ninline regex into module-level _PR_TITLE_PATTERN for testability.\nSync the documented Valid Types list in release-and-automation.md.\n\nNote: the test_release_type_merge_commit_passes regression test from\ndownstream PR #654 depends on TestValidateMergeCommits which is in\nPR #438 (not this branch's chain). Will be added when this and #438\nboth land and someone rebases.\n\n19 new test cases for _PR_TITLE_PATTERN covering all 8 standard types\nplus release variants and rejection of malformed titles.\n\nAddresses #441.\n\nCross-repo port from endavis/pynetappfoundry#654 (CI + governance) and\n#656 (pr_merge).\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T05:33:09+01:00",
+          "tree_id": "ca032de98e54e355c9d8312ee17e9d598f4c0111",
+          "url": "https://github.com/endavis/pyproject-template/commit/3b1a5a2e9c2766ed44a83bab3257877f54cb2d06"
+        },
+        "date": 1776746015800,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8954894.985300254,
+            "unit": "iter/sec",
+            "range": "stddev: 1.201852798748485e-8",
+            "extra": "mean: 111.67076795892437 nsec\nrounds: 87101"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8788013.495752625,
+            "unit": "iter/sec",
+            "range": "stddev: 1.593130817941715e-8",
+            "extra": "mean: 113.79135916021458 nsec\nrounds: 87635"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5005731.182824398,
+            "unit": "iter/sec",
+            "range": "stddev: 4.859868560628586e-8",
+            "extra": "mean: 199.77101515782297 nsec\nrounds: 184129"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1611203.0546095283,
+            "unit": "iter/sec",
+            "range": "stddev: 3.5462154966516427e-7",
+            "extra": "mean: 620.6542354416948 nsec\nrounds: 56712"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 454411.8355348535,
+            "unit": "iter/sec",
+            "range": "stddev: 9.762828868059498e-7",
+            "extra": "mean: 2.2006469061770284 usec\nrounds: 54334"
           }
         ]
       }
