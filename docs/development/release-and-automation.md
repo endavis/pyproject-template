@@ -60,138 +60,66 @@ uv run python -c "from importlib.metadata import version; print(version('your-pa
 
 ## Release Management
 
-This template provides two automated release workflows powered by **commitizen**:
+Releases follow a single PR-based flow powered by **commitizen**. The
+changelog and version bump are reviewed in a pull request; after the PR
+merges, a lightweight tagging step triggers the publish workflow. Direct-to-
+`main` release commands are not supported — they are incompatible with the
+template-default `no-commit-to-main` hook.
 
-### 1. Production Release (`doit release`)
-
-Creates a stable release for PyPI with full governance validation.
+### Release Flow
 
 ```bash
+# Step 1: open a release PR (production or pre-release)
+uv run doit release [--prerelease=alpha|beta|rc] [--increment=MAJOR|MINOR|PATCH]
+
+# --> reviewer merges the PR --
+
+# Step 2: tag main and trigger publish
+uv run doit release_tag
+```
+
+Both commands must be run from `main` with a clean working tree.
+`--prerelease` and `--increment` are mutually exclusive on `doit release`.
+
+### Step 1: Create the release PR (`doit release`)
+
+`doit release` determines the next version, creates a `release/vX.Y.Z`
+branch, updates `CHANGELOG.md`, and opens a PR for review.
+
+```bash
+# Auto-detect the next version from conventional commits
 uv run doit release
+
+# Force a specific increment
+uv run doit release --increment=major   # 1.0.0 → 2.0.0
+uv run doit release --increment=minor   # 1.0.0 → 1.1.0
+uv run doit release --increment=patch   # 1.0.0 → 1.0.1
+
+# Open a pre-release PR (TestPyPI)
+uv run doit release --prerelease=alpha  # 1.0.0 → 1.0.1a0
+uv run doit release --prerelease=beta
+uv run doit release --prerelease=rc
 ```
 
 **What it does:**
+
 1. ✅ Verifies you're on the `main` branch
-2. ✅ Checks for uncommitted changes
-3. ✅ Pulls latest changes from remote
-4. ✅ **Runs governance validations** (merge commit format, issue links)
-5. ✅ Runs all quality checks (`doit check`)
-6. ✅ Uses commitizen to:
-   - Analyze conventional commits since last tag
-   - Determine next version number (MAJOR, MINOR, PATCH)
-   - Update CHANGELOG.md (merges pre-release entries)
-   - Create git tag
-7. ✅ Pushes commits and tags to GitHub
-8. ✅ Triggers CI/CD to build and publish to PyPI
+2. ✅ Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
+3. ✅ Rejects `--prerelease` combined with `--increment` (mutually exclusive)
+4. ✅ Checks for uncommitted changes
+5. ✅ Pulls latest changes from remote
+6. ✅ **Runs governance validations** (merge commit format, issue links)
+7. ✅ Runs all quality checks (`doit check`)
+8. ✅ Asks commitizen for the next version (`cz bump --get-next`)
+9. ✅ Creates a `release/vX.Y.Z` branch
+10. ✅ Updates `CHANGELOG.md` and commits it
+11. ✅ Pushes the branch and opens a PR titled `release: vX.Y.Z`
 
-**Example Output:**
-```
-======================================================================
-Starting automated release process...
-======================================================================
+The PR can be reviewed, discussed, and approved like any other change.
 
-Pulling latest changes...
-✓ Git pull successful.
+### Step 2: Tag the release (`doit release_tag`)
 
-Running governance validations...
-
-Validating merge commit format...
-✓ All merge commits follow required format.
-
-Validating issue links in commits...
-✓ All non-docs commits reference issues.
-
-✓ Governance validations complete.
-
-Running all pre-release checks...
-✓ All checks passed.
-
-Bumping version and generating CHANGELOG with commitizen...
-✓ Version bumped and CHANGELOG updated (merged pre-releases).
-
-Pushing commits and tags to GitHub...
-✓ Pushed new commits and tags to GitHub.
-
-======================================================================
-✓ Automated release 1.0.0 complete!
-======================================================================
-
-Next steps:
-1. Monitor GitHub Actions for build and publish.
-2. Check PyPI: https://pypi.org/project/your-package/
-3. Verify the updated CHANGELOG.md in the repository.
-```
-
-### 2. Pre-release (`doit release_dev`)
-
-Creates alpha/beta/rc releases for TestPyPI testing.
-
-```bash
-# Create alpha pre-release (default)
-uv run doit release_dev
-
-# Create beta pre-release
-uv run doit release_dev --type=beta
-
-# Create release candidate
-uv run doit release_dev --type=rc
-```
-
-**What it does:**
-1. ✅ Verifies you're on the `main` branch (with warning option to continue)
-2. ✅ Checks for uncommitted changes
-3. ✅ Pulls latest changes
-4. ✅ Runs all quality checks
-5. ✅ Uses commitizen to create pre-release tag
-6. ✅ Pushes tag to trigger TestPyPI publish
-
-**No governance validation** - this is for testing only.
-
-### Release Workflow Best Practices
-
-```bash
-# 1. Develop features with conventional commits
-git commit -m "feat: add new feature"
-git commit -m "fix: resolve bug"
-
-# 2. Create alpha for testing
-uv run doit release_dev --type=alpha
-# --> Creates v0.2.0-alpha.1, publishes to TestPyPI
-
-# 3. Test the alpha release
-pip install --index-url https://test.pypi.org/simple/ your-package==0.2.0a1
-
-# 4. Fix issues, create beta
-git commit -m "fix: address alpha feedback"
-uv run doit release_dev --type=beta
-# --> Creates v0.2.0-beta.1
-
-# 5. Final testing, then production release
-uv run doit release
-# --> Creates v0.2.0, updates CHANGELOG, publishes to PyPI
-```
-
-### 3. PR-Based Release (`doit release_pr` + `doit release_tag`)
-
-For teams that require review of changelog and version bump changes before releasing, this two-step workflow routes the release through a pull request.
-
-**When to use instead of `doit release`:**
-
-- Your branch protection rules require PR approval for all changes to `main`
-- You want the changelog and version bump reviewed before the release is finalized
-- Your team prefers an auditable release process with PR-based approvals
-
-**Step 1: Create the release PR**
-
-```bash
-uv run doit release_pr
-```
-
-This creates a PR containing the version bump and updated CHANGELOG.md. The PR can be reviewed, discussed, and approved like any other change.
-
-**Step 2: Tag the release after merge**
-
-After the release PR is merged to `main`, create the release tag:
+After the release PR is merged to `main`:
 
 ```bash
 git checkout main
@@ -199,17 +127,58 @@ git pull
 uv run doit release_tag
 ```
 
-This creates the git tag and pushes it, triggering CI/CD to build and publish the package.
+**What it does:**
 
-**Comparison with direct release:**
+1. ✅ Verifies you're on the `main` branch
+2. ✅ Pulls latest changes
+3. ✅ Finds the most recently merged `release: vX.Y.Z` PR
+4. ✅ Extracts the version from the PR title (falls back to the branch name)
+5. ✅ Creates the git tag `vX.Y.Z` on `main`
+6. ✅ Pushes the tag, which triggers the publish workflow
 
-| Aspect | `doit release` | `doit release_pr` + `doit release_tag` |
-|--------|---------------|---------------------------------------|
-| Steps | Single command | Two-step (PR then tag) |
-| Review | No PR review of changelog | Changelog reviewed in PR |
-| Branch protection | Pushes directly to `main` | Works with strict branch protection |
-| Governance | Built-in validation | Validation in both steps |
-| Best for | Solo maintainers, trusted CI | Teams, regulated environments |
+### Pre-releases (TestPyPI)
+
+Pass `--prerelease=<type>` to `doit release` to open a pre-release PR:
+
+| Type | Use when |
+| --- | --- |
+| `alpha` | Early, unstable snapshots for internal testing |
+| `beta` | Feature-complete but not yet stable |
+| `rc` | Release candidate; only fixes expected before the final release |
+
+Pre-release tags (e.g. `v1.2.0a0`, `v1.2.0-rc.1`) trigger the TestPyPI publish
+workflow; production tags (e.g. `v1.2.0`) trigger TestPyPI followed by PyPI.
+See the [Workflow Triggers](../../.github/CONTRIBUTING.md#workflow-triggers)
+table in `CONTRIBUTING.md` for the full mapping.
+
+### Example Release Cycle
+
+```bash
+# 1. Develop features with conventional commits on feature branches
+git commit -m "feat: add new feature (#99)"
+git commit -m "fix: resolve bug (#100)"
+
+# 2. Cut an alpha for internal testing
+uv run doit release --prerelease=alpha
+# --> Opens PR "release: v0.2.0a0"
+# --> Reviewer merges the PR
+uv run doit release_tag
+# --> Tag v0.2.0a0 pushed; TestPyPI publish triggered
+
+# 3. Install from TestPyPI for testing
+pip install --index-url https://test.pypi.org/simple/ your-package==0.2.0a0
+
+# 4. Fix issues and cut a beta
+git commit -m "fix: address alpha feedback (#101)"
+uv run doit release --prerelease=beta
+# --> ... merge PR, tag, publish to TestPyPI ...
+
+# 5. Cut the final release
+uv run doit release
+# --> Opens PR "release: v0.2.0", reviewer merges
+uv run doit release_tag
+# --> Tag v0.2.0 pushed; publish workflow runs TestPyPI → PyPI
+```
 
 ## Release Notes
 
@@ -764,8 +733,9 @@ uv run doit licenses        # License compliance
 uv run doit sbom            # Generate SBOM (CycloneDX)
 
 # Releases
-uv run doit release_dev     # Create pre-release (TestPyPI)
-uv run doit release         # Create production release (PyPI)
+uv run doit release --prerelease=alpha   # Open a pre-release PR (TestPyPI)
+uv run doit release                      # Open a production release PR (PyPI)
+uv run doit release_tag                  # Tag main after the release PR is merged
 ```
 
 ### Installation Options

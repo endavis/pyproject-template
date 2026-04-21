@@ -5,7 +5,7 @@ the release tasks (issue #631). ``_extract_version_from_release_pr`` is the
 version-parsing helper factored out of ``task_release_tag`` to support
 PEP440 and semver-style pre-release suffixes (issue #632 Phase A).
 ``_build_cz_get_next_cmd`` is the command-list builder factored out of
-``task_release_pr`` so ``--prerelease`` can be threaded through to
+``task_release`` so ``--prerelease`` can be threaded through to
 ``cz bump --get-next`` (issue #632 Phase B). The task functions themselves
 (``task_release``, etc.) have no existing test coverage and are out of scope
 per the plan.
@@ -323,7 +323,7 @@ class TestRunTeed:
 class TestExtractVersionFromReleasePR:
     """Tests for ``_extract_version_from_release_pr``.
 
-    Covers the PR-title / branch-name shapes produced by ``task_release_pr``
+    Covers the PR-title / branch-name shapes produced by ``task_release``
     (and the shapes a maintainer might hand-write), including PEP440 and
     semver-style pre-release suffixes that the previous regex in
     ``task_release_tag`` rejected (issue #632).

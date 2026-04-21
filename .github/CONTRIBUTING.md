@@ -394,99 +394,63 @@ Version bumping is handled by [commitizen](https://commitizen-tools.github.io/co
 | `feat:` | Minor (1.0.0 → 1.1.0) |
 | `BREAKING CHANGE:` | Major (1.0.0 → 2.0.0) |
 
-### Pre-Release Workflow (TestPyPI)
+### Release Workflow
 
-Use pre-releases to test packages before official release:
-
-```bash
-# Create alpha release (default)
-doit release_dev
-
-# Create beta release
-doit release_dev --type=beta
-
-# Create release candidate
-doit release_dev --type=rc
-```
-
-**What `doit release_dev` does:**
-
-1. Verifies you're on the `main` branch
-2. Checks for uncommitted changes
-3. Pulls latest changes from remote
-4. Runs all checks (`doit check`)
-5. Bumps version with commitizen (e.g., `1.0.0` → `1.0.1-alpha0`)
-6. Updates CHANGELOG.md
-7. Creates git tag and pushes to GitHub
-8. **Triggers:** `.github/workflows/testpypi.yml`
-9. **Publishes to:** [TestPyPI](https://test.pypi.org/)
-
-**Testing from TestPyPI:**
+All releases — production and pre-release — go through a pull request.
+`doit release` opens the release PR; a reviewer merges it; `doit release_tag`
+then tags `main` and triggers the publish workflow. Direct-to-`main` release
+commands are not supported.
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ package-name
-```
+# Step 1: open a release PR
+doit release                       # auto-detect next version from commits
+doit release --increment=major     # force MAJOR (1.0.0 → 2.0.0)
+doit release --increment=minor     # force MINOR
+doit release --increment=patch     # force PATCH
+doit release --prerelease=alpha    # open a pre-release PR (1.0.0 → 1.0.1a0)
+doit release --prerelease=beta
+doit release --prerelease=rc
 
-### Production Release Workflow (PyPI)
+# --> reviewer merges the PR --
 
-There are two ways to release: **direct** (requires bypass permissions) or **PR-based** (works with branch protection).
-
-#### Option A: Direct Release (requires bypass permissions)
-
-```bash
-# Auto-detect version bump from commits
-doit release
-
-# Force a specific version bump
-doit release --increment=major    # 1.0.0 → 2.0.0
-doit release --increment=minor    # 1.0.0 → 1.1.0
-doit release --increment=patch    # 1.0.0 → 1.0.1
-```
-
-**What `doit release` does:**
-
-1. Verifies you're on the `main` branch
-2. Checks for uncommitted changes
-3. Pulls latest changes from remote
-4. Validates merge commit format (governance check)
-5. Validates issue links in commits
-6. Runs all checks (`doit check`)
-7. Bumps version with commitizen (merges pre-releases into final version)
-8. Updates CHANGELOG.md (consolidates pre-release entries)
-9. Creates git tag and pushes to GitHub
-10. **Triggers:** `.github/workflows/release.yml`
-11. **Publishes to:** TestPyPI first, then PyPI
-
-> **Note:** This method pushes directly to `main` and requires bypass permissions. See [Setting Up Release Permissions](#setting-up-release-permissions).
-
-#### Option B: PR-Based Release (works with branch protection)
-
-```bash
-# Step 1: Create release PR (auto-detect version)
-doit release_pr
-
-# Or force a specific version bump
-doit release_pr --increment=major
-
-# Step 2: After PR is merged, create the tag
+# Step 2: tag main and trigger publish
+git checkout main
+git pull
 doit release_tag
 ```
 
-**What `doit release_pr` does:**
+`--increment` and `--prerelease` are mutually exclusive.
 
-1. Verifies you're on the `main` branch
-2. Determines next version using commitizen (`cz bump --get-next`)
-3. Creates a `release/vX.Y.Z` branch
-4. Updates CHANGELOG.md
-5. Commits and pushes the branch
-6. Creates a pull request
+**What `doit release` does:**
+
+1. Verifies you're on `main` with a clean working tree
+2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
+3. Rejects `--prerelease` combined with `--increment`
+4. Pulls latest changes from remote
+5. Validates merge commit format (governance check)
+6. Validates issue links in commits
+7. Runs all checks (`doit check`)
+8. Determines the next version using commitizen (`cz bump --get-next`)
+9. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
+10. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
 
 **What `doit release_tag` does:**
 
-1. Finds the most recently merged release PR
-2. Extracts the version from the PR title
-3. Creates a git tag on `main`
-4. Pushes the tag (triggers release workflow)
+1. Verifies you're on `main`, pulls latest changes
+2. Finds the most recently merged `release: vX.Y.Z` PR
+3. Extracts the version from the PR title (falls back to the branch name)
+4. Creates the git tag `vX.Y.Z` on `main`
+5. Pushes the tag
+6. **Triggers:** `.github/workflows/release.yml` (production) or
+   `.github/workflows/testpypi.yml` (pre-release)
+7. **Publishes to:** TestPyPI first, then PyPI for production tags; TestPyPI
+   only for pre-release tags
+
+**Testing a pre-release from TestPyPI:**
+
+```bash
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ package-name==1.0.1a0
+```
 
 ### Workflow Triggers
 
@@ -497,7 +461,10 @@ doit release_tag
 
 ### Setting Up Release Permissions
 
-The release commands (`doit release`, `doit release_dev`) commit directly to `main` and push tags. If your repository has branch protection rules requiring pull requests, you'll need to configure a bypass for automated releases.
+`doit release_tag` pushes the version tag directly to `main`. If your branch
+protection rules cover tag pushes, configure a bypass for the tagging step.
+The release PR itself is reviewed and merged through the normal PR flow, so
+no bypass is required for the commit and changelog changes.
 
 #### Organization Repositories: GitHub App (Recommended)
 
@@ -602,35 +569,30 @@ In your repo **Settings** → **Secrets and variables** → **Actions**:
     fetch-depth: 0
 ```
 
-#### Alternative: Release via Pull Request
-
-If you prefer not to configure bypass permissions, use the PR-based release workflow described in [Option B: PR-Based Release](#option-b-pr-based-release-works-with-branch-protection):
-
-```bash
-# Step 1: Create release PR
-doit release_pr
-
-# Step 2: After PR is merged, create the tag
-doit release_tag
-```
-
 ### Release Checklist
 
-Before running a release:
+Before opening a release PR:
 
 - [ ] All CI checks pass on `main`
 - [ ] CHANGELOG.md is up to date (or will be auto-generated)
-- [ ] No uncommitted changes
+- [ ] No uncommitted changes on your working tree
 - [ ] You have push access to the repository
 - [ ] PyPI/TestPyPI environments are configured in GitHub
+
+After the release PR is merged:
+
+- [ ] `git checkout main && git pull`
+- [ ] `doit release_tag`
+- [ ] Monitor the publish workflow in GitHub Actions
+- [ ] Verify the new version on TestPyPI (pre-release) or PyPI (production)
 
 ### Typical Release Cycle
 
 1. **Development:** Features merged to `main` via PRs
-2. **Alpha testing:** `doit release_dev --type=alpha` → Test on TestPyPI
-3. **Beta testing:** `doit release_dev --type=beta` → Wider testing
-4. **Release candidate:** `doit release_dev --type=rc` → Final testing
-5. **Production:** `doit release` → Publish to PyPI
+2. **Alpha testing:** `doit release --prerelease=alpha` → merge PR → `doit release_tag` → Test on TestPyPI
+3. **Beta testing:** `doit release --prerelease=beta` → merge PR → `doit release_tag` → Wider testing
+4. **Release candidate:** `doit release --prerelease=rc` → merge PR → `doit release_tag` → Final testing
+5. **Production:** `doit release` → merge PR → `doit release_tag` → Publish to PyPI
 
 ### Troubleshooting
 

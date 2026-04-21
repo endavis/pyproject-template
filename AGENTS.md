@@ -195,9 +195,7 @@ The tool hierarchy (prefer higher over lower):
 | GitHub API queries | `gh api` | `curl` to GitHub API |
 | Build docs | `doit docs_build` | `mkdocs build` directly |
 | Serve docs locally | `doit docs_serve` | `mkdocs serve` directly |
-| Release (production) | `doit release` | Manual tag + push |
-| Release (pre-release) | `doit release_dev` | Manual tag + push |
-| Release via PR | `doit release_pr` | Manual changelog + PR |
+| Release | `doit release` | Manual changelog + PR |
 | Tag after release PR merge | `doit release_tag` | Manual tag + push |
 | Mutation testing | `doit mutate` | `mutmut` directly |
 | Generate SBOM | `doit sbom` | `cyclonedx-py` directly |

@@ -375,7 +375,7 @@ def run_configure(
     print("3. Install dependencies: uv sync --all-extras --dev")
     print("4. Install pre-commit hooks: uv run doit pre_commit_install")
     print("5. Run tests: uv run pytest")
-    print("6. Cut a prerelease (if desired): uv run doit release_dev")
+    print("6. Cut a prerelease (if desired): uv run doit release --prerelease=alpha")
     print("7. Start coding!")
     print("━" * 60)
 
