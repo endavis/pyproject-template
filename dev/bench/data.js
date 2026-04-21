@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776729986893,
+  "lastUpdate": 1776743524351,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -4543,6 +4543,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.998260302570933e-7",
             "extra": "mean: 2.016823109093685 usec\nrounds: 55701"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e2df00a136336fa95b700025f69644507bfacab3",
+          "message": "feat: stream subprocess output during release tasks instead of silent capture (merges PR #435)\n\nAdds _child_env, run_streamed, and run_teed to tools/doit/base.py and swaps\n13 call sites in tools/doit/release.py from capture_output=True to the\nappropriate streaming helper. run_streamed inherits stdout/stderr (right\nfor long steps whose output isn't parsed); run_teed pipes + tees + buffers\n(right for steps that need both live output and parseable output, like\ncz bump --get-next whose output gets regex-parsed for the version).\n\nrun_teed includes try/except(kill)/finally(close+wait) so a broken parent\nstdout doesn't leave zombie children. PYTHONUNBUFFERED=1 is set on child\nenvironments so Python children flush line-by-line to pipes.\n\nAdds tests/test_doit_release.py with 23 tests covering stdout/stderr\nbehavior, env passing, cwd, exception cleanup, and a timing-based\nregression test that locks in line-by-line streaming.\n\nAddresses #425.\n\nCross-repo port from endavis/pynetappfoundry#633.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-21T04:51:41+01:00",
+          "tree_id": "2c6cce7196da9453c1303d152bd6a874279ba2d9",
+          "url": "https://github.com/endavis/pyproject-template/commit/e2df00a136336fa95b700025f69644507bfacab3"
+        },
+        "date": 1776743524038,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8830660.163332721,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0884978878604164e-8",
+            "extra": "mean: 113.24181675026621 nsec\nrounds: 83809"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8609954.571860276,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2807985127850733e-8",
+            "extra": "mean: 116.14463138612575 nsec\nrounds: 86866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5196793.724965828,
+            "unit": "iter/sec",
+            "range": "stddev: 1.478049557518121e-8",
+            "extra": "mean: 192.42634072542018 nsec\nrounds: 51584"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1615028.1915366114,
+            "unit": "iter/sec",
+            "range": "stddev: 3.154747935892077e-7",
+            "extra": "mean: 619.1842379225309 nsec\nrounds: 53724"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490664.3926049786,
+            "unit": "iter/sec",
+            "range": "stddev: 4.95333572533975e-7",
+            "extra": "mean: 2.038052923895528 usec\nrounds: 52925"
           }
         ]
       }
