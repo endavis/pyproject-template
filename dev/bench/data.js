@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776776293589,
+  "lastUpdate": 1776784414517,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5133,6 +5133,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.694173400848157e-7",
             "extra": "mean: 2.093783215768877 usec\nrounds: 48057"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "81f88c60d996ba05ad69677334ee9d3b1b111ed2",
+          "message": "feat: add doit tasks to create GitHub environments for PyPI trusted publishing (merges PR #452, addresses #417)\n\n* feat: add doit env_create, env_list, publish_setup tasks\n\nAdd three idempotent doit tasks and their GitHub API helpers to\n``tools/doit/github.py``:\n\n- ``env_create --name=<name>``: create a GitHub environment by name,\n  skipping when it already exists.\n- ``env_list``: list existing environments (sorted alphabetically).\n- ``publish_setup``: create the ``testpypi`` and ``pypi`` environments\n  required for PyPI trusted publishing and print the manual\n  follow-up steps (registering the project on PyPI/TestPyPI) that\n  cannot be automated.\n\nAddresses #417\n\n* test: cover env helpers and tasks via mock_subprocess\n\nAdd 18 tests covering the new ``_gh_repo_slug``, ``_gh_env_exists``,\n``_gh_env_create``, ``_gh_env_list`` helpers and the ``env_create``,\n``env_list``, ``publish_setup`` tasks. Tests use the existing\nprefix-dispatch ``mock_subprocess`` fixture and verify command\nconstruction, the existing-vs-missing-env branches, and idempotence\nof ``publish_setup``.\n\nAddresses #417\n\n* docs: document doit env_create / env_list / publish_setup\n\nAdd a \"GitHub Environments & Trusted Publishing\" section to\n``release-and-automation.md`` that explains the role of the\n``testpypi`` and ``pypi`` environments for OIDC publishing, presents\n``doit publish_setup`` as the one-step bootstrap, and calls out the\nmanual trusted-publisher registration step with links to the PyPI and\nTestPyPI management pages.\n\nAdd matching entries for ``env_create``, ``env_list``, and\n``publish_setup`` to ``doit-tasks-reference.md``, and update the\nGitHub Workflow task category row to include them.\n\nAddresses #417\n\n* docs: point env/publish guides to doit publish_setup\n\nUpdate the two docs pages that still told readers to create the\n``testpypi`` and ``pypi`` environments manually through the GitHub\nSettings UI: ``github-repository-settings.md`` (the OIDC trusted\npublisher section and the summary of manual steps) and\n``new-project.md`` (the post-configure and manual-setup Step 5\nchecklists). Each now points at ``doit publish_setup`` as the one-step\nbootstrap and cross-links the new \"GitHub Environments & Trusted\nPublishing\" section in the release automation guide.\n\nAddresses #417",
+          "timestamp": "2026-04-21T16:13:05+01:00",
+          "tree_id": "aa418afab15bed1951b8167179699c73e41bc20b",
+          "url": "https://github.com/endavis/pyproject-template/commit/81f88c60d996ba05ad69677334ee9d3b1b111ed2"
+        },
+        "date": 1776784413803,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8927384.828237219,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4592833598102395e-8",
+            "extra": "mean: 112.01488669302248 nsec\nrounds: 87329"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8986804.407048628,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0691944053683434e-8",
+            "extra": "mean: 111.27425886955649 nsec\nrounds: 89350"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5401705.381754986,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5820731743039602e-8",
+            "extra": "mean: 185.12672004986416 nsec\nrounds: 54574"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1652310.0391105174,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8396203400816643e-7",
+            "extra": "mean: 605.2132931046807 nsec\nrounds: 37779"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 502786.41791054734,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6768400892726994e-7",
+            "extra": "mean: 1.988916097128769 usec\nrounds: 51798"
           }
         ]
       }
