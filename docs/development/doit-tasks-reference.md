@@ -681,23 +681,34 @@ doit pr_merge --auto-close
 Create an Architecture Decision Record.
 
 ```bash
-# Interactive mode
+# Interactive mode (project-level 0XXX ADR)
 doit adr
 
 # Non-interactive mode
 doit adr --title="Use Redis for caching" --body="## Status\nAccepted\n..."
 doit adr --title="Use Redis" --body-file=adr.md
+
+# Template-meta ADR (9XXX series) — decisions about the template itself
+doit adr --title="Use some tool" --template
+doit adr --title="Use some tool" --template --body-file=adr.md
 ```
 
 **What it does:**
 - Creates a new ADR in `docs/decisions/`
-- Auto-numbers based on existing ADRs
+- Auto-numbers based on existing ADRs in the chosen series
 - Uses ADR template format
+
+**Series:**
+- Default (project-level, 0XXX): decisions specific to this project. Numbering starts at `0001`.
+- `--template` (template-meta, 9XXX): decisions about the template's tooling, workflows, or conventions. Numbering starts at `9001`.
+
+Both series share `docs/decisions/`; the numeric prefix distinguishes them. Template ADRs are inherited by downstream projects spawned from the template; project ADRs are not.
 
 **Options:**
 - `--title`: ADR title (non-interactive)
 - `--body`: ADR body content (non-interactive)
 - `--body-file`: File containing ADR body (non-interactive)
+- `--template`: Create a template-meta ADR (9XXX series) instead of a project-level ADR
 
 See [ADR Documentation](../decisions/README.md) for more information.
 
