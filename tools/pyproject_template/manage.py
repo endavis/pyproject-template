@@ -309,6 +309,7 @@ def run_action(
 
 def action_create_project(manager: SettingsManager, dry_run: bool, *, yes: bool = False) -> int:
     """Create a new project from the template."""
+    del yes  # Kept for action_* signature uniformity; no confirmation prompts remain.
     Logger.header("Creating New Project from Template")
 
     settings = manager.settings
