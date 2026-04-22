@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776874771830,
+  "lastUpdate": 1776885033156,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5664,6 +5664,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000011576275812803848",
             "extra": "mean: 2.222935966956613 usec\nrounds: 56424"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0cdab3e349b2bfd8007acb713b136b134bf0700e",
+          "message": "fix: scope placeholder replacement with marker tokens and word-boundary regex (merges PR #468, addresses #464)\n\n* refactor(spawn): teach update_file three replacement modes\n\nAddresses #464.\n\nPreviously ``update_file()`` applied a blind ``str.replace`` for every\n``(old, new)`` pair with a single regex guard for ``package_name``. This\nleft identifier substrings (``validate_package_name``) vulnerable and\nmade prose files with the word ``username`` or ``package_name`` prone to\naccidental rewrites.\n\nThe function now distinguishes three modes per pair:\n\n1. Marker tokens (``__FOO__``): blind replace. Collision-proof by\n   construction.\n2. Identifier-like literals in ``.py`` files: word-boundary regex,\n   plus the existing ``(?!\\s*=)`` guard on ``package_name`` to preserve\n   kwargs / TOML-keys.\n3. Everything else: blind replace (current default).\n\nThe replacements dicts in both ``setup_repo.py`` and ``configure.py``\ngain the new ``__FOO__`` marker entries alongside the existing literal\nentries. Markers are the canonical form for new prose files; literals\nremain to support runtime-critical files (pyproject.toml, workflows,\nLICENSE, etc.) and downstream consumer projects that have not yet\nmigrated.\n\nThe existing ``test_package_name_preserves_toml_keys`` fixture is\nupdated to use a ``.py`` file, reflecting that the ``(?!\\s*=)`` guard\nnow scopes to Python source. Commit 3 adds a full ``TestUpdateFileModes``\nclass covering the three modes.\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n* refactor(template): switch prose files to marker tokens\n\nConverts literal placeholder tokens to __FOO__ markers in 25 prose\nfiles so substring collisions (e.g. validate_package_name being\ncorrupted to validate_<user_pkg>) are structurally impossible when\nupdate_file() processes them. The three-mode update_file() added in\ncommit 5a25c18 already handles the new markers via the blind-replace\npath; this commit is the mechanical corpus migration.\n\nMarker token map:\n  package_name           -> __PACKAGE_NAME__\n  package-name           -> __PYPI_NAME__\n  Package Name           -> __PROJECT_NAME__\n  username               -> __GH_OWNER__\n  Your Name              -> __AUTHOR_NAME__\n  your.email@example.com -> __AUTHOR_EMAIL__\n  A short description... -> __DESCRIPTION__\n  https://github.com/username/package_name -> __REPO_URL__\n\nFiles converted: README, CHANGELOG, .github/CONTRIBUTING.md,\n.github/SECURITY.md, .claude/CLAUDE.md, .claude/lsp-setup.md, and\ndocs/** except runtime-critical files. Runtime-critical files\n(pyproject.toml, mkdocs.yml, dodo.py, workflows, LICENSE, .envrc,\n.pre-commit-config.yaml) and Python source/tests keep literal\nplaceholders per the hybrid plan decided in the #464 plan.\n\nAdds a \"Placeholder Markers\" note to docs/template/tools-reference.md\nexplaining the convention.\n\nA handful of template-internal docs (docs/template/tools-reference.md,\nnew-project.md, migration.md) had spots where the script corrupted\ndocumentation referring to the template's own `src/package_name/`\ndirectory as a literal path, or to prompt-label prose like \"GitHub\nusername\". Those were manually reverted to literals.\n\nAddresses #464\n\n* test(spawn): cover update_file's three replacement modes\n\nAdds TestUpdateFileModes class to tests/template/test_utils.py with\n6 tests exercising the three-mode update_file() logic introduced in\ncommit 5a25c18:\n\n1. test_marker_replacement_is_blind — __PACKAGE_NAME__ replaces\n   anywhere in a file regardless of surrounding chars.\n2. test_literal_in_python_code_protects_identifiers —\n   validate_package_name survives when the literal 'package_name' is\n   replaced in a .py file (the core #464 bug).\n3. test_literal_username_in_python_code_protects_identifiers —\n   my_username survives; bare username is replaced.\n4. test_literal_in_non_python_file_is_blind — documents that prose\n   files still get blind replace for literal tokens (rationale for\n   the marker migration in commit 96f86cc).\n5. test_python_identifier_hyphen_case — verifies that \\\\b boundaries\n   work around hyphens in package-name.\n6. test_marker_does_not_interfere_with_literal — marker and literal\n   replacements for the same concept coexist cleanly when both are\n   present in the replacements dict.\n\nAddresses #464\n\n* fix(docs): revert marker usage in mkdocs-evaluated links and mkdocstrings directives\n\ndocs_build failed on HEAD because three classes of marker leaked into\nelements mkdocs evaluates at template-build time:\n\n1. docs/reference/api.md uses mkdocstrings directives\n   (``::: package_name``) that actually import the module at build\n   time. __PACKAGE_NAME__ is not an importable module on the template\n   repo, so the build aborted with ModuleNotFoundError. Reverted every\n   occurrence in api.md back to the literal package_name (the\n   template's own package directory). Word-boundary regex in\n   update_file() substitutes correctly at spawn time.\n\n2. docs/development/install-tools-framework.md and docs/usage/basics.md\n   had __REPO_URL__ in markdown link targets. mkdocs resolves those as\n   relative paths, so the build warned/failed. Reverted to the literal\n   https://github.com/username/package_name URL which the existing\n   URL-pattern entry in the replacements dict handles at spawn time.\n\n3. README.md, CHANGELOG.md, .github/SECURITY.md, .github/CONTRIBUTING.md,\n   docs/getting-started/installation.md, and .claude/lsp-setup.md also\n   had __REPO_URL__ references. These aren't in the mkdocs nav so\n   they didn't fail the docs_build, but they render as broken links on\n   GitHub in the pre-spawn template view. Reverted for consistency.\n\nClassification: these specific URL/module tokens never needed markers.\nMarkers are for identifier-like literals (package_name, username,\npackage-name) that can collide with longer identifiers. Full URLs and\nimportable module names are specific enough to be safely handled by\nblind replace (URLs) or word-boundary regex (identifiers in .py).\n\nAddresses #464\n\n---------\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-22T20:09:59+01:00",
+          "tree_id": "bcf9620c1aee953da3738e14737af47c153c8790",
+          "url": "https://github.com/endavis/pyproject-template/commit/0cdab3e349b2bfd8007acb713b136b134bf0700e"
+        },
+        "date": 1776885031706,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8877922.587879457,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8519633673246574e-8",
+            "extra": "mean: 112.63896368788407 nsec\nrounds: 85756"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8879160.103689007,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1875583458985043e-8",
+            "extra": "mean: 112.62326484962601 nsec\nrounds: 88488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5310524.945585784,
+            "unit": "iter/sec",
+            "range": "stddev: 1.641281141395488e-8",
+            "extra": "mean: 188.30530131135535 nsec\nrounds: 53234"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1652465.3594450813,
+            "unit": "iter/sec",
+            "range": "stddev: 2.949118948737411e-7",
+            "extra": "mean: 605.1564072337424 nsec\nrounds: 52261"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 487497.8165359499,
+            "unit": "iter/sec",
+            "range": "stddev: 6.074488466884264e-7",
+            "extra": "mean: 2.0512912388116433 usec\nrounds: 47037"
           }
         ]
       }
