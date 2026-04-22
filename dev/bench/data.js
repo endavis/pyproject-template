@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776793353261,
+  "lastUpdate": 1776858926155,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5369,6 +5369,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.370697505935341e-7",
             "extra": "mean: 2.01595804823575 usec\nrounds: 55826"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d6fa39c22b3c0752da7c862e13896198388d5b99",
+          "message": "fix: bump lxml to 6.1.0 in uv.lock to resolve CVE-2026-41066 (merges PR #460, addresses #459)\n\nlxml 6.0.2 is a transitive dep (via cyclonedx-python-lib) flagged by\npip-audit with CVE-2026-41066. The fix version is 6.1.0. Ran\n`uv lock --upgrade-package lxml`; no pyproject.toml change required.\n`pip-audit` now reports \"No known vulnerabilities found\".\n\nAddresses #459",
+          "timestamp": "2026-04-22T12:55:02+01:00",
+          "tree_id": "450856bd2a5efc2265315e00cabf60674ed5addd",
+          "url": "https://github.com/endavis/pyproject-template/commit/d6fa39c22b3c0752da7c862e13896198388d5b99"
+        },
+        "date": 1776858925795,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8960697.176219767,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7414690323269546e-8",
+            "extra": "mean: 111.59845939820813 nsec\nrounds: 193874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8976935.481433924,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1675511607456616e-8",
+            "extra": "mean: 111.3965898572177 nsec\nrounds: 87055"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6405683.9275640985,
+            "unit": "iter/sec",
+            "range": "stddev: 2.366919150600981e-8",
+            "extra": "mean: 156.111355369398 nsec\nrounds: 62957"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1754607.00529653,
+            "unit": "iter/sec",
+            "range": "stddev: 2.514838713157857e-7",
+            "extra": "mean: 569.9281930263348 nsec\nrounds: 54744"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501200.3584156266,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013581101971931606",
+            "extra": "mean: 1.9952100656135956 usec\nrounds: 45243"
           }
         ]
       }
