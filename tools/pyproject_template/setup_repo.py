@@ -33,6 +33,13 @@ if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
 # isort: off
+# Import cleanup helpers (used after development environment setup to
+# remove the template management suite from the spawned consumer project).
+from cleanup import (  # noqa: E402
+    CleanupMode,
+    cleanup_template_files,
+)
+
 # Import repo settings functions (aliased to avoid shadowing class methods)
 from repo_settings import (  # noqa: E402
     configure_branch_protection as _configure_branch_protection,
@@ -586,6 +593,75 @@ chore: apply code formatting
             print("  uv run doit check")
             print()
 
+    def cleanup_template_suite(self) -> None:
+        """Remove the template management suite from the spawned consumer project.
+
+        Consumer projects do not use or maintain the template's own tooling
+        (``tools/pyproject_template/``, ``docs/template/``, ``bootstrap.py``).
+        This step invokes :func:`cleanup_template_files` with
+        :attr:`CleanupMode.ALL` to delete the suite, then stages, commits, and
+        pushes the deletions so the consumer's default branch reflects a clean
+        tree.
+
+        Consumers who later want the template-sync suite back can re-install
+        it with ``curl -sSL .../bootstrap.py | python3 - --sync``.
+
+        This method is defensive: any failure is logged as a warning and
+        execution continues, so a cleanup failure does not block the user from
+        using their freshly-spawned repository.
+        """
+        Logger.step("Removing template management suite from spawned project...")
+
+        try:
+            result = cleanup_template_files(CleanupMode.ALL, root=Path.cwd())
+
+            # If nothing was deleted, there's nothing to commit.
+            if not result.deleted_files and not result.deleted_dirs:
+                Logger.info("No template files found to clean up")
+                return
+
+            # Stage deletions, commit, and push. --no-verify mirrors the
+            # pattern used in configure_placeholders(); the no-commit-to-main
+            # pre-commit hook would otherwise reject the commit on a freshly
+            # spawned repo whose only branch is main.
+            subprocess.run(["git", "add", "-A"], check=True, capture_output=True)
+            commit_msg = """
+chore: remove template management suite
+
+Auto-removed by setup_repo.py to keep the consumer project free of
+template-only tooling:
+
+- tools/pyproject_template/ (manage.py, setup_repo.py, configure.py,
+  cleanup.py, check_template_updates.py, migrate_existing_project.py,
+  settings.py, repo_settings.py, utils.py, __init__.py)
+- docs/template/
+- bootstrap.py
+- Template nav section in mkdocs.yml
+
+To reinstall the template-sync suite later, run:
+  curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py \\
+      | python3 - --sync
+
+🤖 Generated with setup-repo.py"""
+
+            subprocess.run(
+                ["git", "commit", "-m", commit_msg, "--no-verify"],
+                check=True,
+                capture_output=True,
+            )
+            subprocess.run(["git", "push"], check=True, capture_output=True)
+            Logger.success("Template management suite removed, committed, and pushed")
+
+        except Exception as e:
+            Logger.warning(f"Template suite cleanup failed: {e}")
+            Logger.info(
+                "You can remove the template suite manually later by running "
+                "`python tools/pyproject_template/cleanup.py --all` from the project root."
+            )
+            import traceback
+
+            traceback.print_exc()
+
     def configure_repository_settings(self) -> None:
         """Configure repository settings to match template."""
         _configure_repository_settings(
@@ -656,11 +732,12 @@ chore: apply code formatting
         print(f"      https://github.com/{self.config['repo_full']}/settings/access")
         print()
 
-        Logger.step("Cleanup Recommendations:")
-        print("  You can safely remove the following setup scripts:")
-        print("  - bootstrap.py")
-        print("  - tools/pyproject_template/configure.py")
-        print("  - tools/pyproject_template/setup_repo.py")
+        Logger.info(
+            "Template tooling was auto-removed. To reinstall the template-sync "
+            "suite later, run: curl -sSL "
+            "https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py "
+            "| python3 - --sync"
+        )
         print()
 
         Logger.step("You're all set!")
@@ -688,6 +765,7 @@ chore: apply code formatting
         2. Configure all GitHub settings (before cloning to avoid partial setup)
         3. Clone repository locally
         4. Configure local files and development environment
+        5. Remove template management suite from the consumer project
         """
         self.print_banner()
         self.check_requirements()
@@ -708,6 +786,11 @@ chore: apply code formatting
         self.clone_repository()
         self.configure_placeholders()
         self.setup_development_environment()
+
+        # Remove the template management suite from the spawned project.
+        # Consumers don't use or maintain the template's own tooling; they
+        # can re-install it later with `bootstrap.py --sync` if desired.
+        self.cleanup_template_suite()
 
         self.print_manual_steps()
 
