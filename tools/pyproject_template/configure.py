@@ -428,11 +428,11 @@ def run_configure(
         print("  ✓ Updating test files")
         update_test_files(test_dir, package_name)
 
-    # Remove template tool tests (they're only for the template itself)
-    tool_tests_dir = Path("tests/pyproject_template")
-    if tool_tests_dir.exists():
-        print("  ✓ Removing template tool tests (tests/pyproject_template/)")
-        shutil.rmtree(tool_tests_dir)
+    # Remove template-only tests (they're only for the template itself)
+    template_tests_dir = Path("tests/template")
+    if template_tests_dir.exists():
+        print("  ✓ Removing template-only tests (tests/template/)")
+        shutil.rmtree(template_tests_dir)
 
     # Enable Dependabot if requested
     dependabot_example = Path(".github/dependabot.yml.example")

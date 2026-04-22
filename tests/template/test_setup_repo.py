@@ -446,3 +446,76 @@ class TestRunOrder:
             f"Expected setup_development_environment < cleanup_template_suite < "
             f"print_manual_steps, got order: {call_order}"
         )
+
+
+class TestConfigurePlaceholdersTemplateTestsRemoval:
+    """Tests for RepositorySetup.configure_placeholders() template-tests removal.
+
+    Issue #463: spawned consumer projects must not ship with
+    ``tests/template/`` (the template-only test suite). This verifies that
+    ``configure_placeholders()`` removes the directory and that the removal
+    is a no-op when the directory is absent.
+    """
+
+    @staticmethod
+    def _minimum_config() -> dict[str, str]:
+        """Return the minimum config dict ``configure_placeholders()`` requires."""
+        return {
+            "repo_owner": "testuser",
+            "repo_name": "Test Project",
+            "package_name": "test_pkg",
+            "pypi_name": "test-pkg",
+            "description": "A test project",
+            "author_name": "Test Author",
+            "author_email": "test@example.com",
+        }
+
+    def test_configure_placeholders_removes_tests_template_directory(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """configure_placeholders() removes tests/template/ when present."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        # Simulate a cloned consumer project with a tests/template/ directory.
+        template_tests_dir = tmp_path / "tests" / "template"
+        template_tests_dir.mkdir(parents=True)
+        (template_tests_dir / "__init__.py").write_text("", encoding="utf-8")
+        (template_tests_dir / "test_doit_adr.py").write_text("# template test", encoding="utf-8")
+
+        monkeypatch.chdir(tmp_path)
+
+        setup = RepositorySetup()
+        setup.config = self._minimum_config()
+
+        # Mock subprocess.run so git add/commit/push does not execute.
+        with patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            setup.configure_placeholders()
+
+        assert not template_tests_dir.exists(), (
+            "tests/template/ should have been removed by configure_placeholders()"
+        )
+        # The parent tests/ directory should still exist.
+        assert (tmp_path / "tests").exists()
+
+    def test_configure_placeholders_noop_when_tests_template_absent(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """configure_placeholders() does not raise when tests/template/ is absent."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        # No tests/template/ directory; just an empty tests/ directory.
+        (tmp_path / "tests").mkdir()
+
+        monkeypatch.chdir(tmp_path)
+
+        setup = RepositorySetup()
+        setup.config = self._minimum_config()
+
+        with patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            # Must not raise even though tests/template/ does not exist.
+            setup.configure_placeholders()
+
+        assert (tmp_path / "tests").exists()
+        assert not (tmp_path / "tests" / "template").exists()

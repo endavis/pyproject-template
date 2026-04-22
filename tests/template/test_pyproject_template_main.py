@@ -638,8 +638,8 @@ class TestConfigureModule:
         finally:
             os.chdir(old_cwd)
 
-    def test_run_configure_removes_tool_tests_directory(self, tmp_path: Path) -> None:
-        """Test that tests/pyproject_template/ is removed during configure."""
+    def test_run_configure_removes_template_tests_directory(self, tmp_path: Path) -> None:
+        """Test that tests/template/ is removed during configure."""
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
@@ -647,11 +647,11 @@ class TestConfigureModule:
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
         (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
-        # Create tool tests directory that should be removed
-        tool_tests_dir = tmp_path / "tests" / "pyproject_template"
-        tool_tests_dir.mkdir(parents=True)
-        (tool_tests_dir / "__init__.py").write_text("", encoding="utf-8")
-        (tool_tests_dir / "test_utils.py").write_text("# test file", encoding="utf-8")
+        # Create template-only tests directory that should be removed
+        template_tests_dir = tmp_path / "tests" / "template"
+        template_tests_dir.mkdir(parents=True)
+        (template_tests_dir / "__init__.py").write_text("", encoding="utf-8")
+        (template_tests_dir / "test_utils.py").write_text("# test file", encoding="utf-8")
 
         import os
 
@@ -675,8 +675,8 @@ class TestConfigureModule:
                 )
             assert result == 0
 
-            # Verify tool tests directory was removed
-            assert not tool_tests_dir.exists()
+            # Verify template-only tests directory was removed
+            assert not template_tests_dir.exists()
             # But tests directory itself should still exist
             assert (tmp_path / "tests").exists()
         finally:
