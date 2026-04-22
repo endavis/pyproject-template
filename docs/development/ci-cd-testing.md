@@ -699,7 +699,7 @@ HYPOTHESIS_PROFILE=default uv run pytest -m property -v
 When a property test fails, Hypothesis prints the **minimal failing example**. To reproduce:
 
 1. Copy the seed from the failure output (e.g., `--hypothesis-seed=98765`)
-2. Re-run: `uv run pytest tests/test_properties.py --hypothesis-seed=98765 -v`
+2. Re-run: `uv run pytest tests/template/test_properties.py --hypothesis-seed=98765 -v`
 3. Hypothesis will reproduce the exact same sequence of inputs
 
 Hypothesis also stores failing examples in a `.hypothesis/` directory (git-ignored) so they are replayed automatically on the next run.
