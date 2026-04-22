@@ -63,8 +63,10 @@ class TestGetNextAdrNumber:
     def test_returns_sequential_number(self) -> None:
         """Test that function returns the next sequential number.
 
-        Template ADRs have been moved to docs/template/decisions/ with 9XXX numbering,
-        so docs/decisions/ starts empty and the next number should be 1.
+        All ADRs (template-meta 9XXX and project-level 0001+) share
+        docs/decisions/. This smoke test just confirms a positive integer
+        is returned; specific numbering behavior is covered by dedicated
+        tests below.
         """
         result = _get_next_adr_number()
         assert result >= 1

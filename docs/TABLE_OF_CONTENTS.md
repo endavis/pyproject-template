@@ -74,22 +74,21 @@ Complete index of all documentation, organized by audience and as a full alphabe
 ## Complete Index
 <!-- BEGIN:all -->
 - [Add a Feature: End-to-End Walkthrough](examples/add-a-feature.md) - Step-by-step example of adding a module, CLI subcommand, tests, and docs to the project
-- [ADR-0001: PR-based release is the only supported flow](decisions/0001-pr-based-release-is-the-only-supported-flow.md)
-- [ADR-9001: Use uv for package management](template/decisions/9001-use-uv-for-package-management.md)
-- [ADR-9002: Use doit for task automation](template/decisions/9002-use-doit-for-task-automation.md)
-- [ADR-9003: Use ruff for linting and formatting](template/decisions/9003-use-ruff-for-linting-and-formatting.md)
-- [ADR-9004: Auto-discover doit tasks from modules](template/decisions/9004-auto-discover-doit-tasks.md)
-- [ADR-9005: AI agent command restrictions via hooks](template/decisions/9005-ai-agent-command-restrictions.md)
-- [ADR-9006: Merge-gate workflow requiring ready-to-merge label](template/decisions/9006-merge-gate-workflow.md)
-- [ADR-9007: Use mypy for static type checking](template/decisions/9007-use-mypy-for-type-checking.md)
-- [ADR-9008: PR-based development workflow](template/decisions/9008-pr-based-development-workflow.md)
-- [ADR-9009: Use pre-commit hooks for quality gates](template/decisions/9009-use-pre-commit-hooks-for-quality-gates.md)
-- [ADR-9010: Use conventional commits format](template/decisions/9010-use-conventional-commits-format.md)
-- [ADR-9011: Use pytest for testing](template/decisions/9011-use-pytest-for-testing.md)
-- [ADR-9012: Use mkdocs with Material theme for documentation](template/decisions/9012-use-mkdocs-with-material-theme-for-documentation.md)
-- [ADR-9013: Python version support policy with bookend CI strategy](template/decisions/9013-python-version-support-policy.md)
-- [ADR-9014: Use click for application CLI](template/decisions/9014-use-click-for-application-cli.md)
-- [ADR-9015: install_tools framework: archive extraction and custom URLs](template/decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md)
+- [ADR-9001: Use uv for package management](decisions/9001-use-uv-for-package-management.md)
+- [ADR-9002: Use doit for task automation](decisions/9002-use-doit-for-task-automation.md)
+- [ADR-9003: Use ruff for linting and formatting](decisions/9003-use-ruff-for-linting-and-formatting.md)
+- [ADR-9004: Auto-discover doit tasks from modules](decisions/9004-auto-discover-doit-tasks.md)
+- [ADR-9005: AI agent command restrictions via hooks](decisions/9005-ai-agent-command-restrictions.md)
+- [ADR-9006: Merge-gate workflow requiring ready-to-merge label](decisions/9006-merge-gate-workflow.md)
+- [ADR-9007: Use mypy for static type checking](decisions/9007-use-mypy-for-type-checking.md)
+- [ADR-9008: PR-based development workflow](decisions/9008-pr-based-development-workflow.md)
+- [ADR-9009: Use pre-commit hooks for quality gates](decisions/9009-use-pre-commit-hooks-for-quality-gates.md)
+- [ADR-9010: Use conventional commits format](decisions/9010-use-conventional-commits-format.md)
+- [ADR-9011: Use pytest for testing](decisions/9011-use-pytest-for-testing.md)
+- [ADR-9012: Use mkdocs with Material theme for documentation](decisions/9012-use-mkdocs-with-material-theme-for-documentation.md)
+- [ADR-9013: Python version support policy with bookend CI strategy](decisions/9013-python-version-support-policy.md)
+- [ADR-9014: Use click for application CLI](decisions/9014-use-click-for-application-cli.md)
+- [ADR-9015: install_tools framework: archive extraction and custom URLs](decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md)
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, Copilot, and Codex for this project
 - [AI Agent Sync Checklist](template/ai-sync-checklist.md) - Step-by-step checklist for AI agents synchronizing downstream projects with pyproject-template
@@ -120,7 +119,6 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Release Automation & Security](development/release-and-automation.md) - Automated versioning, release management, and security tooling
 - [Ruff Auto-Fix on Edit Hook](development/ai/ruff-fix-hook.md) - PostToolUse hook that runs ruff --fix on edited Python files
 - [Slash Commands and Workflows](development/ai/slash-commands.md) - Reference for the slash commands and dual-agent workflow this template ships with
-- [Template Architecture Decision Records](template/decisions/README.md)
 - [Template Management](template/manage.md) - Unified interface for creating projects, checking updates, and syncing
 - [Template Tools Reference](template/tools-reference.md) - Complete reference for all template tools in tools/pyproject_template/
 - [Tooling Roles and Architectural Boundaries](development/tooling-roles.md) - What each tool is for, who uses it, and where runtime code ends and dev tooling begins

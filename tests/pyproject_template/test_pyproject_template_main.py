@@ -436,60 +436,6 @@ class TestMainModule:
         assert result is None  # No recommendation, up to date
 
 
-class TestCopyTemplateAdrs:
-    """Tests for _copy_template_adrs helper function."""
-
-    def test_copies_only_9xxx_files(self, tmp_path: Path) -> None:
-        """Test that only 9*.md files are copied, not README."""
-        from tools.pyproject_template.manage import _copy_template_adrs
-
-        template_dir = tmp_path / "template_decisions"
-        template_dir.mkdir()
-        (template_dir / "9001-use-uv.md").write_text("# ADR-9001", encoding="utf-8")
-        (template_dir / "9002-use-doit.md").write_text("# ADR-9002", encoding="utf-8")
-        (template_dir / "README.md").write_text("# Template ADRs", encoding="utf-8")
-
-        project_dir = tmp_path / "project_decisions"
-        project_dir.mkdir()
-
-        count = _copy_template_adrs(template_dir, project_dir)
-
-        assert count == 2
-        assert (project_dir / "9001-use-uv.md").exists()
-        assert (project_dir / "9002-use-doit.md").exists()
-        assert not (project_dir / "README.md").exists()
-
-    def test_returns_count_of_copied_files(self, tmp_path: Path) -> None:
-        """Test that function returns the correct count."""
-        from tools.pyproject_template.manage import _copy_template_adrs
-
-        template_dir = tmp_path / "template_decisions"
-        template_dir.mkdir()
-        (template_dir / "9001-test.md").write_text("# ADR-9001", encoding="utf-8")
-        (template_dir / "9002-test.md").write_text("# ADR-9002", encoding="utf-8")
-        (template_dir / "9003-test.md").write_text("# ADR-9003", encoding="utf-8")
-
-        project_dir = tmp_path / "project_decisions"
-        project_dir.mkdir()
-
-        count = _copy_template_adrs(template_dir, project_dir)
-        assert count == 3
-
-    def test_returns_zero_when_no_9xxx_files(self, tmp_path: Path) -> None:
-        """Test that function returns 0 when no 9XXX files exist."""
-        from tools.pyproject_template.manage import _copy_template_adrs
-
-        template_dir = tmp_path / "template_decisions"
-        template_dir.mkdir()
-        (template_dir / "README.md").write_text("# Empty template ADRs", encoding="utf-8")
-
-        project_dir = tmp_path / "project_decisions"
-        project_dir.mkdir()
-
-        count = _copy_template_adrs(template_dir, project_dir)
-        assert count == 0
-
-
 class TestConfigureModule:
     """Tests for the configure module refactoring."""
 
@@ -925,56 +871,6 @@ class TestYesFlagBehavior:
             mock_manager.update_template_state.assert_called_once_with(
                 "abc123newcommit", "2025-06-15"
             )
-
-    def test_create_with_yes_skips_adr_prompt(self) -> None:
-        """Verify action_create_project() with yes=True skips prompt_confirm for ADRs."""
-        from tools.pyproject_template.manage import action_create_project
-
-        mock_manager = MagicMock()
-        mock_manager.settings.github_user = "testuser"
-        mock_manager.settings.github_repo = "test-repo"
-        mock_manager.settings.description = "desc"
-        mock_manager.settings.package_name = "test_pkg"
-        mock_manager.settings.pypi_name = "test-pkg"
-        mock_manager.settings.author_name = "Author"
-        mock_manager.settings.author_email = "a@b.com"
-
-        with (
-            patch("tools.pyproject_template.manage.prompt_confirm") as mock_confirm,
-            patch.dict("sys.modules", {"setup_repo": MagicMock()}),
-        ):
-            # Import the mocked setup_repo
-            import sys
-
-            mock_setup_module = sys.modules["setup_repo"]
-            mock_setup_cls = MagicMock()
-            mock_setup_module.RepositorySetup.return_value = mock_setup_cls
-            mock_setup_cls.config = {}
-
-            with (
-                patch("tools.pyproject_template.manage.Path") as mock_path_cls,
-                patch(
-                    "tools.pyproject_template.manage.get_template_latest_commit", return_value=None
-                ),
-            ):
-                mock_cwd = MagicMock()
-                mock_path_cls.cwd.return_value = mock_cwd
-                mock_template_dir = MagicMock()
-                mock_project_dir = MagicMock()
-                mock_template_dir.exists.return_value = True
-                mock_project_dir.exists.return_value = True
-                mock_cwd.__truediv__ = lambda self, key: (
-                    mock_template_dir
-                    if "template" in str(key)
-                    else mock_project_dir
-                    if "decisions" in str(key)
-                    else MagicMock()
-                )
-
-                action_create_project(mock_manager, dry_run=False, yes=True)
-
-                # prompt_confirm should NOT have been called (skipped by yes=True)
-                mock_confirm.assert_not_called()
 
     def test_cleanup_with_yes_skips_prompt(self) -> None:
         """Verify action_template_cleanup() with yes=True skips prompt_cleanup."""
