@@ -115,6 +115,7 @@ nav:
       - ADR-9013 Python versions: decisions/9013-python-version-support-policy.md
       - ADR-9014 click CLI: decisions/9014-use-click-for-application-cli.md
       - ADR-9015 install_tools: decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md
+      - ADR-9016 Unify ADRs: decisions/9016-unify-adr-directories.md
   - Reference:
       - API Reference: reference/api.md
   - Examples:

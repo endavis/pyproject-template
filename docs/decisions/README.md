@@ -95,6 +95,7 @@ The Issue contains the full discussion; the ADR summarizes the outcome.
 | [9013](9013-python-version-support-policy.md) | Python version support policy with bookend CI strategy | Accepted |
 | [9014](9014-use-click-for-application-cli.md) | Use click for application CLI | Accepted |
 | [9015](9015-install-tools-framework-archive-extraction-and-custom-urls.md) | install_tools framework: archive extraction and custom URLs | Accepted |
+| [9016](9016-unify-adr-directories.md) | Unify ADR directories under docs/decisions | Accepted |
 
 ### Project-level ADRs (0001+)
 

@@ -89,6 +89,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [ADR-9013: Python version support policy with bookend CI strategy](decisions/9013-python-version-support-policy.md)
 - [ADR-9014: Use click for application CLI](decisions/9014-use-click-for-application-cli.md)
 - [ADR-9015: install_tools framework: archive extraction and custom URLs](decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md)
+- [ADR-9016: Unify ADR directories under docs/decisions](decisions/9016-unify-adr-directories.md)
 - [ADR-NNNN: Title](decisions/adr-template.md)
 - [AI Agent Setup Guide](development/AI_SETUP.md) - Configure Claude, Gemini, Copilot, and Codex for this project
 - [AI Agent Sync Checklist](template/ai-sync-checklist.md) - Step-by-step checklist for AI agents synchronizing downstream projects with pyproject-template
