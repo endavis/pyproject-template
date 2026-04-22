@@ -1,4 +1,4 @@
-# Contributing to Package Name
+# Contributing to __PROJECT_NAME__
 
 Thank you for your interest in contributing to this project! We welcome contributions from everyone.
 
@@ -42,8 +42,8 @@ This project adheres to the Contributor Covenant [Code of Conduct](CODE_OF_CONDU
 
 ```bash
 # Clone your fork
-git clone https://github.com/YOUR_USERNAME/package_name.git
-cd package_name
+git clone https://github.com/YOUR_USERNAME/__PACKAGE_NAME__.git
+cd __PACKAGE_NAME__
 
 # Set up direnv
 direnv allow
@@ -176,7 +176,7 @@ import click
 import pytest
 
 # Local
-from package_name import module
+from __PACKAGE_NAME__ import module
 ```
 
 ## Testing Guidelines
@@ -455,7 +455,7 @@ doit release_tag
 **Testing a pre-release from TestPyPI:**
 
 ```bash
-pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ package-name==1.0.1a0
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ __PYPI_NAME__==1.0.1a0
 ```
 
 ### Workflow Triggers
@@ -879,7 +879,7 @@ ADRs provide context for why decisions were made, helping future contributors un
 
 ```bash
 # Add upstream remote (one-time setup)
-git remote add upstream https://github.com/original-owner/package_name.git
+git remote add upstream https://github.com/original-owner/__PACKAGE_NAME__.git
 
 # Fetch and merge upstream changes
 git checkout main
@@ -893,7 +893,7 @@ git push origin main
 If you have questions:
 
 1. Check the [README.md](README.md) and [AGENTS.md](AGENTS.md)
-2. Search existing [Issues](https://github.com/username/package_name/issues)
+2. Search existing [Issues](__REPO_URL__/issues)
 3. Open a new issue with the "question" label
 4. Join our discussions (if available)
 

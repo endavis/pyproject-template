@@ -19,16 +19,16 @@ This page is the imperative-form rulebook AI agents must follow when generating 
 
 **DO:**
 
-- DO put runtime application code under `src/package_name/`.
+- DO put runtime application code under `src/__PACKAGE_NAME__/`.
 - DO put development tooling, scaffolding, install scripts, and doit task definitions under `tools/`.
-- DO expose the application's user-facing command-line interface as a console script declared in `[project.scripts]` in `pyproject.toml`, backed by a module under `src/package_name/`.
+- DO expose the application's user-facing command-line interface as a console script declared in `[project.scripts]` in `pyproject.toml`, backed by a module under `src/__PACKAGE_NAME__/`.
 - DO keep `[project] dependencies` minimal. Every entry ships to every end user of the package.
 - DO use `doit <task>` for development workflows (test, lint, type-check, build, release, issue and PR creation).
 - DO add heavy libraries used only by tests or tooling to `[dependency-groups] dev`, not `[project] dependencies`.
 
 **DO NOT:**
 
-- DO NOT import from `tools/` or `dodo.py` in any module under `src/package_name/`. Runtime code must be installable and runnable without any dev tooling present.
+- DO NOT import from `tools/` or `dodo.py` in any module under `src/__PACKAGE_NAME__/`. Runtime code must be installable and runnable without any dev tooling present.
 - DO NOT use `doit` tasks to expose application functionality to end users. `doit` is a dev surface, not a runtime surface.
 - DO NOT add a runtime dependency without asking the user first. See the "Ask First" policy in `.github/CONTRIBUTING.md`.
 - DO NOT conflate the development CLI (`doit`) with the application's runtime CLI (console script) in code, PR descriptions, or docs.
@@ -41,13 +41,13 @@ Concrete anti-patterns AI agents hit in this template, with the correct framing 
 
 **Wrong:** User asks for a "greet" command. Agent adds `def task_greet()` under `tools/doit/` so the user runs `doit greet`.
 
-**Right:** Add a module under `src/package_name/` that implements `greet`, register a console script in `[project.scripts]` (e.g. `greet = "package_name.greet:main"`), and test it as runtime code under `tests/`. End users install the package and run `greet` directly — they should never need `doit` installed.
+**Right:** Add a module under `src/__PACKAGE_NAME__/` that implements `greet`, register a console script in `[project.scripts]` (e.g. `greet = "__PACKAGE_NAME__.greet:main"`), and test it as runtime code under `tests/`. End users install the package and run `greet` directly — they should never need `doit` installed.
 
-### 2. Importing a helper from `tools/` into `src/package_name/`
+### 2. Importing a helper from `tools/` into `src/__PACKAGE_NAME__/`
 
 **Wrong:** Runtime module does `from tools.doit.helpers import something` because the helper "already exists and does what I need."
 
-**Right:** If the helper is needed by runtime code, move it into `src/package_name/` and test it as runtime code. If it is only needed by dev tooling, duplicate the small bit of logic or keep it in `tools/` — `src/package_name/` never imports from `tools/` or `dodo.py`.
+**Right:** If the helper is needed by runtime code, move it into `src/__PACKAGE_NAME__/` and test it as runtime code. If it is only needed by dev tooling, duplicate the small bit of logic or keep it in `tools/` — `src/__PACKAGE_NAME__/` never imports from `tools/` or `dodo.py`.
 
 ### 3. Adding a heavy library to `[project] dependencies` for tests or tooling
 
@@ -57,7 +57,7 @@ Concrete anti-patterns AI agents hit in this template, with the correct framing 
 
 ### 4. Proposing `doit run_app` as the user entry point
 
-**Wrong:** Agent drafts a README section telling end users to `pip install package_name && doit run_app` to launch the application.
+**Wrong:** Agent drafts a README section telling end users to `pip install __PACKAGE_NAME__ && doit run_app` to launch the application.
 
 **Right:** End users run the console script declared in `[project.scripts]`. They install the package and invoke the entry point by name. `doit` is not in the runtime dependency surface for end users and must not be presented as a runtime entry point.
 
@@ -72,8 +72,8 @@ Concrete anti-patterns AI agents hit in this template, with the correct framing 
 Short checklist to run through before writing any new code:
 
 1. Read [Tooling Roles and Architectural Boundaries](../tooling-roles.md) for the layering rationale.
-2. Identify the layer the change belongs in: runtime (`src/package_name/`), dev tooling (`tools/`), or dev entry point (`dodo.py`).
-3. Confirm imports respect the boundary: nothing under `src/package_name/` imports from `tools/` or `dodo.py`.
+2. Identify the layer the change belongs in: runtime (`src/__PACKAGE_NAME__/`), dev tooling (`tools/`), or dev entry point (`dodo.py`).
+3. Confirm imports respect the boundary: nothing under `src/__PACKAGE_NAME__/` imports from `tools/` or `dodo.py`.
 4. If the change adds a user-facing command, plan it as a console script under `[project.scripts]`, not a `doit` task.
 5. If the change needs a new runtime dependency, stop and ask the user first.
 

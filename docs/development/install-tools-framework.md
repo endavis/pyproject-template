@@ -2,7 +2,7 @@
 
 A reusable Python framework for installing developer tools from GitHub
 releases (and other URLs) into the user-local `~/.local/bin` directory.
-Lives in [`tools/doit/install_tools.py`](https://github.com/username/package_name/blob/main/tools/doit/install_tools.py)
+Lives in [`tools/doit/install_tools.py`](__REPO_URL__/blob/main/tools/doit/install_tools.py)
 and is consumed by `doit` install tasks (e.g., `doit install_direnv`).
 
 ## Overview

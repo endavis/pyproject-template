@@ -21,7 +21,7 @@ Make sure you have the package installed:
 uv pip install -e .
 
 # Or install from PyPI
-pip install package-name
+pip install __PYPI_NAME__
 ```
 
 Then run any example:

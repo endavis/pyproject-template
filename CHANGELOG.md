@@ -21,5 +21,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Documentation
 - Test coverage
 
-[Unreleased]: https://github.com/username/package_name/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/username/package_name/releases/tag/v0.1.0
+[Unreleased]: __REPO_URL__/compare/v0.1.0...HEAD
+[0.1.0]: __REPO_URL__/releases/tag/v0.1.0

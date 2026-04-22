@@ -109,7 +109,7 @@ Interactively prompts for project information and replaces all placeholder value
 | Author name | Your Name | Author for package metadata |
 | Author email | your.email@example.com | Contact email |
 | GitHub username | username | Your GitHub username |
-| Description | A short description... | One-line project description |
+| Description | A short description of your package | One-line project description |
 
 ### Files Modified
 
@@ -135,6 +135,10 @@ Interactively prompts for project information and replaces all placeholder value
 
 - Python 3.12+
 - Must be run from template root directory
+
+### Placeholder Markers
+
+Prose files in the template (`README.md`, `CHANGELOG.md`, `docs/**/*.md`, most files under `.github/`) use explicit marker tokens like `__PACKAGE_NAME__`, `__GH_OWNER__`, `__AUTHOR_NAME__`, `__PYPI_NAME__`, `__PROJECT_NAME__`, `__AUTHOR_EMAIL__`, and `__DESCRIPTION__`. The spawn flow (`setup_repo.py` / `configure.py`) substitutes these at placeholder-replacement time. Markers are used instead of bare identifier literals (`package_name`, `username`) so substring collisions cannot corrupt identifiers like `validate_package_name`. Runtime-critical files (`pyproject.toml`, `mkdocs.yml`, `dodo.py`, workflows, `LICENSE`, `.envrc`, `.pre-commit-config.yaml`) keep literal placeholder values so the template repo itself remains runnable. Python source and test files keep literal identifiers but get word-boundary regex protection during substitution.
 
 ---
 
