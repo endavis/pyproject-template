@@ -309,8 +309,14 @@ class TestUpdateFile:
         assert 'package_name="value"' in content
 
     def test_package_name_preserves_toml_keys(self, tmp_path: Path) -> None:
-        """Test that package_name replacement preserves TOML keys."""
-        test_file = tmp_path / "settings.toml"
+        """``package_name = "value"`` form is preserved inside Python source.
+
+        The ``(?!\\s*=)`` guard protects both kwargs and TOML-key forms when
+        the file is a ``.py`` module. Non-Python files receive a blind
+        replace and are covered by
+        :class:`TestUpdateFileModes` (see commit-3 additions for this fix).
+        """
+        test_file = tmp_path / "settings.py"
         test_file.write_text('package_name = "value"\nname = "package_name"\n', encoding="utf-8")
 
         update_file(test_file, {"package_name": "my_pkg"})

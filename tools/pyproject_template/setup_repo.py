@@ -324,13 +324,30 @@ class RepositorySetup:
             owner = self.config["repo_owner"]
             pkg = self.config["package_name"]
             replacements = {
-                # URLs
+                # Marker tokens (unambiguous, used in prose files). These take
+                # priority because ``update_file()`` treats them as blind
+                # replaces regardless of surrounding context.
+                "__PACKAGE_NAME__": self.config["package_name"],
+                "__PYPI_NAME__": self.config["pypi_name"],
+                "__PROJECT_NAME__": self.config["repo_name"],
+                "__GH_OWNER__": owner,
+                "__AUTHOR_NAME__": self.config["author_name"],
+                "__AUTHOR_EMAIL__": self.config["author_email"],
+                "__DESCRIPTION__": self.config["description"],
+                "__REPO_URL__": f"https://github.com/{owner}/{pkg}",
+                "__REPO_SLUG__": f"{owner}/{pkg}",
+                # URLs — kept for runtime-critical files (pyproject.toml,
+                # workflows, LICENSE, mkdocs.yml, dodo.py, .envrc,
+                # .pre-commit-config.yaml) that retain literal placeholders,
+                # and for downstream consumer projects that have not yet
+                # migrated to marker tokens.
                 "https://github.com/username/package_name": (f"https://github.com/{owner}/{pkg}"),
                 f"https://github.com/username/{pkg}": (f"https://github.com/{owner}/{pkg}"),
                 "gh username/package_name": f"gh {owner}/{pkg}",
                 "username/package_name": f"{owner}/{pkg}",
                 "username": owner,
-                # Package names
+                # Package names (literal forms; Python files receive
+                # word-boundary protection from ``update_file()``).
                 "package_name": self.config["package_name"],
                 "package-name": self.config["pypi_name"],
                 "Package Name": self.config["repo_name"],

@@ -343,7 +343,22 @@ def run_configure(
     # Define replacements
     # IMPORTANT: Longer/Specific replacements must come before shorter substrings
     replacements = {
-        # URLs (Specific matches first)
+        # Marker tokens (unambiguous, used in prose files). These take
+        # priority because ``update_file()`` treats them as blind replaces
+        # regardless of surrounding context.
+        "__PACKAGE_NAME__": package_name,
+        "__PYPI_NAME__": pypi_name,
+        "__PROJECT_NAME__": project_name,
+        "__GH_OWNER__": github_user,
+        "__AUTHOR_NAME__": author_name,
+        "__AUTHOR_EMAIL__": author_email,
+        "__DESCRIPTION__": description,
+        "__REPO_URL__": f"https://github.com/{github_user}/{package_name}",
+        "__REPO_SLUG__": f"{github_user}/{package_name}",
+        # URLs (Specific matches first). Retained for runtime-critical files
+        # (pyproject.toml, workflows, LICENSE, mkdocs.yml, dodo.py, .envrc,
+        # .pre-commit-config.yaml) that keep literal placeholders, and for
+        # downstream consumer projects that have not yet migrated.
         "https://github.com/username/package_name": f"https://github.com/{github_user}/{package_name}",
         "https://github.com/original-owner/package_name": f"https://github.com/{github_user}/{package_name}",
         "https://codecov.io/gh/username/package_name": f"https://codecov.io/gh/{github_user}/{package_name}",
@@ -357,7 +372,9 @@ def run_configure(
         "package-name/": f"{pypi_name}/",
         # Repo name pattern (mkdocs.yml) - must come before general package_name
         "username/package_name": f"{github_user}/{package_name}",
-        # General Placeholders (Substrings)
+        # General Placeholders (Substrings). Python files receive
+        # word-boundary protection from ``update_file()`` so identifier
+        # substrings (e.g. ``validate_package_name``) survive.
         "package_name": package_name,
         "package-name": pypi_name,
         "Package Name": project_name,
