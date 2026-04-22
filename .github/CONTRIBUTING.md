@@ -893,7 +893,7 @@ git push origin main
 If you have questions:
 
 1. Check the [README.md](README.md) and [AGENTS.md](AGENTS.md)
-2. Search existing [Issues](__REPO_URL__/issues)
+2. Search existing [Issues](https://github.com/username/package_name/issues)
 3. Open a new issue with the "question" label
 4. Join our discussions (if available)
 

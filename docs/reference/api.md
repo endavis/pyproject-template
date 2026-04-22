@@ -15,7 +15,7 @@ Complete API documentation for __PROJECT_NAME__, auto-generated from source code
 
 ## Package Overview
 
-::: __PACKAGE_NAME__
+::: package_name
     options:
       show_root_heading: false
       show_source: false
@@ -25,7 +25,7 @@ Complete API documentation for __PROJECT_NAME__, auto-generated from source code
 
 The core module provides the main functionality of the package.
 
-::: __PACKAGE_NAME__.core
+::: package_name.core
     options:
       show_root_heading: true
       show_root_full_path: true
@@ -34,7 +34,7 @@ The core module provides the main functionality of the package.
 
 Centralized logging configuration with console and structured file output.
 
-::: __PACKAGE_NAME__.logging
+::: package_name.logging
     options:
       show_root_heading: true
       show_root_full_path: true
@@ -47,9 +47,9 @@ This template provides a starting point. To add your own functionality:
 
 ### Adding a New Module
 
-1. Create a new file in `src/__PACKAGE_NAME__/`:
+1. Create a new file in `src/package_name/`:
    ```python
-   # src/__PACKAGE_NAME__/new_module.py
+   # src/package_name/new_module.py
    """New module description."""
 
    def new_function(param: str) -> str:
@@ -79,7 +79,7 @@ This template provides a starting point. To add your own functionality:
    ```markdown
    ## New Module
 
-   ::: __PACKAGE_NAME__.new_module
+   ::: package_name.new_module
    ```
 
 4. Add tests in `tests/`.
@@ -119,7 +119,7 @@ def example_function(param1: str, param2: int = 10) -> dict[str, Any]:
 All public APIs include type hints for better IDE support and type checking:
 
 ```python
-from __PACKAGE_NAME__ import greet
+from package_name import greet
 
 # Type checkers will infer the correct types
 message: str = greet("Python")
@@ -186,7 +186,7 @@ To document a new module, add it to `docs/reference/api.md`:
 
 Description of what this module does.
 
-::: __PACKAGE_NAME__.my_module
+::: package_name.my_module
     options:
       show_root_heading: true
       show_root_full_path: true
@@ -197,7 +197,7 @@ Description of what this module does.
 Override options for specific modules:
 
 ```markdown
-::: __PACKAGE_NAME__.internal
+::: package_name.internal
     options:
       show_source: false        # Hide source for internal module
       members: ["public_func"]  # Only document specific members

@@ -16,7 +16,7 @@ Instead, please report them via one of the following methods:
 
 ### Preferred Method: Private Security Advisory
 
-1. Go to the [Security tab](__REPO_URL__/security)
+1. Go to the [Security tab](https://github.com/username/package_name/security)
 2. Click "Report a vulnerability"
 3. Fill out the form with details
 

@@ -205,4 +205,4 @@ With LSP:
 If you encounter issues:
 1. Check the troubleshooting section above
 2. Verify all prerequisites are met
-3. Open an issue at: __REPO_URL__/issues
+3. Open an issue at: https://github.com/username/package_name/issues

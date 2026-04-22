@@ -804,5 +804,5 @@ uv run pre-commit install
 ## Next Steps
 
 - Check the [API Reference](../reference/api.md) for complete documentation
-- Read [CONTRIBUTING.md](__REPO_URL__/blob/main/.github/CONTRIBUTING.md) for contribution guidelines
+- Read [CONTRIBUTING.md](https://github.com/username/package_name/blob/main/.github/CONTRIBUTING.md) for contribution guidelines
 - Review the docs and TODOs in this template to identify improvements for your project

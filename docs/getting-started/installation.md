@@ -37,7 +37,7 @@ uv pip install __PYPI_NAME__
 ### Clone the Repository
 
 ```bash
-git clone __REPO_URL__.git
+git clone https://github.com/username/package_name.git
 cd __PACKAGE_NAME__
 ```
 

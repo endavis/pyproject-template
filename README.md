@@ -78,7 +78,7 @@ The script will:
 
 ```bash
 # Clone the template
-git clone __REPO_URL__.git my-project
+git clone https://github.com/username/package_name.git my-project
 cd my-project
 
 # Run the interactive configuration script
@@ -114,7 +114,7 @@ It will automatically:
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
 # Clone repository
-git clone __REPO_URL__.git
+git clone https://github.com/username/package_name.git
 cd __PACKAGE_NAME__
 
 # Create virtual environment and install dependencies
