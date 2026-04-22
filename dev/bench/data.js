@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776859450849,
+  "lastUpdate": 1776864858731,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5487,6 +5487,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.401310747098499e-7",
             "extra": "mean: 2.087699058118131 usec\nrounds: 48521"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "30ae0b1a868cbd2750b48a4b0cd9d0d91814007d",
+          "message": "fix: unify ADR directories under docs/decisions and add doit adr --template (merges PR #462, addresses #461)\n\n* chore: remove misplaced downstream ADR from docs/decisions/\n\nThe file docs/decisions/0001-pr-based-release-is-the-only-supported-flow.md\ndocuments a release-workflow decision made in a downstream consumer of the\ntemplate and references issues #632/#634/#637 that do not exist in this\nrepository. Its own text (\"intentional drift between this repo and the\nupstream template\") confirms it was committed back to the template by\nmistake.\n\nDeleting the file restores the design invariant asserted by\ntests/test_doit_adr.py (\"docs/decisions/ starts empty and the next number\nshould be 1\") and by docs/template/decisions/README.md. This commit is\nscoped to the deletion only; the broader directory unification lands in\na follow-up commit on the same branch.\n\nAddresses #461.\n\n* refactor: unify template ADRs into docs/decisions/\n\nCollapses docs/template/decisions/ into docs/decisions/ so all ADRs —\ntemplate-meta (9XXX) and project-level (0001+) — live in a single\ndirectory. The numeric prefix alone encodes ownership; the physical\ndirectory split added no information and produced contradictory\nguidance across the repo (issue #461).\n\nChanges:\n- git mv 9001-9015 ADR files from docs/template/decisions/ into\n  docs/decisions/.\n- Delete docs/template/decisions/ (README.md removed; directory\n  collapses with the renames).\n- Rewrite docs/decisions/README.md to describe the two-series\n  convention, update the creation instructions, and list 9001-9015 in\n  an index with a reserved section for 0001+.\n- Drop _copy_template_adrs() and the opt-in prompt from\n  tools/pyproject_template/manage.py; downstream projects now inherit\n  9XXX ADRs via the clone. Remove the now-unused prompt_confirm import\n  (the only caller in this module was the removed prompt).\n- Delete the TestCopyTemplateAdrs class and\n  test_create_with_yes_skips_adr_prompt — they exercised the removed\n  copy path.\n- Update inbound links to docs/template/decisions/ across\n  architectural-conventions.md, install-tools-framework.md,\n  tooling-roles.md, add-a-feature.md, cli.md, and mkdocs.yml so they\n  point at docs/decisions/ instead.\n- Regenerate docs/TABLE_OF_CONTENTS.md so entries reflect the new\n  paths.\n- Update the test_doit_adr.py smoke-test docstring to reflect the\n  unified layout (no assertion changes).\n\nAddresses #461.\n\n* feat(doit): add --template flag to doit adr for 9XXX series\n\nBefore this commit, doit adr could only create project-level (0XXX)\nADRs and the 9XXX template-meta ADRs had to be authored by hand. The\ncontradiction was flagged by issue #461.\n\nChanges:\n- Add TEMPLATE_SERIES_FLOOR = 9001 and refactor _get_next_adr_number()\n  to take a template bool. It scans the shared docs/decisions/\n  directory with different regexes (^0\\d{3}-.*\\.md$ for the project\n  series, ^9\\d{3}-.*\\.md$ for the template series) and returns\n  max + 1, falling back to the series floor (1 for project, 9001 for\n  template) when none exist.\n- Thread a template parameter through create_adr() and expose it as a\n  --template boolean flag on the doit adr task.\n- Update the task docstring with both project and template\n  invocations, and print the series in the status output so the user\n  can see which series a new ADR will land in.\n- Replace the integration-style _get_next_adr_number tests with\n  monkeypatched tmp_path tests that cover both series, the floor\n  behavior for the template series, series isolation within the\n  shared directory, and the ignore list (README.md,\n  adr-template.md). Keep a smoke test against the real ADR_DIR.\n- Document --template in docs/development/doit-tasks-reference.md.\n\nAddresses #461.\n\n* docs(adr): add ADR-9016 recording the unified-directory decision\n\nADR-9016 documents the decision to collapse docs/template/decisions/\ninto docs/decisions/ and drop the opt-in ADR-copy prompt from the\nproject-setup flow. It is the dogfood case for the new\ndoit adr --template flag: the ADR was created by running\n\n    doit adr --title=\"Unify ADR directories under docs/decisions\" \\\n             --template --body-file=<body>\n\nand renamed to docs/decisions/9016-unify-adr-directories.md so the\nfilename matches the planned slug.\n\nAlso updates:\n- docs/decisions/README.md — adds 9016 to the template-meta index.\n- mkdocs.yml — adds 9016 to the Decisions nav.\n- docs/TABLE_OF_CONTENTS.md — regenerated by pre-commit hook.\n\nAddresses #461.\n\n* chore: discard unused yes param in action_create_project\n\nThe refactor in commit 8f39d5e removed the opt-in ADR-copy prompt,\nwhich was the only consumer of the `yes` parameter in\naction_create_project. The parameter is retained in the signature\nbecause run_action() dispatches uniformly to every action_*\nfunction with `yes=yes`. A `del yes` discard documents the intent\nand silences the pyright \"not accessed\" hint without touching the\ndispatcher pattern.\n\nAddresses #461.",
+          "timestamp": "2026-04-22T14:33:52+01:00",
+          "tree_id": "517407699606fc11c645e923f7df0b4e2fbc19c4",
+          "url": "https://github.com/endavis/pyproject-template/commit/30ae0b1a868cbd2750b48a4b0cd9d0d91814007d"
+        },
+        "date": 1776864858259,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9049281.871065225,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1894450993153866e-8",
+            "extra": "mean: 110.50600636029102 nsec\nrounds: 88363"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8895269.614670109,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1629866767431508e-8",
+            "extra": "mean: 112.41930186700543 nsec\nrounds: 86230"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6270736.262686813,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4834368082735373e-8",
+            "extra": "mean: 159.47090710071282 nsec\nrounds: 63036"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1766444.93785802,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7037346950083607e-7",
+            "extra": "mean: 566.108786392512 nsec\nrounds: 56542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 438528.84517336515,
+            "unit": "iter/sec",
+            "range": "stddev: 7.832260840285224e-7",
+            "extra": "mean: 2.280351705495374 usec\nrounds: 52888"
           }
         ]
       }
