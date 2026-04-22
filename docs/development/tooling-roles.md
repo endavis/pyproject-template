@@ -75,7 +75,9 @@ The template is opinionated about a small number of things:
   [CLI Guide](../usage/cli.md) for how the CLI is structured and how to
   add subcommands.
 - **ADRs document the *why*.** When a tooling decision is non-obvious, it
-  gets an ADR under `docs/template/decisions/` or `docs/decisions/`.
+  gets an ADR under `docs/decisions/`. Template-meta decisions use the
+  9XXX-series (created via `doit adr --template`); project-level decisions
+  use the 0001-series (created via `doit adr`).
 
 ## Dependency placement
 
@@ -94,8 +96,8 @@ legitimate runtime use.
 
 ## See also
 
-- [ADR-9002: Use doit for task automation](../template/decisions/9002-use-doit-for-task-automation.md)
-- [ADR-9005: AI agent command restrictions](../template/decisions/9005-ai-agent-command-restrictions.md)
+- [ADR-9002: Use doit for task automation](../decisions/9002-use-doit-for-task-automation.md)
+- [ADR-9005: AI agent command restrictions](../decisions/9005-ai-agent-command-restrictions.md)
 - [Doit Tasks Reference](doit-tasks-reference.md)
 - [`AGENTS.md`](../../AGENTS.md) — imperative tool reference for contributors and AI agents
 - [New Project Setup](../template/new-project.md)

@@ -80,8 +80,8 @@ Short checklist to run through before writing any new code:
 ## See also
 
 - [Tooling Roles and Architectural Boundaries](../tooling-roles.md) — the human-facing rationale for the layering
-- [ADR-9002: Use doit for task automation](../../template/decisions/9002-use-doit-for-task-automation.md)
-- [ADR-9005: AI agent command restrictions](../../template/decisions/9005-ai-agent-command-restrictions.md)
+- [ADR-9002: Use doit for task automation](../../decisions/9002-use-doit-for-task-automation.md)
+- [ADR-9005: AI agent command restrictions](../../decisions/9005-ai-agent-command-restrictions.md)
 - [AI Enforcement Principles](enforcement-principles.md)
 - [AI Command Blocking](command-blocking.md)
 - [`AGENTS.md`](../../../AGENTS.md) — imperative tool reference and workflow rules

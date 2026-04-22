@@ -318,4 +318,4 @@ doit pr_merge
 - [API Reference](../reference/api.md) -- generated API docs
 - [Contributing Guide](https://github.com/endavis/pyproject-template/blob/main/.github/CONTRIBUTING.md) --
   full development workflow
-- [ADR-9014: Use click for application CLI](../template/decisions/9014-use-click-for-application-cli.md)
+- [ADR-9014: Use click for application CLI](../decisions/9014-use-click-for-application-cli.md)

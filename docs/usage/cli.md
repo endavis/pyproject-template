@@ -108,7 +108,7 @@ Key properties:
   layer.
 
 For the rationale behind choosing click (versus `argparse` or `typer`),
-see [ADR-9014: Use click for application CLI](../template/decisions/9014-use-click-for-application-cli.md).
+see [ADR-9014: Use click for application CLI](../decisions/9014-use-click-for-application-cli.md).
 
 ## How to add a new subcommand
 
@@ -189,7 +189,7 @@ What to cover for every new subcommand:
   contributor-only task runner. Not the same thing as this page.
 - [Tooling Roles and Architectural Boundaries](../development/tooling-roles.md) —
   why runtime CLI and dev tooling are kept separate.
-- [ADR-9014: Use click for application CLI](../template/decisions/9014-use-click-for-application-cli.md)
+- [ADR-9014: Use click for application CLI](../decisions/9014-use-click-for-application-cli.md)
 
 - [Add a Feature End-to-End](../examples/add-a-feature.md) —
   narrative walkthrough of adding a module, CLI subcommand, tests, and docs.

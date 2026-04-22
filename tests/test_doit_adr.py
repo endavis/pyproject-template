@@ -1,9 +1,14 @@
 """Tests for adr.py doit tasks."""
 
 from io import StringIO
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from tools.doit import adr as adr_module
 from tools.doit.adr import (
+    TEMPLATE_SERIES_FLOOR,
     _get_next_adr_number,
     _is_placeholder_content,
     _title_to_slug,
@@ -55,19 +60,82 @@ class TestGetNextAdrNumber:
     """Tests for _get_next_adr_number function."""
 
     def test_returns_positive_integer(self) -> None:
-        """Test that function returns a positive integer."""
+        """Smoke test against the real ADR_DIR: returns a positive integer."""
         result = _get_next_adr_number()
         assert isinstance(result, int)
-        assert result > 0
-
-    def test_returns_sequential_number(self) -> None:
-        """Test that function returns the next sequential number.
-
-        Template ADRs have been moved to docs/template/decisions/ with 9XXX numbering,
-        so docs/decisions/ starts empty and the next number should be 1.
-        """
-        result = _get_next_adr_number()
         assert result >= 1
+
+    def test_project_series_returns_1_when_no_project_adrs(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Project series starts at 1 when only template (9XXX) ADRs exist."""
+        for n in range(9001, 9016):
+            (tmp_path / f"{n}-example.md").write_text(f"# ADR-{n}", encoding="utf-8")
+
+        monkeypatch.setattr(adr_module, "ADR_DIR", tmp_path)
+        assert _get_next_adr_number(template=False) == 1
+
+    def test_template_series_returns_9016_given_9015_max(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Template series returns max + 1 when template ADRs already exist."""
+        for n in range(9001, 9016):
+            (tmp_path / f"{n}-example.md").write_text(f"# ADR-{n}", encoding="utf-8")
+
+        monkeypatch.setattr(adr_module, "ADR_DIR", tmp_path)
+        assert _get_next_adr_number(template=True) == 9016
+
+    def test_template_series_returns_floor_when_empty(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Template series returns the floor (9001) when no template ADRs exist."""
+        # Project ADRs present, but no template ADRs.
+        (tmp_path / "0001-something.md").write_text("# ADR-0001", encoding="utf-8")
+
+        monkeypatch.setattr(adr_module, "ADR_DIR", tmp_path)
+        assert _get_next_adr_number(template=True) == TEMPLATE_SERIES_FLOOR
+
+    def test_project_series_returns_max_plus_1(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Project series returns max + 1 when project ADRs already exist."""
+        (tmp_path / "0001-first.md").write_text("# ADR-0001", encoding="utf-8")
+        (tmp_path / "0002-second.md").write_text("# ADR-0002", encoding="utf-8")
+
+        monkeypatch.setattr(adr_module, "ADR_DIR", tmp_path)
+        assert _get_next_adr_number(template=False) == 3
+
+    def test_series_isolation(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        """Template and project series are counted independently in the shared directory."""
+        (tmp_path / "0001-first.md").write_text("# ADR-0001", encoding="utf-8")
+        (tmp_path / "0002-second.md").write_text("# ADR-0002", encoding="utf-8")
+        (tmp_path / "9001-a.md").write_text("# ADR-9001", encoding="utf-8")
+        (tmp_path / "9015-b.md").write_text("# ADR-9015", encoding="utf-8")
+
+        monkeypatch.setattr(adr_module, "ADR_DIR", tmp_path)
+        assert _get_next_adr_number(template=False) == 3
+        assert _get_next_adr_number(template=True) == 9016
+
+    def test_readme_and_template_files_ignored(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """README.md and adr-template.md must not influence numbering."""
+        (tmp_path / "README.md").write_text("# README", encoding="utf-8")
+        (tmp_path / "adr-template.md").write_text("# ADR-NNNN", encoding="utf-8")
+
+        monkeypatch.setattr(adr_module, "ADR_DIR", tmp_path)
+        assert _get_next_adr_number(template=False) == 1
+        assert _get_next_adr_number(template=True) == TEMPLATE_SERIES_FLOOR
+
+    def test_missing_directory_returns_floor(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """If ADR_DIR does not exist, both series return their floor."""
+        missing = tmp_path / "does_not_exist"
+        monkeypatch.setattr(adr_module, "ADR_DIR", missing)
+
+        assert _get_next_adr_number(template=False) == 1
+        assert _get_next_adr_number(template=True) == TEMPLATE_SERIES_FLOOR
 
 
 class TestIsPlaceholderContent:
