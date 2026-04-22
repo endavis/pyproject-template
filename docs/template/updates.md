@@ -18,6 +18,17 @@ Stay in sync with improvements to the pyproject-template.
 > ```
 > Select option **[3] Check for template updates** to compare your project against the latest template, then **[5] Mark as synced** after applying changes.
 
+> **Don't have the template management suite?** The automated
+> [New Project Setup](new-project.md) removes the suite by default so your
+> consumer project starts with a clean tree. Reinstall it at any time with:
+> ```bash
+> curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py \
+>     | python3 - --sync
+> ```
+> This installs `tools/pyproject_template/` back into your project so you
+> can use `manage.py`, `check_template_updates.py`, and the rest of the
+> sync tooling described below.
+
 ## When to Update
 
 Consider checking for template updates when:

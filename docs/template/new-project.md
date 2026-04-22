@@ -43,7 +43,11 @@ The bootstrap script (`setup_repo.py`) automates the entire setup:
 4. **Replicates labels** from the template repository
 5. **Runs placeholder replacement** (`configure.py`)
 6. **Clones the repository** locally
-7. **Prints next steps** checklist
+7. **Removes the template management suite** (`tools/pyproject_template/`,
+   `docs/template/`, `bootstrap.py`) so your consumer project owns a clean
+   tree. If you later want ongoing template sync, reinstall the suite with
+   `bootstrap.py --sync` (see [Keeping Up to Date](updates.md)).
+8. **Prints next steps** checklist
 
 ### Requirements
 
@@ -77,6 +81,15 @@ After the script completes, you'll need to:
    instructions. See the
    [release automation guide](../development/release-and-automation.md#github-environments-trusted-publishing)
    for background.
+
+   > **Note:** The template management suite (`tools/pyproject_template/`,
+   > `docs/template/`, `bootstrap.py`) was auto-removed during setup so your
+   > project owns a clean tree. If you later want ongoing template sync,
+   > reinstall the suite by running:
+   > ```bash
+   > curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py \
+   >     | python3 - --sync
+   > ```
 
 2. **Add Codecov token** (optional, for coverage reports):
    - Sign up at [codecov.io](https://codecov.io)

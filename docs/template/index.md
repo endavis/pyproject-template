@@ -31,6 +31,12 @@ This interactive menu provides access to all template operations - creating proj
 - **Automated setup** (recommended): One command creates and configures everything
 - **Manual setup**: Clone the template and configure it yourself
 
+> **Note:** The automated setup removes the template management suite
+> (`tools/pyproject_template/`, `docs/template/`, `bootstrap.py`) from your
+> spawned project by default. Consumers who want ongoing template sync can
+> reinstall the suite with `bootstrap.py --sync` — see
+> **[Keeping Up to Date](updates.md)**.
+
 ### Have an Existing Project?
 
 **[Migration Guide](migration.md)** - Bring your existing Python project into this template.
