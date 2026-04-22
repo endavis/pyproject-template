@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776864858731,
+  "lastUpdate": 1776872195025,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5546,6 +5546,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.832260840285224e-7",
             "extra": "mean: 2.280351705495374 usec\nrounds: 52888"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "74ed41ff858c0409bbdfaeba8ebb6be314bb861c",
+          "message": "fix: auto-remove template management suite from spawned projects (merges PR #466, addresses #465)\n\n* feat(spawn): auto-remove template management suite from spawned projects\n\nAdd `cleanup_template_suite()` to `RepositorySetup` and wire it into\n`run()` between `setup_development_environment()` and\n`print_manual_steps()`. The method invokes\n`cleanup_template_files(CleanupMode.ALL, root=Path.cwd())`, then stages,\ncommits, and pushes the deletions so the consumer's default branch\nreflects a clean tree.\n\nThis honors the two-flow design already documented in `bootstrap.py`'s\nown module docstring: default spawn ships a clean consumer tree;\n`bootstrap.py --sync` re-installs the template management suite for\nprojects that want ongoing template sync.\n\nDefensive behavior mirrors `configure_placeholders()`:\n- `--no-verify` on the commit to bypass the no-commit-to-main pre-commit\n  hook that blocks fresh spawns whose only branch is main.\n- Exceptions are logged as warnings and swallowed so a cleanup failure\n  does not block the user from using their freshly spawned repository.\n- Early return when `cleanup_template_files` reports no deletions,\n  avoiding an empty commit if a consumer re-runs setup on a project\n  that has already been cleaned.\n\nAlso removes the now-obsolete \"Cleanup Recommendations\" manual-steps\nblock from `print_manual_steps()` and replaces it with a one-liner\npointing to `bootstrap.py --sync` for re-installation.\n\nTests cover (7 new cases in `TestCleanupTemplateSuite` and\n`TestRunOrder`):\n- `CleanupMode.ALL` is the mode passed to `cleanup_template_files`.\n- `Path.cwd()` is the root argument.\n- Successful cleanup stages (`git add -A`), commits with\n  `--no-verify` and the expected subject, and pushes.\n- Empty `CleanupResult` skips the git path entirely.\n- `OSError` from the cleanup helper is caught and surfaced as a\n  warning without re-raising.\n- `subprocess.CalledProcessError` during commit is caught the same way.\n- `run()` calls `cleanup_template_suite()` after\n  `setup_development_environment` and before `print_manual_steps`.\n\nAddresses #465\n\n* docs: describe auto-cleanup of template suite and --sync re-install path\n\nUpdate the three consumer-facing template docs to reflect the new\ndefault behavior introduced in the sibling code change:\n\n- `docs/template/new-project.md`: add step 7 (\"Removes the template\n  management suite\") to the \"What It Does\" list and a post-setup note\n  pointing to `bootstrap.py --sync` as the re-install path.\n- `docs/template/index.md`: cross-reference the new default behavior\n  from the template overview and link to the updates guide.\n- `docs/template/updates.md`: add a callout for consumers who spawned a\n  clean tree and later want the template-sync suite back, documenting\n  the `bootstrap.py --sync` command.\n\nAddresses #465",
+          "timestamp": "2026-04-22T16:36:00+01:00",
+          "tree_id": "ae14a2293c5d4b712a8bc52326ee26b749310eaa",
+          "url": "https://github.com/endavis/pyproject-template/commit/74ed41ff858c0409bbdfaeba8ebb6be314bb861c"
+        },
+        "date": 1776872193546,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11611614.126577113,
+            "unit": "iter/sec",
+            "range": "stddev: 8.745450339818214e-9",
+            "extra": "mean: 86.12067100224775 nsec\nrounds: 114247"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11655830.941588696,
+            "unit": "iter/sec",
+            "range": "stddev: 7.762083561978943e-9",
+            "extra": "mean: 85.79396913110165 nsec\nrounds: 111309"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8356228.3479883205,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1662833503807056e-8",
+            "extra": "mean: 119.67121509319932 nsec\nrounds: 82183"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2238835.2070899555,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3786986938911558e-7",
+            "extra": "mean: 446.66083364831616 nsec\nrounds: 61032"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 655890.6823411119,
+            "unit": "iter/sec",
+            "range": "stddev: 3.364506870569772e-7",
+            "extra": "mean: 1.524644314858441 usec\nrounds: 50078"
           }
         ]
       }
