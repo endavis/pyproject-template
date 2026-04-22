@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776872195025,
+  "lastUpdate": 1776874771830,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5605,6 +5605,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.364506870569772e-7",
             "extra": "mean: 1.524644314858441 usec\nrounds: 50078"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "13638e1390dfeb98e2d89441b67a50338a05ff19",
+          "message": "fix: consolidate template-only tests into tests/template/ and strip them during spawn (merges PR #467, addresses #463)\n\n* refactor(tests): consolidate template-only tests into tests/template/ and use pytest pythonpath\n\nMove 16 template-infrastructure test files (9 top-level `test_doit_*.py`,\n`test_templates.py`, `test_properties.py`, plus 7 files from\n`tests/pyproject_template/`) into a single `tests/template/` directory.\n\nRetire the fragile `sys.path.insert` hack in the deleted\n`tests/pyproject_template/conftest.py` in favour of a standard\n`pythonpath = [\".\"]` entry under `[tool.pytest.ini_options]` in\n`pyproject.toml`. This makes `uv run pytest tests/template/test_doit_adr.py`\n(single-file invocation) work as well as full-suite runs, closing the\ndiscrepancy flagged in issue #463.\n\nMechanical fixups forced by the move (tests/template/ is one level deeper\nthan tests/):\n- test_doit_github.py: extra .parent on repo-labels lookup.\n- test_templates.py: extra .parent on ISSUE_TEMPLATE lookup.\n- test_properties.py: drop the now-redundant sys.path.insert block.\n\nAddresses #463\n\n* fix(spawn): remove tests/template/ during configure_placeholders\n\nReroute the template-only tests removal in the spawn flow to point at the\nconsolidated `tests/template/` directory introduced by the preceding\nrefactor commit. Both spawn entry points (`setup_repo.py` and\n`configure.py`) are updated so fresh consumer projects ship without the\ntemplate-infrastructure tests and pass `doit check` cleanly.\n\nAlso rename the existing configure-side regression test to reflect the\nnew path and add two new unit tests for\n`RepositorySetup.configure_placeholders()`: one asserting\n`tests/template/` is removed when present, and one asserting the call\nis a no-op (does not raise) when the directory is absent.\n\nAddresses #463\n\n* docs: fix stale test path in hypothesis debugging example\n\ntests/test_properties.py moved to tests/template/test_properties.py in\ncommit 69e32a2 as part of the template-only tests consolidation. The\nHypothesis seed-reproduction example in ci-cd-testing.md still referenced\nthe old path; update it.\n\nAddresses #463",
+          "timestamp": "2026-04-22T17:18:56+01:00",
+          "tree_id": "517c2146f373653bd7a6619ec866f1f56e26c5e1",
+          "url": "https://github.com/endavis/pyproject-template/commit/13638e1390dfeb98e2d89441b67a50338a05ff19"
+        },
+        "date": 1776874771249,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8980827.061538553,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0317562198754444e-8",
+            "extra": "mean: 111.34831938615291 nsec\nrounds: 90580"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8766724.418394744,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3229298468925885e-8",
+            "extra": "mean: 114.06768962666992 nsec\nrounds: 89518"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5126349.083268572,
+            "unit": "iter/sec",
+            "range": "stddev: 5.657507948649673e-8",
+            "extra": "mean: 195.07060166148457 nsec\nrounds: 198847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1586705.6735814747,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1810483468009735e-7",
+            "extra": "mean: 630.236606983842 nsec\nrounds: 59770"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 449855.51309833024,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011576275812803848",
+            "extra": "mean: 2.222935966956613 usec\nrounds: 56424"
           }
         ]
       }
