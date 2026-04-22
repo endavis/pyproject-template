@@ -648,7 +648,7 @@ class TestLabelsSync:
 
     def test_labels_file_parses(self) -> None:
         """The actual .github/labels.yml parses and has non-empty entries."""
-        repo_labels = Path(__file__).resolve().parent.parent / ".github" / "labels.yml"
+        repo_labels = Path(__file__).resolve().parent.parent.parent / ".github" / "labels.yml"
         assert repo_labels.exists(), f"{repo_labels} is missing"
 
         entries = _load_labels_file(repo_labels, self._make_console())

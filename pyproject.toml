@@ -152,6 +152,7 @@ follow_imports = "skip"
 minversion = "8.0"
 addopts = "--strict-config --strict-markers --benchmark-disable"
 testpaths = ["tests"]
+pythonpath = ["."]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]

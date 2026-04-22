@@ -7,21 +7,13 @@ using randomly generated inputs rather than hand-picked examples.
 from __future__ import annotations
 
 import re
-import sys
-from pathlib import Path
 
 import pytest
 from hypothesis import example, given
 from hypothesis import strategies as st
 
 from package_name.core import greet
-
-# Add project root to sys.path so tools module can be imported
-_project_root = Path(__file__).resolve().parent.parent
-if str(_project_root) not in sys.path:
-    sys.path.insert(0, str(_project_root))
-
-from tools.pyproject_template.utils import (  # noqa: E402
+from tools.pyproject_template.utils import (
     is_github_url,
     validate_email,
     validate_package_name,

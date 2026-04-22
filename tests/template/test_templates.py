@@ -42,7 +42,7 @@ class TestIssueTypeMapping:
 
     def test_mapping_files_exist(self) -> None:
         """All mapped template files should exist."""
-        github_dir = Path(__file__).parent.parent / ".github" / "ISSUE_TEMPLATE"
+        github_dir = Path(__file__).parent.parent.parent / ".github" / "ISSUE_TEMPLATE"
         for issue_type, filename in ISSUE_TYPE_TO_FILE.items():
             template_path = github_dir / filename
             assert template_path.exists(), f"Template for {issue_type} not found: {template_path}"
