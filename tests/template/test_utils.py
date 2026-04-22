@@ -359,6 +359,100 @@ class TestUpdateTestFiles:
         # Should not raise
 
 
+class TestUpdateFileModes:
+    """Tests for update_file's three replacement modes (#464).
+
+    1. Marker tokens (``__FOO__``): blind replace; collision-proof.
+    2. Identifier-like literals in ``.py`` files: word-boundary regex,
+       so ``validate_package_name`` survives replacement of ``package_name``.
+    3. Everything else: blind replace.
+    """
+
+    def test_marker_replacement_is_blind(self, tmp_path: Path) -> None:
+        """``__PACKAGE_NAME__`` marker is replaced regardless of surrounding chars."""
+        test_file = tmp_path / "readme.md"
+        test_file.write_text(
+            "Install `__PACKAGE_NAME__`. See docs at __PACKAGE_NAME__.\n",
+            encoding="utf-8",
+        )
+
+        update_file(test_file, {"__PACKAGE_NAME__": "my_pkg"})
+
+        content = test_file.read_text(encoding="utf-8")
+        assert "Install `my_pkg`" in content
+        assert "See docs at my_pkg" in content
+
+    def test_literal_in_python_code_protects_identifiers(self, tmp_path: Path) -> None:
+        """``validate_package_name`` survives replacement of the ``package_name`` literal."""
+        test_file = tmp_path / "mod.py"
+        test_file.write_text(
+            "from tools.utils import validate_package_name\nfrom package_name import core\n",
+            encoding="utf-8",
+        )
+
+        update_file(test_file, {"package_name": "my_pkg"})
+
+        content = test_file.read_text(encoding="utf-8")
+        assert "validate_package_name" in content  # identifier preserved
+        assert "from my_pkg import core" in content  # standalone replaced
+
+    def test_literal_username_in_python_code_protects_identifiers(self, tmp_path: Path) -> None:
+        """``my_username`` survives; bare ``username`` is replaced."""
+        test_file = tmp_path / "mod.py"
+        test_file.write_text(
+            "my_username = config['user']\nprint(username)\n",
+            encoding="utf-8",
+        )
+
+        update_file(test_file, {"username": "testuser"})
+
+        content = test_file.read_text(encoding="utf-8")
+        assert "my_username" in content
+        assert "print(testuser)" in content
+
+    def test_literal_in_non_python_file_is_blind(self, tmp_path: Path) -> None:
+        """Prose files still get blind replace for literal tokens (no word boundary)."""
+        test_file = tmp_path / "guide.md"
+        test_file.write_text("Run `my_package_name` to install.\n", encoding="utf-8")
+
+        update_file(test_file, {"package_name": "pyprojecttest"})
+
+        # Blind replace corrupts identifiers in non-Python files by design;
+        # callers should migrate prose files to marker tokens (see #464 commit 2).
+        content = test_file.read_text(encoding="utf-8")
+        assert "my_pyprojecttest" in content
+
+    def test_python_identifier_hyphen_case(self, tmp_path: Path) -> None:
+        """``\\b`` boundaries work around hyphen since ``-`` is non-word."""
+        test_file = tmp_path / "mod.py"
+        test_file.write_text(
+            "# doc: package-name and somepackage-name and package-nameish\n",
+            encoding="utf-8",
+        )
+
+        update_file(test_file, {"package-name": "my-pkg"})
+
+        content = test_file.read_text(encoding="utf-8")
+        assert "# doc: my-pkg and somepackage-name and package-nameish" in content
+
+    def test_marker_does_not_interfere_with_literal(self, tmp_path: Path) -> None:
+        """Marker and literal replacements for the same concept coexist cleanly."""
+        test_file = tmp_path / "mixed.md"
+        test_file.write_text(
+            "New marker: __PACKAGE_NAME__. Old literal: package_name.\n",
+            encoding="utf-8",
+        )
+
+        update_file(
+            test_file,
+            {"__PACKAGE_NAME__": "my_pkg", "package_name": "my_pkg"},
+        )
+
+        content = test_file.read_text(encoding="utf-8")
+        assert "New marker: my_pkg" in content
+        assert "Old literal: my_pkg" in content
+
+
 class TestColors:
     """Tests for Colors class."""
 
