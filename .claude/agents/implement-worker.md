@@ -28,10 +28,10 @@ The parent prompt will provide:
 
 ### 2. Fetch the implementation plan
 
-Retrieve all comments and find the one containing `## Implementation Plan for`:
+Retrieve all comments and find the one whose body has a heading line starting with `Implementation Plan for`:
 
 ```bash
-gh api repos/{owner}/{repo}/issues/<issue-number>/comments --jq '.[] | select(.body | contains("## Implementation Plan for")) | .body'
+gh api repos/{owner}/{repo}/issues/<issue-number>/comments --jq '.[] | select(.body | test("^#+ Implementation Plan for"; "m")) | .body'
 ```
 
 - If multiple plan comments exist, use the most recent one.
