@@ -14,7 +14,7 @@ tags:
 ## Purpose
 
 This page documents the **application's user-facing command-line
-interface** — the `package-name` console script shipped by the published
+interface** — the `__PYPI_NAME__` console script shipped by the published
 package. It covers the entry point, the module layout, how to add new
 subcommands, and how to test them.
 
@@ -26,28 +26,28 @@ architectural rationale behind the runtime/dev split, see
 
 ## Quick reference
 
-After installing the package, the `package-name` command is available on
+After installing the package, the `__PYPI_NAME__` command is available on
 your `PATH`:
 
 ```bash
-$ package-name greet
+$ __PYPI_NAME__ greet
 Hello, World!
 
-$ package-name greet --name Python
+$ __PYPI_NAME__ greet --name Python
 Hello, Python!
 
-$ package-name greet -n Python
+$ __PYPI_NAME__ greet -n Python
 Hello, Python!
 
-$ package-name --version
-package_name, version 0.0.0
+$ __PYPI_NAME__ --version
+__PACKAGE_NAME__, version 0.0.0
 ```
 
 During development, prefix invocations with `uv run` to use the project
 virtual environment:
 
 ```bash
-uv run package-name greet --name Python
+uv run __PYPI_NAME__ greet --name Python
 ```
 
 ## Entry point and module layout
@@ -56,16 +56,16 @@ The CLI is registered in `pyproject.toml` as a console script:
 
 ```toml
 [project.scripts]
-package-name = "package_name.cli:main"
+__PYPI_NAME__ = "__PACKAGE_NAME__.cli:main"
 ```
 
-The script name on the left (`package-name`) is the hyphen-cased
+The script name on the left (`__PYPI_NAME__`) is the hyphen-cased
 distribution name. The value on the right points at the `main` function
-in `src/package_name/cli.py`. When the package is installed (via `uv
+in `src/__PACKAGE_NAME__/cli.py`. When the package is installed (via `uv
 sync`, `pip install`, etc.), the build backend generates an executable
-shim that calls `package_name.cli.main()`.
+shim that calls `__PACKAGE_NAME__.cli.main()`.
 
-The CLI module lives at `src/package_name/cli.py` and is a single file
+The CLI module lives at `src/__PACKAGE_NAME__/cli.py` and is a single file
 for the baseline template. Larger projects may split it into a
 `cli/` package with one file per subcommand group.
 
@@ -78,13 +78,13 @@ subcommands attach to it via the `@main.command()` decorator:
 ```python
 import click
 
-from package_name.core import greet as _greet
+from __PACKAGE_NAME__.core import greet as _greet
 
 
 @click.group()
-@click.version_option(package_name="package_name")
+@click.version_option(__PACKAGE_NAME__="__PACKAGE_NAME__")
 def main() -> None:
-    """package_name command-line interface."""
+    """__PACKAGE_NAME__ command-line interface."""
 
 
 @main.command()
@@ -98,11 +98,11 @@ Key properties:
 
 - **`main` is a `click.Group`.** This is what `[project.scripts]` points
   at. It has no behavior of its own — it dispatches to subcommands.
-- **`@click.version_option(package_name="package_name")`** wires up
+- **`@click.version_option(__PACKAGE_NAME__="__PACKAGE_NAME__")`** wires up
   `--version` using the installed package metadata, so the version never
   drifts out of sync with the git tag.
 - **Subcommands call into the runtime package.** The `greet` command
-  delegates to `package_name.core.greet`. The CLI layer handles parsing
+  delegates to `__PACKAGE_NAME__.core.greet`. The CLI layer handles parsing
   and output; the core module owns the logic. This keeps the core
   testable without invoking click and makes the CLI a thin presentation
   layer.
@@ -112,11 +112,11 @@ see [ADR-9014: Use click for application CLI](../decisions/9014-use-click-for-ap
 
 ## How to add a new subcommand
 
-1. **Open `src/package_name/cli.py`.**
+1. **Open `src/__PACKAGE_NAME__/cli.py`.**
 2. **Write a function decorated with `@main.command()`.** Add options
    and arguments with `@click.option` / `@click.argument`.
 3. **Delegate to a function in the runtime package.** Do not put business
-   logic in `cli.py` — call into `package_name.core` (or a new module)
+   logic in `cli.py` — call into `__PACKAGE_NAME__.core` (or a new module)
    and use the CLI function as a thin adapter.
 4. **Add tests in `tests/test_cli.py`** (see [Testing CLI commands](#testing-cli-commands)
    below).
@@ -125,7 +125,7 @@ Example: adding a `shout` subcommand that uppercases a name and greets
 it loudly.
 
 ```python
-# src/package_name/cli.py
+# src/__PACKAGE_NAME__/cli.py
 
 @main.command()
 @click.argument("name")
@@ -139,7 +139,7 @@ def shout(name: str, exclaim: int) -> None:
 Usage:
 
 ```bash
-$ package-name shout python --exclaim 3
+$ __PYPI_NAME__ shout python --exclaim 3
 Hello, PYTHON!!!
 ```
 
@@ -153,7 +153,7 @@ pitfalls, and gives you direct access to exit codes and captured output.
 # tests/test_cli.py
 from click.testing import CliRunner
 
-from package_name.cli import main
+from __PACKAGE_NAME__.cli import main
 
 
 def test_greet_default_name() -> None:

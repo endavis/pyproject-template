@@ -268,7 +268,7 @@ Once `tools/pyproject_template/manage.py` is installed and sync state is tracked
 
 - **Selective merging:** Not all template changes apply to every project - review diffs carefully
 - **Preserve divergences:** Projects may intentionally differ from template (document with ADRs)
-- **Replace placeholders:** Any `package_name` references in copied template content must be replaced with the actual package name
+- **Replace placeholders:** Any `__PACKAGE_NAME__` references in copied template content must be replaced with the actual package name
 - **Validate before commit:** Always run `doit check` before staging - mandatory per project workflow
 - **One PR per sync:** Keep all template synchronization changes in a single PR unless scope is too large
 - **manage.py is the official tool:** Use it for checking updates and marking sync state

@@ -12,7 +12,7 @@ tags:
 
 This guide covers both package usage and development workflows.
 
-> Looking for the `package-name` command-line interface? See the
+> Looking for the `__PYPI_NAME__` command-line interface? See the
 > [CLI Guide](cli.md) for the console script, subcommands, and how to
 > extend them.
 
@@ -21,7 +21,7 @@ This guide covers both package usage and development workflows.
 ### Basic Usage
 
 ```python
-from package_name import greet
+from __PACKAGE_NAME__ import greet
 
 # Simple greeting
 message = greet("World")
@@ -206,7 +206,7 @@ If your package provides a CLI, create convenience tasks:
 def task_run_server():
     """Start development server."""
     return {
-        "actions": ["uv run package-name server --debug --port 8080"],
+        "actions": ["uv run __PYPI_NAME__ server --debug --port 8080"],
         "title": title_with_actions,
     }
 
@@ -214,9 +214,9 @@ def task_init_db():
     """Initialize database."""
     return {
         "actions": [
-            "uv run package-name db create",
-            "uv run package-name db migrate",
-            "uv run package-name db seed-dev",
+            "uv run __PYPI_NAME__ db create",
+            "uv run __PYPI_NAME__ db migrate",
+            "uv run __PYPI_NAME__ db seed-dev",
         ],
         "title": title_with_actions,
     }
@@ -237,8 +237,8 @@ def task_deploy_dev():
     """Deploy to development environment."""
     return {
         "actions": [
-            "uv run package-name validate --env dev",
-            "uv run package-name deploy --env dev --auto-approve",
+            "uv run __PYPI_NAME__ validate --env dev",
+            "uv run __PYPI_NAME__ deploy --env dev --auto-approve",
         ],
         "title": title_with_actions,
     }
@@ -257,7 +257,7 @@ def task_deploy_prod():
 
         # Run deployment
         subprocess.run(
-            "uv run package-name deploy --env prod",
+            "uv run __PYPI_NAME__ deploy --env prod",
             shell=True,
             check=True
         )
@@ -310,9 +310,9 @@ def task_process_data():
     """Run data processing pipeline."""
     return {
         "actions": [
-            "uv run package-name extract --source api --output tmp/raw.json",
-            "uv run package-name transform --input tmp/raw.json --output tmp/clean.json",
-            "uv run package-name load --input tmp/clean.json --target postgres",
+            "uv run __PYPI_NAME__ extract --source api --output tmp/raw.json",
+            "uv run __PYPI_NAME__ transform --input tmp/raw.json --output tmp/clean.json",
+            "uv run __PYPI_NAME__ load --input tmp/clean.json --target postgres",
         ],
         "title": title_with_actions,
     }
@@ -321,7 +321,7 @@ def task_backup_data():
     """Backup production database."""
     return {
         "actions": [
-            "uv run package-name backup create --env prod --output backups/$(date +%Y%m%d-%H%M%S).sql.gz",
+            "uv run __PYPI_NAME__ backup create --env prod --output backups/$(date +%Y%m%d-%H%M%S).sql.gz",
         ],
         "title": title_with_actions,
     }
@@ -339,7 +339,7 @@ def task_restore_data():
         latest = backups[0]
         print(f"Restoring from: {latest}")
         subprocess.run(
-            f"uv run package-name backup restore --file {latest} --env dev",
+            f"uv run __PYPI_NAME__ backup restore --file {latest} --env dev",
             shell=True,
             check=True
         )
@@ -402,7 +402,7 @@ def task_deploy():
 
         # Deploy
         subprocess.run(
-            f"uv run package-name deploy --env {env}",
+            f"uv run __PYPI_NAME__ deploy --env {env}",
             shell=True,
             check=True
         )
@@ -439,8 +439,8 @@ def task_validate_config():
     """Validate all configuration files."""
     return {
         "actions": [
-            "uv run package-name config validate --env dev",
-            "uv run package-name config validate --env prod",
+            "uv run __PYPI_NAME__ config validate --env dev",
+            "uv run __PYPI_NAME__ config validate --env prod",
         ],
         "title": title_with_actions,
     }
@@ -450,8 +450,8 @@ def task_health_check():
     return {
         "actions": [
             "curl -f http://localhost:8000/health || echo 'Service down!'",
-            "uv run package-name db ping",
-            "uv run package-name cache status",
+            "uv run __PYPI_NAME__ db ping",
+            "uv run __PYPI_NAME__ cache status",
         ],
         "title": title_with_actions,
     }
@@ -466,10 +466,10 @@ def task_generate_models():
     """Generate data models from OpenAPI spec."""
     return {
         "actions": [
-            "uv run datamodel-codegen --input api-spec.yaml --output src/package_name/models/",
+            "uv run datamodel-codegen --input api-spec.yaml --output src/__PACKAGE_NAME__/models/",
         ],
         "file_dep": ["api-spec.yaml"],
-        "targets": ["src/package_name/models/api.py"],
+        "targets": ["src/__PACKAGE_NAME__/models/api.py"],
         "title": title_with_actions,
     }
 
@@ -742,7 +742,7 @@ uv run pytest -v
 uv run mypy --show-error-codes --pretty src/
 
 # Check specific file
-uv run mypy src/package_name/core.py
+uv run mypy src/__PACKAGE_NAME__/core.py
 ```
 
 #### Pre-commit Hook Failures

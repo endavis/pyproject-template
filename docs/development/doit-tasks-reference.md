@@ -563,7 +563,7 @@ uv sync --all-extras --dev
 uv run pre-commit install
 ```
 
-> **Note:** `src/package_name/_version.py` is a build-time artifact written
+> **Note:** `src/__PACKAGE_NAME__/_version.py` is a build-time artifact written
 > by `hatch-vcs`. It is gitignored and untracked — `hatch-vcs` regenerates
 > it on every build, but git treats it as untracked rather than a modified
 > tracked file, so it does not appear in `git status`.

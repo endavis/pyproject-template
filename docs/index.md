@@ -1,5 +1,5 @@
 ---
-title: Package Name Documentation
+title: __PROJECT_NAME__ Documentation
 description: Welcome and overview of the project
 audience:
   - users
@@ -9,13 +9,13 @@ tags:
   - getting-started
 ---
 
-# Package Name Documentation
+# __PROJECT_NAME__ Documentation
 
-Welcome to the documentation for Package Name!
+Welcome to the documentation for __PROJECT_NAME__!
 
 ## Overview
 
-Package Name is a modern Python project template with comprehensive tooling for development, testing, documentation, and deployment.
+__PROJECT_NAME__ is a modern Python project template with comprehensive tooling for development, testing, documentation, and deployment.
 
 ## Quick Links
 
@@ -44,7 +44,7 @@ Package Name is a modern Python project template with comprehensive tooling for 
 ## Quick Start
 
 ```python
-from package_name import greet
+from __PACKAGE_NAME__ import greet
 
 # Simple greeting example
 message = greet("Python")

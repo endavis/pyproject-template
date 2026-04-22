@@ -1,6 +1,6 @@
 ---
 title: API Reference
-description: Complete API documentation for Package Name
+description: Complete API documentation for __PROJECT_NAME__
 audience:
   - users
   - contributors
@@ -11,7 +11,7 @@ tags:
 
 # API Reference
 
-Complete API documentation for Package Name, auto-generated from source code docstrings.
+Complete API documentation for __PROJECT_NAME__, auto-generated from source code docstrings.
 
 ## Package Overview
 

@@ -52,11 +52,11 @@ What you'll see (illustrative — your plan will look different):
 The provider module currently makes a network call on every lookup...
 
 ### Files to create
-- `src/package_name/cache.py` — new LRU cache wrapper
+- `src/__PACKAGE_NAME__/cache.py` — new LRU cache wrapper
 - `tests/test_cache.py` — unit tests for hit, miss, eviction
 
 ### Files to modify
-- `src/package_name/provider.py` — wrap lookups in the cache
+- `src/__PACKAGE_NAME__/provider.py` — wrap lookups in the cache
 
 ### Test plan
 - Unit tests for cache hit, cache miss, eviction ordering

@@ -19,7 +19,7 @@ workflows (testing, linting, releases, issue and PR creation) reproducible
 and discoverable. It is not part of the published package's public API.
 
 - doit must **not** be used to front the application's user-facing CLI. The
-  application's CLI is a console script under `src/package_name/`. End users
+  application's CLI is a console script under `src/__PACKAGE_NAME__/`. End users
   of the published package should never need to install `doit` to use it.
 - `doit` is a **development dependency only**, declared under
   `[project.optional-dependencies] dev` in `pyproject.toml`. It is not

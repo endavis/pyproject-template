@@ -8,12 +8,12 @@ Accepted
 
 Use **[click](https://click.palletsprojects.com/)** as the framework for
 the package's user-facing command-line interface. The CLI lives at
-`src/package_name/cli.py` and is registered as a console script via
+`src/__PACKAGE_NAME__/cli.py` and is registered as a console script via
 `[project.scripts]` in `pyproject.toml`:
 
 ```toml
 [project.scripts]
-package-name = "package_name.cli:main"
+__PYPI_NAME__ = "__PACKAGE_NAME__.cli:main"
 ```
 
 `click` is added to `[project] dependencies` as a runtime dependency
@@ -30,7 +30,7 @@ grounds the new [CLI Guide](../../usage/cli.md) in real code.
 The runtime/dev split documented in
 [ADR-9002](9002-use-doit-for-task-automation.md)
 and [Tooling Roles and Architectural Boundaries](../../development/tooling-roles.md)
-requires the application CLI to live under `src/package_name/` and to be
+requires the application CLI to live under `src/__PACKAGE_NAME__/` and to be
 runnable without any dev tooling (no `doit`, no `uv`). A standardized
 runtime CLI framework is needed to make that boundary concrete.
 
@@ -67,9 +67,9 @@ runtime CLI framework is needed to make that boundary concrete.
 **Positive:**
 
 - The template now has a concrete, testable CLI surface that contributors
-  can extend by copying the pattern in `src/package_name/cli.py`.
+  can extend by copying the pattern in `src/__PACKAGE_NAME__/cli.py`.
 - The runtime/dev boundary is enforceable: end users of the published
-  package run `package-name ...` without needing `doit` installed.
+  package run `__PYPI_NAME__ ...` without needing `doit` installed.
 - New subcommands have one obvious home and one obvious test pattern.
 
 **Negative:**
