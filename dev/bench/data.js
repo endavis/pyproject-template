@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776858926155,
+  "lastUpdate": 1776859450849,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5428,6 +5428,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000013581101971931606",
             "extra": "mean: 1.9952100656135956 usec\nrounds: 45243"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f4950470b2331ff771111a90b17868756490f4a8",
+          "message": "fix: tolerate single-# plan headers in /implement grep (merges PR #458, addresses #457)\n\nRelax plan-comment detection in /plan-issue, /plan-both, /implement,\n/where-am-i, and the implement-worker agent to accept both\n`# Implementation Plan for ...` and `## Implementation Plan for ...`.\nFour grep patterns switch to `grep -E \"^#+ Implementation Plan for\"`;\nthe jq filter in implement-worker switches to\n`test(\"^#+ Implementation Plan for\"; \"m\")`. Planner/template files are\nunchanged — canonical emitted form remains `##`.\n\nAddresses #457",
+          "timestamp": "2026-04-22T13:03:47+01:00",
+          "tree_id": "15f37195a110bc33527b52ab7342259a3287f943",
+          "url": "https://github.com/endavis/pyproject-template/commit/f4950470b2331ff771111a90b17868756490f4a8"
+        },
+        "date": 1776859450494,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8849736.707781356,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3383636579650982e-8",
+            "extra": "mean: 112.99771202466674 nsec\nrounds: 88834"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9193552.866150148,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1811597041049277e-8",
+            "extra": "mean: 108.77187683141649 nsec\nrounds: 88724"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5726886.44151537,
+            "unit": "iter/sec",
+            "range": "stddev: 4.098177673035811e-8",
+            "extra": "mean: 174.61495180885646 nsec\nrounds: 60592"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1663213.4580226887,
+            "unit": "iter/sec",
+            "range": "stddev: 3.334990846495017e-7",
+            "extra": "mean: 601.2457361840073 nsec\nrounds: 51128"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 478996.24043582607,
+            "unit": "iter/sec",
+            "range": "stddev: 6.401310747098499e-7",
+            "extra": "mean: 2.087699058118131 usec\nrounds: 48521"
           }
         ]
       }
