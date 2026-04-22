@@ -19,7 +19,7 @@ The implementation is delegated to a sub-agent (Task tool) so raw tool output st
 2. **Verify a plan comment exists:**
    Fetch all comments and search for the plan header:
    ```bash
-   gh api repos/{owner}/{repo}/issues/$ARGUMENTS/comments --jq '.[].body' | grep "## Implementation Plan for"
+   gh api repos/{owner}/{repo}/issues/$ARGUMENTS/comments --jq '.[].body' | grep -E "^#+ Implementation Plan for"
    ```
    - If no plan comment is found, tell the user:
      > "No implementation plan found for issue #$ARGUMENTS. Run `/plan-issue $ARGUMENTS` first."
