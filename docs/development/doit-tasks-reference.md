@@ -802,7 +802,7 @@ doit publish_setup
 **What it does:**
 1. Resolves the `owner/repo` slug.
 2. Creates (idempotently) the `testpypi` and `pypi` environments used by the release workflows for OIDC authentication.
-3. Prints follow-up instructions for registering the project as a trusted publisher on TestPyPI (`https://test.pypi.org/manage/account/publishing/`) and PyPI (`https://pypi.org/manage/account/publishing/`). That registration must be completed manually through the PyPI web UI.
+3. Prints follow-up instructions for registering three trusted publishers — one per `(workflow, environment)` pair the template uses: `testpypi.yml` × `testpypi`, `release.yml` × `testpypi`, and `release.yml` × `pypi`. Registration is done on TestPyPI (`https://test.pypi.org/manage/account/publishing/`) and PyPI (`https://pypi.org/manage/account/publishing/`); both must be completed manually through the PyPI web UI.
 
 **Requirements:**
 - `gh` installed and authenticated with repo-admin permissions.

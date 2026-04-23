@@ -1285,17 +1285,23 @@ def task_publish_setup() -> dict[str, Any]:
         console.print(
             Panel.fit(
                 "[bold]Next steps (manual, outside this tool):[/bold]\n\n"
-                "  1. Register the TestPyPI trusted publisher:\n"
+                "  Register THREE trusted publishers — PyPI scopes them per\n"
+                "  (owner, repo, workflow, environment) tuple, so each\n"
+                "  (workflow, env) pair the template uses needs its own entry.\n\n"
+                "  1. TestPyPI — workflow=testpypi.yml, env=testpypi\n"
                 "     https://test.pypi.org/manage/account/publishing/\n"
-                "  2. Register the PyPI trusted publisher:\n"
-                "     https://pypi.org/manage/account/publishing/\n\n"
-                "  When filling the forms, use:\n"
+                "     Purpose: pre-release uploads (v*-* tags).\n\n"
+                "  2. TestPyPI — workflow=release.yml, env=testpypi\n"
+                "     https://test.pypi.org/manage/account/publishing/\n"
+                "     Purpose: production-release canary (release.yml uploads\n"
+                "     to TestPyPI before PyPI as a sanity check).\n\n"
+                "  3. PyPI — workflow=release.yml, env=pypi\n"
+                "     https://pypi.org/manage/account/publishing/\n"
+                "     Purpose: production-release publish.\n\n"
+                "  Common fields for all three forms:\n"
                 "     PyPI project name: (your pypi-name from pyproject.toml)\n"
                 f"     Repository owner:  {owner}\n"
-                f"     Repository name:   {repo}\n"
-                "     Workflow filename: release.yml (for pypi) /\n"
-                "                        testpypi.yml (for testpypi)\n"
-                "     Environment name:  pypi / testpypi",
+                f"     Repository name:   {repo}",
                 border_style="cyan",
             )
         )

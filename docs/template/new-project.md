@@ -224,8 +224,10 @@ Manually configure what the automated setup does automatically:
 3. **PyPI publishing environments**:
    - Run `doit publish_setup` to create the `testpypi` and `pypi`
      environments and print the trusted-publisher registration steps.
-   - Follow the links in the printed output to register the project as a
-     trusted publisher on TestPyPI and PyPI.
+   - Follow the links in the printed output to register **three** trusted
+     publishers — one per `(workflow, environment)` pair. See the
+     [release automation guide](../development/release-and-automation.md#trusted-publisher-registration-manual)
+     for the full table.
 
 4. **Secrets** (Settings → Secrets → Actions):
    - Add `CODECOV_TOKEN` (optional, for coverage uploads)

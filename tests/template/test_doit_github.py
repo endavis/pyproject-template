@@ -1003,3 +1003,37 @@ class TestTaskPublishSetup:
         ]
         assert len(put_calls) == 1
         assert put_calls[0].args[0][4] == "repos/acme/widgets/environments/pypi"
+
+    def test_output_lists_all_three_trusted_publishers(
+        self, mock_subprocess: MagicMock, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Panel output enumerates all three (workflow, env) registrations."""
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments/testpypi"): {"returncode": 0},
+                ("gh", "api", "repos/acme/widgets/environments/pypi"): {"returncode": 0},
+            }
+        )
+
+        self._action()()
+
+        # Collapse all whitespace so assertions are robust against any
+        # rich-driven line wrapping inside the Panel.fit output.
+        captured = capsys.readouterr().out
+        collapsed = " ".join(captured.split())
+
+        # All three (workflow, env) pairs must be mentioned.
+        assert "workflow=testpypi.yml, env=testpypi" in collapsed
+        assert "workflow=release.yml, env=testpypi" in collapsed
+        assert "workflow=release.yml, env=pypi" in collapsed
+
+        # Both publishing URLs must appear. The TestPyPI URL must appear
+        # at least twice (once per TestPyPI registration).
+        assert "https://pypi.org/manage/account/publishing/" in collapsed
+        assert "https://test.pypi.org/manage/account/publishing/" in collapsed
+        assert collapsed.count("https://test.pypi.org/manage/account/publishing/") >= 2
+
+        # The owner/repo values from _gh_repo_slug must appear.
+        assert "acme" in collapsed
+        assert "widgets" in collapsed

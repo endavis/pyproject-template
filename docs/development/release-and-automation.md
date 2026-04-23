@@ -222,7 +222,7 @@ succeed:
 
 | Environment | Used by | Purpose |
 | --- | --- | --- |
-| `testpypi` | `release.yml` (pre-release step), `testpypi.yml` | OIDC identity for TestPyPI |
+| `testpypi` | `release.yml` (pre-publish canary), `testpypi.yml` | OIDC identity for TestPyPI |
 | `pypi` | `release.yml` (production step) | OIDC identity for PyPI |
 
 The environments are created empty — no protection rules, reviewers, or
@@ -273,23 +273,38 @@ full option matrix.
 
 Creating the GitHub Environment is only half the setup. The other half
 is registering this project as a trusted publisher on PyPI and TestPyPI,
-which must be done by the project owner through the PyPI web UI:
+which must be done by the project owner through the PyPI web UI.
 
-- TestPyPI: <https://test.pypi.org/manage/account/publishing/>
-- PyPI: <https://pypi.org/manage/account/publishing/>
+PyPI scopes trusted publishers per `(owner, repo, workflow, environment)`
+tuple, and the template fires three distinct `(workflow, env)` pairs —
+two against TestPyPI and one against PyPI. Each pair needs its own
+registration:
 
-For both forms, supply:
+| # | Host | Registration page | Workflow | Environment | Purpose |
+| --- | --- | --- | --- | --- | --- |
+| 1 | TestPyPI | <https://test.pypi.org/manage/account/publishing/> | `testpypi.yml` | `testpypi` | Pre-release uploads (`v*-*` tags) |
+| 2 | TestPyPI | <https://test.pypi.org/manage/account/publishing/> | `release.yml` | `testpypi` | Production-release canary — `release.yml` uploads to TestPyPI before PyPI as a sanity check |
+| 3 | PyPI | <https://pypi.org/manage/account/publishing/> | `release.yml` | `pypi` | Production-release publish |
+
+For every form, supply the same common fields:
 
 - **PyPI project name** — the distribution name from `pyproject.toml`.
 - **Owner** — the GitHub user or organization that owns the repository.
 - **Repository name** — the repository name on GitHub.
-- **Workflow filename** — `release.yml` for PyPI, `testpypi.yml` for
-  TestPyPI.
-- **Environment name** — `pypi` for PyPI, `testpypi` for TestPyPI.
 
-Once both sides are registered, pushing a `v*` tag (via `doit release`
-followed by `doit release_tag`) triggers the publish workflow, which
-authenticates via OIDC and uploads the built distribution.
+And use the per-row **Workflow filename** and **Environment name** from
+the table above.
+
+Skipping registration #2 is the most common mistake. Pre-releases still
+work (they use registration #1), but the first production release fails
+at `release.yml`'s TestPyPI canary step with a `403 Invalid API Token:
+OIDC scoped token is not valid for project` error — because
+`release.yml` + `testpypi` is a different scope from `testpypi.yml` +
+`testpypi`.
+
+Once all three sides are registered, pushing a `v*` tag (via `doit
+release` followed by `doit release_tag`) triggers the publish workflow,
+which authenticates via OIDC and uploads the built distribution.
 
 **Further reading**
 
