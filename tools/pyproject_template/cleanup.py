@@ -180,14 +180,20 @@ def update_mkdocs_nav(root: Path | None = None, dry_run: bool = False) -> bool:
 
 
 # Regex patterns used by scrub_template_references. Defined at module scope so
-# tests can import/inspect them if needed; each pattern is self-guarded by a
-# "no match -> no change" fast path inside the function.
+# tests can import/inspect them if needed. The patterns are applied blindly
+# (``re.sub`` is a no-op when nothing matches), and the function detects
+# whether any scrub occurred by comparing the final content to the original.
 
 # ``pyproject.toml`` stanza for the template-only tools.pyproject_template.*
 # mypy override. Removes the ``[[tool.mypy.overrides]]`` block (including its
 # two trailing preceding comment lines and the ``follow_imports = "skip"`` row)
 # plus the single blank line that separates it from the next section. Greedy
 # comment capture is avoided by anchoring on the module line.
+#
+# Kept as a fallback because ``doit fmt_pyproject`` in the wizard rewrites the
+# stanza form into inline-array form before the scrubber runs
+# (see ``_PYPROJECT_TEMPLATE_MYPY_OVERRIDE_INLINE_RE``); downstream users that
+# invoke the scrubber on an un-formatted file still need this pattern to hit.
 _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE = re.compile(
     r"\[\[tool\.mypy\.overrides\]\]\n"
     r"(?:# [^\n]*\n)*"  # optional explanatory comments
@@ -196,13 +202,60 @@ _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE = re.compile(
     r"\n?",  # trailing blank line (optional so trailing-file case is tolerated)
 )
 
-# README.md block containing both template-only setup sections. Starts at
-# ``## Quick Setup (Automated)`` and runs up to (but not including) the next
-# top-level heading ``## Development Setup``. The non-greedy body match plus
-# explicit terminator keeps the scrubber from devouring unrelated sections if
-# the consumer has reshuffled headings.
+# ``pyproject.toml`` inline-array form of the mypy override. ``doit
+# fmt_pyproject`` (run earlier in the wizard) rewrites the stanza form into
+# an entry inside ``overrides = [...]``. The two comment lines above the
+# dict entry are preserved by the formatter, so they're part of the match.
+_PYPROJECT_TEMPLATE_MYPY_OVERRIDE_INLINE_RE = re.compile(
+    r"  # Standalone scripts using sys\.path manipulation; excluded from discovery\n"
+    r"  # but still followed via imports from bootstrap\.py\n"
+    r'  \{ module = "tools\.pyproject_template\.\*", follow_imports = "skip" \},\n',
+)
+
+# ``pyproject.toml`` ruff ``per-file-ignores`` block targeting
+# ``tools/pyproject_template/*.py``. Matches the whole TOML entry from the
+# ``lint.per-file-ignores."tools/pyproject_template/*.py" = [`` line through
+# the closing ``]\n``; the indented body is captured non-greedily.
+_PYPROJECT_TEMPLATE_RUFF_PERFILE_RE = re.compile(
+    r'lint\.per-file-ignores\."tools/pyproject_template/\*\.py" = \[\n'
+    r"(?:  [^\n]*\n)*?"
+    r"\]\n",
+)
+
+# ``pyproject.toml`` comment line above ``[tool.mypy]::exclude`` that
+# specifically references ``tools/pyproject_template/``. Removed alongside
+# the corresponding array entry so the remaining AI-config excludes are not
+# left dangling beneath a now-irrelevant explanatory comment.
+_PYPROJECT_TEMPLATE_MYPY_EXCLUDE_COMMENT_RE = re.compile(
+    r"# tools/pyproject_template/ uses sys\.path manipulation for standalone execution\n",
+)
+
+# ``pyproject.toml`` array entry ``"tools/pyproject_template/"`` inside
+# ``[tool.mypy]::exclude = [...]``. The trailing ``\s*`` consumes the
+# separator between array entries (comma, optional whitespace and/or
+# newline), which handles both pyproject-fmt-normalized form (``[ ... ]``
+# padded with spaces) and the raw template form.
+_PYPROJECT_TEMPLATE_MYPY_EXCLUDE_ENTRY_RE = re.compile(
+    r'"tools/pyproject_template/",\s*',
+)
+
+# README.md block containing both template-only top-level setup sections.
+# Starts at ``## Quick Setup (Automated)`` and runs up to (but not including)
+# the next top-level heading ``## Development Setup``. The non-greedy body
+# match plus explicit terminator keeps the scrubber from devouring unrelated
+# sections if the consumer has reshuffled headings.
 _README_TEMPLATE_SECTIONS_RE = re.compile(
     r"## Quick Setup \(Automated\)\n.*?(?=## Development Setup\b)",
+    re.DOTALL,
+)
+
+# README.md ``### Migrating an Existing Project`` and ``### Keeping Up to
+# Date`` subsections (under ``## Versioning & Releases``). Both reference
+# template-management scripts that no longer exist in the consumer project
+# (``migrate_existing_project.py`` and ``check_template_updates.py``). The
+# terminator ``### Creating a Release`` is the next subsection that stays.
+_README_TEMPLATE_SUBSECTIONS_RE = re.compile(
+    r"### Migrating an Existing Project\n.*?(?=### Creating a Release\b)",
     re.DOTALL,
 )
 
@@ -229,18 +282,23 @@ def scrub_template_references(root: Path | None = None, dry_run: bool = False) -
     or configuration for template-only tooling after the cleanup phase has
     deleted the files those references point at:
 
-    * ``pyproject.toml`` — removes the ``[[tool.mypy.overrides]]`` stanza
-      targeting ``tools.pyproject_template.*`` (which no longer exists after
-      ``cleanup_template_files(CleanupMode.ALL)``).
+    * ``pyproject.toml`` — removes every ``tools/pyproject_template/``
+      artifact: the ruff ``per-file-ignores`` block, the mypy ``exclude``
+      entry (and its explanatory comment), and the mypy override (in both
+      stanza and inline-array form, because ``doit fmt_pyproject`` rewrites
+      the file before cleanup runs in the wizard).
     * ``README.md`` — removes the ``## Quick Setup (Automated)`` and
-      ``## Using This Template (Manual)`` sections, leaving headings above
-      and below intact.
+      ``## Using This Template (Manual)`` top-level sections plus the
+      ``### Migrating an Existing Project`` and ``### Keeping Up to Date``
+      subsections of ``## Versioning & Releases``.
     * ``docs/development/doit-tasks-reference.md`` — removes the
       ``### template_clean`` section and rewrites the TOC table row so the
       remaining ``cleanup`` entry is listed alone.
 
-    Each rewrite guards itself with a "no match -> no change" fast path so
-    repeat calls and already-scrubbed files are no-ops.
+    Patterns are applied blindly; ``re.sub`` is a no-op when nothing matches,
+    and the function detects whether a file changed by comparing final
+    content to the original. That makes the scrubber idempotent — repeat
+    calls and already-scrubbed files record no change.
 
     Args:
         root: Project root directory (defaults to cwd).
@@ -255,30 +313,38 @@ def scrub_template_references(root: Path | None = None, dry_run: bool = False) -
 
     changed: list[Path] = []
 
-    # 1. pyproject.toml — remove the tools.pyproject_template.* mypy stanza.
+    # 1. pyproject.toml — scrub all template-only configuration fragments.
     pyproject = root / "pyproject.toml"
     if pyproject.is_file():
         original = pyproject.read_text(encoding="utf-8")
-        if _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE.search(original):
-            new_content = _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE.sub("", original)
+        new_content = original
+        new_content = _PYPROJECT_TEMPLATE_RUFF_PERFILE_RE.sub("", new_content)
+        new_content = _PYPROJECT_TEMPLATE_MYPY_EXCLUDE_COMMENT_RE.sub("", new_content)
+        new_content = _PYPROJECT_TEMPLATE_MYPY_EXCLUDE_ENTRY_RE.sub("", new_content)
+        new_content = _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE.sub("", new_content)
+        new_content = _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_INLINE_RE.sub("", new_content)
+        if new_content != original:
             if dry_run:
-                Logger.info("Would scrub tools.pyproject_template mypy override in pyproject.toml")
+                Logger.info("Would scrub template-only references in pyproject.toml")
             else:
                 pyproject.write_text(new_content, encoding="utf-8")
-                Logger.success("Removed tools.pyproject_template mypy override from pyproject.toml")
+                Logger.success("Removed template-only references from pyproject.toml")
             changed.append(pyproject)
 
-    # 2. README.md — remove both template-only setup sections.
+    # 2. README.md — scrub both top-level template sections and the two
+    #    template-management subsections under "Versioning & Releases".
     readme = root / "README.md"
     if readme.is_file():
         original = readme.read_text(encoding="utf-8")
-        if _README_TEMPLATE_SECTIONS_RE.search(original):
-            new_content = _README_TEMPLATE_SECTIONS_RE.sub("", original)
+        new_content = original
+        new_content = _README_TEMPLATE_SECTIONS_RE.sub("", new_content)
+        new_content = _README_TEMPLATE_SUBSECTIONS_RE.sub("", new_content)
+        if new_content != original:
             if dry_run:
-                Logger.info("Would scrub template-only setup sections in README.md")
+                Logger.info("Would scrub template-only sections in README.md")
             else:
                 readme.write_text(new_content, encoding="utf-8")
-                Logger.success("Removed template-only setup sections from README.md")
+                Logger.success("Removed template-only sections from README.md")
             changed.append(readme)
 
     # 3. docs/development/doit-tasks-reference.md — remove the template_clean
@@ -287,10 +353,8 @@ def scrub_template_references(root: Path | None = None, dry_run: bool = False) -
     if doit_ref.is_file():
         original = doit_ref.read_text(encoding="utf-8")
         new_content = original
-        if _DOIT_REF_TEMPLATE_CLEAN_RE.search(new_content):
-            new_content = _DOIT_REF_TEMPLATE_CLEAN_RE.sub("", new_content)
-        if _DOIT_REF_TOC_TEMPLATE_CLEAN_RE.search(new_content):
-            new_content = _DOIT_REF_TOC_TEMPLATE_CLEAN_RE.sub("`cleanup`", new_content)
+        new_content = _DOIT_REF_TEMPLATE_CLEAN_RE.sub("", new_content)
+        new_content = _DOIT_REF_TOC_TEMPLATE_CLEAN_RE.sub("`cleanup`", new_content)
         if new_content != original:
             if dry_run:
                 Logger.info(
