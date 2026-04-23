@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776944189985,
+  "lastUpdate": 1776945554593,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5782,6 +5782,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.552133963445774e-7",
             "extra": "mean: 1.5250736355852543 usec\nrounds: 59971"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b99d5115f10369365570f72cfbaba2af180a82d9",
+          "message": "fix: fall back to --global in get_git_config when CWD has no repo (merges PR #472, addresses #470)\n\nThe unscoped `git config <key>` lookup exits non-zero when the CWD is\nnot inside a git repository, even for keys set in ~/.gitconfig. That\nbroke bootstrap.py's required-field loop on piped stdin when run from\noutside a repo. Retry with `git config --global <key>` on failure so\nuser.name / user.email resolve from global identity regardless of CWD.\nBoth calls remain inside the existing exception guard; signature and\nthe three existing callers are unchanged.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-23T12:58:50+01:00",
+          "tree_id": "8dec5ff80a205eb9133108e50d7cda544e8c5b35",
+          "url": "https://github.com/endavis/pyproject-template/commit/b99d5115f10369365570f72cfbaba2af180a82d9"
+        },
+        "date": 1776945554185,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8937302.074787853,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1856976164573614e-8",
+            "extra": "mean: 111.89058975873738 nsec\nrounds: 86866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9025474.881040048,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1673123890627577e-8",
+            "extra": "mean: 110.7974941131037 nsec\nrounds: 88332"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5248667.756204017,
+            "unit": "iter/sec",
+            "range": "stddev: 2.88418121617978e-8",
+            "extra": "mean: 190.52453812074168 nsec\nrounds: 198020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1583223.0180179977,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2618808119713507e-7",
+            "extra": "mean: 631.6229543276082 nsec\nrounds: 55667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 486495.0511236196,
+            "unit": "iter/sec",
+            "range": "stddev: 4.967043724375519e-7",
+            "extra": "mean: 2.055519367957347 usec\nrounds: 51451"
           }
         ]
       }
