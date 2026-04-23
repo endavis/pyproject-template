@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776962688253,
+  "lastUpdate": 1776966436394,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5900,6 +5900,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.813859263293326e-7",
             "extra": "mean: 1.8912499206883489 usec\nrounds: 31518"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a734f58c5f52a52d2a78b1b50be5229f697f7bf9",
+          "message": "fix: allow --prerelease + --increment on doit release (merges PR #476, addresses #475)\n\nThe task rejected --prerelease combined with --increment with a custom\nerror, but cz bump accepts both (and recommends --increment when\nconventional-commit hints are thin). That false-mutex blocked the\nfirst-pre-release-on-a-fresh-repo path that PR #436 was built for.\n\nDrop the 7-line mutex block; cz handles flag precedence. Update the\ntask docstring and every doc that claimed the flags were mutually\nexclusive. New TestCreateReleasePrValidation tests cover the accepted\ncombination and guard the still-enforced allowed-values check.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-23T18:46:41+01:00",
+          "tree_id": "38e612fa8a1ad7a89800935d0c2f638c88efe6a7",
+          "url": "https://github.com/endavis/pyproject-template/commit/a734f58c5f52a52d2a78b1b50be5229f697f7bf9"
+        },
+        "date": 1776966435403,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9017038.38874197,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0876187217580132e-8",
+            "extra": "mean: 110.90115810625012 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9049660.043027055,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0697158599280921e-8",
+            "extra": "mean: 110.50138847707545 nsec\nrounds: 89040"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5620800.248968445,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3752794467829103e-8",
+            "extra": "mean: 177.91060982526903 nsec\nrounds: 56262"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1678403.8323711548,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1402248254637435e-7",
+            "extra": "mean: 595.8041686470985 nsec\nrounds: 39437"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491292.6591862352,
+            "unit": "iter/sec",
+            "range": "stddev: 4.989511690659913e-7",
+            "extra": "mean: 2.035446655474915 usec\nrounds: 61159"
           }
         ]
       }
