@@ -169,13 +169,27 @@ Release workflows use GitHub environments for OIDC-based publishing.
 ### OIDC Trusted Publisher Configuration
 
 Both environments use PyPI's trusted publisher mechanism instead of API tokens.
-Configure the trusted publisher on PyPI and TestPyPI:
+PyPI scopes each trusted publisher per `(owner, repo, workflow, environment)`
+tuple, so the template requires **three** separate registrations — one for
+each `(workflow, env)` pair the publish flow uses:
+
+| # | Host | Workflow | Environment | Purpose |
+| :--- | :--- | :--- | :--- | :--- |
+| 1 | TestPyPI | `testpypi.yml` | `testpypi` | Pre-release uploads (`v*-*` tags) |
+| 2 | TestPyPI | `release.yml` | `testpypi` | Production-release canary (before PyPI) |
+| 3 | PyPI | `release.yml` | `pypi` | Production-release publish |
+
+For every registration, supply the same common fields:
 
 - **Publisher:** GitHub Actions
 - **Owner:** Your GitHub username or organization
 - **Repository:** Your repository name
-- **Workflow:** `release.yml` (for PyPI) or `testpypi.yml` (for TestPyPI)
-- **Environment:** `pypi` or `testpypi` respectively
+
+Then fill in the row-specific **Workflow** and **Environment** from the
+table above. Missing registration #2 is the most common failure mode —
+pre-releases still work, but the first production release fails at the
+`release.yml` TestPyPI canary step with `403 Invalid API Token: OIDC
+scoped token is not valid for project`.
 
 **Automated:** Partial. Run `doit publish_setup` to create the `testpypi`
 and `pypi` environments in one step (idempotent). Trusted publishers must
