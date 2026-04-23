@@ -340,3 +340,362 @@ class TestMain:
         with patch("sys.argv", ["cleanup.py", "--setup", "--all"]):
             result = main()
             assert result == 1
+
+
+class TestScrubTemplateReferences:
+    """Tests for ``scrub_template_references``.
+
+    Verifies each of the three target files gets cleaned up correctly and
+    that the scrubber is idempotent. Addresses issue #469.
+    """
+
+    _PYPROJECT_WITH_STANZA = """\
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "doit.*"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+# Standalone scripts using sys.path manipulation; excluded from discovery
+# but still followed via imports from bootstrap.py
+module = "tools.pyproject_template.*"
+follow_imports = "skip"
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+"""
+
+    _PYPROJECT_WITHOUT_STANZA = """\
+[tool.mypy]
+strict = true
+
+[[tool.mypy.overrides]]
+module = "doit.*"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+"""
+
+    _README_WITH_TEMPLATE_SECTIONS = """\
+# My Project
+
+Intro text.
+
+## Features
+
+- feature one
+
+## Quick Setup (Automated)
+
+Stuff about bootstrap.py.
+
+## Using This Template (Manual)
+
+Manual instructions about tools/pyproject_template/configure.py.
+
+## Development Setup
+
+Dev instructions.
+"""
+
+    _README_WITHOUT_TEMPLATE_SECTIONS = """\
+# My Project
+
+Intro text.
+
+## Features
+
+- feature one
+
+## Development Setup
+
+Dev instructions.
+"""
+
+    _DOIT_REF_WITH_TEMPLATE_CLEAN = """\
+# Doit Tasks Reference
+
+| Category | Commands | Purpose |
+| --- | --- | --- |
+| Setup | `install` | Install deps |
+| Maintenance | `cleanup`, `template_clean` | Project cleanup |
+
+## Testing Tasks
+
+### `test`
+
+Run tests.
+
+### `template_clean`
+
+Remove template-specific files after project setup.
+
+```bash
+doit template_clean --setup
+```
+
+**Setup mode (`--setup`)** removes:
+- `bootstrap.py`
+
+### `build`
+
+Build the package.
+"""
+
+    _DOIT_REF_WITHOUT_TEMPLATE_CLEAN = """\
+# Doit Tasks Reference
+
+| Category | Commands | Purpose |
+| --- | --- | --- |
+| Setup | `install` | Install deps |
+| Maintenance | `cleanup` | Project cleanup |
+
+## Testing Tasks
+
+### `test`
+
+Run tests.
+
+### `build`
+
+Build the package.
+"""
+
+    def test_scrubs_pyproject_when_stanza_present(self, tmp_path: Path) -> None:
+        """pyproject.toml stanza is removed when present."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        (tmp_path / "pyproject.toml").write_text(self._PYPROJECT_WITH_STANZA, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        new = (tmp_path / "pyproject.toml").read_text(encoding="utf-8")
+        assert "tools.pyproject_template" not in new
+        # The unrelated doit.* override must survive.
+        assert 'module = "doit.*"' in new
+        assert tmp_path / "pyproject.toml" in changed
+
+    def test_pyproject_noop_when_stanza_absent(self, tmp_path: Path) -> None:
+        """Already-scrubbed pyproject.toml is left unchanged."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(self._PYPROJECT_WITHOUT_STANZA, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        assert pyproject not in changed
+        assert pyproject.read_text(encoding="utf-8") == self._PYPROJECT_WITHOUT_STANZA
+
+    def test_scrubs_readme_when_sections_present(self, tmp_path: Path) -> None:
+        """Both template sections are removed; surrounding headings survive."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        readme = tmp_path / "README.md"
+        readme.write_text(self._README_WITH_TEMPLATE_SECTIONS, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        new = readme.read_text(encoding="utf-8")
+        assert "## Quick Setup (Automated)" not in new
+        assert "## Using This Template (Manual)" not in new
+        # Surrounding headings intact.
+        assert "## Features" in new
+        assert "## Development Setup" in new
+        assert readme in changed
+
+    def test_readme_noop_when_sections_absent(self, tmp_path: Path) -> None:
+        """Already-scrubbed README.md is left unchanged."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        readme = tmp_path / "README.md"
+        readme.write_text(self._README_WITHOUT_TEMPLATE_SECTIONS, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        assert readme not in changed
+        assert readme.read_text(encoding="utf-8") == self._README_WITHOUT_TEMPLATE_SECTIONS
+
+    def test_scrubs_doit_reference_section_and_toc(self, tmp_path: Path) -> None:
+        """doit-tasks-reference.md section removed and TOC row rewritten."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        doit_ref = tmp_path / "docs" / "development" / "doit-tasks-reference.md"
+        doit_ref.parent.mkdir(parents=True)
+        doit_ref.write_text(self._DOIT_REF_WITH_TEMPLATE_CLEAN, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        new = doit_ref.read_text(encoding="utf-8")
+        assert "template_clean" not in new
+        # The TOC row is rewritten to list only ``cleanup``.
+        assert "| Maintenance | `cleanup` | Project cleanup |" in new
+        # The surrounding sections still exist.
+        assert "### `test`" in new
+        assert "### `build`" in new
+        assert doit_ref in changed
+
+    def test_doit_reference_noop_when_template_clean_absent(self, tmp_path: Path) -> None:
+        """Already-scrubbed doit-tasks-reference.md is left unchanged."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        doit_ref = tmp_path / "docs" / "development" / "doit-tasks-reference.md"
+        doit_ref.parent.mkdir(parents=True)
+        doit_ref.write_text(self._DOIT_REF_WITHOUT_TEMPLATE_CLEAN, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        assert doit_ref not in changed
+        assert doit_ref.read_text(encoding="utf-8") == self._DOIT_REF_WITHOUT_TEMPLATE_CLEAN
+
+    def test_scrub_is_idempotent(self, tmp_path: Path) -> None:
+        """Running the scrubber twice must change nothing on the second pass."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        (tmp_path / "pyproject.toml").write_text(self._PYPROJECT_WITH_STANZA, encoding="utf-8")
+        (tmp_path / "README.md").write_text(self._README_WITH_TEMPLATE_SECTIONS, encoding="utf-8")
+        doit_ref = tmp_path / "docs" / "development" / "doit-tasks-reference.md"
+        doit_ref.parent.mkdir(parents=True)
+        doit_ref.write_text(self._DOIT_REF_WITH_TEMPLATE_CLEAN, encoding="utf-8")
+
+        # First pass: changes expected.
+        first_changed = scrub_template_references(tmp_path)
+        assert first_changed  # non-empty list
+
+        # Snapshot the post-first-pass file contents.
+        snapshots = {path: path.read_text(encoding="utf-8") for path in first_changed}
+
+        # Second pass: nothing should change.
+        second_changed = scrub_template_references(tmp_path)
+        assert second_changed == []
+
+        for path, original in snapshots.items():
+            assert path.read_text(encoding="utf-8") == original
+
+    def test_dry_run_does_not_write_files(self, tmp_path: Path) -> None:
+        """Under dry_run=True the files are not modified."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(self._PYPROJECT_WITH_STANZA, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path, dry_run=True)
+
+        # File still has the stanza — nothing was written.
+        assert pyproject.read_text(encoding="utf-8") == self._PYPROJECT_WITH_STANZA
+        # But the change is still reported.
+        assert pyproject in changed
+
+    def test_no_target_files_returns_empty(self, tmp_path: Path) -> None:
+        """When none of the three target files exist, return an empty list."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        changed = scrub_template_references(tmp_path)
+        assert changed == []
+
+
+class TestCleanupAllDeletesTemplateCleanTask:
+    """Regression test for issue #469: ``tools/doit/template_clean.py`` goes away.
+
+    The doit task file imports the template cleanup module, which is deleted
+    under ``CleanupMode.ALL``. Leaving the task behind is misleading because
+    it would fail on invocation in a spawned repo.
+    """
+
+    def test_cleanup_all_deletes_template_clean_task(self, tmp_path: Path) -> None:
+        """template_clean.py is in ALL_TEMPLATE_FILES and gets deleted."""
+        from tools.pyproject_template.cleanup import (
+            ALL_TEMPLATE_FILES,
+            CleanupMode,
+            cleanup_template_files,
+        )
+
+        # Verify the constant itself lists the file (documents intent).
+        assert "tools/doit/template_clean.py" in ALL_TEMPLATE_FILES
+
+        # Create the file and run ALL-mode cleanup.
+        template_clean = tmp_path / "tools" / "doit" / "template_clean.py"
+        template_clean.parent.mkdir(parents=True)
+        template_clean.write_text("# placeholder", encoding="utf-8")
+
+        result = cleanup_template_files(CleanupMode.ALL, tmp_path)
+
+        assert not template_clean.exists()
+        # And the deleted_files list reflects the removal.
+        assert any(p.name == "template_clean.py" for p in result.deleted_files)
+
+    def test_cleanup_setup_only_leaves_template_clean_task(self, tmp_path: Path) -> None:
+        """Under SETUP_ONLY mode, template_clean.py survives (bug-#469 scope)."""
+        from tools.pyproject_template.cleanup import (
+            CleanupMode,
+            cleanup_template_files,
+        )
+
+        template_clean = tmp_path / "tools" / "doit" / "template_clean.py"
+        template_clean.parent.mkdir(parents=True)
+        template_clean.write_text("# placeholder", encoding="utf-8")
+
+        cleanup_template_files(CleanupMode.SETUP_ONLY, tmp_path)
+
+        assert template_clean.exists()
+
+
+class TestCleanupAllInvokesScrubber:
+    """``cleanup_template_files(CleanupMode.ALL)`` calls the scrubber."""
+
+    def test_all_mode_scrubs_pyproject(self, tmp_path: Path) -> None:
+        """ALL-mode cleanup removes the tools.pyproject_template mypy override."""
+        from tools.pyproject_template.cleanup import (
+            CleanupMode,
+            cleanup_template_files,
+        )
+
+        pyproject_content = (
+            "[tool.mypy]\n"
+            "strict = true\n"
+            "\n"
+            "[[tool.mypy.overrides]]\n"
+            "# Standalone scripts using sys.path manipulation; excluded from discovery\n"
+            "# but still followed via imports from bootstrap.py\n"
+            'module = "tools.pyproject_template.*"\n'
+            'follow_imports = "skip"\n'
+            "\n"
+            "[tool.pytest.ini_options]\n"
+            'minversion = "8.0"\n'
+        )
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(pyproject_content, encoding="utf-8")
+
+        # We need at least one deletable file so ALL-mode has work to do.
+        (tmp_path / "bootstrap.py").touch()
+
+        cleanup_template_files(CleanupMode.ALL, tmp_path)
+
+        new = pyproject.read_text(encoding="utf-8")
+        assert "tools.pyproject_template" not in new
+
+    def test_setup_only_mode_does_not_scrub(self, tmp_path: Path) -> None:
+        """SETUP_ONLY mode leaves scrubber targets untouched."""
+        from tools.pyproject_template.cleanup import (
+            CleanupMode,
+            cleanup_template_files,
+        )
+
+        pyproject_content = (
+            "[[tool.mypy.overrides]]\n"
+            "# guarded\n"
+            'module = "tools.pyproject_template.*"\n'
+            'follow_imports = "skip"\n'
+            "\n"
+        )
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(pyproject_content, encoding="utf-8")
+        (tmp_path / "bootstrap.py").touch()
+
+        cleanup_template_files(CleanupMode.SETUP_ONLY, tmp_path)
+
+        # Scrubber must not run under SETUP_ONLY.
+        assert pyproject.read_text(encoding="utf-8") == pyproject_content

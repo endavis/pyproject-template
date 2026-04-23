@@ -4,6 +4,7 @@ import os
 import subprocess  # nosec B404 - subprocess is required to run doit sub-tasks
 import sys
 from collections.abc import Mapping
+from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
@@ -30,6 +31,32 @@ def success_message() -> None:
         )
     )
     console.print()
+
+
+def optional_root_files(*names: str) -> str:
+    """Return a shell-ready, space-prefixed suffix of existing root-level files.
+
+    Builds a string such as ``" bootstrap.py"`` (leading space, space-separated)
+    containing only the names that exist as files at the current working
+    directory. Missing names are silently skipped; argument order is preserved
+    for the names that survive.
+
+    Designed for safe concatenation onto an existing command string used in a
+    ``doit`` task action, so tasks can reference root-level files (e.g.
+    ``bootstrap.py``) that are present in the template but deleted by the
+    consumer-project cleanup step. Empty input or no surviving names yields
+    ``""``, making concatenation a no-op.
+
+    Args:
+        *names: Candidate filenames at the current working directory.
+
+    Returns:
+        ``""`` when no names survive, otherwise ``" " + " ".join(survivors)``.
+    """
+    survivors = [name for name in names if Path(name).is_file()]
+    if not survivors:
+        return ""
+    return " " + " ".join(survivors)
 
 
 def _child_env(env: Mapping[str, str] | None) -> dict[str, str]:

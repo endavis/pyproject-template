@@ -427,6 +427,11 @@ class TestRunOrder:
                 side_effect=make_tracker("cleanup_template_suite"),
             ),
             patch.object(
+                setup,
+                "verify_post_cleanup",
+                side_effect=make_tracker("verify_post_cleanup"),
+            ),
+            patch.object(
                 setup, "print_manual_steps", side_effect=make_tracker("print_manual_steps")
             ),
         ):
@@ -436,16 +441,127 @@ class TestRunOrder:
         # and before print_manual_steps.
         assert "setup_development_environment" in call_order
         assert "cleanup_template_suite" in call_order
+        assert "verify_post_cleanup" in call_order
         assert "print_manual_steps" in call_order
 
         env_idx = call_order.index("setup_development_environment")
         cleanup_idx = call_order.index("cleanup_template_suite")
+        verify_idx = call_order.index("verify_post_cleanup")
         manual_idx = call_order.index("print_manual_steps")
 
-        assert env_idx < cleanup_idx < manual_idx, (
+        assert env_idx < cleanup_idx < verify_idx < manual_idx, (
             f"Expected setup_development_environment < cleanup_template_suite < "
-            f"print_manual_steps, got order: {call_order}"
+            f"verify_post_cleanup < print_manual_steps, got order: {call_order}"
         )
+
+
+class TestVerifyPostCleanup:
+    """Tests for RepositorySetup.verify_post_cleanup().
+
+    Issue #469: after ``cleanup_template_suite`` removes ``bootstrap.py``
+    and the template management suite, any doit task that referenced those
+    files becomes broken. ``verify_post_cleanup`` re-runs ``doit check`` to
+    surface the failure in the spawned repo. It must be LENIENT — log a
+    diagnostic and return without raising or ``sys.exit`` — so the wizard
+    still reaches ``print_manual_steps`` and the user sees the final
+    instructions.
+    """
+
+    def test_runs_doit_check_in_current_directory(self) -> None:
+        """verify_post_cleanup invokes ``uv run doit check``."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            setup.verify_post_cleanup()
+
+        assert mock_run.call_count == 1
+        # Grab the command argument (first positional) from the call.
+        cmd = mock_run.call_args.args[0]
+        assert cmd == ["uv", "run", "doit", "check"]
+
+    def test_success_emits_success_message_and_does_not_raise(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """When doit check returns 0, method returns silently with a success message."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=0)
+            # Must not raise.
+            setup.verify_post_cleanup()
+
+        # Output should include the success marker but NOT the failure
+        # diagnostic.
+        captured = capsys.readouterr()
+        combined = captured.out + captured.err
+        assert "Post-cleanup validation checks passed" in combined
+        assert "Validation failed *after* cleanup" not in combined
+
+    def test_failure_logs_diagnostic_and_does_not_raise(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """When doit check returns non-zero, method logs diagnostic and returns.
+
+        The diagnostic marker ``Validation failed *after* cleanup`` must
+        appear in the output so the user can correlate the failure with
+        the post-cleanup phase.
+        """
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run:
+            mock_run.return_value = MagicMock(returncode=1)
+            # Must not raise — no SystemExit, no other exception.
+            setup.verify_post_cleanup()
+
+        captured = capsys.readouterr()
+        combined = captured.out + captured.err
+        # Specific diagnostic marker we can assert on.
+        assert "Validation failed *after* cleanup" in combined
+
+    def test_failure_does_not_call_sys_exit(self) -> None:
+        """verify_post_cleanup must not sys.exit on failure.
+
+        Issue #469 explicitly requires lenient handling because the GitHub
+        repo has already been created and partially configured — forcing
+        an exit would leave the user stranded with no path to the manual
+        steps summary.
+        """
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with (
+            patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run,
+            patch("tools.pyproject_template.setup_repo.sys.exit") as mock_exit,
+        ):
+            mock_run.return_value = MagicMock(returncode=1)
+            setup.verify_post_cleanup()
+
+        mock_exit.assert_not_called()
+
+    def test_filenotfounderror_handled_gracefully(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """If ``uv`` is missing from PATH, surface a diagnostic but do not raise."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with patch(
+            "tools.pyproject_template.setup_repo.subprocess.run",
+            side_effect=FileNotFoundError("uv not found"),
+        ):
+            # Must not raise.
+            setup.verify_post_cleanup()
+
+        captured = capsys.readouterr()
+        combined = captured.out + captured.err
+        assert "Validation failed *after* cleanup" in combined
 
 
 class TestConfigurePlaceholdersTemplateTestsRemoval:
