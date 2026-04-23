@@ -379,6 +379,38 @@ ignore_missing_imports = true
 minversion = "8.0"
 """
 
+    # Mirrors the pyproject.toml state that ``doit fmt_pyproject`` produces
+    # before the scrubber runs in the wizard: mypy overrides are normalized
+    # into an ``overrides = [...]`` inline array, and the mypy ``exclude``
+    # brackets get space-padded. Exercises every new scrub pattern added for
+    # the #469 follow-up in one realistic fixture.
+    _PYPROJECT_POST_FMT_WITH_TEMPLATE_REFS = """\
+[tool.ruff]
+line-length = 100
+
+lint.per-file-ignores."tests/benchmarks/*.py" = [
+  "ANN401",
+]
+lint.per-file-ignores."tools/pyproject_template/*.py" = [
+  "ANN401",
+  "RUF022",
+]
+
+[tool.mypy]
+strict = true
+# tools/pyproject_template/ uses sys.path manipulation for standalone execution
+exclude = [ "tools/pyproject_template/", ".claude/", ".gemini/", ".codex/" ]
+overrides = [
+  { module = "doit.*", ignore_missing_imports = true },
+  # Standalone scripts using sys.path manipulation; excluded from discovery
+  # but still followed via imports from bootstrap.py
+  { module = "tools.pyproject_template.*", follow_imports = "skip" },
+]
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+"""
+
     _README_WITH_TEMPLATE_SECTIONS = """\
 # My Project
 
@@ -413,6 +445,38 @@ Intro text.
 ## Development Setup
 
 Dev instructions.
+"""
+
+    _README_WITH_TEMPLATE_SUBSECTIONS = """\
+# My Project
+
+Intro text.
+
+## Versioning & Releases
+
+Commitizen + hatch-vcs.
+
+### Migrating an Existing Project
+
+Bring your existing Python project into this template:
+
+```bash
+python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
+```
+
+### Keeping Up to Date
+
+Already using this template? Stay in sync with improvements:
+
+```bash
+python tools/pyproject_template/check_template_updates.py
+```
+
+### Creating a Release
+
+```bash
+doit release
+```
 """
 
     _DOIT_REF_WITH_TEMPLATE_CLEAN = """\
@@ -551,12 +615,121 @@ Build the package.
         assert doit_ref not in changed
         assert doit_ref.read_text(encoding="utf-8") == self._DOIT_REF_WITHOUT_TEMPLATE_CLEAN
 
+    def test_scrubs_pyproject_post_fmt_inline_overrides(self, tmp_path: Path) -> None:
+        """Post-fmt inline-array mypy override is scrubbed (#469 follow-up).
+
+        The wizard runs ``doit fmt_pyproject`` before cleanup, which rewrites
+        the template's ``[[tool.mypy.overrides]]`` stanza form into an inline
+        array entry — the original scrubber only matched the stanza form, so
+        the reference survived into spawned projects.
+        """
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(self._PYPROJECT_POST_FMT_WITH_TEMPLATE_REFS, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        new = pyproject.read_text(encoding="utf-8")
+        # Every mention of the template path is gone.
+        assert "tools/pyproject_template" not in new
+        assert "tools.pyproject_template" not in new
+        # Unrelated overrides and excludes survive.
+        assert 'module = "doit.*"' in new
+        assert '".claude/"' in new
+        assert '".gemini/"' in new
+        assert '".codex/"' in new
+        # The unrelated ruff per-file-ignores block survives.
+        assert 'lint.per-file-ignores."tests/benchmarks/*.py"' in new
+        assert pyproject in changed
+
+    def test_scrubs_pyproject_ruff_perfile_ignores(self, tmp_path: Path) -> None:
+        """Ruff ``per-file-ignores`` block for the template path is removed (#469 follow-up)."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            'lint.per-file-ignores."tools/pyproject_template/*.py" = [\n'
+            '  "ANN401",\n'
+            '  "RUF022",\n'
+            "]\n"
+            "\n"
+            "[tool.pytest.ini_options]\n"
+            'minversion = "8.0"\n',
+            encoding="utf-8",
+        )
+
+        changed = scrub_template_references(tmp_path)
+
+        new = pyproject.read_text(encoding="utf-8")
+        assert 'lint.per-file-ignores."tools/pyproject_template' not in new
+        assert "[tool.pytest.ini_options]" in new
+        assert pyproject in changed
+
+    def test_scrubs_pyproject_mypy_exclude_entry_and_comment(self, tmp_path: Path) -> None:
+        """Mypy ``exclude`` entry and its comment go; other excludes stay (#469 follow-up)."""
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        pyproject = tmp_path / "pyproject.toml"
+        pyproject.write_text(
+            "[tool.mypy]\n"
+            "strict = true\n"
+            "# tools/pyproject_template/ uses sys.path manipulation for standalone execution\n"
+            'exclude = [ "tools/pyproject_template/", ".claude/", ".gemini/", ".codex/" ]\n',
+            encoding="utf-8",
+        )
+
+        changed = scrub_template_references(tmp_path)
+
+        new = pyproject.read_text(encoding="utf-8")
+        assert "tools/pyproject_template" not in new
+        # The comment line is gone (it was specifically about the removed entry).
+        assert "uses sys.path manipulation" not in new
+        # The remaining AI-config excludes survive intact.
+        assert '".claude/"' in new
+        assert '".gemini/"' in new
+        assert '".codex/"' in new
+        assert pyproject in changed
+
+    def test_scrubs_readme_template_subsections(self, tmp_path: Path) -> None:
+        """README's ``### Migrating``/``### Keeping Up to Date`` are removed (#469 follow-up).
+
+        Both subsections point at deleted template-management scripts; the
+        preceding ``## Versioning & Releases`` heading and the following
+        ``### Creating a Release`` subsection must survive.
+        """
+        from tools.pyproject_template.cleanup import scrub_template_references
+
+        readme = tmp_path / "README.md"
+        readme.write_text(self._README_WITH_TEMPLATE_SUBSECTIONS, encoding="utf-8")
+
+        changed = scrub_template_references(tmp_path)
+
+        new = readme.read_text(encoding="utf-8")
+        assert "### Migrating an Existing Project" not in new
+        assert "### Keeping Up to Date" not in new
+        assert "migrate_existing_project.py" not in new
+        assert "check_template_updates.py" not in new
+        # Surrounding headings survive.
+        assert "## Versioning & Releases" in new
+        assert "### Creating a Release" in new
+        assert readme in changed
+
     def test_scrub_is_idempotent(self, tmp_path: Path) -> None:
         """Running the scrubber twice must change nothing on the second pass."""
         from tools.pyproject_template.cleanup import scrub_template_references
 
-        (tmp_path / "pyproject.toml").write_text(self._PYPROJECT_WITH_STANZA, encoding="utf-8")
-        (tmp_path / "README.md").write_text(self._README_WITH_TEMPLATE_SECTIONS, encoding="utf-8")
+        # Use the realistic post-``fmt_pyproject`` fixture so the idempotency
+        # check exercises every new pattern introduced in the #469 follow-up.
+        (tmp_path / "pyproject.toml").write_text(
+            self._PYPROJECT_POST_FMT_WITH_TEMPLATE_REFS, encoding="utf-8"
+        )
+        # README gets both the top-level template sections AND the subsections
+        # so the two README patterns are both exercised.
+        (tmp_path / "README.md").write_text(
+            self._README_WITH_TEMPLATE_SECTIONS + "\n" + self._README_WITH_TEMPLATE_SUBSECTIONS,
+            encoding="utf-8",
+        )
         doit_ref = tmp_path / "docs" / "development" / "doit-tasks-reference.md"
         doit_ref.parent.mkdir(parents=True)
         doit_ref.write_text(self._DOIT_REF_WITH_TEMPLATE_CLEAN, encoding="utf-8")
