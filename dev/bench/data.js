@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776945554593,
+  "lastUpdate": 1776962688253,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5841,6 +5841,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.967043724375519e-7",
             "extra": "mean: 2.055519367957347 usec\nrounds: 51451"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4e405b0143c1afeecf3596fe16b207b2dc0afe89",
+          "message": "fix: scrub remaining pyproject/README template refs in spawn cleanup (#469 follow-up) (merges PR #473, addresses #469)\n\nfix: scrub remaining pyproject.toml/README template refs in spawn cleanup (#469 follow-up)\n\nThe first pass of scrub_template_references missed several stale\ntools/pyproject_template/ references that the spawn wizard leaves\nbehind after CleanupMode.ALL. Root cause has two parts:\n\n1. `doit fmt_pyproject` runs before cleanup in setup_repo.run() and\n   rewrites `[[tool.mypy.overrides]]` stanzas into an inline-array\n   `overrides = [...]` list. The original regex only matched stanza\n   form, so the tools.pyproject_template.* override survived.\n2. The original regex scope didn't cover three additional pyproject\n   fragments (ruff per-file-ignores block, mypy exclude entry + its\n   explanatory comment) and the two README subsections under\n   `## Versioning & Releases` (`### Migrating an Existing Project`,\n   `### Keeping Up to Date`).\n\nAdd four new patterns (post-fmt inline override, ruff per-file block,\nmypy exclude comment, mypy exclude entry) plus one more README pattern\nfor the subsections. Keep the existing stanza-form pattern as a\nharmless fallback for downstream users who invoke the scrubber before\nfmt_pyproject normalizes the file. Refactor scrub_template_references\nto apply every pattern for a given file unconditionally (re.sub is a\nno-op on no match) and detect change via content comparison — simpler\nthan per-pattern search/sub.\n\nNew tests in TestScrubTemplateReferences cover each new pattern plus a\nrealistic post-fmt_pyproject fixture that exercises every pattern in\none file. Idempotency test now exercises all patterns end-to-end.\n\nAll doit check gates green (39 cleanup tests pass).\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-23T17:44:15+01:00",
+          "tree_id": "c00beab7bdd8b6067194f6f8fb21c18f0e1e1719",
+          "url": "https://github.com/endavis/pyproject-template/commit/4e405b0143c1afeecf3596fe16b207b2dc0afe89"
+        },
+        "date": 1776962687223,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8869422.947702967,
+            "unit": "iter/sec",
+            "range": "stddev: 8.728884181040633e-9",
+            "extra": "mean: 112.74690652326863 nsec\nrounds: 88803"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8988686.169354666,
+            "unit": "iter/sec",
+            "range": "stddev: 9.415759554307616e-9",
+            "extra": "mean: 111.25096384044679 nsec\nrounds: 87805"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5539846.717842222,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1519115869193284e-8",
+            "extra": "mean: 180.51040957131417 nsec\nrounds: 54789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1626868.600568541,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6719311478905764e-7",
+            "extra": "mean: 614.6777924477309 nsec\nrounds: 34065"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 528750.848346915,
+            "unit": "iter/sec",
+            "range": "stddev: 2.813859263293326e-7",
+            "extra": "mean: 1.8912499206883489 usec\nrounds: 31518"
           }
         ]
       }
