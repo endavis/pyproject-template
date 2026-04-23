@@ -263,11 +263,12 @@ def task_release() -> dict[str, Any]:
     reviewer merges the PR, run ``doit release_tag`` to tag ``main`` and
     trigger the publish workflow.
 
-    CLI params (see the ``params`` entry in the returned dict): ``--increment``
-    forces a version increment type; ``--prerelease`` produces a pre-release
-    (alpha/beta/rc). The action function ``create_release_pr`` accepts these
-    as keyword arguments so doit's param parsing reaches them — see #650 for
-    why the closure approach was wrong.
+    CLI params (see the ``params`` entry in the returned dict): ``--prerelease``
+    alone uses conventional-commit hints; ``--increment`` alone forces a bump
+    type; both together force a pre-release of the chosen bump type (see #475).
+    The action function ``create_release_pr`` accepts these as keyword arguments
+    so doit's param parsing reaches them — see #650 for why the closure approach
+    was wrong.
     """
 
     def create_release_pr(increment: str = "", prerelease: str = "") -> None:
@@ -297,14 +298,6 @@ def task_release() -> dict[str, Any]:
             console.print(
                 f"[bold red]❌ Error: Invalid prerelease value '{prerelease}'. "
                 f"Allowed values: alpha, beta, rc (or empty for a production release).[/bold red]"
-            )
-            sys.exit(1)
-
-        # prerelease and increment are mutually exclusive
-        if prerelease and increment:
-            console.print(
-                "[bold red]❌ Error: --prerelease and --increment "
-                "are mutually exclusive.[/bold red]"
             )
             sys.exit(1)
 
