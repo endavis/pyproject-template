@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776966436394,
+  "lastUpdate": 1776970596704,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5959,6 +5959,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.989511690659913e-7",
             "extra": "mean: 2.035446655474915 usec\nrounds: 61159"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7a13c9384b1b94446836eabaa20ca0800d185369",
+          "message": "fix: document three trusted-publisher registrations in publish_setup (merges PR #480, addresses #479)\n\nPyPI scopes trusted publishers per (owner, repo, workflow, env), so the\ntemplate needs three registrations, not two: testpypi.yml x testpypi,\nrelease.yml x testpypi (the canary), and release.yml x pypi. Missing\nthe second caused first-production-release 403s at the TestPyPI canary\nstep. Update the publish_setup panel and the four docs pages that\ndescribe setup, and pin the output shape with a new test.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-23T19:56:08+01:00",
+          "tree_id": "374a34f37a15383bdc71f17e1ae1877182579579",
+          "url": "https://github.com/endavis/pyproject-template/commit/7a13c9384b1b94446836eabaa20ca0800d185369"
+        },
+        "date": 1776970595741,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8764250.530948225,
+            "unit": "iter/sec",
+            "range": "stddev: 9.24205047995221e-9",
+            "extra": "mean: 114.09988754529677 nsec\nrounds: 87413"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8851821.77995255,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7998920395871584e-8",
+            "extra": "mean: 112.9710950874296 nsec\nrounds: 86678"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5795506.938434137,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5157274183822355e-8",
+            "extra": "mean: 172.54745971716247 nsec\nrounds: 56848"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1599449.363347038,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2465467665726227e-7",
+            "extra": "mean: 625.2151664916613 nsec\nrounds: 61148"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 519624.0417755779,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0280351130778707e-7",
+            "extra": "mean: 1.9244683070917132 usec\nrounds: 50516"
           }
         ]
       }
