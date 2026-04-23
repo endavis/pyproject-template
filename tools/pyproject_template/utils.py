@@ -171,6 +171,18 @@ def get_git_config(key: str, default: str = "") -> str:
 
     Returns:
         The config value if found, otherwise the default value.
+
+    Notes:
+        The unscoped ``git config <key>`` lookup merges system, global, and
+        local config — but only when the current working directory is inside
+        a git repository. When called from outside any repo (e.g. the
+        bootstrap wizard running from ``~/src`` before the project checkout
+        exists), the unscoped call exits non-zero even for keys that are set
+        in ``~/.gitconfig``. This function retries with ``--global`` on
+        failure so that ``user.name`` and ``user.email`` resolve from the
+        user's global identity regardless of CWD (see #470). Keys that only
+        exist locally (e.g. ``remote.origin.url``) fail both calls and fall
+        through to ``default``, which is the correct behavior.
     """
     try:
         result = subprocess.run(
@@ -178,7 +190,19 @@ def get_git_config(key: str, default: str = "") -> str:
             capture_output=True,
             text=True,
         )
-        return result.stdout.strip() if result.returncode == 0 else default
+        if result.returncode == 0:
+            return result.stdout.strip()
+        # Unscoped lookup failed — retry with --global so that globally
+        # configured values (user.name, user.email) resolve even when the
+        # CWD is not inside a git repository.
+        global_result = subprocess.run(
+            ["git", "config", "--global", key],
+            capture_output=True,
+            text=True,
+        )
+        if global_result.returncode == 0:
+            return global_result.stdout.strip()
+        return default
     except (subprocess.SubprocessError, FileNotFoundError):
         return default
 

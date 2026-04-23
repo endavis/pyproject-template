@@ -146,6 +146,42 @@ class TestGetGitConfig:
             result = get_git_config("user.name", "fallback")
             assert result == "fallback"
 
+    def test_falls_back_to_global_when_unscoped_fails(self) -> None:
+        """Unscoped lookup failure triggers ``--global`` retry (#470)."""
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=1, stdout=""),
+                MagicMock(returncode=0, stdout="Global User\n"),
+            ]
+            result = get_git_config("user.name")
+            assert result == "Global User"
+            assert mock_run.call_count == 2
+            # Second call must include the --global flag.
+            second_call_argv = mock_run.call_args_list[1].args[0]
+            assert "--global" in second_call_argv
+
+    def test_returns_default_when_both_scopes_fail(self) -> None:
+        """Both unscoped and global lookups failing yields the default (#470)."""
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=1, stdout=""),
+                MagicMock(returncode=1, stdout=""),
+            ]
+            result = get_git_config("nonexistent.key", "default_value")
+            assert result == "default_value"
+            assert mock_run.call_count == 2
+
+    def test_fallback_exception_returns_default(self) -> None:
+        """Exception on the ``--global`` retry falls back to default (#470)."""
+        with patch("subprocess.run") as mock_run:
+            mock_run.side_effect = [
+                MagicMock(returncode=1, stdout=""),
+                FileNotFoundError,
+            ]
+            result = get_git_config("user.name", "fallback")
+            assert result == "fallback"
+            assert mock_run.call_count == 2
+
 
 class TestIsGithubUrl:
     """Tests for is_github_url function."""
