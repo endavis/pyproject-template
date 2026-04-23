@@ -417,9 +417,8 @@ class TestBuildCzGetNextCmd:
                 "rc",
                 ["uv", "run", "cz", "bump", "--get-next", "--yes", "--prerelease", "rc"],
             ),
-            # Both set: helper does NOT validate; the task is responsible for
-            # rejecting this combination. Helper just emits both flags in
-            # increment-then-prerelease order.
+            # Both set: helper emits both flags in increment-then-prerelease
+            # order; the task accepts this combination (see #475).
             (
                 "minor",
                 "alpha",
@@ -723,3 +722,109 @@ class TestReleaseTagGhSearch:
         assert '"head:release/"' in src, (
             "task_release_tag must use head:release/ to find merged release PRs"
         )
+
+
+class _ReachedCzBuild(Exception):  # noqa: N818 - sentinel, not a runtime error
+    """Sentinel raised from ``_build_cz_get_next_cmd`` to halt the task flow.
+
+    Used by ``TestCreateReleasePrValidation`` to prove that control reached
+    the cz step without exercising the real release pipeline. Suffixing
+    ``Error`` would be misleading — this signals success, not failure.
+    """
+
+
+class TestCreateReleasePrValidation:
+    """Tests for the ``--prerelease`` / ``--increment`` validation in
+    ``task_release``'s action (issue #475).
+
+    The mutex that rejected ``--prerelease`` + ``--increment`` has been
+    removed; cz itself accepts both flags (increment forces the base bump,
+    prerelease appends the suffix). These tests mock the pre-cz subprocess
+    calls and the ``_build_cz_get_next_cmd`` helper so the action runs far
+    enough to prove the combination is accepted, then stops via a sentinel
+    exception before any real release work happens.
+
+    The separate invalid-prerelease test guards against the allowed-values
+    check accidentally being deleted alongside the mutex.
+    """
+
+    @staticmethod
+    def _patch_precz_subprocess_calls(monkeypatch: MonkeyPatch) -> None:
+        """Patch everything needed to walk from the action entry to the cz call.
+
+        Mocks in ``tools.doit.release``:
+
+        - ``subprocess.run``: branch=main, status clean, all other calls no-op.
+        - ``run_streamed``: return ``None`` (used for ``git pull`` and
+          ``doit check``).
+        - ``validate_merge_commits`` / ``validate_issue_links``: return ``True``.
+        - ``_build_cz_get_next_cmd``: raise ``_ReachedCzBuild`` so the flow
+          stops before subprocess ever runs cz.
+        """
+
+        def fake_run(
+            cmd: list[str],
+            *_args: object,
+            **_kwargs: object,
+        ) -> subprocess.CompletedProcess[str]:
+            if cmd[:3] == ["git", "branch", "--show-current"]:
+                stdout = "main\n"
+            elif cmd[:3] == ["git", "status", "-s"]:
+                stdout = ""
+            else:
+                stdout = ""
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake_run)
+        monkeypatch.setattr("tools.doit.release.run_streamed", lambda *a, **kw: None)
+        # Pretend the repo has a version tag so the tagless-repo guard at
+        # release.py (still enforced for bare --prerelease) doesn't fire
+        # and abort the flow before it reaches _build_cz_get_next_cmd.
+        monkeypatch.setattr("tools.doit.release._repo_has_version_tags", lambda: True)
+        monkeypatch.setattr(
+            "tools.doit.release.validate_merge_commits",
+            lambda _console: True,
+        )
+        monkeypatch.setattr(
+            "tools.doit.release.validate_issue_links",
+            lambda _console: True,
+        )
+
+        def raise_sentinel(_increment: str, _prerelease: str) -> list[str]:
+            raise _ReachedCzBuild
+
+        monkeypatch.setattr("tools.doit.release._build_cz_get_next_cmd", raise_sentinel)
+
+    def test_prerelease_with_increment_is_accepted(self, monkeypatch: MonkeyPatch) -> None:
+        """``--prerelease=alpha --increment=minor`` no longer aborts with SystemExit.
+
+        The mutex at ``release.py`` was removed in #475. This test proves the
+        combination is accepted by walking the action up to the
+        ``_build_cz_get_next_cmd`` call, which the monkeypatch replaces with a
+        sentinel-raising stub. If the mutex had still been in place, the action
+        would have called ``sys.exit(1)`` before reaching that call.
+        """
+        from tools.doit.release import task_release
+
+        self._patch_precz_subprocess_calls(monkeypatch)
+        action = task_release()["actions"][0]
+
+        # The sentinel proves the flow reached cz; SystemExit would mean the
+        # mutex (or some earlier validation) rejected the combination.
+        with pytest.raises(_ReachedCzBuild):
+            action(increment="minor", prerelease="alpha")
+
+    def test_invalid_prerelease_still_rejected(self, monkeypatch: MonkeyPatch) -> None:
+        """An invalid ``--prerelease`` value still raises ``SystemExit``.
+
+        Regression guard: the allowed-values check (``alpha``/``beta``/``rc``)
+        sits immediately above the removed mutex block. This test ensures it
+        was not dropped along with the mutex.
+        """
+        from tools.doit.release import task_release
+
+        self._patch_precz_subprocess_calls(monkeypatch)
+        action = task_release()["actions"][0]
+
+        with pytest.raises(SystemExit):
+            action(prerelease="gamma")

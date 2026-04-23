@@ -824,7 +824,7 @@ Open a release PR with the version bump and changelog updates.
 # Auto-detect the next version from conventional commits
 doit release
 
-# Force a specific increment (mutually exclusive with --prerelease)
+# Force a specific increment
 doit release --increment=major   # 1.0.0 → 2.0.0
 doit release --increment=minor
 doit release --increment=patch
@@ -833,23 +833,26 @@ doit release --increment=patch
 doit release --prerelease=alpha  # 1.0.0 → 1.0.1a0
 doit release --prerelease=beta
 doit release --prerelease=rc
+
+# Force a pre-release of a specific bump type (see issue #475)
+doit release --prerelease=alpha --increment=minor  # 1.0.0 → 1.1.0a0
 ```
 
 **What it does:**
 1. Verifies you're on `main` with a clean working tree
 2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
-3. Rejects `--prerelease` combined with `--increment` (mutually exclusive)
-4. Pulls latest changes
-5. Runs governance validations (merge commit format, issue links)
-6. Runs all quality checks (`doit check`)
-7. Asks commitizen for the next version (`cz bump --get-next`)
-8. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
-9. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
+3. Pulls latest changes
+4. Runs governance validations (merge commit format, issue links)
+5. Runs all quality checks (`doit check`)
+6. Asks commitizen for the next version (`cz bump --get-next`)
+7. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
+8. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
 
 **Options:**
 - `--increment`: Force `MAJOR`, `MINOR`, or `PATCH` bump (auto-detects if empty).
 - `--prerelease`: `alpha`, `beta`, or `rc`. Empty means a production release.
-  Mutually exclusive with `--increment`.
+  Can be combined with `--increment` to force a pre-release of a specific
+  bump type (see [issue #475](https://github.com/endavis/pyproject-template/issues/475)).
 
 **Requirements:**
 - Must be on `main` branch

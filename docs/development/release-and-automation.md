@@ -81,7 +81,9 @@ uv run doit release_tag
 ```
 
 Both commands must be run from `main` with a clean working tree.
-`--prerelease` and `--increment` are mutually exclusive on `doit release`.
+`--prerelease` and `--increment` can be combined (e.g.
+`doit release --prerelease=alpha --increment=minor` forces a pre-release of
+the chosen bump type — see [issue #475](https://github.com/endavis/pyproject-template/issues/475)).
 
 ### Before your first pre-release
 
@@ -135,15 +137,14 @@ uv run doit release --prerelease=rc
 
 1. ✅ Verifies you're on the `main` branch
 2. ✅ Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
-3. ✅ Rejects `--prerelease` combined with `--increment` (mutually exclusive)
-4. ✅ Checks for uncommitted changes
-5. ✅ Pulls latest changes from remote
-6. ✅ **Runs governance validations** (merge commit format, issue links)
-7. ✅ Runs all quality checks (`doit check`)
-8. ✅ Asks commitizen for the next version (`cz bump --get-next`)
-9. ✅ Creates a `release/vX.Y.Z` branch
-10. ✅ Updates `CHANGELOG.md` and commits it
-11. ✅ Pushes the branch and opens a PR titled `release: vX.Y.Z`
+3. ✅ Checks for uncommitted changes
+4. ✅ Pulls latest changes from remote
+5. ✅ **Runs governance validations** (merge commit format, issue links)
+6. ✅ Runs all quality checks (`doit check`)
+7. ✅ Asks commitizen for the next version (`cz bump --get-next`)
+8. ✅ Creates a `release/vX.Y.Z` branch
+9. ✅ Updates `CHANGELOG.md` and commits it
+10. ✅ Pushes the branch and opens a PR titled `release: vX.Y.Z`
 
 The PR can be reviewed, discussed, and approved like any other change.
 
