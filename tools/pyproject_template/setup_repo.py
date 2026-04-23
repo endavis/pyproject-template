@@ -679,6 +679,53 @@ To reinstall the template-sync suite later, run:
 
             traceback.print_exc()
 
+    def verify_post_cleanup(self) -> None:
+        """Run ``doit check`` after template suite cleanup; log on failure.
+
+        The wizard already runs ``doit check`` inside
+        :meth:`setup_development_environment`, but that runs *before*
+        :meth:`cleanup_template_suite` removes ``bootstrap.py`` and the
+        template management suite. Any task command that references files
+        which cleanup just deleted would slip through undetected.
+
+        This method re-runs ``uv run doit check`` in the cloned project
+        directory after cleanup. Failure is treated leniently — matching the
+        pattern in :meth:`setup_development_environment`: the wizard prints
+        a clear diagnostic and continues to :meth:`print_manual_steps`. It
+        does **not** ``sys.exit``, because the GitHub repo has already been
+        created and partially configured; forcing an exit here would leave
+        the user with a half-set-up remote and no friendly path forward.
+        """
+        Logger.step("Verifying project after cleanup (doit check)...")
+
+        try:
+            check_result = subprocess.run(
+                ["uv", "run", "doit", "check"],
+                capture_output=False,
+                text=True,
+            )
+        except FileNotFoundError as e:
+            # uv not on PATH in this shell; surface the diagnostic but
+            # do not raise — the user can re-run manually.
+            Logger.warning(f"Post-cleanup validation could not run: {e}")
+            Logger.info(
+                "Validation failed *after* cleanup — the repo was created but "
+                "`doit check` currently fails; see output above"
+            )
+            return
+
+        if check_result.returncode != 0:
+            Logger.warning(
+                f"Post-cleanup `doit check` returned non-zero exit status {check_result.returncode}"
+            )
+            Logger.info(
+                "Validation failed *after* cleanup — the repo was created but "
+                "`doit check` currently fails; see output above"
+            )
+            return
+
+        Logger.success("Post-cleanup validation checks passed")
+
     def configure_repository_settings(self) -> None:
         """Configure repository settings to match template."""
         _configure_repository_settings(
@@ -783,6 +830,7 @@ To reinstall the template-sync suite later, run:
         3. Clone repository locally
         4. Configure local files and development environment
         5. Remove template management suite from the consumer project
+        6. Re-run ``doit check`` to confirm the post-cleanup tree is valid
         """
         self.print_banner()
         self.check_requirements()
@@ -808,6 +856,12 @@ To reinstall the template-sync suite later, run:
         # Consumers don't use or maintain the template's own tooling; they
         # can re-install it later with `bootstrap.py --sync` if desired.
         self.cleanup_template_suite()
+
+        # Re-run `doit check` after cleanup to catch any stale references
+        # that survived the template-suite removal. Lenient — logs a
+        # diagnostic and continues on failure so the wizard still reaches
+        # print_manual_steps.
+        self.verify_post_cleanup()
 
         self.print_manual_steps()
 

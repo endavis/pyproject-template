@@ -74,6 +74,10 @@ ALL_TEMPLATE_FILES = [
     "tools/pyproject_template/cleanup.py",
     "tools/pyproject_template/utils.py",
     "tools/pyproject_template/__init__.py",
+    # doit task that wraps cleanup.py — useless in a spawned project because
+    # the module it imports is deleted above. Leaving it in ``doit list``
+    # would be misleading.
+    "tools/doit/template_clean.py",
     "docs/template/index.md",
     "docs/template/manage.md",
     "docs/template/updates.md",
@@ -175,6 +179,135 @@ def update_mkdocs_nav(root: Path | None = None, dry_run: bool = False) -> bool:
     return True
 
 
+# Regex patterns used by scrub_template_references. Defined at module scope so
+# tests can import/inspect them if needed; each pattern is self-guarded by a
+# "no match -> no change" fast path inside the function.
+
+# ``pyproject.toml`` stanza for the template-only tools.pyproject_template.*
+# mypy override. Removes the ``[[tool.mypy.overrides]]`` block (including its
+# two trailing preceding comment lines and the ``follow_imports = "skip"`` row)
+# plus the single blank line that separates it from the next section. Greedy
+# comment capture is avoided by anchoring on the module line.
+_PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE = re.compile(
+    r"\[\[tool\.mypy\.overrides\]\]\n"
+    r"(?:# [^\n]*\n)*"  # optional explanatory comments
+    r'module = "tools\.pyproject_template\.\*"\n'
+    r'follow_imports = "skip"\n'
+    r"\n?",  # trailing blank line (optional so trailing-file case is tolerated)
+)
+
+# README.md block containing both template-only setup sections. Starts at
+# ``## Quick Setup (Automated)`` and runs up to (but not including) the next
+# top-level heading ``## Development Setup``. The non-greedy body match plus
+# explicit terminator keeps the scrubber from devouring unrelated sections if
+# the consumer has reshuffled headings.
+_README_TEMPLATE_SECTIONS_RE = re.compile(
+    r"## Quick Setup \(Automated\)\n.*?(?=## Development Setup\b)",
+    re.DOTALL,
+)
+
+# doit-tasks-reference.md ``### template_clean`` section. Runs from the heading
+# up to (but not including) the next ``### build`` heading. The non-greedy body
+# match guards against consuming adjacent sections.
+_DOIT_REF_TEMPLATE_CLEAN_RE = re.compile(
+    r"### `template_clean`\n.*?(?=### `build`)",
+    re.DOTALL,
+)
+
+# doit-tasks-reference.md TOC table row that lists ``template_clean`` alongside
+# ``cleanup``. Rewrites the backtick-delimited command pair so the remaining
+# task (``cleanup``) still shows up in the Maintenance row.
+_DOIT_REF_TOC_TEMPLATE_CLEAN_RE = re.compile(
+    r"`cleanup`, `template_clean`",
+)
+
+
+def scrub_template_references(root: Path | None = None, dry_run: bool = False) -> list[Path]:
+    """Remove user-visible stale references to template-only machinery.
+
+    Applies targeted regex rewrites to three files that retain documentation
+    or configuration for template-only tooling after the cleanup phase has
+    deleted the files those references point at:
+
+    * ``pyproject.toml`` — removes the ``[[tool.mypy.overrides]]`` stanza
+      targeting ``tools.pyproject_template.*`` (which no longer exists after
+      ``cleanup_template_files(CleanupMode.ALL)``).
+    * ``README.md`` — removes the ``## Quick Setup (Automated)`` and
+      ``## Using This Template (Manual)`` sections, leaving headings above
+      and below intact.
+    * ``docs/development/doit-tasks-reference.md`` — removes the
+      ``### template_clean`` section and rewrites the TOC table row so the
+      remaining ``cleanup`` entry is listed alone.
+
+    Each rewrite guards itself with a "no match -> no change" fast path so
+    repeat calls and already-scrubbed files are no-ops.
+
+    Args:
+        root: Project root directory (defaults to cwd).
+        dry_run: If True, report what would be changed but do not write files.
+
+    Returns:
+        Sorted list of paths whose contents changed (or would change, under
+        ``dry_run``). Empty list when no scrub was needed.
+    """
+    if root is None:
+        root = Path.cwd()
+
+    changed: list[Path] = []
+
+    # 1. pyproject.toml — remove the tools.pyproject_template.* mypy stanza.
+    pyproject = root / "pyproject.toml"
+    if pyproject.is_file():
+        original = pyproject.read_text(encoding="utf-8")
+        if _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE.search(original):
+            new_content = _PYPROJECT_TEMPLATE_MYPY_OVERRIDE_RE.sub("", original)
+            if dry_run:
+                Logger.info("Would scrub tools.pyproject_template mypy override in pyproject.toml")
+            else:
+                pyproject.write_text(new_content, encoding="utf-8")
+                Logger.success("Removed tools.pyproject_template mypy override from pyproject.toml")
+            changed.append(pyproject)
+
+    # 2. README.md — remove both template-only setup sections.
+    readme = root / "README.md"
+    if readme.is_file():
+        original = readme.read_text(encoding="utf-8")
+        if _README_TEMPLATE_SECTIONS_RE.search(original):
+            new_content = _README_TEMPLATE_SECTIONS_RE.sub("", original)
+            if dry_run:
+                Logger.info("Would scrub template-only setup sections in README.md")
+            else:
+                readme.write_text(new_content, encoding="utf-8")
+                Logger.success("Removed template-only setup sections from README.md")
+            changed.append(readme)
+
+    # 3. docs/development/doit-tasks-reference.md — remove the template_clean
+    #    section and rewrite the TOC row.
+    doit_ref = root / "docs" / "development" / "doit-tasks-reference.md"
+    if doit_ref.is_file():
+        original = doit_ref.read_text(encoding="utf-8")
+        new_content = original
+        if _DOIT_REF_TEMPLATE_CLEAN_RE.search(new_content):
+            new_content = _DOIT_REF_TEMPLATE_CLEAN_RE.sub("", new_content)
+        if _DOIT_REF_TOC_TEMPLATE_CLEAN_RE.search(new_content):
+            new_content = _DOIT_REF_TOC_TEMPLATE_CLEAN_RE.sub("`cleanup`", new_content)
+        if new_content != original:
+            if dry_run:
+                Logger.info(
+                    "Would scrub template_clean references in "
+                    "docs/development/doit-tasks-reference.md"
+                )
+            else:
+                doit_ref.write_text(new_content, encoding="utf-8")
+                Logger.success(
+                    "Removed template_clean references from "
+                    "docs/development/doit-tasks-reference.md"
+                )
+            changed.append(doit_ref)
+
+    return sorted(changed)
+
+
 def cleanup_template_files(
     mode: CleanupMode,
     root: Path | None = None,
@@ -223,6 +356,9 @@ def cleanup_template_files(
         mkdocs_would_update = False
         if mode == CleanupMode.ALL:
             mkdocs_would_update = update_mkdocs_nav(root, dry_run=True)
+            # Also report any scrub targets; the return value is discarded
+            # here because CleanupResult has no field for it.
+            scrub_template_references(root, dry_run=True)
         return CleanupResult(files_to_delete, dirs_to_delete, [], mkdocs_would_update)
 
     # Delete files
@@ -247,6 +383,9 @@ def cleanup_template_files(
     mkdocs_updated = False
     if mode == CleanupMode.ALL:
         mkdocs_updated = update_mkdocs_nav(root, dry_run=False)
+        # Scrub user-visible references (pyproject.toml, README.md,
+        # doit-tasks-reference.md) that still point at now-deleted files.
+        scrub_template_references(root, dry_run=False)
 
     # Report results
     if deleted_files:
