@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1776885033156,
+  "lastUpdate": 1776944189985,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -5723,6 +5723,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.074488466884264e-7",
             "extra": "mean: 2.0512912388116433 usec\nrounds: 47037"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c8d1bf4ab2f779b6196f65a87d00f4eb2981169d",
+          "message": "fix: scrub bootstrap.py refs and template docs during spawn cleanup (merges PR #471, addresses #469)\n\nSpawn cleanup deletes bootstrap.py and the template management suite,\nbut several doit task commands hardcoded bootstrap.py and three\nuser-visible files still referenced template-only machinery, causing\n`doit check` to fail in spawned repos.\n\nAdd `optional_root_files()` in tools/doit/base.py and route the six\naffected task actions (lint/format/format_check/type_check, security,\nspell_check) through it so bootstrap.py is included only when present.\nBroaden cleanup: add `scrub_template_references()` that rewrites\npyproject.toml (mypy override), README.md (template-setup sections),\nand docs/development/doit-tasks-reference.md (template_clean section\n+ TOC row) under CleanupMode.ALL, and add tools/doit/template_clean.py\nto ALL_TEMPLATE_FILES. Finally, wire a post-cleanup `doit check` into\nRepositorySetup.run() via verify_post_cleanup() so future regressions\nsurface inside the wizard with a lenient diagnostic (no sys.exit).\n\nSame family as #463, #464, #465.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-23T12:35:53+01:00",
+          "tree_id": "8277ce4e1ac0cdd252df4bb0c4752a7a0c3b1056",
+          "url": "https://github.com/endavis/pyproject-template/commit/c8d1bf4ab2f779b6196f65a87d00f4eb2981169d"
+        },
+        "date": 1776944189082,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11672291.813334087,
+            "unit": "iter/sec",
+            "range": "stddev: 9.754810105636952e-9",
+            "extra": "mean: 85.67297802284459 nsec\nrounds: 111161"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11940274.664109135,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0615268209779845e-8",
+            "extra": "mean: 83.75016723910598 nsec\nrounds: 108886"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8129015.333066312,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7406369943650563e-8",
+            "extra": "mean: 123.01612914079645 nsec\nrounds: 77280"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2291450.6334428703,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7313407104438007e-7",
+            "extra": "mean: 436.4047758242624 nsec\nrounds: 68344"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 655706.0437388292,
+            "unit": "iter/sec",
+            "range": "stddev: 3.552133963445774e-7",
+            "extra": "mean: 1.5250736355852543 usec\nrounds: 59971"
           }
         ]
       }
