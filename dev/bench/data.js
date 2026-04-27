@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777283860642,
+  "lastUpdate": 1777284050208,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6077,6 +6077,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.9440843945797626e-7",
             "extra": "mean: 1.9037583746028988 usec\nrounds: 45227"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9161946d74b7b0f06da1007268169301a354d6b7",
+          "message": "feat: add Codex workflow skills (merges PR #482, addresses #399)",
+          "timestamp": "2026-04-27T11:00:26+01:00",
+          "tree_id": "949fda09c46856ea311567d1f48493f5874c25eb",
+          "url": "https://github.com/endavis/pyproject-template/commit/9161946d74b7b0f06da1007268169301a354d6b7"
+        },
+        "date": 1777284049831,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8783285.978339607,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0588204896125447e-8",
+            "extra": "mean: 113.8526062416836 nsec\nrounds: 87559"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8990423.898717098,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1468747902931539e-8",
+            "extra": "mean: 111.22946050883056 nsec\nrounds: 86044"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5375291.647863249,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4784119564680035e-8",
+            "extra": "mean: 186.03641727933285 nsec\nrounds: 56552"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1681195.251831104,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8764071874107046e-7",
+            "extra": "mean: 594.8149085662907 nsec\nrounds: 63212"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488652.70168619335,
+            "unit": "iter/sec",
+            "range": "stddev: 5.062361282959507e-7",
+            "extra": "mean: 2.046443203013717 usec\nrounds: 50927"
           }
         ]
       }
