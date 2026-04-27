@@ -115,7 +115,7 @@ env:
 ### Configuring the App
 
 Follow the full setup in
-[GitHub Repository Settings → Release Permissions](../../.github/CONTRIBUTING.md#organization-repositories-github-app-recommended).
+[GitHub Repository Settings → Release Permissions](../../.github/CONTRIBUTING.md#recommended-github-app).
 The auto-merge workflow reuses the same App as the release workflow. When
 creating or updating the App, ensure the repository permissions include:
 
