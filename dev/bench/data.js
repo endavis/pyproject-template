@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777284050208,
+  "lastUpdate": 1777289941678,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6136,6 +6136,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.062361282959507e-7",
             "extra": "mean: 2.046443203013717 usec\nrounds: 50927"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "060bba8fd1457928f80f3f24d766751ecb2d2c89",
+          "message": "feat: add Gemini-native /implement and /finalize plus split planner (merges PR #491, addresses #398)\n\nAdds standalone Gemini-native implementations of /implement and\n/finalize under .gemini/commands/, completing the Gemini-first\nissue-to-PR workflow. The new commands share the GitHub-artifact\ncontract (plan comment header, branch naming, PR body) with the\nClaude versions, so users can switch agents mid-workflow.\n\nSplits the existing Gemini /plan-issue into two commands so that\nstandalone use posts plans directly to GitHub (matching Claude's\n/plan-issue) without producing duplicate comments under dual-agent\norchestration:\n  - /plan-issue: interactive, posts on user approval (standalone)\n  - /plan-issue-stdout: output-only (used by Claude's /plan-both)\n\nUpdates Claude's /plan-both to invoke the stdout-only variant.\n\nAlso enables auto-approval in .gemini/settings.json so /implement\ncan run end-to-end without per-tool prompts, refreshes the AI\nConfig Directories table in AGENTS.md, and updates the slash-\ncommands and AI_SETUP docs.\n\nAddresses #398",
+          "timestamp": "2026-04-27T12:38:36+01:00",
+          "tree_id": "8589fd2e451828a82f2dad7c426f41bf187be0c1",
+          "url": "https://github.com/endavis/pyproject-template/commit/060bba8fd1457928f80f3f24d766751ecb2d2c89"
+        },
+        "date": 1777289941210,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9042031.733264184,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2460525145695686e-8",
+            "extra": "mean: 110.59461296968915 nsec\nrounds: 88598"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8922371.825736232,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3756966446605379e-8",
+            "extra": "mean: 112.07782185399842 nsec\nrounds: 88130"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6257958.318520836,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7560482095103153e-8",
+            "extra": "mean: 159.7965261354386 nsec\nrounds: 64375"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1739220.0878585025,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4160216463231476e-7",
+            "extra": "mean: 574.970359979741 nsec\nrounds: 55938"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 508878.4719374236,
+            "unit": "iter/sec",
+            "range": "stddev: 4.895098797260434e-7",
+            "extra": "mean: 1.9651057278818609 usec\nrounds: 49826"
           }
         ]
       }
