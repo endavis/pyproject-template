@@ -167,6 +167,35 @@ Lists live in `.github/automerge-config.json`:
 Globs use `*` as a wildcard and are matched case-insensitively against the full
 dependency name. Edit the file via a normal PR to change policy.
 
+## Version-update cooldown
+
+To defend against supply-chain attacks that publish malicious versions and
+are detected and yanked within hours-to-days, the `uv` ecosystem entry in
+`.github/dependabot.yml` sets a 7-day
+[`cooldown`](https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference#cooldown--):
+
+```yaml
+cooldown:
+  default-days: 7
+  include:
+    - "*"
+```
+
+Dependabot waits 7 days from a new version's release date before opening a
+PR for it, so a malicious release that is yanked within a few days never
+produces a PR to auto-merge.
+
+**Security-update PRs bypass cooldown.** Per the dependabot docs: *"the
+`cooldown` option is only available for version updates, not security
+updates."* Advisory-driven PRs continue to land at full speed, so CVE
+patching latency is unchanged.
+
+**The `github-actions` ecosystem is not covered.** Dependabot's `cooldown`
+only supports SemVer ecosystems and explicitly excludes `github-actions`.
+Action bumps continue to flow through auto-merge under the existing
+`automerge-config.json` rules; tighter handling for actions is tracked
+separately.
+
 ## Rebase handling for stale PRs
 
 The workflow includes a scheduled job (every 6 hours, plus `workflow_dispatch`)
@@ -187,6 +216,7 @@ does not spam the bot while a rebase is in progress.
 ## Related
 
 - `AGENTS.md` section [Dependabot PRs](../../AGENTS.md#dependabot-prs)
+- `.github/dependabot.yml`
 - `.github/workflows/dependabot-automerge.yml`
 - `.github/workflows/dependabot-blocked-label.yml`
 - `.github/automerge-config.json`
