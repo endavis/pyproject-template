@@ -196,22 +196,34 @@ Action bumps continue to flow through auto-merge under the existing
 `automerge-config.json` rules; tighter handling for actions is tracked
 separately.
 
-## Rebase handling for stale PRs
+## Stale PRs
 
-The workflow includes a scheduled job (every 6 hours, plus `workflow_dispatch`)
-that finds qualifying dependabot PRs whose branches have fallen behind `main`
-and asks dependabot to rebase:
+When `main` advances after a dependabot PR is opened, the PR ends up
+`BEHIND` and stops auto-merging. There is no fully-automated rebase path
+the workflow can use, so the unstick step is manual:
 
+```bash
+gh pr comment <number> --body "@dependabot rebase"
 ```
-@dependabot rebase
-```
 
-This follows the signed-commit rule documented in the
+Dependabot rebases the branch and force-pushes. The `synchronize` event
+re-runs the Merge Gate and CI, and the already-enabled auto-merge fires
+when checks go green.
+
+> [!IMPORTANT]
+> The comment **must be posted by a real user** (your `gh` CLI auth, or
+> the PR sidebar UI). Dependabot's command parser rejects `@dependabot`
+> commands from GitHub Apps, including the App configured for this repo
+> — see upstream issue
+> [dependabot/dependabot-core#9147](https://github.com/dependabot/dependabot-core/issues/9147).
+> Posting the rebase request from a workflow that authenticates as the
+> App, or as `github-actions[bot]` via `GITHUB_TOKEN`, fails with
+> *"Sorry, only users with push access can use that command."*
+
+This also follows the signed-commit rule documented in the
 [Dependabot PRs](../../AGENTS.md#dependabot-prs) section of `AGENTS.md`:
-**never** call the GitHub `update-branch` API or rebase locally, because both
-strip dependabot's verified commit signatures. The job also skips any PR that
-already received a `@dependabot rebase` comment within the last hour, so it
-does not spam the bot while a rebase is in progress.
+**never** call the GitHub `update-branch` API or rebase locally, because
+both strip dependabot's verified commit signatures.
 
 ## Related
 
