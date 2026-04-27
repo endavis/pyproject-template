@@ -51,10 +51,10 @@ Prompt the subagent with:
 
 Save the subagent's output as Claude's plan.
 
-**Gemini's plan** — invoke Gemini CLI non-interactively:
+**Gemini's plan** — invoke Gemini CLI non-interactively, using the stdout-only variant so Gemini does not post to GitHub itself (Claude posts both plans below):
 
 ```bash
-gemini -p "/plan-issue $ARGUMENTS" --yolo 2>/dev/null
+gemini -p "/plan-issue-stdout $ARGUMENTS" --yolo 2>/dev/null
 ```
 
 Capture the stdout output as Gemini's plan.

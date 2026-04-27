@@ -23,7 +23,7 @@ This template is designed primarily for **Claude Code**, which is the only agent
 | Agent | Permission model | Hooks support | Slash commands | LSP | Dual-agent role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Codex CLI** | TOML approval policies (`.codex/config.toml`) plus repo skills (`.agents/skills/`) | Project-level `tools/hooks/ai/` apply via Codex hooks | Built-in only; repo workflow uses skills | Not documented | Standalone alternative (not part of dual-agent flow) |
-| **Gemini CLI** | JSON allowlists + lifecycle hooks (`.gemini/settings.json`) | Project-level hooks apply; Gemini lifecycle hooks supported | 2 output-only (`/plan-issue`, `/review-pr`) | Not documented | Second-opinion reviewer / planner in dual-agent flow |
+| **Gemini CLI** | JSON allowlists + lifecycle hooks (`.gemini/settings.json`) | Project-level hooks apply; Gemini lifecycle hooks supported | 5 (`/plan-issue`, `/implement`, `/finalize` standalone; `/plan-issue-stdout`, `/review-pr` orchestration-only) | Not documented | Standalone alternative; second-opinion reviewer / planner in dual-agent flow |
 | **GitHub Copilot CLI** | JSON hook config (`.github/hooks/copilot-hooks.json`) | Project-level hooks apply; Copilot `preToolUse` hook wired | Auto-discovers from `.claude/commands/` | Not documented | Standalone alternative (auto-discovers Claude commands) |
 | **Claude Code** | Layered permissions (`.claude/settings.local.json` + `.claude/settings.json` PreToolUse hooks) | Project-level hooks plus Claude PreToolUse hooks | 8 (`plan-issue`, `implement`, `finalize`, `close-issue`, `plan-both`, `review-both`, `gemini-review`, `where-am-i`) | Supported | Primary orchestrator in single-agent and dual-agent flows |
 

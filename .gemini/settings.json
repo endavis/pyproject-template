@@ -47,6 +47,16 @@
     "showToolCalls": true
   },
   "context": {
-    "files": ["AGENTS.md", "GEMINI.md"]
+    "files": [
+      "AGENTS.md",
+      "GEMINI.md"
+    ]
+  },
+  "general": {
+    "defaultApprovalMode": "auto_edit"
+  },
+  "security": {
+    "enablePermanentToolApproval": true,
+    "autoAddToPolicyByDefault": true
   }
 }

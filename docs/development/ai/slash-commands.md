@@ -34,9 +34,9 @@ The default Claude flow takes an issue from unplanned to closed. Each step produ
 
 The dual-agent flow replaces the planning and (optionally) review steps with orchestrated calls that spawn Claude and Gemini in **isolated contexts**. The design intent is that neither agent can bias the other: each generates its output without seeing the other's work, and the orchestrating Claude agent in the main conversation posts both raw outputs plus a synthesis.
 
-Gemini commands under `.gemini/commands/` are **output-only**: Gemini does not post to GitHub itself. The orchestrating Claude agent captures Gemini's stdout and posts it via `gh`.
+The Gemini commands invoked from the orchestrator (`/plan-issue-stdout` and `/review-pr`) are **output-only**: Gemini does not post to GitHub itself. The orchestrating Claude agent captures Gemini's stdout and posts it via `gh`. (Gemini's standalone planning command, `/plan-issue`, does post directly — but `/plan-both` invokes the stdout-only variant to avoid duplicate comments.)
 
-1. **`/plan-both <n>`** — replaces `/plan-issue`. Claude validates the issue, then in parallel (a) spawns a general-purpose subagent to produce a Claude plan and (b) invokes `gemini -p "/plan-issue <n>" --yolo` to produce a Gemini plan. Both are posted as separate comments on the issue, Claude synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
+1. **`/plan-both <n>`** — replaces `/plan-issue`. Claude validates the issue, then in parallel (a) spawns a general-purpose subagent to produce a Claude plan and (b) invokes `gemini -p "/plan-issue-stdout <n>" --yolo` to produce a Gemini plan. Both are posted as separate comments on the issue, Claude synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
 2. **`/implement <n>`** — same as the single-agent flow. The synthesized plan comment is the input.
 3. **`/review-both`** — runs after a PR exists. In parallel spawns a Claude review subagent and invokes `gemini -p "/review-pr" --yolo`, posts both reviews as PR comments, and posts a combined synthesis listing consensus findings, agent-specific findings, and a combined verdict. Alternatively, **`/gemini-review`** runs only the Gemini review and posts it (useful when the user wants a second opinion without a full Claude review).
 4. **`/finalize`**, merge, and **`/close-issue <n>`** — same as the single-agent flow.
@@ -78,7 +78,7 @@ Validates that the issue is open and that a plan comment exists (otherwise instr
 
 **Args:** issue number. **Source:** `.claude/commands/plan-both.md`.
 
-Dual-agent replacement for `/plan-issue`. Validates the issue, warns if plan comments already exist, then generates two plans in isolated contexts — a Claude plan via a spawned subagent and a Gemini plan via `gemini -p "/plan-issue <n>" --yolo` — posts both as separate issue comments, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the dual-agent workflow. **Design note:** isolated contexts are mandatory so neither agent can see the other's output while drafting; Claude is the orchestrator and the only agent that writes to GitHub.
+Dual-agent replacement for `/plan-issue`. Validates the issue, warns if plan comments already exist, then generates two plans in isolated contexts — a Claude plan via a spawned subagent and a Gemini plan via `gemini -p "/plan-issue-stdout <n>" --yolo` (the stdout-only variant of Gemini's planner) — posts both as separate issue comments, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the dual-agent workflow. **Design note:** isolated contexts are mandatory so neither agent can see the other's output while drafting; Claude is the orchestrator and the only agent that writes to GitHub.
 
 ### `/plan-issue <n>`
 
@@ -98,13 +98,45 @@ Dual-agent PR review. Verifies a PR exists for the current branch, then in paral
 
 Inspects the current git state (branch, uncommitted changes, recent log), extracts the issue number from the branch name if on a feature branch, checks for a plan comment, unpushed commits, and open PRs, then reports a status summary and suggests the next command to run. **Workflow position:** any time. **Design note:** read-only and side-effect-free — safe to run whenever the user is unsure where they are in the lifecycle.
 
-### `/plan-issue <n>` (Gemini)
+## Gemini
+
+Gemini-first users can complete the full issue lifecycle using Gemini-native commands. This workflow shares the same artifacts (plan comments, branch names, PR bodies) as the Claude flow, enabling seamless handoff between agents.
+
+### Standalone workflow
+
+1. **`/plan-issue <n>` (Gemini)** — Gemini reads the issue and project rules, explores the codebase, and drafts a plan inline in the conversation. After the user approves the plan, Gemini posts it as a comment on the issue with the header `## Implementation Plan for #<n>: <title>`.
+2. **User review of the plan** — same as Claude flow.
+3. **`/implement <n>` (Gemini)** — Gemini validates the plan comment, creates the feature branch, and implements the changes inline in the conversation. It runs `doit check` to verify the implementation.
+4. **User review of the changes** — same as Claude flow.
+5. **`/finalize` (Gemini)** — Gemini detects the branch and issue, checks for doc/ADR updates, runs `doit check`, and drafts the commit message and PR body. After user approval, it stages, commits, and creates the PR via `doit pr`.
+
+### Command reference
+
+#### `/finalize` (Gemini)
+
+**Args:** none. **Source:** `.gemini/commands/finalize.md`.
+
+Gemini-native implementation of the finalize command. Detects the branch and issue, checks for uncommitted changes, reviews changed files for documentation/ADR updates, runs `doit check`, and drafts a commit message and PR body (written to `tmp/agents/gemini/pr-body-issue-<n>.md`). After user approval, it stages files, commits, and creates the PR via `doit pr`. **Workflow position:** after implementation and review. **Design note:** unlike the Claude version, all operations happen inline in the main conversation context.
+
+#### `/implement <n>` (Gemini)
+
+**Args:** issue number. **Source:** `.gemini/commands/implement.md`.
+
+Gemini-native implementation of the implement command. Validates the issue and plan comment, creates the feature branch, and implements the changes inline in the conversation. Runs `doit check` to verify the implementation. **Workflow position:** after plan exists, before `/finalize`. **Design note:** performs all implementation steps directly in the main conversation context rather than spawning a subagent.
+
+#### `/plan-issue <n>` (Gemini)
 
 **Args:** issue number. **Source:** `.gemini/commands/plan-issue.md`.
 
-Invoked by Claude's `/plan-both` orchestration command via `gemini -p "/plan-issue <n>" --yolo`. Fetches the issue, reads `AGENTS.md`, explores the codebase, and outputs a plan in the standard format to stdout, signed `*Plan by: Gemini*`. **Workflow position:** called indirectly from `/plan-both`. **Design note:** output-only — the command explicitly instructs Gemini not to post to GitHub; the orchestrating Claude agent captures stdout and posts it.
+Gemini-native standalone planning command. Validates the issue, reads `AGENTS.md`, explores the codebase, and drafts a plan inline in the conversation. Iterates with the user until the plan is approved, then posts it to the issue as a comment via `gh issue comment`. Mirrors the behavior of Claude's `/plan-issue`. **Workflow position:** start of standalone Gemini workflow, before `/implement`. **Design note:** Gemini has no plan-mode equivalent, so iteration happens in the regular conversation context.
 
-### `/review-pr` (Gemini)
+#### `/plan-issue-stdout <n>` (Gemini)
+
+**Args:** issue number. **Source:** `.gemini/commands/plan-issue-stdout.md`.
+
+Orchestration-only variant of `/plan-issue`. Invoked by Claude's `/plan-both` command via `gemini -p "/plan-issue-stdout <n>" --yolo`. Fetches the issue, reads `AGENTS.md`, explores the codebase, and outputs a plan in the standard format to stdout, signed `*Plan by: Gemini*`. **Workflow position:** called indirectly from `/plan-both`. **Design note:** output-only — the command explicitly instructs Gemini not to post to GitHub; the orchestrating Claude agent captures stdout and posts it. Split from `/plan-issue` so the standalone command can post directly without producing duplicate comments under orchestration.
+
+#### `/review-pr` (Gemini)
 
 **Args:** none. **Source:** `.gemini/commands/review-pr.md`.
 
@@ -134,7 +166,7 @@ GitHub Copilot CLI automatically discovers project skills from `.claude/commands
 
 **Implement-worker subagent:** Shared with Claude — defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when `/implement` spawns the subagent.
 
-**No parallel command files needed:** Because Copilot CLI discovers skills from `.claude/commands/` directly, you do not need to maintain a separate `.copilot/commands/` directory unless you need to override Claude-specific behavior for Copilot sessions.
+**No parallel command files needed:** Because Copilot CLI discovers skills from `.claude/commands/` directly, you do not need to maintain a separate `.copilot/commands/` directory unless you want to override Claude-specific behavior for Copilot sessions.
 
 ## Adding a new slash command
 
