@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777300088559,
+  "lastUpdate": 1777300627916,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6372,6 +6372,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.536331109355924e-7",
             "extra": "mean: 2.0469181924875612 usec\nrounds: 50081"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "225184c05d1fef8d0627830a3f61e5bd7964086f",
+          "message": "docs: clarify GitHub App vs PAT setup and credential scope in CONTRIBUTING.md (merges PR #499, addresses #498)\n\ndocs: clarify GitHub App vs PAT setup and credential scope\n\nRestructure the \"Setting Up Release Permissions\" section of\n.github/CONTRIBUTING.md to fix three confusions in the existing copy:\n\n1. The \"personal vs organization\" framing is misleading — a GitHub\n   App works just as well on a personal account. The real decision\n   axis is CI-driven vs local-only releases and whether you want\n   full dependabot auto-merge automation.\n\n2. The previous \"Store Secrets\" step did not specify repository\n   scope vs environment scope. Storing the App credentials in an\n   environment makes vars.RELEASE_APP_ID and the private-key secret\n   silently resolve to empty strings, because the enable-automerge\n   job in dependabot-automerge.yml does not declare an environment.\n   This is the failure mode this session debugged for #492 / #493.\n\n3. Step 5 was titled \"Update Workflows (if using CI-based releases)\",\n   which implied the App credentials are required for release.yml.\n   They are not — release.yml uses PyPI trusted publishing (OIDC)\n   and GITHUB_TOKEN. The snippet documents an optional CI-driven\n   tag-push extension not currently used by this template.\n\nAlso tightens the PAT path to its actual remaining use case\n(local-only releases from a maintainer's laptop) by dropping the\nobsolete CI-as-PAT subsections.\n\nChanges:\n- Add \"Which path should I use?\" decision callout with a small table.\n- Rename \"Organization Repositories: GitHub App (Recommended)\" to\n  \"Recommended: GitHub App\". Add a NOTE callout clarifying release.yml\n  uses OIDC + GITHUB_TOKEN.\n- Rename step 4 to \"Store Credentials at the Repository Scope\" with a\n  WARNING callout describing the environment-scope failure chain.\n- Rename step 5 to \"Optional: CI-Driven Tag-Push Flow (not used by\n  this template's release.yml)\" with explanatory context.\n- Rename \"Personal Repositories: PAT\" to \"Alternative: Fine-Grained\n  PAT (local-only releases)\" with an explicit usage guard. Drop the\n  obsolete \"Store as Secret (for CI-based releases)\" and \"Update\n  Workflows\" subsections.\n- Update the cross-link anchor in dependabot-automerge.md:118 to\n  match the renamed heading.\n\nAddresses #498",
+          "timestamp": "2026-04-27T15:36:34+01:00",
+          "tree_id": "278245df9b526f56354c4500e607a7594442446f",
+          "url": "https://github.com/endavis/pyproject-template/commit/225184c05d1fef8d0627830a3f61e5bd7964086f"
+        },
+        "date": 1777300627103,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8721936.269372016,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2671949075403445e-8",
+            "extra": "mean: 114.65344037328084 nsec\nrounds: 88098"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 7939438.766132711,
+            "unit": "iter/sec",
+            "range": "stddev: 4.278691802458254e-8",
+            "extra": "mean: 125.9534873252884 nsec\nrounds: 90654"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5211831.863395402,
+            "unit": "iter/sec",
+            "range": "stddev: 2.593757497414789e-8",
+            "extra": "mean: 191.87111676095407 nsec\nrounds: 54873"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1646022.1569498873,
+            "unit": "iter/sec",
+            "range": "stddev: 5.190232500833297e-7",
+            "extra": "mean: 607.525236387474 nsec\nrounds: 55733"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490022.9732917638,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001953490893777944",
+            "extra": "mean: 2.0407206488349505 usec\nrounds: 54870"
           }
         ]
       }
