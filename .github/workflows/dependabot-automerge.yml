@@ -232,12 +232,24 @@ jobs:
     name: Request dependabot rebase for stale PRs
     runs-on: ubuntu-latest
     if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
+      # The @dependabot rebase comment must be posted by an actor with push
+      # access. github-actions[bot] (the default GITHUB_TOKEN identity) is
+      # rejected by dependabot's command parser, so we mint an App token when
+      # the App is configured and fall back to GITHUB_TOKEN only for graceful
+      # degradation.
+      - name: Generate App token
+        id: app-token
+        if: ${{ vars.RELEASE_APP_ID != '' }}
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+
       - name: Find stale dependabot PRs and request rebase
         uses: actions/github-script@v9
         with:
+          github-token: ${{ steps.app-token.outputs.token || secrets.GITHUB_TOKEN }}
           script: |
             const { data: prs } = await github.rest.pulls.list({
               owner: context.repo.owner,
