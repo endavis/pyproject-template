@@ -297,9 +297,11 @@ Each supported AI CLI has a dedicated config directory at the repo root:
 | Claude Code | `.claude/` | Commands, agents, settings. Primary source of slash commands. |
 | Gemini CLI | `.gemini/` | Commands and settings. Output-only commands (orchestrated by Claude). |
 | GitHub Copilot CLI | `.copilot/` | Config directory. Skills auto-discovered from `.claude/commands/`. Hook wired in `.github/hooks/copilot-hooks.json`. |
-| Codex CLI | `.codex/` | `config.toml` only (command approval policies). No slash commands. |
+| Codex CLI | `.codex/`, `.agents/skills/` | `config.toml` for approvals/hooks plus repo-scoped skills for the Codex workflow. No custom slash commands. |
 
 Copilot CLI does **not** need a `commands/` subdirectory: it discovers skills from `.claude/commands/` automatically, so the full workflow (`/plan-issue`, `/implement`, `/finalize`, etc.) works out of the box.
+
+Codex CLI does **not** use repo-defined slash commands in this template. Its repo-native workflow is provided through checked-in skills under `.agents/skills/`, invoked with built-in Codex skill selection such as `/skills` or explicit mentions like `$plan-issue`.
 
 ### Temporary Files
 
