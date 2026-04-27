@@ -1,36 +1,58 @@
 # Plan Issue (Gemini)
 
-Create an implementation plan for GitHub issue #$ARGUMENTS.
+Plan the implementation for GitHub issue #$ARGUMENTS.
 
 ## Instructions
 
-You are being invoked to provide a planning perspective. Your plan will be posted
-to the GitHub issue by the orchestrating agent (Claude). Output clean markdown to
-stdout — do NOT post to GitHub directly.
+This command runs in the main conversation context so the user can ask questions,
+discuss tradeoffs, and refine the plan interactively. After the user approves it,
+the plan is posted to the issue as a comment.
 
-### Step 1: Fetch the issue details
+If you are being invoked non-interactively by a dual-agent orchestrator (Claude's
+`/plan-both`), you should be reading `/plan-issue-stdout` instead — that variant
+emits the plan to stdout without posting, which is what the orchestrator needs.
+
+### Step 1: Validate the issue
+
+1. **Verify the issue exists and is open:**
+   ```bash
+   gh issue view $ARGUMENTS --json number,title,state,labels
+   ```
+   - If the issue does not exist, tell the user and stop.
+   - If the issue is closed, tell the user and ask if they want to reopen it or stop.
+
+2. **Check for an existing plan comment:**
+   ```bash
+   gh issue view $ARGUMENTS --json comments --jq '.comments[].body' | grep -lE "^#+ Implementation Plan for"
+   ```
+   - If a plan comment already exists, warn the user:
+     > "Issue #$ARGUMENTS already has an implementation plan comment. Continuing will post a new one. Proceed?"
+   - Wait for user confirmation before continuing.
+
+### Step 2: Read the project rules
+
+- Read `AGENTS.md` — understand workflow, conventions, and commit guidelines.
+- Identify relevant coding standards and testing requirements.
+
+### Step 3: Fetch the issue details
 
 ```bash
 gh issue view $ARGUMENTS --json title,body,labels,assignees
 ```
 
-- Parse the issue body to understand what needs to be done
-- Check if the issue has the `needs-adr` label
+- Parse the issue body to understand what needs to be done.
+- Check if the issue has the `needs-adr` label.
 
-### Step 2: Read the project standards
+### Step 4: Explore the codebase
 
-- Read `AGENTS.md` — understand workflow, conventions, and patterns
-- Identify relevant coding standards and testing requirements
+- Identify which files, modules, and tests are relevant.
+- Understand existing patterns and conventions in the affected areas.
+- Check for related ADRs in `docs/decisions/`.
+- If anything is ambiguous or there are multiple valid approaches, **ask the user** before deciding.
 
-### Step 3: Explore the codebase
+### Step 5: Draft the plan and iterate with the user
 
-- Identify which files, modules, and tests are relevant
-- Understand existing patterns and conventions in the affected areas
-- Check for related ADRs in `docs/decisions/`
-
-### Step 4: Output the implementation plan
-
-Output the plan in this exact format:
+Draft the plan in this exact format and present it to the user:
 
 ```
 ## Implementation Plan for #<number>: <title>
@@ -61,9 +83,27 @@ Brief description of what will be done.
 *Plan by: Gemini* | *Date: <today's date>*
 ```
 
-### Important
+Then:
 
-- Output ONLY the plan markdown — no preamble, no conversational text
-- Be specific about file paths and function names
-- Include concrete test cases, not vague descriptions
-- Note any risks or alternative approaches worth considering
+1. Ask the user for feedback on the plan.
+2. Discuss alternatives, answer questions, and adjust the plan as the user requests.
+3. Keep iterating until the user explicitly says the plan is approved.
+4. Do NOT post the plan until the user confirms approval.
+
+### Step 6: Post the approved plan to the issue
+
+Only after the user explicitly approves the plan, post it as a comment:
+
+```bash
+gh issue comment $ARGUMENTS --body "<approved plan>"
+```
+
+Tell the user:
+- The plan has been posted as a comment on issue #$ARGUMENTS.
+- When ready, use `/implement $ARGUMENTS` to start implementation.
+
+## See Also
+
+- `/implement $ARGUMENTS` — implement the approved plan.
+- `/finalize` — commit changes and create a PR.
+- `/plan-issue-stdout $ARGUMENTS` — orchestration-only variant (output to stdout, no posting).
