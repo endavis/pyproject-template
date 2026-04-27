@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777292157784,
+  "lastUpdate": 1777294294585,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6254,6 +6254,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000016814543749134194",
             "extra": "mean: 2.0224116362183766 usec\nrounds: 49449"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "621fce1484e480f413f7ba772d413290c7da096b",
+          "message": "chore: add 7-day cooldown to dependabot uv updates for supply-chain hardening (merges PR #495, addresses #494)\n\nchore: add 7-day cooldown to dependabot uv updates\n\nDefends the auto-merge path against supply-chain attacks where a\ncompromised maintainer publishes a malicious patch or minor that gets\ndetected and yanked within hours to days. Dependabot's native cooldown\ndelays version-update PRs until the new version has aged for\ndefault-days: 7, so a malicious release pulled within the window never\nproduces a PR for auto-merge to act on.\n\nSecurity-update PRs (advisory-driven) bypass cooldown, per the\ndependabot documentation, so CVE patching latency is unchanged.\n\nThe github-actions ecosystem is not covered — dependabot's cooldown\nonly supports SemVer ecosystems and explicitly excludes github-actions.\nHardening action bumps is tracked separately.\n\nDocumentation in docs/development/dependabot-automerge.md gains a\nVersion-update cooldown section covering the configuration, the\nsecurity-update bypass, and the github-actions non-coverage.\n\nAddresses #494",
+          "timestamp": "2026-04-27T13:51:02+01:00",
+          "tree_id": "7b4312319b53f13ca79935399791302b12010965",
+          "url": "https://github.com/endavis/pyproject-template/commit/621fce1484e480f413f7ba772d413290c7da096b"
+        },
+        "date": 1777294293056,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8835419.978303624,
+            "unit": "iter/sec",
+            "range": "stddev: 1.073804784036492e-8",
+            "extra": "mean: 113.1808111505297 nsec\nrounds: 84374"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8894103.352727389,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0604410697044906e-8",
+            "extra": "mean: 112.43404313413433 nsec\nrounds: 86799"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5375805.984308913,
+            "unit": "iter/sec",
+            "range": "stddev: 1.864057645403138e-8",
+            "extra": "mean: 186.01861803027015 nsec\nrounds: 55609"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1659571.789762989,
+            "unit": "iter/sec",
+            "range": "stddev: 3.291765335125501e-7",
+            "extra": "mean: 602.5650750202343 nsec\nrounds: 44902"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498105.45989886235,
+            "unit": "iter/sec",
+            "range": "stddev: 5.629510235470835e-7",
+            "extra": "mean: 2.0076069838765562 usec\nrounds: 56616"
           }
         ]
       }
