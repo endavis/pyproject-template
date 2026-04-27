@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "click>=8.3.2",
+    "click>=8.3.3",
     "rich>=15.0.0",
 ]
 
