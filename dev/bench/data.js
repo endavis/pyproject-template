@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777294294585,
+  "lastUpdate": 1777300088559,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6313,6 +6313,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.629510235470835e-7",
             "extra": "mean: 2.0076069838765562 usec\nrounds: 56616"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "23b85bfe3c2233b7aca180ed3ab7d7498ce63b99",
+          "message": "chore: remove broken request-rebase job from dependabot-automerge workflow (merges PR #497, addresses #496)\n\nchore: remove broken request-rebase job from dependabot-automerge\n\nThe request-rebase job posted @dependabot rebase on stale PRs, but\ndependabot's command parser rejects all GitHub App actors regardless\nof permissions (upstream issue dependabot/dependabot-core#9147). PR\n#493's App-token wiring made the comment author correct but could not\naddress the underlying authz check; end-to-end validation confirmed\nthe comment is still rejected with \"Sorry, only users with push access\ncan use that command.\"\n\nSince no path forward avoids either re-introducing a PAT (reversing\nthe project's App-only stance) or stripping dependabot's verified\ncommit signatures (forbidden by AGENTS.md), the job is removed.\nMaintainers post @dependabot rebase manually as themselves to unstick\nstale PRs.\n\nRemoved:\n- request-rebase job (Generate App token step + the github-script\n  rebase loop) from .github/workflows/dependabot-automerge.yml\n- schedule: cron and workflow_dispatch: triggers from the workflow's\n  on: block, since they only existed to fire that job (the surviving\n  jobs gate on pull_request_target events)\n\nUpdated:\n- docs/development/dependabot-automerge.md: replaced \"Rebase handling\n  for stale PRs\" with \"Stale PRs\", documenting the manual unstick path\n  and an IMPORTANT callout linking to dependabot/dependabot-core#9147\n- tests/test_dependabot_automerge_workflow.py: inverted the trigger\n  test (renamed to test_schedule_and_workflow_dispatch_absent) so it\n  pins the intentional removal; updated stale docstring in\n  test_concurrency_group_keyed_on_pr_number_or_ref\n\nThe enable-automerge job's App-token usage from #493 is unaffected.\nThat fix correctly addressed the original bug — GitHub Apps can author\nlabeled events that trigger downstream workflows, so the require-label\nMerge Gate flip works as intended. Only the @dependabot rebase comment\npath was blocked.\n\nAddresses #496",
+          "timestamp": "2026-04-27T15:27:34+01:00",
+          "tree_id": "64804674fdcc87968008686969c01cf6e828a237",
+          "url": "https://github.com/endavis/pyproject-template/commit/23b85bfe3c2233b7aca180ed3ab7d7498ce63b99"
+        },
+        "date": 1777300087520,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8871656.400672192,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0963982283286618e-8",
+            "extra": "mean: 112.71852231836115 nsec\nrounds: 88402"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8815423.604027212,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1811419228295288e-8",
+            "extra": "mean: 113.43754366417093 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5133930.035578468,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8839001503834326e-8",
+            "extra": "mean: 194.7825531454335 nsec\nrounds: 197239"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1610744.1791078888,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9835433480807633e-7",
+            "extra": "mean: 620.8310500019005 nsec\nrounds: 62190"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488539.30932370515,
+            "unit": "iter/sec",
+            "range": "stddev: 5.536331109355924e-7",
+            "extra": "mean: 2.0469181924875612 usec\nrounds: 50081"
           }
         ]
       }
