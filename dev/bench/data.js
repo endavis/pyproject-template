@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777289941678,
+  "lastUpdate": 1777292157784,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6195,6 +6195,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.895098797260434e-7",
             "extra": "mean: 1.9651057278818609 usec\nrounds: 49826"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5c892fe705ec2a6989d8cbca734eb79d9dfcf69a",
+          "message": "fix: use App token in request-rebase job for dependabot push-access check (merges PR #493, addresses #492)\n\nThe request-rebase job in dependabot-automerge.yml posted @dependabot\nrebase comments using GITHUB_TOKEN, which authenticates as\ngithub-actions[bot]. Dependabot's command parser rejects comments from\nthat actor with \"Sorry, only users with push access can use that\ncommand\", so stale dependabot PRs never actually got rebased.\n\nMirror the App-token / GITHUB_TOKEN fallback pattern that the\nenable-automerge job already uses: mint an App installation token when\nvars.RELEASE_APP_ID is set and pass it to actions/github-script@v9 via\nits github-token input. The App's installation token grants Contents:\nwrite, which dependabot accepts as push access.\n\nThe job-level env: GH_TOKEN was unused (the script uses the GitHub API\nclient from actions/github-script, not the gh CLI) and is removed.\n\nAddresses #492",
+          "timestamp": "2026-04-27T13:15:26+01:00",
+          "tree_id": "9e377133b9bbacb99f0e96343ad19b523ca8b861",
+          "url": "https://github.com/endavis/pyproject-template/commit/5c892fe705ec2a6989d8cbca734eb79d9dfcf69a"
+        },
+        "date": 1777292156752,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8662570.774516026,
+            "unit": "iter/sec",
+            "range": "stddev: 2.386120875338903e-8",
+            "extra": "mean: 115.43917227687754 nsec\nrounds: 88387"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9001398.419317756,
+            "unit": "iter/sec",
+            "range": "stddev: 7.965962696487028e-9",
+            "extra": "mean: 111.09384935721945 nsec\nrounds: 87651"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5600873.381871828,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0557638190110912e-8",
+            "extra": "mean: 178.54358272705622 nsec\nrounds: 54813"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1595950.8806432656,
+            "unit": "iter/sec",
+            "range": "stddev: 2.07498121871943e-7",
+            "extra": "mean: 626.5857001795313 nsec\nrounds: 59609"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494459.1803624401,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016814543749134194",
+            "extra": "mean: 2.0224116362183766 usec\nrounds: 49449"
           }
         ]
       }
