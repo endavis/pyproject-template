@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777384795135,
+  "lastUpdate": 1777389988700,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6667,6 +6667,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.999523921875075e-7",
             "extra": "mean: 2.0026982002389135 usec\nrounds: 55729"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f50d7175775ddd2f0da7b02234a5342a5fec3385",
+          "message": "feat: support per-platform extract_binaries in install_tool framework (merges PR #506, addresses #477)\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-28T16:25:55+01:00",
+          "tree_id": "c30cc172e3c8932ab204c570d4c55ff4485d39df",
+          "url": "https://github.com/endavis/pyproject-template/commit/f50d7175775ddd2f0da7b02234a5342a5fec3385"
+        },
+        "date": 1777389987407,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8276998.164510086,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0729077345804203e-8",
+            "extra": "mean: 120.81674782625613 nsec\nrounds: 85100"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8268672.978686494,
+            "unit": "iter/sec",
+            "range": "stddev: 1.294656102088297e-8",
+            "extra": "mean: 120.93839030490396 nsec\nrounds: 82556"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5174877.0574741345,
+            "unit": "iter/sec",
+            "range": "stddev: 5.341913467430911e-8",
+            "extra": "mean: 193.24130581144695 nsec\nrounds: 57627"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1641322.4800984114,
+            "unit": "iter/sec",
+            "range": "stddev: 3.7866311436548106e-7",
+            "extra": "mean: 609.2647923399193 nsec\nrounds: 52392"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 486257.3199359727,
+            "unit": "iter/sec",
+            "range": "stddev: 7.988934610955861e-7",
+            "extra": "mean: 2.056524311308411 usec\nrounds: 45740"
           }
         ]
       }
