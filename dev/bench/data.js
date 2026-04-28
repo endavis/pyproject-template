@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777300627916,
+  "lastUpdate": 1777372411831,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6431,6 +6431,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000001953490893777944",
             "extra": "mean: 2.0407206488349505 usec\nrounds: 54870"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dbcf586562fbb4ce8d8de10db4505c600943b2f1",
+          "message": "chore: upgrade github/codeql-action from v3 to v4 (supersedes #485) (merges PR #501, addresses #500)\n\nchore: upgrade github/codeql-action from v3 to v4\n\nBumps github/codeql-action from @v3 to @v4 in\n.github/workflows/codeql.yml and updates the corresponding pinned-\nversion assertions in tests/test_codeql_workflow.py.\n\nThe v3 -> v4 upgrade is a pure Node runtime bump (init/action.yml\nusing: node20 -> node24). v3.x.y and v4.x.y minor releases ship in\nlockstep with identical inputs and behaviors. GitHub-hosted runners\nalready support node24, so no project-specific impact.\n\nThe version pin in the tests is a deliberate guard rail: it forces a\nhuman to consciously update the test alongside any major bump rather\nthan letting an unreviewed major version change ride a green CI.\nThis commit keeps that pattern (just rolled forward) so the next\nmajor bump triggers the same review loop.\n\nSupersedes dependabot PR #485, which couldn't merge alone because of\nthe test pin. Dependabot will auto-close #485 once main reaches v4.\n\nAddresses #500",
+          "timestamp": "2026-04-28T11:32:57+01:00",
+          "tree_id": "c5b3b5dbbd1ba964393f0d7872cbb9a41191388a",
+          "url": "https://github.com/endavis/pyproject-template/commit/dbcf586562fbb4ce8d8de10db4505c600943b2f1"
+        },
+        "date": 1777372410857,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8403548.52493715,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1260921937450317e-8",
+            "extra": "mean: 118.99734939740578 nsec\nrounds: 84660"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8401341.289667554,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1847235075565985e-8",
+            "extra": "mean: 119.02861287516752 nsec\nrounds: 80620"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5770596.72993564,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4901191327121325e-8",
+            "extra": "mean: 173.29230351730942 nsec\nrounds: 56010"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1716832.5304943165,
+            "unit": "iter/sec",
+            "range": "stddev: 2.725210380204795e-7",
+            "extra": "mean: 582.4679939586632 nsec\nrounds: 57661"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501440.8016533855,
+            "unit": "iter/sec",
+            "range": "stddev: 5.289453573305068e-7",
+            "extra": "mean: 1.9942533529436188 usec\nrounds: 49658"
           }
         ]
       }
