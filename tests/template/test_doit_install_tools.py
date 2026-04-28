@@ -534,6 +534,101 @@ class TestInstallTool:
         assert args[1] == ["age", "age-keygen"]
         assert args[2] == tmp_path
 
+    @patch("tools.doit.install_tools.download_and_extract_archive")
+    @patch("tools.doit.install_tools.get_install_dir")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Linux")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_extract_binaries_dict_resolves_for_linux(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_get_install_dir: MagicMock,
+        mock_extract: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that a per-platform extract_binaries dict resolves to the linux list."""
+        mock_get_install_dir.return_value = tmp_path
+
+        install_tool(
+            name="age",
+            repo="FiloSottile/age",
+            asset_patterns={
+                "linux": "age-v{version}-linux-amd64.tar.gz",
+                "windows": "age-v{version}-windows-amd64.zip",
+            },
+            extract_binaries={
+                "linux": ["age", "age-keygen"],
+                "windows": ["age.exe", "age-keygen.exe"],
+            },
+        )
+
+        mock_extract.assert_called_once()
+        args = mock_extract.call_args.args
+        assert args[1] == ["age", "age-keygen"]
+        assert args[2] == tmp_path
+
+    @patch("tools.doit.install_tools.download_and_extract_archive")
+    @patch("tools.doit.install_tools.get_install_dir")
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Windows")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_extract_binaries_dict_resolves_for_windows(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        mock_get_install_dir: MagicMock,
+        mock_extract: MagicMock,
+        tmp_path: Path,
+    ) -> None:
+        """Test that a per-platform extract_binaries dict resolves to the windows list."""
+        mock_get_install_dir.return_value = tmp_path
+
+        install_tool(
+            name="age",
+            repo="FiloSottile/age",
+            asset_patterns={
+                "linux": "age-v{version}-linux-amd64.tar.gz",
+                "windows": "age-v{version}-windows-amd64.zip",
+            },
+            extract_binaries={
+                "linux": ["age", "age-keygen"],
+                "windows": ["age.exe", "age-keygen.exe"],
+            },
+        )
+
+        mock_extract.assert_called_once()
+        args = mock_extract.call_args.args
+        assert args[1] == ["age.exe", "age-keygen.exe"]
+        assert args[2] == tmp_path
+
+    @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
+    @patch("tools.doit.install_tools.platform.system", return_value="Windows")
+    @patch("tools.doit.install_tools.shutil.which", return_value=None)
+    def test_install_with_extract_binaries_dict_missing_platform_exits(
+        self,
+        mock_which: MagicMock,
+        mock_system: MagicMock,
+        mock_get_release: MagicMock,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Test that a per-platform extract_binaries dict missing the current OS exits."""
+        with pytest.raises(SystemExit):
+            install_tool(
+                name="age",
+                repo="FiloSottile/age",
+                asset_patterns={
+                    "linux": "age-v{version}-linux-amd64.tar.gz",
+                    "windows": "age-v{version}-windows-amd64.zip",
+                },
+                extract_binaries={"linux": ["age", "age-keygen"]},
+            )
+
+        captured = capsys.readouterr()
+        assert "Unsupported OS for age: windows" in captured.out
+
     @patch("tools.doit.install_tools.download_github_release_binary")
     @patch("tools.doit.install_tools.subprocess.run")
     @patch("tools.doit.install_tools.get_latest_github_release", return_value="1.0.0")
@@ -673,6 +768,27 @@ class TestCreateInstallTask:
         result["actions"][0]()
 
         assert mock_install.call_args.kwargs["extract_binaries"] == ["age", "age-keygen"]
+
+    @patch("tools.doit.install_tools.install_tool")
+    def test_forwards_dict_extract_binaries(self, mock_install: MagicMock) -> None:
+        """Test that a per-platform extract_binaries dict is forwarded unchanged."""
+        per_platform = {
+            "linux": ["age", "age-keygen"],
+            "windows": ["age.exe", "age-keygen.exe"],
+        }
+        result = create_install_task(
+            name="age",
+            repo="FiloSottile/age",
+            asset_patterns={
+                "linux": "age.tar.gz",
+                "windows": "age.zip",
+            },
+            extract_binaries=per_platform,
+        )
+
+        result["actions"][0]()
+
+        assert mock_install.call_args.kwargs["extract_binaries"] == per_platform
 
     @patch("tools.doit.install_tools.install_tool")
     def test_forwards_url_template(self, mock_install: MagicMock) -> None:
