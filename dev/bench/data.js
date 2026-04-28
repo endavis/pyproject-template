@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777389988700,
+  "lastUpdate": 1777394198334,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6726,6 +6726,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.988934610955861e-7",
             "extra": "mean: 2.056524311308411 usec\nrounds: 45740"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "170df8c909cd3199c4dfeb866f3494cc989ea61c",
+          "message": "chore: add sync-exclude mechanism for downstream template drift (merges PR #507, addresses #481)\n\nAddresses #481\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-28T17:35:58+01:00",
+          "tree_id": "f81bdc552430604425379b96ceea9f769b6d82ec",
+          "url": "https://github.com/endavis/pyproject-template/commit/170df8c909cd3199c4dfeb866f3494cc989ea61c"
+        },
+        "date": 1777394197349,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8326680.136383714,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2862198862006787e-8",
+            "extra": "mean: 120.09588258716288 nsec\nrounds: 82768"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8203376.5112844,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8876631211486332e-8",
+            "extra": "mean: 121.90102436776125 nsec\nrounds: 84374"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5755646.241049026,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5097290608602453e-8",
+            "extra": "mean: 173.74243623036492 nsec\nrounds: 58648"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1682359.9658637932,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4063233340292515e-7",
+            "extra": "mean: 594.4031124674075 nsec\nrounds: 60787"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491807.86625832634,
+            "unit": "iter/sec",
+            "range": "stddev: 5.068737780936561e-7",
+            "extra": "mean: 2.0333143664577773 usec\nrounds: 50667"
           }
         ]
       }
