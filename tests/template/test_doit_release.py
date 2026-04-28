@@ -27,12 +27,14 @@ from tools.doit.release import (
     _build_cz_get_next_cmd,
     _extract_next_version_from_cz_output,
     _extract_version_from_release_pr,
+    _get_pypi_name_from_pyproject,
     _repo_has_version_tags,
     validate_merge_commits,
 )
 
 if TYPE_CHECKING:
     from collections.abc import Callable
+    from pathlib import Path
 
     from _pytest.monkeypatch import MonkeyPatch
 
@@ -828,3 +830,67 @@ class TestCreateReleasePrValidation:
 
         with pytest.raises(SystemExit):
             action(prerelease="gamma")
+
+
+class TestGetPypiNameFromPyproject:
+    """Tests for ``_get_pypi_name_from_pyproject`` (issue #478).
+
+    The helper reads ``[project].name`` from ``pyproject.toml`` in the current
+    working directory at runtime. ``task_release_tag`` calls it to substitute
+    the project's PyPI name into the "Next steps" URL printout instead of
+    relying on the template's spawn-time placeholder substitution (which never
+    visited ``tools/doit/`` and therefore left the literal ``package-name``
+    string in URLs of every spawned project).
+
+    Each test uses ``monkeypatch.chdir(tmp_path)`` so the helper reads a
+    synthetic ``pyproject.toml`` instead of the repo's real one.
+    """
+
+    def test_returns_project_name(self, tmp_path: Path, monkeypatch: MonkeyPatch) -> None:
+        """Happy path: ``[project].name = "my-pkg"`` → ``"my-pkg"``."""
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "my-pkg"\nversion = "0.1.0"\n',
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        assert _get_pypi_name_from_pyproject() == "my-pkg"
+
+    def test_returns_none_when_pyproject_missing(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """No ``pyproject.toml`` in the cwd → ``None`` (caller falls back)."""
+        monkeypatch.chdir(tmp_path)
+        assert _get_pypi_name_from_pyproject() is None
+
+    def test_returns_none_when_project_table_missing(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Valid TOML without a ``[project]`` table → ``None``."""
+        (tmp_path / "pyproject.toml").write_text(
+            '[tool.poetry]\nname = "irrelevant"\n',
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        assert _get_pypi_name_from_pyproject() is None
+
+    def test_returns_none_when_name_key_missing(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """``[project]`` table present but no ``name`` key → ``None``."""
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nversion = "0.1.0"\n',
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        assert _get_pypi_name_from_pyproject() is None
+
+    def test_returns_none_for_malformed_toml(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Malformed TOML → ``None`` (the ``TOMLDecodeError`` is swallowed)."""
+        (tmp_path / "pyproject.toml").write_text(
+            "this is = = not valid toml [[",
+            encoding="utf-8",
+        )
+        monkeypatch.chdir(tmp_path)
+        assert _get_pypi_name_from_pyproject() is None
