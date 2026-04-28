@@ -63,6 +63,42 @@ Compares your project against the latest template:
 
 **Important:** This does NOT automatically apply changes. You must manually review and apply changes you want.
 
+#### Excluding upstream files from drift checks
+
+Downstream projects often diverge from the template in deliberate ways — a
+FastAPI example app for a tool that isn't a service, a Click `test_cli.py`
+when the project uses Typer, and so on. Without a way to silence those, every
+`check` run re-flags them and buries real upstream changes.
+
+Add a hand-managed file at `.config/pyproject_template/sync-exclude.toml`
+listing upstream-relative glob patterns:
+
+```toml
+exclude = [
+    "examples/api/**",
+    "src/package_name/core.py",
+    "tests/test_cli.py",
+]
+```
+
+- Patterns are matched against upstream-relative paths via `fnmatch.fnmatch`,
+  so `*` matches any characters (including `/`) and `**` is a recursive
+  wildcard for subtrees.
+- Matched files are removed from the actionable drift list. `check` prints a
+  trailing line like `Skipped per project policy: 15 files
+  (see .config/pyproject_template/sync-exclude.toml)` so the suppression stays
+  visible without crowding the signal.
+- Pass `--show-excluded` to list every excluded path:
+  ```bash
+  python tools/pyproject_template/manage.py check --show-excluded
+  ```
+- The hardcoded skip set (build artifacts: `.git`, `__pycache__`, `.venv`,
+  `uv.lock`, etc.) takes precedence and is not user-configurable. A file that
+  matches the hardcoded set never appears in either list.
+- This file is **separate** from `settings.toml` on purpose: `settings.toml`
+  is rewritten by `manage.py sync`, which would clobber any user-managed
+  excludes. `sync-exclude.toml` is never touched by automation.
+
 ### [4] Update repository settings
 
 Configures GitHub repository settings:
