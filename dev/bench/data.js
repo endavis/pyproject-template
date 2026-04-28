@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777372411831,
+  "lastUpdate": 1777378126322,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6490,6 +6490,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.289453573305068e-7",
             "extra": "mean: 1.9942533529436188 usec\nrounds: 49658"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4bdbbc52ae867e483a12e963bbd7fd3359da3ca1",
+          "message": "fix: scrub remaining tools/pyproject_template/ refs in three docs files (merges PR #502, addresses #474)\n\nAddresses #474\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-28T13:05:34+01:00",
+          "tree_id": "5f5475c5dcbb948f58e93349109d35473e25e791",
+          "url": "https://github.com/endavis/pyproject-template/commit/4bdbbc52ae867e483a12e963bbd7fd3359da3ca1"
+        },
+        "date": 1777378125317,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8312624.705514235,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1556081184268175e-8",
+            "extra": "mean: 120.29894713478926 nsec\nrounds: 83382"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8481247.888079878,
+            "unit": "iter/sec",
+            "range": "stddev: 1.256368722927465e-8",
+            "extra": "mean: 117.90717748097752 nsec\nrounds: 83181"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5604961.051787447,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4160740596458374e-8",
+            "extra": "mean: 178.41337178981746 nsec\nrounds: 137476"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1686958.5602515657,
+            "unit": "iter/sec",
+            "range": "stddev: 2.712297819443368e-7",
+            "extra": "mean: 592.7827888379643 nsec\nrounds: 42728"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 508373.5618681299,
+            "unit": "iter/sec",
+            "range": "stddev: 5.25665411682485e-7",
+            "extra": "mean: 1.9670574455628282 usec\nrounds: 53320"
           }
         ]
       }
