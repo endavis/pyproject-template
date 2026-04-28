@@ -136,7 +136,7 @@ each workflow, its trigger, and required permissions.
 | **CI (full matrix)** | `ci-full-matrix.yml` | PR to `main` (labeled with `full-matrix`) -- dispatches `ci.yml` with `full_matrix: true` | `contents: read` |
 | **CodeQL** | `codeql.yml` | Push to `main`, PR to `main`, Scheduled (Monday 04:27 UTC) | `contents: read`, `security-events: write`, `actions: read` |
 | **Merge Gate** | `merge-gate.yml` | PR to `main` (opened, labeled, unlabeled, synchronize, reopened) | `contents: read` |
-| **PR Validation** | `pr-checks.yml` | PR (opened, edited, synchronize) | Default |
+| **PR Validation** | `pr-checks.yml` | PR (opened, edited, synchronize) | `contents: read`, `pull-requests: read` |
 | **Breaking Change Detection** | `breaking-change-detection.yml` | PR (opened, synchronize, edited) | `contents: read`, `issues: write`, `pull-requests: write` |
 | **Benchmark** | `benchmark.yml` | Push to `main`, PR to `main`, `workflow_dispatch` | `contents: write`, `pull-requests: write` |
 | **Mutation Testing** | `mutation.yml` | Scheduled (Sunday midnight UTC), `workflow_dispatch` | `contents: read` |
