@@ -71,6 +71,35 @@ def task_install_age():
 `extract_binaries` matches by **basename**, so any directory structure
 inside the archive (e.g., `age/age`, `age/age-keygen`) is ignored.
 
+#### Per-platform binary names
+
+When archive members differ per OS — most commonly a `.exe` suffix on
+Windows — pass a `dict` keyed by `platform.system().lower()` instead of
+a flat list. The same key convention used by `asset_patterns` applies:
+
+```python
+from tools.doit.install_tools import create_install_task
+
+def task_install_age():
+    return create_install_task(
+        name="age",
+        repo="FiloSottile/age",
+        asset_patterns={
+            "linux": "age-v{version}-linux-amd64.tar.gz",
+            "darwin": "age-v{version}-darwin-amd64.tar.gz",
+            "windows": "age-v{version}-windows-amd64.zip",
+        },
+        extract_binaries={
+            "linux": ["age", "age-keygen"],
+            "darwin": ["age", "age-keygen"],
+            "windows": ["age.exe", "age-keygen.exe"],
+        },
+    )
+```
+
+If the current OS is missing from the dict the install aborts with the
+same `Unsupported OS` error that `asset_patterns` uses.
+
 ### Multi-arch archive from GitHub releases via `url_template` (gh)
 
 ```python
