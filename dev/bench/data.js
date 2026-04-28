@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777378126322,
+  "lastUpdate": 1777379640254,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6549,6 +6549,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.25665411682485e-7",
             "extra": "mean: 1.9670574455628282 usec\nrounds: 53320"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b1f4bc7860328b315c2a6ee61c08da6697c92021",
+          "message": "chore: declare least-privilege permissions in pr-checks.yml (merges PR #504, addresses #503)\n\nAdd a top-level `permissions:` block (`contents: read`, `pull-requests:\nread`) to .github/workflows/pr-checks.yml so the workflow's GITHUB_TOKEN\nno longer inherits the repository-default scopes. Resolves CodeQL alerts\n#2, #5, and #18 (one per job).\n\nAlso update the workflow permissions table in\ndocs/development/github-repository-settings.md so the PR Validation row\nreflects the now-declared permissions instead of \"Default\".\n\nAddresses #503\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-04-28T13:33:34+01:00",
+          "tree_id": "0ae3ec38d45d749f2e648d2123fa879849e7e986",
+          "url": "https://github.com/endavis/pyproject-template/commit/b1f4bc7860328b315c2a6ee61c08da6697c92021"
+        },
+        "date": 1777379639672,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8726945.519617554,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4673352496955112e-8",
+            "extra": "mean: 114.58762951505437 nsec\nrounds: 86708"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9022434.431089697,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0118369431447756e-8",
+            "extra": "mean: 110.8348315122334 nsec\nrounds: 87306"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5532229.809695738,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4609043405413034e-8",
+            "extra": "mean: 180.75894068019528 nsec\nrounds: 53591"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1610350.4711546428,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7007804183759036e-7",
+            "extra": "mean: 620.9828344279533 nsec\nrounds: 42527"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 532113.0486565591,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9855008771839165e-7",
+            "extra": "mean: 1.879299901636933 usec\nrounds: 35575"
           }
         ]
       }
