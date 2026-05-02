@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777394198334,
+  "lastUpdate": 1777739228124,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6785,6 +6785,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.068737780936561e-7",
             "extra": "mean: 2.0333143664577773 usec\nrounds: 50667"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "407fc2da35cdf99b0ddfb4527c8f4f7c6c3246f7",
+          "message": "feat: add /snapshot and /resume slash commands for session-resumption workflow (merges PR #509, addresses #508)",
+          "timestamp": "2026-05-02T17:26:41+01:00",
+          "tree_id": "e835faf041f3714f3eec68c8811c64fa2ae7808f",
+          "url": "https://github.com/endavis/pyproject-template/commit/407fc2da35cdf99b0ddfb4527c8f4f7c6c3246f7"
+        },
+        "date": 1777739227581,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9000899.901199749,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7122223527661465e-8",
+            "extra": "mean: 111.1000023305123 nsec\nrounds: 85823"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9209548.947357887,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1898669355167739e-8",
+            "extra": "mean: 108.58295077381486 nsec\nrounds: 89119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5259857.1190731535,
+            "unit": "iter/sec",
+            "range": "stddev: 3.409844305135741e-8",
+            "extra": "mean: 190.11923277798303 nsec\nrounds: 194970"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1595945.229998514,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7046568398125937e-7",
+            "extra": "mean: 626.5879186849859 nsec\nrounds: 54994"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 366713.4473440898,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000019108287620854037",
+            "extra": "mean: 2.7269248162085886 usec\nrounds: 46925"
           }
         ]
       }
