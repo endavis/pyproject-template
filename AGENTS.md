@@ -324,6 +324,8 @@ Where `<agent-type>` is one of: `claude`, `gemini`, `copilot`, `codex`, or the r
 
 **Cleanup rule:** Agents must delete their temporary files when the task is complete. Do not leave stale files in `tmp/agents/`.
 
+**Exception:** `tmp/resume/` is the one location outside `tmp/agents/<agent-type>/`. Snapshots written by `/snapshot` are portable project-state captures meant to be readable by any agent — Claude can write a snapshot and Gemini or Codex can resume from it.
+
 ## Token Efficiency
 - **Be Concise:** Minimal text output.
 - **Use Local Tools:** Prefer native file tools over sub-agents (see [AI Agent File Operations](#ai-agent-file-operations)).
