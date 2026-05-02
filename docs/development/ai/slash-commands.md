@@ -98,6 +98,14 @@ Dual-agent PR review. Verifies a PR exists for the current branch, then in paral
 
 Inspects the current git state (branch, uncommitted changes, recent log), extracts the issue number from the branch name if on a feature branch, checks for a plan comment, unpushed commits, and open PRs, then reports a status summary and suggests the next command to run. **Workflow position:** any time. **Design note:** read-only and side-effect-free — safe to run whenever the user is unsure where they are in the lifecycle.
 
+### `/snapshot <slug>` and `/resume <slug>`
+
+**Args:** optional kebab-case slug. **Sources:** `.claude/commands/snapshot.md`, `.claude/commands/resume.md` (Claude); `.gemini/commands/snapshot.md`, `.gemini/commands/resume.md` (Gemini); `.agents/skills/snapshot/SKILL.md`, `.agents/skills/resume/SKILL.md` (Codex).
+
+Pause-and-resume helpers for long-running workstreams. `/snapshot` writes a paste-ready resumption prompt to `tmp/resume/{inv_epoch}-{slug}.md`; `/resume` reads the matching file and treats its contents as the session's initial instructions. The `inv_epoch` prefix is a 10-digit decreasing integer so default `ls` lists newest first; users see only the slug. If `/resume` is invoked without a slug, it picks the most recent snapshot.
+
+**Cross-agent portability:** `tmp/resume/` is intentionally shared (not per-agent), so a snapshot taken in Claude can be resumed in Gemini or Codex and vice versa. This is the documented exception to the `tmp/agents/<agent-type>/` rule in `AGENTS.md`. **Workflow position:** any time, independent of the issue lifecycle. **Design note:** snapshots are immutable once written; the user is expected to verify referenced issues/PRs are still current before acting on stale references. **When to use it:** at the end of a session when work is unfinished and you want a clean handoff into the next session — capture the goal, current branch state, recommended next step, and any user direction or constraints that should bind the future session.
+
 ## Gemini
 
 Gemini-first users can complete the full issue lifecycle using Gemini-native commands. This workflow shares the same artifacts (plan comments, branch names, PR bodies) as the Claude flow, enabling seamless handoff between agents.
