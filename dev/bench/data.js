@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777799411785,
+  "lastUpdate": 1777805742729,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6903,6 +6903,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.2520776826946965e-7",
             "extra": "mean: 1.9578519031164714 usec\nrounds: 47820"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "146d20dfa9e5dc92fb2186216814b156665b7a43",
+          "message": "chore: add Claude Code env-var defaults for token efficiency (merges PR #519, addresses #512)\n\nchore: add Claude Code env-var defaults to settings.json for token efficiency\n\nAdd an `env` block with three vars — ENABLE_PROMPT_CACHING_1H=1,\nCLAUDE_AUTOCOMPACT_PCT_OVERRIDE=50, CLAUDE_CODE_SUBAGENT_MODEL=claude-sonnet-4-6\n— that reduce token cost and improve session survival on long-running work.\nProject-level defaults propagate to downstream consumers via template-sync.\nDocument each var, override patterns, and companion-issue cross-references in\ndocs/development/AI_SETUP.md.\n\nAddresses #512.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-03T11:55:19+01:00",
+          "tree_id": "21a0fc2a9894aedf58d2df7d426ac05820f3b120",
+          "url": "https://github.com/endavis/pyproject-template/commit/146d20dfa9e5dc92fb2186216814b156665b7a43"
+        },
+        "date": 1777805742315,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8814008.522708619,
+            "unit": "iter/sec",
+            "range": "stddev: 1.282494743909988e-8",
+            "extra": "mean: 113.45575596206612 nsec\nrounds: 87101"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9038674.468428124,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1259722390479949e-8",
+            "extra": "mean: 110.63569149358973 nsec\nrounds: 47506"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5369395.447685188,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4865452441201596e-8",
+            "extra": "mean: 186.24070619181387 nsec\nrounds: 55764"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1642326.7697143184,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7503909805950435e-7",
+            "extra": "mean: 608.8922243981624 nsec\nrounds: 57462"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501327.03572124604,
+            "unit": "iter/sec",
+            "range": "stddev: 4.912969452127566e-7",
+            "extra": "mean: 1.9947059080133716 usec\nrounds: 53150"
           }
         ]
       }
