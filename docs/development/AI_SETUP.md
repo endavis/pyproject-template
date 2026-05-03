@@ -193,7 +193,7 @@ To opt out or tune values for your local environment, override them in `.claude/
 **Cross-references:**
 
 - The 50% autocompact threshold is paired with the PreCompact handoff hook tracked in #513 — once that hook lands, earlier compaction has lower cost because the handoff preserves more context.
-<!-- TBD: link to #514 add-ons walkthrough doc when it lands -->
+- For operators who need more aggressive token reduction, see [AI Agent Token-Efficiency Add-Ons](ai/token-efficiency-add-ons.md) — a catalogue of opt-in external tools (RTK, Headroom, Caveman) with tipping-point guidance and trust caveats.
 
 ### 4. GitHub Copilot CLI
 
