@@ -9,7 +9,7 @@ discuss tradeoffs, and refine the plan interactively. After the user approves it
 the plan is posted to the issue as a comment.
 
 If you are being invoked non-interactively by a dual-agent orchestrator (Claude's
-`/plan-both`), you should be reading `/plan-issue-stdout` instead — that variant
+`/ghissue-plan-both`), you should be reading `/ghissue-plan-stdout` instead — that variant
 emits the plan to stdout without posting, which is what the orchestrator needs.
 
 ### Step 1: Validate the issue
@@ -100,10 +100,10 @@ gh issue comment $ARGUMENTS --body "<approved plan>"
 
 Tell the user:
 - The plan has been posted as a comment on issue #$ARGUMENTS.
-- When ready, use `/implement $ARGUMENTS` to start implementation.
+- When ready, use `/ghissue-implement $ARGUMENTS` to start implementation.
 
 ## See Also
 
-- `/implement $ARGUMENTS` — implement the approved plan.
-- `/finalize` — commit changes and create a PR.
-- `/plan-issue-stdout $ARGUMENTS` — orchestration-only variant (output to stdout, no posting).
+- `/ghissue-implement $ARGUMENTS` — implement the approved plan.
+- `/ghissue-finalize` — commit changes and create a PR.
+- `/ghissue-plan-stdout $ARGUMENTS` — orchestration-only variant (output to stdout, no posting).

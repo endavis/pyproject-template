@@ -10,9 +10,9 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def test_codex_workflow_skills_exist() -> None:
     """Codex workflow skills should be present in the repo skills directory."""
     skill_paths = [
-        REPO_ROOT / ".agents" / "skills" / "plan-issue" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "implement" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "finalize" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "ghissue-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "ghissue-implement" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "ghissue-finalize" / "SKILL.md",
     ]
 
     for skill_path in skill_paths:
@@ -43,7 +43,7 @@ def test_ai_setup_documents_codex_skills_workflow() -> None:
     content = (REPO_ROOT / "docs" / "development" / "AI_SETUP.md").read_text(encoding="utf-8")
 
     assert ".agents/skills" in content
-    assert "$plan-issue" in content
+    assert "$ghissue-plan" in content
     assert "shared dangerous-command hook" in content
 
 
@@ -55,7 +55,7 @@ def test_slash_commands_doc_mentions_codex_skills_instead_of_custom_commands() -
 
     assert "repo-scoped skills" in content
     assert "/skills" in content
-    assert "$implement" in content
+    assert "$ghissue-implement" in content
 
 
 def test_enforcement_principles_document_codex_hook_support() -> None:

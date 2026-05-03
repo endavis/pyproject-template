@@ -47,7 +47,7 @@ Save the subagent's output as Claude's review.
 **Gemini's review** — invoke Gemini CLI non-interactively:
 
 ```bash
-gemini -p "/review-pr" --yolo 2>/dev/null
+gemini -p "/ghissue-review-pr" --yolo 2>/dev/null
 ```
 
 Capture the stdout output as Gemini's review.

@@ -21,7 +21,7 @@ gh pr view --json number,title,headRefName
 Run Gemini in non-interactive mode:
 
 ```bash
-gemini -p "/review-pr" --yolo 2>/dev/null
+gemini -p "/ghissue-review-pr" --yolo 2>/dev/null
 ```
 
 - Capture the stdout output — this is Gemini's review in markdown format.

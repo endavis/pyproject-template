@@ -337,7 +337,7 @@ Hooks include:
 
 ## AI Agent Support
 
-This template is designed primarily for **Claude Code**, which is the only agent that ships the full slash-command workflow (plan → implement → finalize → close-issue). **Gemini CLI** is supported in a narrower role as a second-opinion planner/reviewer inside Claude-orchestrated dual-agent commands, and **Codex CLI** is supported as a standalone alternative without slash commands. Support for additional primary agents is planned.
+This template is designed primarily for **Claude Code**, which is the only agent that ships the full slash-command workflow (ghissue-plan → ghissue-implement → ghissue-finalize → ghissue-close). **Gemini CLI** is supported in a narrower role as a second-opinion planner/reviewer inside Claude-orchestrated dual-agent commands, and **Codex CLI** is supported as a standalone alternative without slash commands. Support for additional primary agents is planned.
 
 ### Requirements
 

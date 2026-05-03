@@ -20,7 +20,7 @@ This command performs the implementation of an approved plan for the specified i
    gh api repos/{owner}/{repo}/issues/$ARGUMENTS/comments --jq '.[].body' | grep -E "^#+ Implementation Plan for"
    ```
    - If no plan comment is found, tell the user:
-     > "No implementation plan found for issue #$ARGUMENTS. Run `/plan-issue $ARGUMENTS` first."
+     > "No implementation plan found for issue #$ARGUMENTS. Run `/ghissue-plan $ARGUMENTS` first."
    - Stop and wait for the user.
 
 3. **Check current branch state:**
@@ -84,4 +84,4 @@ Show the user:
 Tell the user:
 - Review the changes and test as needed
 - Discuss any fixes directly in conversation
-- When satisfied, use `/finalize` to commit and create a PR
+- When satisfied, use `/ghissue-finalize` to commit and create a PR
