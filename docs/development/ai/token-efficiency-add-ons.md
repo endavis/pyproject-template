@@ -230,6 +230,21 @@ The hook lives in `.claude/settings.json` (committed) or `.claude/settings.local
 (local-only). Keep injected text short — per-turn injection costs tokens on every message, so
 verbosity here works against the goal.
 
+### Per-stack rule files (third mechanism)
+
+A third application of the same pattern is **small per-stack rule files** imported into
+`.claude/CLAUDE.md` via the `@import` directive. Where per-turn injection is best for style rules
+that must survive every autocompact event, per-stack rule files are best for **narrow, domain-
+specific self-checks** that only apply when the agent is doing a specific class of work (code
+generation, database migrations, API contract changes, etc.).
+
+Each rule file is skill-gated, capped at 30 lines, and built from documented observed failures —
+not from generic advice. The template ships a commented-out `@import` placeholder in
+`.claude/CLAUDE.md`; downstream consumers uncomment it and add their own rule files.
+
+See [`.claude/rules/README.md`](../../../.claude/rules/README.md) for the pattern, file structure,
+and a worked example.
+
 ## Related primitives in this template
 
 These are not add-ons (they ship with the template) but they interact with the tools above:
