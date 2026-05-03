@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777816729107,
+  "lastUpdate": 1777818602031,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7021,6 +7021,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.4693885712883343e-7",
             "extra": "mean: 1.9682344606008246 usec\nrounds: 50179"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "17385a1668b07db5f21b0381e20d4103662b7da1",
+          "message": "feat: add .claude/rules/ scaffold and @import pattern in CLAUDE.md (merges PR #525, addresses #518)\n\nProvides downstream consumers a documented, first-class mechanism for\nnarrow per-stack rule files: a README covering when to author a rule\nfile, the required Skill/self-check/observed-failures structure, and a\nworked example. The @import line ships commented-out so the template\nitself loads no rule files until a consumer adds one and opts in.\n\nAddresses #518\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-03T15:29:37+01:00",
+          "tree_id": "4e20abecc1d580f577bd211507b333293f1a02fa",
+          "url": "https://github.com/endavis/pyproject-template/commit/17385a1668b07db5f21b0381e20d4103662b7da1"
+        },
+        "date": 1777818601496,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8863179.792093715,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2255219972407568e-8",
+            "extra": "mean: 112.826324576202 nsec\nrounds: 84948"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8980074.416891059,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1337357787846256e-8",
+            "extra": "mean: 111.35765179395966 nsec\nrounds: 89119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5345723.20498451,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8548771671398402e-8",
+            "extra": "mean: 187.0654281290828 nsec\nrounds: 26639"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1648126.4014979948,
+            "unit": "iter/sec",
+            "range": "stddev: 3.265033048717195e-7",
+            "extra": "mean: 606.7495788497122 nsec\nrounds: 53462"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 484564.4032253044,
+            "unit": "iter/sec",
+            "range": "stddev: 5.801625399804591e-7",
+            "extra": "mean: 2.063709165064354 usec\nrounds: 54873"
           }
         ]
       }
