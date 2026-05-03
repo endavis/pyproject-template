@@ -23,9 +23,9 @@ This template is designed primarily for **Claude Code**, which is the only agent
 | Agent | Permission model | Hooks support | Slash commands | LSP | Dual-agent role |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **Codex CLI** | TOML approval policies (`.codex/config.toml`) plus repo skills (`.agents/skills/`) | Project-level `tools/hooks/ai/` apply via Codex hooks | Built-in only; repo workflow uses skills | Not documented | Standalone alternative (not part of dual-agent flow) |
-| **Gemini CLI** | JSON allowlists + lifecycle hooks (`.gemini/settings.json`) | Project-level hooks apply; Gemini lifecycle hooks supported | 5 (`/plan-issue`, `/implement`, `/finalize` standalone; `/plan-issue-stdout`, `/review-pr` orchestration-only) | Not documented | Standalone alternative; second-opinion reviewer / planner in dual-agent flow |
+| **Gemini CLI** | JSON allowlists + lifecycle hooks (`.gemini/settings.json`) | Project-level hooks apply; Gemini lifecycle hooks supported | 5 (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize` standalone; `/ghissue-plan-stdout`, `/ghissue-review-pr` orchestration-only) | Not documented | Standalone alternative; second-opinion reviewer / planner in dual-agent flow |
 | **GitHub Copilot CLI** | JSON hook config (`.github/hooks/copilot-hooks.json`) | Project-level hooks apply; Copilot `preToolUse` hook wired | Auto-discovers from `.claude/commands/` | Not documented | Standalone alternative (auto-discovers Claude commands) |
-| **Claude Code** | Layered permissions (`.claude/settings.local.json` + `.claude/settings.json` PreToolUse hooks) | Project-level hooks plus Claude PreToolUse hooks | 8 (`plan-issue`, `implement`, `finalize`, `close-issue`, `plan-both`, `review-both`, `gemini-review`, `where-am-i`) | Supported | Primary orchestrator in single-agent and dual-agent flows |
+| **Claude Code** | Layered permissions (`.claude/settings.local.json` + `.claude/settings.json` PreToolUse hooks) | Project-level hooks plus Claude PreToolUse hooks | 8 (`ghissue-plan`, `ghissue-implement`, `ghissue-finalize`, `ghissue-close`, `ghissue-plan-both`, `ghissue-review-both`, `ghissue-gemini-review`, `ghissue-status`) | Supported | Primary orchestrator in single-agent and dual-agent flows |
 
 The project-level dangerous-command hooks under `tools/hooks/ai/` apply to all four agents regardless of per-agent config and cannot be bypassed by editing `.claude/settings.local.json`, `.codex/config.toml`, `.gemini/settings.json`, or `.github/hooks/copilot-hooks.json`. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
@@ -60,7 +60,7 @@ codex
 - [Configuring Codex](https://developers.openai.com/codex/local-config/)
 - [Codex Security Guide](https://developers.openai.com/codex/security/)
 
-**Codex parity status:** Codex does not use repo-defined slash commands in this template. Instead, it uses repo-scoped workflow skills checked into `.agents/skills/` and invoked through Codex's built-in skill surface such as `/skills` or explicit mentions like `$plan-issue`, `$implement`, and `$finalize`. LSP integration is not documented for Codex here. Codex is not part of the dual-agent workflow (Claude and Gemini are); it works as a standalone alternative for contributors who prefer the OpenAI CLI. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex via `.codex/config.toml`, and the approval-policy rules remain a secondary defense layer. For the broader workflow picture, see [Slash Commands and Workflows](ai/slash-commands.md).
+**Codex parity status:** Codex does not use repo-defined slash commands in this template. Instead, it uses repo-scoped workflow skills checked into `.agents/skills/` and invoked through Codex's built-in skill surface such as `/skills` or explicit mentions like `$ghissue-plan`, `$ghissue-implement`, and `$ghissue-finalize`. LSP integration is not documented for Codex here. Codex is not part of the dual-agent workflow (Claude and Gemini are); it works as a standalone alternative for contributors who prefer the OpenAI CLI. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex via `.codex/config.toml`, and the approval-policy rules remain a secondary defense layer. For the broader workflow picture, see [Slash Commands and Workflows](ai/slash-commands.md).
 
 ### 2. Gemini CLI (Google)
 
@@ -163,7 +163,7 @@ For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` 
 | :--- | :--- | :--- | :--- |
 | `ENABLE_PROMPT_CACHING_1H` | `1` | Extends prompt cache TTL from 5 minutes to 1 hour. Cuts cost on repeated reads of the same context within a session. | None — pure efficiency flag. |
 | `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | `50` | Auto-compaction triggers at 50% of the context window instead of the default (~92%). Sessions compact earlier, leaving more headroom for the post-compact continuation. | More frequent compaction churn until the PreCompact handoff hook (#513) lands. |
-| `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-4-6` | Subagents (e.g. those spawned by `/implement`) default to Sonnet 4.6 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
+| `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-4-6` | Subagents (e.g. those spawned by `/ghissue-implement`) default to Sonnet 4.6 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
 
 **Per-agent model overrides:**
 
@@ -201,7 +201,7 @@ To opt out or tune values for your local environment, override them in `.claude/
 
 > **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
-GitHub Copilot CLI reads `AGENTS.md` directly and auto-discovers project skills from `.claude/commands/`, so the full slash-command workflow (`/plan-issue`, `/implement`, `/finalize`, `/close-issue`, `/where-am-i`, etc.) is available in Copilot sessions without any parallel command files. The `implement-worker` subagent used by `/implement` is shared with Claude (defined in `.claude/agents/implement-worker.md`).
+GitHub Copilot CLI reads `AGENTS.md` directly and auto-discovers project skills from `.claude/commands/`, so the full slash-command workflow (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize`, `/ghissue-close`, `/ghissue-status`, etc.) is available in Copilot sessions without any parallel command files. The `implement-worker` subagent used by `/ghissue-implement` is shared with Claude (defined in `.claude/agents/implement-worker.md`).
 
 **Hook wiring:**
 

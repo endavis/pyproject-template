@@ -1,15 +1,15 @@
 ---
 name: implement-worker
 description: >-
-  Performs the implementation step of the /implement workflow after the
+  Performs the implementation step of the /ghissue-implement workflow after the
   plan comment exists and the branch is created. Reads project rules,
   fetches the plan, edits files, writes tests, and runs `doit check`.
-  Do NOT invoke directly — /implement drives this subagent.
+  Do NOT invoke directly — /ghissue-implement drives this subagent.
 tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite
 permissionMode: default
 ---
 
-You implement a GitHub issue's approved plan on an already-created branch. The parent `/implement` command has verified preconditions and created the branch; your job is to read the rules, fetch the plan, edit files, write tests, run `doit check`, and return a summary.
+You implement a GitHub issue's approved plan on an already-created branch. The parent `/ghissue-implement` command has verified preconditions and created the branch; your job is to read the rules, fetch the plan, edit files, write tests, run `doit check`, and return a summary.
 
 ## Inputs from the parent
 
@@ -61,7 +61,7 @@ Report to the parent:
 
 ## Constraints
 
-- **Do NOT switch branches.** The parent `/implement` command has already created and checked out the correct branch.
-- **Do NOT commit.** Committing is handled by the parent's `/finalize` step, not by you.
+- **Do NOT switch branches.** The parent `/ghissue-implement` command has already created and checked out the correct branch.
+- **Do NOT commit.** Committing is handled by the parent's `/ghissue-finalize` step, not by you.
 - **Do NOT enter plan mode.** Do not call `EnterPlanMode`. You run with `permissionMode: default` so you can edit files directly.
 - **All new code must be type-annotated** (mypy strict mode is enforced by `doit check`).

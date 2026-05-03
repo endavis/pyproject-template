@@ -5,13 +5,13 @@ Create an implementation plan for GitHub issue #$ARGUMENTS and emit it to stdout
 ## Instructions
 
 This command is for **orchestration use only** — it is invoked by Claude's
-`/plan-both` command via `gemini -p "/plan-issue-stdout <n>" --yolo` so the
+`/ghissue-plan-both` command via `gemini -p "/ghissue-plan-stdout <n>" --yolo` so the
 orchestrating Claude agent can capture the plan and post it to GitHub itself.
 
 **Output clean markdown to stdout — do NOT post to GitHub directly.** Posting
 from here would create duplicate comments because the orchestrator also posts.
 
-If you are a Gemini-first user planning an issue, use `/plan-issue` instead —
+If you are a Gemini-first user planning an issue, use `/ghissue-plan` instead —
 that variant posts the approved plan to GitHub for you.
 
 ### Step 1: Fetch the issue details
