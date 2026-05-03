@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777805742729,
+  "lastUpdate": 1777816729107,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6962,6 +6962,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.912969452127566e-7",
             "extra": "mean: 1.9947059080133716 usec\nrounds: 53150"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f8886ba50a8b264a4aa157c3dd518105b87bdffa",
+          "message": "docs: add AI agent token-efficiency add-ons walkthrough (merges PR #520, addresses #514)\n\nIntroduces docs/development/ai/token-efficiency-add-ons.md — an opt-in\ncatalogue of external tools (RTK, Headroom, Caveman) for operators who hit\ntoken-cost or session-length limits that the baseline env-var defaults (#512)\nand PreCompact handoff hook (#513) don't fully cover. Includes tipping-point\nheuristics, per-CLI applicability tables, the Headroom MITM trust caveat, and\nthe Caveman intensity trade-off table with a recommendation to start at lite.\nAlso adds a cross-link from AI_SETUP.md and a mkdocs nav entry.\n\nAddresses #514\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-03T14:58:25+01:00",
+          "tree_id": "e266ee3d8c9ffb4c750fd4d4e58386fabc0bed07",
+          "url": "https://github.com/endavis/pyproject-template/commit/f8886ba50a8b264a4aa157c3dd518105b87bdffa"
+        },
+        "date": 1777816728283,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9003716.23753583,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5908180358660558e-8",
+            "extra": "mean: 111.0652505718776 nsec\nrounds: 87360"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8940696.751816273,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2697706417951232e-8",
+            "extra": "mean: 111.84810622246563 nsec\nrounds: 85274"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6510818.335829731,
+            "unit": "iter/sec",
+            "range": "stddev: 1.683975898862519e-8",
+            "extra": "mean: 153.5905240201363 nsec\nrounds: 62803"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1759699.5591059243,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7955601677441136e-7",
+            "extra": "mean: 568.2788262492287 nsec\nrounds: 55106"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 508069.55168071756,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4693885712883343e-7",
+            "extra": "mean: 1.9682344606008246 usec\nrounds: 50179"
           }
         ]
       }
