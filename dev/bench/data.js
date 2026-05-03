@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777823425337,
+  "lastUpdate": 1777827185228,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7139,6 +7139,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.214575584557436e-7",
             "extra": "mean: 1.9404864336581016 usec\nrounds: 49092"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ba1d66af279ec9e8a4933a99913ee10a4bf0349d",
+          "message": "chore: rename workflow commands to ghissue- prefix (merges PR #533, addresses #532)\n\nRename 8 Claude commands, 5 Gemini commands, and 3 Codex skills to use\nthe ghissue- prefix (e.g. /plan-issue → /ghissue-plan). Sweep all\ncross-references in docs, configs, and sibling agent files.\n/checkpoint and /restore are unchanged.\n\nBREAKING CHANGE: Old slash-command names are gone. Update any aliases\nor scripts that reference /plan-issue, /implement, /finalize,\n/close-issue, /where-am-i, /gemini-review, /review-both, or the Gemini\nequivalents. Use /ghissue-<verb> instead.\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-03T17:52:34+01:00",
+          "tree_id": "b16589ad9ab2fba0d842e9e54c8c067231bedf52",
+          "url": "https://github.com/endavis/pyproject-template/commit/ba1d66af279ec9e8a4933a99913ee10a4bf0349d"
+        },
+        "date": 1777827183886,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8330777.4410612555,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7114574478723386e-8",
+            "extra": "mean: 120.0368161404886 nsec\nrounds: 88176"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8873516.9353356,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1362128806678669e-8",
+            "extra": "mean: 112.69488831625017 nsec\nrounds: 86942"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5423460.533884904,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5597688215535714e-8",
+            "extra": "mean: 184.38412038811046 nsec\nrounds: 54723"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1679116.9253465424,
+            "unit": "iter/sec",
+            "range": "stddev: 2.509441819046946e-7",
+            "extra": "mean: 595.5511405458653 nsec\nrounds: 43136"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 499891.62752201204,
+            "unit": "iter/sec",
+            "range": "stddev: 5.190993733195625e-7",
+            "extra": "mean: 2.0004335838890728 usec\nrounds: 52013"
           }
         ]
       }
