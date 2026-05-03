@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777739228124,
+  "lastUpdate": 1777799411785,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -6844,6 +6844,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000019108287620854037",
             "extra": "mean: 2.7269248162085886 usec\nrounds: 46925"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e3e675e83ea6e2ddc70a56d5af4c679372982bb6",
+          "message": "fix: rename /snapshot and /resume to /checkpoint and /restore (merges PR #511, addresses #510)\n\nThe /resume name collided with the built-in session-resumption command in\nall four supported agents (Claude Code, Gemini CLI, Codex CLI, Copilot\nCLI); /snapshot also collided with Gemini's built-in chat-context summary.\nPer Claude Code's documented precedence, custom skills shadow built-ins —\nso adding these names removed users' ability to invoke each agent's\nbuilt-in session picker via the natural keystroke.\n\nRename to /checkpoint (save) and /restore (load); rename storage directory\ntmp/resume/ → tmp/checkpoints/. Verbs match natural language (\"checkpoint\nnow\" → \"restore later\") and avoid the overloaded AI term \"context\".\nRenames preserve git history via git mv.\n\nAddresses #510. Introduced by #509 (which addressed #508).",
+          "timestamp": "2026-05-03T10:09:48+01:00",
+          "tree_id": "6ff5f79780d9009870a53b29ad265d56ef9aa2d7",
+          "url": "https://github.com/endavis/pyproject-template/commit/e3e675e83ea6e2ddc70a56d5af4c679372982bb6"
+        },
+        "date": 1777799411429,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9035030.091190154,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1187372876302567e-8",
+            "extra": "mean: 110.68031759795426 nsec\nrounds: 88130"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8794578.800300518,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0578020300475249e-8",
+            "extra": "mean: 113.7064119507155 nsec\nrounds: 85049"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6292170.296457868,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4647730248606827e-8",
+            "extra": "mean: 158.9276756484075 nsec\nrounds: 63764"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1785969.8589301265,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7341812711859176e-7",
+            "extra": "mean: 559.9198637086986 nsec\nrounds: 51949"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 510763.8623780578,
+            "unit": "iter/sec",
+            "range": "stddev: 4.2520776826946965e-7",
+            "extra": "mean: 1.9578519031164714 usec\nrounds: 47820"
           }
         ]
       }
