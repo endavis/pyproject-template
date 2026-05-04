@@ -1,3 +1,5 @@
+description = "Review the pull request for the current branch."
+prompt = """
 # Review PR (Gemini)
 
 Review the pull request for the current branch.
@@ -88,3 +90,4 @@ Brief justification for the verdict.
 - Be specific: reference file paths and line ranges
 - Distinguish between critical issues (must fix) and suggestions (nice to have)
 - If the code looks good, say so — don't invent issues to fill space
+"""

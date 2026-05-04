@@ -1,3 +1,5 @@
+description = "Finalize the current branch: update documentation, commit changes, and create a PR."
+prompt = """
 # Finalize (Gemini)
 
 Finalize the current branch: update documentation, commit changes, and create a PR.
@@ -81,3 +83,4 @@ Execute the finalization steps directly in the current context:
 4. **Report the PR URL to the user.**
 
 **IMPORTANT:** Do NOT commit or create the PR without explicit user confirmation.
+"""
