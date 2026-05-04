@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777891949983,
+  "lastUpdate": 1777894605565,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7257,6 +7257,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.581403062666929e-7",
             "extra": "mean: 2.012632171670774 usec\nrounds: 48384"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "db6045fc07f7d50739a20a3eabc142b6e52bc839",
+          "message": "feat: add PreCompact auto-checkpoint and SessionStart auto-restore hooks (merges PR #536, addresses #513)\n\nWires the existing /checkpoint and /restore primitives into Claude Code's\nPreCompact and SessionStart lifecycle events so the same pause/resume\npattern fires automatically when autocompact triggers mid-task.\n\n- PreCompact hook synthesizes a structured checkpoint via headless\n  `claude -p --bare` and writes to tmp/checkpoints/{inv_epoch}-auto-precompact.md.\n  Falls back to AUTO_PARTIAL raw-tail dump on any failure; always exits 0.\n- SessionStart hook (matcher: compact|resume) injects the newest\n  *-auto-precompact*.md as additionalContext on a resumed session.\n  Opt-out via CLAUDE_NO_AUTO_RESTORE=1; widen via CLAUDE_RESTORE_ANY=1.\n- 17 new unit tests; doit check passes.\n\nAddresses #513",
+          "timestamp": "2026-05-04T12:36:15+01:00",
+          "tree_id": "064a179660a53ae32753659c610102fdaf8f3c89",
+          "url": "https://github.com/endavis/pyproject-template/commit/db6045fc07f7d50739a20a3eabc142b6e52bc839"
+        },
+        "date": 1777894605095,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8850837.86560606,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1543888476769923e-8",
+            "extra": "mean: 112.98365365904544 nsec\nrounds: 88098"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8617874.922260668,
+            "unit": "iter/sec",
+            "range": "stddev: 2.369014761637979e-8",
+            "extra": "mean: 116.03788741664366 nsec\nrounds: 186951"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5711817.203826135,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4791422635052247e-8",
+            "extra": "mean: 175.07563080452522 nsec\nrounds: 58679"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1597071.027172302,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7830158659737177e-7",
+            "extra": "mean: 626.1462283055454 nsec\nrounds: 56234"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490266.60410836944,
+            "unit": "iter/sec",
+            "range": "stddev: 5.348378433044797e-7",
+            "extra": "mean: 2.03970654256303 usec\nrounds: 55146"
           }
         ]
       }
