@@ -254,6 +254,136 @@ documented in [AI Command Blocking](command-blocking.md). The two hooks are comp
 dangerous-command hook blocks security-relevant patterns for everyone; this hook enforces
 token-efficiency discipline only for operators who opt in.
 
+## Codebase Memory MCP gate (opt-in)
+
+The [Codebase Memory MCP server](https://github.com/DeusData/codebase-memory-mcp) (CBM) builds a
+tree-sitter knowledge graph of your repository and exposes it as MCP tools
+(`search_graph`, `trace_path`, `get_architecture`, `get_code_snippet`, `index_repository`,
+`detect_changes`). Structural queries — "where is function X defined?", "what calls module Y?" —
+cost orders of magnitude fewer tokens answered by the graph than by reading files directly.
+
+Without enforcement, models default to trained behaviour: `Read`/`Grep`/`Glob` on source files.
+The three hooks below close that loop.
+
+### Three-hook design
+
+| Hook | Event | What it does |
+| :--- | :--- | :--- |
+| `cbm-code-discovery-gate.py` | `PreToolUse` on `Read\|Grep\|Glob` | Blocks code-discovery on source files unless a CBM tool ran recently or the target is in the allow-list |
+| `cbm-mcp-marker.py` | `PostToolUse` on CBM tool prefix | Touches a sidecar marker file, opening a 120s window during which the gate passes through |
+| `cbm-session-reminder.py` | `SessionStart` on `compact\|resume\|clear` | Re-injects the CBM protocol into context so the model does not forget the discipline after autocompact |
+
+### Allow-list
+
+The gate passes through automatically for paths that CBM cannot help with:
+
+| Allow-list rule | What it covers |
+| :--- | :--- |
+| Extensions `.json .yaml .yml .md .toml .lock .txt .env .sh` | Config, docs, lockfiles |
+| Path contains `.claude/`, `CLAUDE.md`, `settings`, `hooks/` | Project metadata and hooks |
+| Path contains `tests/` or `_test.` | Test files |
+
+Source-code files (`.py`, `.ts`, `.js`, `.go`, etc.) are **not** in the allow-list. A
+`Grep`/`Glob` with no `path` argument (whole-repo search) is also always gated — that is exactly
+the case CBM's `search_graph` is optimised for.
+
+### Read-after-CBM workflow
+
+1. Agent calls a CBM tool (e.g. `mcp__codebase-memory__search_graph`).
+2. `cbm-mcp-marker.py` touches `/tmp/cbm-mcp-used-{ppid}` (scoped to the Claude Code session by
+   parent PID).
+3. Within 120 seconds, `Read`/`Grep`/`Glob` on source files passes through the gate.
+4. After 120 seconds the window closes — the next code-discovery call requires another CBM call
+   first.
+
+The 120-second window is deliberately short: long enough for a focused follow-up read, short
+enough to prevent the gate from becoming permanently open after a single CBM call at session start.
+
+### Setup
+
+**Prerequisites:** install and configure the CBM MCP server. Follow the upstream instructions at
+[github.com/DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp). The
+hooks in this template assume the server is named `codebase-memory` in your MCP config.
+
+**Step 1** — Index the repository once:
+
+```bash
+# Inside a Claude Code session with CBM MCP wired:
+mcp__codebase-memory__index_repository
+```
+
+**Step 2** — Wire the three hooks in `.claude/settings.local.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read|Grep|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/cbm-code-discovery-gate.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__codebase-memory__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/cbm-mcp-marker.py"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "matcher": "compact|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/cbm-session-reminder.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This goes in `.claude/settings.local.json` (not committed) — each operator opts in individually.
+Do **not** add it to the committed `.claude/settings.json`.
+
+**Step 3** — Refresh the graph when the codebase changes materially:
+
+```bash
+mcp__codebase-memory__detect_changes   # check if refresh is needed
+mcp__codebase-memory__index_repository # re-index if needed
+```
+
+### Trust caveats
+
+CBM indexes the repository by parsing source files with tree-sitter. The resulting graph lives
+locally in whatever storage backend the CBM server is configured with. Key considerations:
+
+- **Graph staleness:** the graph reflects the codebase at the time of the last `index_repository`
+  call. After significant changes (new modules, major refactors), call `detect_changes` and
+  re-index before relying on graph results. The gate passes through regardless of graph freshness —
+  it enforces that a CBM tool *runs*, not that the graph is accurate.
+- **Server trust:** CBM reads your source files to build the graph. Apply the same due-diligence
+  you would to any tool that reads your codebase. Read the source and confirm no network egress
+  before using on sensitive or employer-owned codebases.
+- **MCP server name:** if your CBM server is configured under a different name than
+  `codebase-memory`, update the `PostToolUse` matcher (e.g. `mcp__my-cbm__.*`) to match. The
+  hook itself is tool-name-agnostic; only the matcher needs updating.
+
+**Why disabled by default:** CBM requires an external MCP server that each operator installs and
+configures separately. Wiring these hooks in committed settings would break every contributor who
+has not installed CBM.
+
 ## Session-survival of project rules
 
 This section documents the **pattern** that Caveman uses, so you can apply it to any narrow rule
