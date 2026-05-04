@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777896350301,
+  "lastUpdate": 1777904848005,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7375,6 +7375,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.05721282771541e-7",
             "extra": "mean: 1.9817052147345162 usec\nrounds: 39561"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39edad04c0ccbde197b051f5070a74c1d2ab7793",
+          "message": "feat: ship optional context-mode hook wrappers (opt-in) (merges PR #538, addresses #517)\n\nShips five opt-in Claude Code hook wrappers for the third-party\ncontext-mode MCP. None are wired in committed settings; operators\nopt in via .claude/settings.local.json. Mirrors the CBM gate-hooks\nprecedent (PR #537).\n\nAddresses #517\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-04T15:27:01+01:00",
+          "tree_id": "2db24dcf7931a08790feac73a00c3515c7ca8868",
+          "url": "https://github.com/endavis/pyproject-template/commit/39edad04c0ccbde197b051f5070a74c1d2ab7793"
+        },
+        "date": 1777904847070,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8933717.805787334,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6968620488137536e-8",
+            "extra": "mean: 111.93548103256542 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8958388.39451308,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2112383859620895e-8",
+            "extra": "mean: 111.62722087518439 nsec\nrounds: 85786"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6546139.025157755,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8880570308156744e-8",
+            "extra": "mean: 152.76180297376146 nsec\nrounds: 64255"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1755640.8920883958,
+            "unit": "iter/sec",
+            "range": "stddev: 2.240687153538143e-7",
+            "extra": "mean: 569.5925656017646 nsec\nrounds: 55258"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506163.05749061843,
+            "unit": "iter/sec",
+            "range": "stddev: 4.963503704306586e-7",
+            "extra": "mean: 1.975647936373813 usec\nrounds: 52607"
           }
         ]
       }
