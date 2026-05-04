@@ -190,6 +190,70 @@ in your local Claude Code settings:
 This is a **local-only** file (not committed). Do not commit Caveman plugin config — intensity
 preference varies by operator and can conflict with other contributors' expectations.
 
+## Bash raw-tool ban (opt-in)
+
+This hook enforces what `AGENTS.md` already asks for: prefer native file tools (`Read`, `Grep`,
+`Glob`, `Edit`, `Write`) over their raw shell equivalents. When an agent defects to `Bash`, the
+raw output bypasses every other token-efficiency control and lands in context uncompressed.
+
+**What it blocks:**
+
+- Leading banned commands: `cat`, `head`, `tail`, `find`, `grep`, `rg`, `wc`
+- Piped truncators: `... | head`, `... | tail` (regardless of arguments)
+
+Each block message names the offending command, suggests the native replacement, and reminds the
+agent about the escape hatch.
+
+**Native tool replacements:**
+
+| Blocked command | Use instead |
+| :--- | :--- |
+| `cat` / `head` / `tail` | `Read` |
+| `find` | `Glob` |
+| `grep` / `rg` | `Grep` |
+| `wc` | `Read` (then count in the result) |
+
+**Opt-in via `.claude/settings.local.json`:**
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/bash-ban-raw-tools.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This goes in `.claude/settings.local.json` (not committed) — each operator opts in individually.
+Do **not** add it to the committed `.claude/settings.json`.
+
+**Escape hatch:**
+
+```bash
+touch /tmp/bash-raw-unlock
+```
+
+Allows all banned commands for 10 minutes. The file auto-expires — no cleanup needed. Useful when
+you need a one-off raw shell command without disabling the hook permanently.
+
+**Why disabled by default:** humans share the repo. Raw shell commands are legitimate in human
+workflows. The hook is only beneficial when an AI agent is the primary operator of the terminal.
+Enable it locally for AI-heavy sessions; disable it when you are working interactively.
+
+**Related:** the always-on dangerous-command hook (committed in `.claude/settings.json`) is
+documented in [AI Command Blocking](command-blocking.md). The two hooks are complementary: the
+dangerous-command hook blocks security-relevant patterns for everyone; this hook enforces
+token-efficiency discipline only for operators who opt in.
+
 ## Session-survival of project rules
 
 This section documents the **pattern** that Caveman uses, so you can apply it to any narrow rule
