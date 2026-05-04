@@ -544,8 +544,8 @@ def _extract_linked_issues(body: str) -> list[str]:
     seen: set[str] = set()
     result: list[str] = []
 
-    pattern = r"addresses\s+#(\d+)"
-    for match in re.finditer(pattern, body, re.IGNORECASE):
+    pattern = r"^Addresses\s+#(\d+)"
+    for match in re.finditer(pattern, body, re.MULTILINE):
         issue = match.group(1)
         if issue not in seen:
             seen.add(issue)

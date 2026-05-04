@@ -674,7 +674,7 @@ doit pr_merge --auto-close
 **Options:**
 - `--pr`: PR number to merge (defaults to PR for current branch)
 - `--delete-branch`: Delete the source branch after merge (default: `true`)
-- `--auto-close`: Close linked issues (parsed from `Addresses #XX` in the PR body) after a successful merge (default: `false`)
+- `--auto-close`: Close linked issues (parsed from `Addresses #XX` at the start of a line in the PR body) after a successful merge (default: `false`)
 
 ### `adr`
 

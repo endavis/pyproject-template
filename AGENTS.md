@@ -405,7 +405,7 @@ Before creating a PR, verify:
 - [ ] Branch name follows convention: `<type>/<issue>-<description>`
 - [ ] Commits follow conventional format: `<type>: <subject>`
 - [ ] PR title follows conventional format: `<type>: <subject>`
-- [ ] PR description references the issue: "Addresses #XX"
+- [ ] PR description references the issue: "Addresses #XX" (at start of line)
 - [ ] If issue has `needs-adr` label: ADR created and included in PR
 - [ ] If implementing architectural decision: Related ADR updated with issue link
 - [ ] If ADR created/updated: Links to documentation in `docs/` included
