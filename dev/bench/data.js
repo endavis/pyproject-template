@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777904848005,
+  "lastUpdate": 1777911874437,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7434,6 +7434,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.963503704306586e-7",
             "extra": "mean: 1.975647936373813 usec\nrounds: 52607"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "664777b2c7daf925c0a96cb36afb11ee3b06a420",
+          "message": "chore: convert custom commands to native Gemini CLI TOML format (merges PR #539, addresses #531)",
+          "timestamp": "2026-05-04T17:24:03+01:00",
+          "tree_id": "69cccfda1707c0aedbf5072590d1dae049dc76c7",
+          "url": "https://github.com/endavis/pyproject-template/commit/664777b2c7daf925c0a96cb36afb11ee3b06a420"
+        },
+        "date": 1777911873177,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9052994.818562156,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7500362188430454e-8",
+            "extra": "mean: 110.46068401029143 nsec\nrounds: 88332"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8841609.8589833,
+            "unit": "iter/sec",
+            "range": "stddev: 2.401053254198125e-8",
+            "extra": "mean: 113.1015749336615 nsec\nrounds: 88645"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5362792.0823254865,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5605846355354295e-8",
+            "extra": "mean: 186.47002991142747 nsec\nrounds: 53491"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1652131.9345449596,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4598095500644736e-7",
+            "extra": "mean: 605.2785368351506 nsec\nrounds: 55332"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498895.08720155054,
+            "unit": "iter/sec",
+            "range": "stddev: 4.915398205030656e-7",
+            "extra": "mean: 2.0044294394825464 usec\nrounds: 48384"
           }
         ]
       }
