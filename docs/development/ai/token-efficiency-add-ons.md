@@ -551,17 +551,20 @@ verbosity here works against the goal.
 ### Per-stack rule files (third mechanism)
 
 A third application of the same pattern is **small per-stack rule files** imported into
-`.claude/CLAUDE.md` via the `@import` directive. Where per-turn injection is best for style rules
-that must survive every autocompact event, per-stack rule files are best for **narrow, domain-
-specific self-checks** that only apply when the agent is doing a specific class of work (code
-generation, database migrations, API contract changes, etc.).
+`.claude/CLAUDE.md` via the `@import` directive (for Claude) or into `GEMINI.md` via the `@`
+directive (for Gemini). Where per-turn injection is best for style rules that must survive every
+autocompact event, per-stack rule files are best for **narrow, domain-specific self-checks** that
+only apply when the agent is doing a specific class of work (code generation, database migrations,
+API contract changes, etc.).
 
 Each rule file is skill-gated, capped at 30 lines, and built from documented observed failures —
 not from generic advice. The template ships a commented-out `@import` placeholder in
-`.claude/CLAUDE.md`; downstream consumers uncomment it and add their own rule files.
+`.claude/CLAUDE.md` and a commented-out `@` placeholder in `GEMINI.md`; downstream consumers
+uncomment them and add their own rule files.
 
-See [`.claude/rules/README.md`](../../../.claude/rules/README.md) for the pattern, file structure,
-and a worked example.
+See [`.claude/rules/README.md`](../../../.claude/rules/README.md) and
+[`.gemini/rules/README.md`](../../../.gemini/rules/README.md) for the pattern, file structure, and
+a worked example.
 
 ## Related primitives in this template
 
