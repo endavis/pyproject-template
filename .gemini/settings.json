@@ -15,6 +15,9 @@
       }
     ]
   },
+  "chatCompression": {
+    "contextPercentageThreshold": 0.5
+  },
   "ui": {
     "autoApprove": false,
     "showToolCalls": true
