@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777827185228,
+  "lastUpdate": 1777891949983,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7198,6 +7198,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.190993733195625e-7",
             "extra": "mean: 2.0004335838890728 usec\nrounds: 52013"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1a317134c6d2ddb0c30eb0386c4138abe8af0f6f",
+          "message": "feat: ship optional bash-ban-raw-tools hook (disabled by default) (merges PR #534, addresses #515)\n\nAdd tools/hooks/ai/bash-ban-raw-tools.py, a Claude Code PreToolUse/Bash\nhook that blocks raw shell commands AI agents should be using native tools\nfor (cat, head, tail, find, grep, rg, wc). Piped truncators (... | head,\n... | tail) are also blocked. An mtime-based escape hatch at\n/tmp/bash-raw-unlock allows banned commands for 10 minutes when genuinely\nneeded.\n\nThe hook is not wired into the committed .claude/settings.json. Operators\nopt in via .claude/settings.local.json so human contributors using the\nsame repo are unaffected.\n\nIncludes 19 pytest cases (tests/test_bash_ban_raw_tools.py), a new\n## Bash raw-tool ban (opt-in) section in token-efficiency-add-ons.md,\nand a cross-reference in command-blocking.md.\n\nAddresses #515\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-04T11:51:59+01:00",
+          "tree_id": "9967a91bdbe74b7747ac7bc6d7e86b6cb9a60519",
+          "url": "https://github.com/endavis/pyproject-template/commit/1a317134c6d2ddb0c30eb0386c4138abe8af0f6f"
+        },
+        "date": 1777891949048,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8652654.97132011,
+            "unit": "iter/sec",
+            "range": "stddev: 1.144597201641397e-8",
+            "extra": "mean: 115.57146370848912 nsec\nrounds: 87169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8788956.630175238,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1993544581624117e-8",
+            "extra": "mean: 113.77914831968643 nsec\nrounds: 85020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5331218.8962569665,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6119620345573805e-8",
+            "extra": "mean: 187.5743651610511 nsec\nrounds: 55329"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1664313.734360695,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6361702330374805e-7",
+            "extra": "mean: 600.8482531595074 nsec\nrounds: 60021"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496861.77835955797,
+            "unit": "iter/sec",
+            "range": "stddev: 5.581403062666929e-7",
+            "extra": "mean: 2.012632171670774 usec\nrounds: 48384"
           }
         ]
       }
