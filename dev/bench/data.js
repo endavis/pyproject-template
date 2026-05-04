@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777911874437,
+  "lastUpdate": 1777929787611,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7493,6 +7493,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.915398205030656e-7",
             "extra": "mean: 2.0044294394825464 usec\nrounds: 48384"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a31985a40025661bb89ff1ad311f30b6550bed02",
+          "message": "chore: resolve Gemini CLI command conflicts by disabling redundant skills (merges PR #541, addresses #540)",
+          "timestamp": "2026-05-04T22:22:43+01:00",
+          "tree_id": "412156afb4a612ccd19998b8209e97c6a0a60811",
+          "url": "https://github.com/endavis/pyproject-template/commit/a31985a40025661bb89ff1ad311f30b6550bed02"
+        },
+        "date": 1777929787125,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8808892.36066507,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4412347846685345e-8",
+            "extra": "mean: 113.52165051594524 nsec\nrounds: 88645"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8934500.623824354,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2639226150214385e-8",
+            "extra": "mean: 111.92567353271465 nsec\nrounds: 88021"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5332705.056144102,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8774654321727767e-8",
+            "extra": "mean: 187.52209047223513 nsec\nrounds: 52701"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1589974.0516467707,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6841583950358757e-7",
+            "extra": "mean: 628.9410817517922 nsec\nrounds: 60202"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491311.6801305248,
+            "unit": "iter/sec",
+            "range": "stddev: 5.147182628557506e-7",
+            "extra": "mean: 2.0353678539340527 usec\nrounds: 53263"
           }
         ]
       }
