@@ -1,6 +1,8 @@
+description = "Create an implementation plan for GitHub issue {{args}} and emit it to stdout."
+prompt = """
 # Plan Issue – Stdout (Gemini)
 
-Create an implementation plan for GitHub issue #$ARGUMENTS and emit it to stdout.
+Create an implementation plan for GitHub issue #{{args}} and emit it to stdout.
 
 ## Instructions
 
@@ -17,7 +19,7 @@ that variant posts the approved plan to GitHub for you.
 ### Step 1: Fetch the issue details
 
 ```bash
-gh issue view $ARGUMENTS --json title,body,labels,assignees
+gh issue view {{args}} --json title,body,labels,assignees
 ```
 
 - Parse the issue body to understand what needs to be done
@@ -73,3 +75,4 @@ Brief description of what will be done.
 - Be specific about file paths and function names
 - Include concrete test cases, not vague descriptions
 - Note any risks or alternative approaches worth considering
+"""
