@@ -384,6 +384,130 @@ locally in whatever storage backend the CBM server is configured with. Key consi
 configures separately. Wiring these hooks in committed settings would break every contributor who
 has not installed CBM.
 
+## context-mode MCP wrappers (opt-in)
+
+The [context-mode MCP](https://github.com/mksglu/context-mode) intercepts tool outputs, runs
+commands in a sandboxed environment, indexes the full output into a local BM25 knowledge base, and
+returns only a compact summary to the model. Claude can call `ctx_search` later to retrieve detail.
+This prevents large tool outputs — `pytest -v` over thousands of tests, `terraform plan`, verbose
+`kubectl describe` — from flooding the conversation context and consuming tokens until the next
+autocompact event.
+
+context-mode wires up via four lifecycle hooks (`PreToolUse`, `PostToolUse`, `PreCompact`,
+`SessionStart`), each invoking `context-mode hook claude-code <event>`. Without thin wrappers,
+operators must hand-wire all four — error-prone, and easy to omit the `PreCompact`/`SessionStart`
+events that handle index persistence across compaction cycles.
+
+### Five-hook design
+
+| Hook | Event | What it does |
+| :--- | :--- | :--- |
+| `context-mode-pretooluse.py` | `PreToolUse` (no matcher) | Forwards every PreToolUse event to the context-mode CLI for interception |
+| `context-mode-posttooluse.py` | `PostToolUse` (no matcher) | Forwards every PostToolUse event so outputs are indexed and summarised |
+| `context-mode-precompact.py` | `PreCompact` | Persists the BM25 index before autocompact so it survives context resets |
+| `context-mode-sessionstart.py` | `SessionStart` | Restores the index when a session resumes after compaction |
+| `context-mode-test-runner-reminder.py` | `PreToolUse` on `Bash` | Advisory only — reminds Claude to prefer `ctx_batch_execute` for test runs |
+
+Each forwarder uses `shutil.which("context-mode")` to detect non-installation and exits 0 silently.
+Non-installation is a no-op, not an error.
+
+### Setup
+
+**Prerequisites:** install the context-mode CLI and configure the MCP server. Follow the upstream
+instructions at [github.com/mksglu/context-mode](https://github.com/mksglu/context-mode).
+
+**Step 1** — Wire all five hooks in `.claude/settings.local.json`:
+
+```json
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/context-mode-pretooluse.py"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/context-mode-test-runner-reminder.py"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/context-mode-posttooluse.py"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/context-mode-precompact.py"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 $CLAUDE_PROJECT_DIR/tools/hooks/ai/context-mode-sessionstart.py"
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+This goes in `.claude/settings.local.json` (not committed) — each operator opts in individually.
+Do **not** add it to the committed `.claude/settings.json`.
+
+**Step 2** — Verify the wiring with a manual smoke test: install a fake `context-mode` shim that
+logs its argv to stderr, wire `context-mode-pretooluse.py` as above, trigger any tool call, and
+confirm stderr shows `context-mode hook claude-code PreToolUse` with the original stdin forwarded.
+
+### ctx_batch_execute workflow
+
+When `context-mode` MCP is active, prefer `ctx_batch_execute` for multi-command sequences (test +
+lint + typecheck) rather than running each command in a separate `Bash` call. `ctx_batch_execute`
+submits all commands together, indexes the combined output into the BM25 store, and returns a
+compact summary. Use `ctx_search` to retrieve specific detail from that summary on demand.
+
+This is most valuable for test runs on large projects where `pytest -v` output can easily exceed
+tens of thousands of lines.
+
+### Trust caveats
+
+context-mode claims to run commands in a sandboxed environment and maintain a local BM25 index with
+no network egress. Key considerations before adopting:
+
+- **Verify upstream:** read the source at [github.com/mksglu/context-mode](https://github.com/mksglu/context-mode)
+  to confirm no network egress before using on sensitive or employer-owned codebases.
+- **Local index:** the BM25 index lives on disk in whatever path context-mode configures. Treat it
+  with the same care as any file containing code excerpts.
+- **Index freshness:** the index reflects commands run since the last `SessionStart` restore. After
+  a session that skips the hooks, `ctx_search` may return stale or empty results.
+
+**Why disabled by default:** context-mode intercepts every tool call via `PreToolUse` and
+`PostToolUse` with no matcher restriction. Wiring these hooks in committed settings would add
+latency and context-mode dependency for every contributor regardless of whether they have installed
+the CLI.
+
 ## Session-survival of project rules
 
 This section documents the **pattern** that Caveman uses, so you can apply it to any narrow rule
