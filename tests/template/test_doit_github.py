@@ -40,27 +40,33 @@ class TestExtractLinkedIssues:
         result = _extract_linked_issues(body)
         assert result == ["123"]
 
-    def test_addresses_lowercase(self) -> None:
-        """Test extraction of lowercase 'addresses #XX' pattern."""
+    def test_addresses_lowercase_ignored(self) -> None:
+        """Test that lowercase 'addresses #XX' is ignored."""
         body = "addresses #456"
         result = _extract_linked_issues(body)
-        assert result == ["456"]
+        assert result == []
 
-    def test_addresses_uppercase(self) -> None:
-        """Test extraction of uppercase 'ADDRESSES #XX' pattern."""
+    def test_addresses_uppercase_ignored(self) -> None:
+        """Test that uppercase 'ADDRESSES #XX' is ignored."""
         body = "ADDRESSES #789"
         result = _extract_linked_issues(body)
-        assert result == ["789"]
+        assert result == []
+
+    def test_mid_sentence_ignored(self) -> None:
+        """Test that mid-sentence 'Addresses #XX' is ignored."""
+        body = "This PR Addresses #123"
+        result = _extract_linked_issues(body)
+        assert result == []
 
     def test_multiple_addresses(self) -> None:
-        """Test extraction of multiple addresses patterns."""
+        """Test extraction of multiple addresses patterns at line starts."""
         body = "Addresses #123\nAddresses #456"
         result = _extract_linked_issues(body)
         assert result == ["123", "456"]
 
     def test_duplicate_issues(self) -> None:
         """Test that duplicate issues are removed."""
-        body = "Addresses #123\nAlso addresses #123"
+        body = "Addresses #123\nAddresses #123"
         result = _extract_linked_issues(body)
         assert result == ["123"]
 

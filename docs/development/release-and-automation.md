@@ -422,6 +422,9 @@ In your PR body, use the `Addresses` keyword to link issues:
 |---------|--------|----------|
 | `Addresses #XX` | Included as `addresses #XX` in merge commit | PR relates to the issue |
 
+> [!NOTE]
+> The `Addresses #XX` keyword is case-sensitive and must be placed at the start of a line to be correctly parsed by `doit pr_merge`. Mid-sentence references or different capitalizations are ignored to prevent misattribution.
+
 **Example PR body:**
 ```markdown
 ## Summary
