@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777933847713,
+  "lastUpdate": 1777934587536,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7611,6 +7611,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.474526755158942e-7",
             "extra": "mean: 2.032428602632483 usec\nrounds: 50310"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8d990d71a32dca64a64c9e01cf2d56dad145b98b",
+          "message": "feat: add .gemini/rules/ scaffold mirroring .claude/rules/ pattern (merges PR #543, addresses #521)",
+          "timestamp": "2026-05-04T23:42:33+01:00",
+          "tree_id": "9066a12002e361a6c75f053532a81da57e69d9aa",
+          "url": "https://github.com/endavis/pyproject-template/commit/8d990d71a32dca64a64c9e01cf2d56dad145b98b"
+        },
+        "date": 1777934586952,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8776822.444250466,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2144329380113143e-7",
+            "extra": "mean: 113.9364509595476 nsec\nrounds: 87866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8750257.50478279,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5114511876543307e-8",
+            "extra": "mean: 114.28235105691593 nsec\nrounds: 89598"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 4839506.918437151,
+            "unit": "iter/sec",
+            "range": "stddev: 6.790596728024066e-8",
+            "extra": "mean: 206.63262122640697 nsec\nrounds: 54753"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1676510.6569225711,
+            "unit": "iter/sec",
+            "range": "stddev: 2.994092487777624e-7",
+            "extra": "mean: 596.4769719004444 nsec\nrounds: 61121"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496148.92606750043,
+            "unit": "iter/sec",
+            "range": "stddev: 8.516107691945524e-7",
+            "extra": "mean: 2.01552386281685 usec\nrounds: 35725"
           }
         ]
       }
