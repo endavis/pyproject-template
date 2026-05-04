@@ -16,8 +16,8 @@ tags:
 ## Purpose
 
 This page is an **opt-in menu** for operators of larger downstream projects who hit token-cost or
-session-length pain points. The baseline defaults (env-var settings, autocompact threshold) are
-already on for everyone — see [AI Agent Setup: Environment Variables](../AI_SETUP.md#environment-variables).
+session-length pain points. The baseline defaults (env-var settings for Claude, `chatCompression` settings for Gemini) are
+already on for everyone — see [AI Agent Setup Guide](../AI_SETUP.md).
 Add-ons here are additional investments: each has setup cost, operational burden, and in some cases
 a trust trade-off. Read the tipping-point guidance before adopting any of them.
 
@@ -579,11 +579,9 @@ These are not add-ons (they ship with the template) but they interact with the t
   checkpoint automatically to `tmp/checkpoints/{inv_epoch}-auto-precompact.md` and the
   `SessionStart` hook restores it into the next session, reducing context loss without any manual
   `/checkpoint` invocation. See [Auto-Checkpoint and Session-Restore Hooks](auto-checkpoint-hook.md).
-
 ## Out of scope
 
 - No code is shipped here. All three tools are external; install them from their respective repos.
-- Equivalent add-ons for Gemini CLI, Codex CLI, and GitHub Copilot CLI. Most of these tools are
-  Claude Code-specific. If equivalents exist for other CLIs, that is a separate doc.
+- Equivalent add-ons for Codex CLI and GitHub Copilot CLI. Most of these tools are Claude Code-specific. RTK is the notable exception with universal support.
 - Shipping tool configuration in this template's committed files. All snippets above go into
   `.claude/settings.local.json` (not committed) to keep individual operator preferences local.
