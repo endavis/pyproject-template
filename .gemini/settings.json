@@ -31,5 +31,14 @@
   "security": {
     "enablePermanentToolApproval": true,
     "autoAddToPolicyByDefault": true
+  },
+  "skills": {
+    "disabled": [
+      "restore",
+      "ghissue-plan",
+      "ghissue-implement",
+      "ghissue-finalize",
+      "checkpoint"
+    ]
   }
 }
