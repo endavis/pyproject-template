@@ -321,8 +321,10 @@ These are not add-ons (they ship with the template) but they interact with the t
   `CLAUDE_CODE_SUBAGENT_MODEL` are already set via `.claude/settings.json`. Headroom and Caveman
   layer on top of these defaults, not instead of them. See
   [AI Agent Setup: Environment Variables](../AI_SETUP.md#environment-variables).
-- **PreCompact handoff hook** — tracked in #513. Once merged, autocompact events preserve more
-  context automatically, reducing the frequency of sessions that need `/checkpoint` or Headroom.
+- **PreCompact handoff hook** — ships with this template. Autocompact events now synthesize a
+  checkpoint automatically to `tmp/checkpoints/{inv_epoch}-auto-precompact.md` and the
+  `SessionStart` hook restores it into the next session, reducing context loss without any manual
+  `/checkpoint` invocation. See [Auto-Checkpoint and Session-Restore Hooks](auto-checkpoint-hook.md).
 
 ## Out of scope
 

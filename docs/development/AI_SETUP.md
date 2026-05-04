@@ -162,7 +162,7 @@ For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` 
 | Var | Value | Effect | Risk |
 | :--- | :--- | :--- | :--- |
 | `ENABLE_PROMPT_CACHING_1H` | `1` | Extends prompt cache TTL from 5 minutes to 1 hour. Cuts cost on repeated reads of the same context within a session. | None — pure efficiency flag. |
-| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | `50` | Auto-compaction triggers at 50% of the context window instead of the default (~92%). Sessions compact earlier, leaving more headroom for the post-compact continuation. | More frequent compaction churn until the PreCompact handoff hook (#513) lands. |
+| `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | `50` | Auto-compaction triggers at 50% of the context window instead of the default (~92%). Sessions compact earlier, leaving more headroom for the post-compact continuation. | More frequent compaction churn; mitigated by the [PreCompact handoff hook](ai/auto-checkpoint-hook.md) which preserves context across compaction events. |
 | `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-4-6` | Subagents (e.g. those spawned by `/ghissue-implement`) default to Sonnet 4.6 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
 
 **Per-agent model overrides:**
@@ -192,7 +192,7 @@ To opt out or tune values for your local environment, override them in `.claude/
 
 **Cross-references:**
 
-- The 50% autocompact threshold is paired with the PreCompact handoff hook tracked in #513 — once that hook lands, earlier compaction has lower cost because the handoff preserves more context.
+- The 50% autocompact threshold is paired with the [PreCompact handoff hook](ai/auto-checkpoint-hook.md) — earlier compaction has lower cost because the hook preserves context across compaction events automatically.
 - For operators who need more aggressive token reduction, see [AI Agent Token-Efficiency Add-Ons](ai/token-efficiency-add-ons.md) — a catalogue of opt-in external tools (RTK, Headroom, Caveman) with tipping-point guidance and trust caveats.
 
 ### 4. GitHub Copilot CLI
