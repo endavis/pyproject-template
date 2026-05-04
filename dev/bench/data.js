@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777929787611,
+  "lastUpdate": 1777933847713,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7552,6 +7552,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.147182628557506e-7",
             "extra": "mean: 2.0353678539340527 usec\nrounds: 53263"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "16223499a9a04b6c439256349928795d67299749",
+          "message": "feat: add Gemini CLI token-efficiency settings (chatCompression, model) (merges PR #542, addresses #524)",
+          "timestamp": "2026-05-04T23:30:17+01:00",
+          "tree_id": "11439f50ba26ad88d8c0e284f5ba45fa778d1328",
+          "url": "https://github.com/endavis/pyproject-template/commit/16223499a9a04b6c439256349928795d67299749"
+        },
+        "date": 1777933846683,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8758397.998657987,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1838424935652098e-8",
+            "extra": "mean: 114.17613131456527 nsec\nrounds: 84804"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9125650.600394297,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3553512241219112e-8",
+            "extra": "mean: 109.58122809970308 nsec\nrounds: 82420"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5453750.671183012,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5975094968734812e-8",
+            "extra": "mean: 183.36005077824413 nsec\nrounds: 54157"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1657756.310362483,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9061046386379014e-7",
+            "extra": "mean: 603.2249696466794 nsec\nrounds: 58439"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492022.2037343697,
+            "unit": "iter/sec",
+            "range": "stddev: 5.474526755158942e-7",
+            "extra": "mean: 2.032428602632483 usec\nrounds: 50310"
           }
         ]
       }
