@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777894605565,
+  "lastUpdate": 1777896350301,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7316,6 +7316,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.348378433044797e-7",
             "extra": "mean: 2.03970654256303 usec\nrounds: 55146"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d6c7e7596d7ca92c81701896203d16b81b8b870d",
+          "message": "feat: ship optional CBM gate hooks (opt-in, requires CBM MCP server) (merges PR #537, addresses #516)\n\nAdds three Claude Code hooks that enforce token-efficient code discovery\nwhen the Codebase Memory MCP server is installed. All three are disabled\nby default; operators wire them in settings.local.json individually.\n\n- cbm-code-discovery-gate.py: PreToolUse gate on Read/Grep/Glob\n- cbm-mcp-marker.py: PostToolUse marker to open a 120s allow window\n- cbm-session-reminder.py: SessionStart re-injection after autocompact\n- cbm-session-reminder.md: companion reminder text for injection\n- 33 new tests across 3 test files\n- New section in token-efficiency-add-ons.md\n\nAddresses #516\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-04T13:05:25+01:00",
+          "tree_id": "85af717e30b0b7e5649ec2247d637b288ecc758e",
+          "url": "https://github.com/endavis/pyproject-template/commit/d6c7e7596d7ca92c81701896203d16b81b8b870d"
+        },
+        "date": 1777896349379,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8899694.270450814,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6634654706430413e-8",
+            "extra": "mean: 112.36341042863096 nsec\nrounds: 196928"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8763199.147816151,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1800738939295189e-8",
+            "extra": "mean: 114.11357691776374 nsec\nrounds: 81847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6639597.132973637,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4381957592406901e-8",
+            "extra": "mean: 150.6115476545692 nsec\nrounds: 63845"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1756497.750287283,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2483301561138572e-7",
+            "extra": "mean: 569.3147058323561 nsec\nrounds: 58086"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 504615.9199485012,
+            "unit": "iter/sec",
+            "range": "stddev: 5.05721282771541e-7",
+            "extra": "mean: 1.9817052147345162 usec\nrounds: 39561"
           }
         ]
       }
