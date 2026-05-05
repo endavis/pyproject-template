@@ -566,6 +566,22 @@ See [`.claude/rules/README.md`](../../../.claude/rules/README.md) and
 [`.gemini/rules/README.md`](../../../.gemini/rules/README.md) for the pattern, file structure, and
 a worked example.
 
+GitHub Copilot has a native equivalent: **`.github/instructions/NAME.instructions.md`** files with
+`applyTo:` YAML frontmatter for path-based gating. No import directive is needed — Copilot
+auto-discovers all `*.instructions.md` files in `.github/instructions/`. The body format (skill
+gate, numbered self-checks, observed-failures footer, ≤30 lines) is identical to the Claude and
+Gemini variants. The key contrast with those variants is the load mechanism:
+
+| CLI | Directory | Load mechanism |
+| :--- | :--- | :--- |
+| Claude Code | `.claude/rules/` | `@./rules/*.md` in `.claude/CLAUDE.md` |
+| Gemini CLI | `.gemini/rules/` | `@./.gemini/rules/*.md` in `GEMINI.md` |
+| GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
+
+Claude Code and Gemini CLI cannot read `.github/instructions/` files; this format is
+Copilot-native only. See [`.github/instructions/README.md`](../../../.github/instructions/README.md)
+for the full pattern and a worked example.
+
 ## Related primitives in this template
 
 These are not add-ons (they ship with the template) but they interact with the tools above:

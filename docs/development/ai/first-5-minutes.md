@@ -148,5 +148,6 @@ Run `/ghissue-status`. It is read-only, has no side effects, and will tell you t
 - [AGENTS.md](../../../AGENTS.md) — universal context file and workflow reference.
 - [`.claude/rules/` scaffold](../../../.claude/rules/README.md) — per-stack rule-file pattern for Claude Code.
 - [`.gemini/rules/` scaffold](../../../.gemini/rules/README.md) — per-stack rule-file pattern for Gemini CLI.
+- [`.github/instructions/` scaffold](../../../.github/instructions/README.md) — per-stack instruction-file pattern for GitHub Copilot.
 - <!-- TODO: wire this link up properly when #342 lands -->
   For an end-to-end example of the *coding* side of a feature (creating a module, CLI subcommand, tests, and docs), see [the add-a-feature example](../../examples/add-a-feature.md) (tracked in [#342](https://github.com/endavis/pyproject-template/issues/342)).
