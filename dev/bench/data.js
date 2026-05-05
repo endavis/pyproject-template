@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777944624387,
+  "lastUpdate": 1777981675564,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7788,6 +7788,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.433238466282515e-7",
             "extra": "mean: 2.038406078155598 usec\nrounds: 51825"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1ce1510f75607f69153474e283f5751c12c48059",
+          "message": "docs: document .github/instructions/ rule pattern for Copilot CLI (merges PR #546, addresses #522)\n\nAddresses #522\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-05-05T12:47:27+01:00",
+          "tree_id": "4724cfd8f47f2cd7e51bd14f95c6eb27dfcacda7",
+          "url": "https://github.com/endavis/pyproject-template/commit/1ce1510f75607f69153474e283f5751c12c48059"
+        },
+        "date": 1777981674994,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8910993.929651877,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1640471351632533e-8",
+            "extra": "mean: 112.22092708114624 nsec\nrounds: 85602"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8883109.682161706,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3304537704006625e-8",
+            "extra": "mean: 112.57319067084285 nsec\nrounds: 88881"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5290800.084052047,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1549388487908747e-8",
+            "extra": "mean: 189.00733048188312 nsec\nrounds: 52841"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1645598.7482298545,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8018050616626573e-7",
+            "extra": "mean: 607.6815512139182 nsec\nrounds: 59592"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488499.4898258964,
+            "unit": "iter/sec",
+            "range": "stddev: 5.32595710027429e-7",
+            "extra": "mean: 2.047085044769248 usec\nrounds: 52149"
           }
         ]
       }
