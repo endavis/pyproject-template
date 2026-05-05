@@ -577,10 +577,16 @@ Gemini variants. The key contrast with those variants is the load mechanism:
 | Claude Code | `.claude/rules/` | `@./rules/*.md` in `.claude/CLAUDE.md` |
 | Gemini CLI | `.gemini/rules/` | `@./.gemini/rules/*.md` in `GEMINI.md` |
 | GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
+| Codex CLI | `.agents/skills/<name>/` | `description:` frontmatter is the skill-gate trigger |
 
 Claude Code and Gemini CLI cannot read `.github/instructions/` files; this format is
 Copilot-native only. See [`.github/instructions/README.md`](../../../.github/instructions/README.md)
 for the full pattern and a worked example.
+
+Codex CLI uses a different mechanism: the `description:` field in a skill's YAML frontmatter acts
+as the skill-gate trigger — Codex auto-loads the skill when the task description matches. There is
+no `@import` directive. See [`.agents/skills/README.md`](../../../.agents/skills/README.md) for the
+full pattern and a worked example.
 
 ## Related primitives in this template
 

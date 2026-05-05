@@ -297,13 +297,13 @@ Each supported AI CLI has a dedicated config directory at the repo root:
 | Claude Code | `.claude/` | Commands, agents, rules, settings. Primary source of slash commands. |
 | Gemini CLI | `.gemini/` | Commands, settings, and rules/ subdirectory for per-stack rule files. Supports a standalone workflow (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize`) and Claude-orchestrated dual-agent flows. |
 | GitHub Copilot CLI | `.copilot/` | Config directory. Skills auto-discovered from `.claude/commands/`. Hook wired in `.github/hooks/copilot-hooks.json`. Per-stack instruction files live in `.github/instructions/` (Copilot-native; Claude/Gemini cannot read them). See `.github/instructions/README.md`. |
-| Codex CLI | `.codex/`, `.agents/skills/` | `config.toml` for approvals/hooks plus repo-scoped skills for the Codex workflow. No custom slash commands. |
+| Codex CLI | `.codex/`, `.agents/skills/` | `config.toml` for approvals/hooks plus repo-scoped skills for the Codex workflow. No custom slash commands. Rule-shaped skills live in `.agents/skills/<name>/SKILL.md`; the `description:` frontmatter is the skill-gate trigger. See `.agents/skills/README.md`. |
 
 Copilot CLI does **not** need a `commands/` subdirectory: it discovers skills from `.claude/commands/` automatically, so the full workflow (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize`, etc.) works out of the box.
 
 Gemini CLI ships standalone implementations of `/ghissue-plan`, `/ghissue-implement`, and `/ghissue-finalize` under `.gemini/commands/`. They share the GitHub-artifact contract (plan comment header `## Implementation Plan for #<n>: <title>`, `<type>/<n>-<slug>` branch names, `Addresses #<n>` PR body) with the Claude versions, so users can switch agents mid-workflow without losing state.
 
-Codex CLI does **not** use repo-defined slash commands in this template. Its repo-native workflow is provided through checked-in skills under `.agents/skills/`, invoked with built-in Codex skill selection such as `/skills` or explicit mentions like `$ghissue-plan`.
+Codex CLI does **not** use repo-defined slash commands in this template. Its repo-native workflow is provided through checked-in skills under `.agents/skills/`, invoked with built-in Codex skill selection such as `/skills` or explicit mentions like `$ghissue-plan`. Rule-shaped skills (per-stack self-check checklists) follow the same discipline as `.claude/rules/`, `.gemini/rules/`, and `.github/instructions/` — ≤30 lines, numbered self-checks, observed-failures footer — with the key distinction that the `description:` frontmatter field acts as the skill-gate trigger instead of an import directive or glob. See `.agents/skills/README.md`.
 
 ### Temporary Files
 
