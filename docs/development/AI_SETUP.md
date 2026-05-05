@@ -209,7 +209,7 @@ To opt out or tune values for your local environment, override them in `.claude/
 
 > **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
-GitHub Copilot CLI reads `AGENTS.md` directly and auto-discovers project skills from `.claude/commands/`, so the full slash-command workflow (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize`, `/ghissue-close`, `/ghissue-status`, etc.) is available in Copilot sessions without any parallel command files. The `implement-worker` subagent used by `/ghissue-implement` is shared with Claude (defined in `.claude/agents/implement-worker.md`).
+GitHub Copilot CLI reads `AGENTS.md` directly and auto-discovers project skills from `.claude/commands/`, so the full slash-command workflow (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize`, `/ghissue-close`, `/ghissue-status`, etc.) is available in Copilot sessions without any parallel command files. It also natively discovers per-stack instruction files from `.github/instructions/*.instructions.md`; see [`.github/instructions/README.md`](../../.github/instructions/README.md) for the scaffold and format. The `implement-worker` subagent used by `/ghissue-implement` is shared with Claude (defined in `.claude/agents/implement-worker.md`).
 
 **Hook wiring:**
 
@@ -240,6 +240,8 @@ copilot
 **Files:**
 - `.copilot/README.md` - Description of the Copilot CLI config directory
 - `.github/hooks/copilot-hooks.json` - `preToolUse` hook wiring
+- `.github/instructions/*.instructions.md` - Copilot-native per-stack instruction files (auto-discovered)
+- `.github/instructions/README.md` - Instruction-file scaffold and format reference
 - `.claude/commands/*.md` - Slash commands (auto-discovered by Copilot CLI)
 - `.claude/agents/implement-worker.md` - Shared subagent definition
 
@@ -284,7 +286,7 @@ This template ships several files that influence agent behavior. They fall into 
 - **`AGENTS.md`** (project root, ~20 KB) — universal source of truth for architecture, workflow, tooling hierarchy, and security rules. Read directly by Codex CLI, Gemini CLI, and GitHub Copilot CLI; imported by Claude Code via `@../AGENTS.md` in `.claude/CLAUDE.md`.
 - **`.claude/CLAUDE.md`** (~2 KB) — Claude-specific complement. First line is `@../AGENTS.md`, which imports the universal rules; the rest adds Claude-specific layers (token-efficiency guidance, the mandatory TodoWrite plan-test-code loop, the development workflow reminder, and the commit workflow reminder).
 - **`GEMINI.md`** (project root, ~1 KB) — Gemini-specific complement. Covers Gemini's stdout-only collaboration mode (so Claude handles GitHub writes), the output signing footer, and Gemini's tool-usage rules. Read alongside `AGENTS.md` by Gemini CLI, not instead of it.
-- **`.copilot/README.md`** — describes the Copilot CLI config directory. Copilot CLI reads `AGENTS.md` directly and auto-discovers slash commands from `.claude/commands/`; no Copilot-specific context markdown is required.
+- **`.copilot/README.md`** — describes the Copilot CLI config directory. Copilot CLI reads `AGENTS.md` directly, auto-discovers slash commands from `.claude/commands/`, and uses `.github/instructions/*.instructions.md` for Copilot-native per-stack instruction files.
 - **`.codex/config.toml`** — Codex approval policy file (TOML). Not a context file; configures permissions only. Codex reads `AGENTS.md` directly for instructions.
 - **`.claude/settings.json`** — Claude PreToolUse hooks and statusline configuration. Committed.
 - **`.claude/settings.local.json`** — local Claude permissions overlay. Not committed.
@@ -447,7 +449,8 @@ gemini --yolo
 
 **`.copilot/` auto-detection:**
 - The `.copilot/` directory exists primarily to document Copilot-specific wiring; Copilot CLI does not require any config files there
-- If you move the repository, Copilot CLI still loads `AGENTS.md` from the repo root and the hook from `.github/hooks/copilot-hooks.json`
+- Copilot CLI also auto-discovers `.github/instructions/*.instructions.md` without any import or directive
+- If you move the repository, Copilot CLI still loads `AGENTS.md` from the repo root, the hook from `.github/hooks/copilot-hooks.json`, and instruction files from `.github/instructions/`
 
 ## Resources
 
