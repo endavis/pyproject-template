@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777937153384,
+  "lastUpdate": 1777944624387,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7729,6 +7729,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.40805929677758e-7",
             "extra": "mean: 2.013442536745187 usec\nrounds: 53234"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ffc0613cd8f144bf371579fc099bd1154761138c",
+          "message": "fix: replace || echo swallow pattern with install_check_or_skip gate (merges PR #545, addresses #527)\n\n* fix: replace || echo swallow pattern with install_check_or_skip gate\n\nSeven doit tasks used `cmd || echo 'tool not installed...'` to handle\noptional security/git extras. Because echo exits 0, this swallowed real\nfailures (bandit findings, pre-commit hook rejections, pip-audit CVEs)\nand tasks ticked green locally while CI surfaced them directly.\n\nAdd `install_check_or_skip(package, hint)` in tools/doit/base.py that\nemits `uv pip show <pkg> >/dev/null 2>&1 || { echo <hint>; exit 0; };`\nto gate the action. Missing package: exit 0 with hint (preserves the\nfriendly fallback). Present: real exit code propagates unmasked.\n\nAddresses #527\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n* test: skip bash-driven gate tests on Windows (CI fix)\n\nGitHub's Windows runner resolves `bash` to `wsl.exe`, which exits 1\nwith \"WSL has no installed distributions\" before the snippet under\ntest runs. Two of three behavioural tests failed; the third passed\nfor the wrong reason.\n\nSplit TestInstallCheckOrSkip into a structural class (cross-platform)\nand TestInstallCheckOrSkipShellBehavior (POSIX-shell only, skipped on\nWindows). The doit task action only ever runs through POSIX shell in\nreal use, so this matches reality.\n\nAddresses #527\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-05T02:29:47+01:00",
+          "tree_id": "2b6e27f7faf3b4e2d4650b62bdd4f6f1f42f0856",
+          "url": "https://github.com/endavis/pyproject-template/commit/ffc0613cd8f144bf371579fc099bd1154761138c"
+        },
+        "date": 1777944623380,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8550423.651952341,
+            "unit": "iter/sec",
+            "range": "stddev: 2.258603130535468e-8",
+            "extra": "mean: 116.95326930048282 nsec\nrounds: 85529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8895234.932073759,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1455030598613283e-8",
+            "extra": "mean: 112.4197401908157 nsec\nrounds: 88488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5321888.039049071,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5607927769728905e-8",
+            "extra": "mean: 187.90323897506917 nsec\nrounds: 54014"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1629316.7379341081,
+            "unit": "iter/sec",
+            "range": "stddev: 3.07597804545714e-7",
+            "extra": "mean: 613.7542055008591 nsec\nrounds: 59981"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490579.3849009837,
+            "unit": "iter/sec",
+            "range": "stddev: 5.433238466282515e-7",
+            "extra": "mean: 2.038406078155598 usec\nrounds: 51825"
           }
         ]
       }
