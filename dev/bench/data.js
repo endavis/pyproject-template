@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777981675564,
+  "lastUpdate": 1777983602433,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7847,6 +7847,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.32595710027429e-7",
             "extra": "mean: 2.047085044769248 usec\nrounds: 52149"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9750c42d4c29fffe44dadfa0975ad922d725d538",
+          "message": "docs: document .agents/skills/ as rule-pattern equivalent for Codex CLI (merges PR #547, addresses #523)\n\nAdd .agents/skills/README.md documenting rule-shaped skills as the Codex\nCLI equivalent of .claude/rules/ and .gemini/rules/. Covers when to author,\nfile structure, description: frontmatter as the skill-gate trigger, <=30-line\ntarget, a worked example, and the shared discipline across all four CLIs.\n\nCross-link from docs/development/ai/token-efficiency-add-ons.md (per-stack\nrule files table) and docs/development/ai/first-5-minutes.md (See also).\nUpdate AGENTS.md Codex row and paragraph with rule-shaped skill guidance.\n\nAddresses #523\n\nCo-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>",
+          "timestamp": "2026-05-05T13:19:36+01:00",
+          "tree_id": "00e3f2344260b16b567b7f30926136fda00665af",
+          "url": "https://github.com/endavis/pyproject-template/commit/9750c42d4c29fffe44dadfa0975ad922d725d538"
+        },
+        "date": 1777983601513,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8940315.797070498,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1375712313896584e-8",
+            "extra": "mean: 111.85287216897567 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8706008.510773435,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1249663365407332e-8",
+            "extra": "mean: 114.86320037047159 nsec\nrounds: 85237"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5393427.100633915,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5903340817588517e-8",
+            "extra": "mean: 185.41086795860565 nsec\nrounds: 53862"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1629408.4489313008,
+            "unit": "iter/sec",
+            "range": "stddev: 6.646772302831499e-7",
+            "extra": "mean: 613.7196604423414 nsec\nrounds: 60787"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 486497.79896639736,
+            "unit": "iter/sec",
+            "range": "stddev: 5.727943690897857e-7",
+            "extra": "mean: 2.0555077579478844 usec\nrounds: 52978"
           }
         ]
       }
