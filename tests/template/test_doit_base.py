@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 import shlex
 import subprocess  # nosec B404 - test invokes bash deliberately to verify shell-snippet behaviour
+import sys
 from pathlib import Path
 
 import pytest
@@ -137,16 +138,14 @@ def _run_bash(action: str, env: dict[str, str]) -> subprocess.CompletedProcess[s
 
 
 class TestInstallCheckOrSkip:
-    """Structural and behavioural tests for ``install_check_or_skip``.
+    """Structural tests for ``install_check_or_skip`` (cross-platform).
 
-    Structural tests assert the generated snippet's shape; behavioural tests
-    drive the snippet through ``bash -c`` against a fake ``uv`` shim on PATH
-    to verify that the three relevant branches behave correctly. The
-    "installed + tool fails -> action exits non-zero" case is the bug fix
-    being verified (issue #527).
+    Asserts the generated snippet's shape: gate command, redirection, hint,
+    exit-0 branch, separator, and shell-safe quoting. Behavioural assertions
+    (snippet driven through ``bash``) live in
+    ``TestInstallCheckOrSkipShellBehavior`` below — those are POSIX-shell
+    specific and skipped on Windows.
     """
-
-    # --- Structural ---
 
     def test_snippet_contains_uv_pip_show_with_package(self) -> None:
         """The gate uses ``uv pip show <package>`` to detect installation."""
@@ -187,7 +186,25 @@ class TestInstallCheckOrSkip:
         # bash must echo back the original hint verbatim when the snippet runs.
         assert shlex.quote(hint) in snippet
 
-    # --- Behavioural (fake uv on PATH) ---
+
+@pytest.mark.skipif(
+    sys.platform == "win32",
+    reason=(
+        "Behavioural tests drive the snippet through bash -c with a fake "
+        "``uv`` shim on PATH. On GitHub's Windows runners, ``bash`` resolves "
+        "to ``wsl.exe`` and fails before the snippet is reached. The doit "
+        "task action only runs through POSIX shell in real use, so this "
+        "platform restriction matches reality."
+    ),
+)
+class TestInstallCheckOrSkipShellBehavior:
+    """Behavioural tests for ``install_check_or_skip`` (POSIX shells only).
+
+    Drive the snippet through ``bash -c`` against a fake ``uv`` shim on PATH
+    to verify that the three relevant branches behave correctly. The
+    "installed + tool fails -> action exits non-zero" case is the bug fix
+    being verified (issue #527).
+    """
 
     def _build_env(self, bindir: Path, *, installed: bool) -> dict[str, str]:
         """Build a minimal child env with the fake-uv directory ahead of system bins."""
