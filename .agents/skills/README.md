@@ -130,7 +130,7 @@ four CLIs even though the file format and load mechanism differ:
 | CLI | Directory | Load mechanism |
 | :--- | :--- | :--- |
 | Claude Code | `.claude/rules/` | `@./rules/*.md` in `.claude/CLAUDE.md` |
-| Gemini CLI | `.gemini/rules/` | `@./.gemini/rules/*.md` in `GEMINI.md` |
+| Gemini CLI | `.gemini/rules/` | One `@./.gemini/rules/<name>.md` line per rule file in `GEMINI.md` (literal paths only) |
 | GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
 | Codex CLI | `.agents/skills/<name>/` | `description:` frontmatter is the skill-gate trigger |
 

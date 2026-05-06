@@ -50,23 +50,27 @@ Target: **30 lines or fewer** per rule file. If a file grows past 30 lines, spli
 
 ## How to load
 
-Uncomment the `<!-- @./.gemini/rules/*.md -->` line in `GEMINI.md`:
+When you author a rule file (e.g., `codegen.md`), add a literal `@`-import for it to `GEMINI.md`:
 
 ```markdown
 @./AGENTS.md
-<!-- Uncomment when you add rule files. See .gemini/rules/README.md for the pattern. -->
-<!-- @./.gemini/rules/*.md -->
+@./.gemini/rules/codegen.md
+
+# Gemini CLI Instructions
+...
 ```
 
-becomes:
+Add one line per rule file. Do **not** use a glob like `@./.gemini/rules/*.md` — Gemini CLI's
+[Memory Import Processor](https://geminicli.com/docs/reference/memport/) only supports literal
+relative or absolute paths to specific files. Globs work in practice via undocumented behavior but
+emit a spurious `[ERROR] [ImportProcessor] Failed to import .../*.md: ENOENT` log on every run
+(the processor calls `access()` on the literal pattern before expanding it).
 
-```markdown
-@./AGENTS.md
-@./.gemini/rules/*.md
-```
+This is the inverse of Claude Code's `.claude/CLAUDE.md`, which does support glob imports — the two
+CLIs differ here despite using the same `@`-import syntax.
 
-Note: the line stays commented out in this template repository. Downstream consumers uncomment it
-after authoring their first rule file.
+Note: this template ships with no import line in `GEMINI.md`. Add the first line when you author
+your first rule file.
 
 ## Discipline: build from observed failures, not generic best-practices
 

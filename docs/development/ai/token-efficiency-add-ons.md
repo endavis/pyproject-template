@@ -559,8 +559,10 @@ API contract changes, etc.).
 
 Each rule file is skill-gated, capped at 30 lines, and built from documented observed failures —
 not from generic advice. The template ships a commented-out `@import` placeholder in
-`.claude/CLAUDE.md` and a commented-out `@` placeholder in `GEMINI.md`; downstream consumers
-uncomment them and add their own rule files.
+`.claude/CLAUDE.md` (which Claude Code honors as a no-op until uncommented). For Gemini, the
+template ships **no** `@`-import in `GEMINI.md` — Gemini's Memory Import Processor doesn't honor
+HTML comments and only supports literal file paths (not globs), so consumers add a literal
+`@./.gemini/rules/<name>.md` line per rule file when they author one.
 
 See [`.claude/rules/README.md`](../../../.claude/rules/README.md) and
 [`.gemini/rules/README.md`](../../../.gemini/rules/README.md) for the pattern, file structure, and
@@ -575,7 +577,7 @@ Gemini variants. The key contrast with those variants is the load mechanism:
 | CLI | Directory | Load mechanism |
 | :--- | :--- | :--- |
 | Claude Code | `.claude/rules/` | `@./rules/*.md` in `.claude/CLAUDE.md` |
-| Gemini CLI | `.gemini/rules/` | `@./.gemini/rules/*.md` in `GEMINI.md` |
+| Gemini CLI | `.gemini/rules/` | One `@./.gemini/rules/<name>.md` line per rule file in `GEMINI.md` (literal paths only) |
 | GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
 | Codex CLI | `.agents/skills/<name>/` | `description:` frontmatter is the skill-gate trigger |
 

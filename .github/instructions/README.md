@@ -117,7 +117,7 @@ Claude Code, Gemini CLI, and GitHub Copilot even though the file format differs:
 | CLI | Directory | Load mechanism |
 | :--- | :--- | :--- |
 | Claude Code | `.claude/rules/` | `@./rules/*.md` in `.claude/CLAUDE.md` |
-| Gemini CLI | `.gemini/rules/` | `@./.gemini/rules/*.md` in `GEMINI.md` |
+| Gemini CLI | `.gemini/rules/` | One `@./.gemini/rules/<name>.md` line per rule file in `GEMINI.md` (literal paths only) |
 | GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
 
 See [`.claude/rules/README.md`](../../.claude/rules/README.md) and

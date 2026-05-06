@@ -1,6 +1,4 @@
 @./AGENTS.md
-<!-- Uncomment when you add rule files. See .gemini/rules/README.md for the pattern. -->
-<!-- @./.gemini/rules/*.md -->
 
 # Gemini CLI Instructions
 
