@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778068477570,
+  "lastUpdate": 1778080006929,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7965,6 +7965,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.9400771652540103e-7",
             "extra": "mean: 1.5191698682568304 usec\nrounds: 56638"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d4b16c8dc3b467cfc96bd6874cabb48b0b1108da",
+          "message": "chore: switch .gemini/rules/ pattern to per-file @-imports (merges PR #553, addresses #552)\n\nGemini CLI's Memory Import Processor only documents support for literal\nrelative or absolute paths in @-imports — globs like @./.gemini/rules/*.md\nare undocumented behavior that emits a spurious ENOENT log on every run\n(the processor calls access() on the literal pattern before expanding it).\nThe HTML-comment toggle introduced in PR #543 also doesn't work — Gemini\nprocesses the directive regardless of HTML comments.\n\nReplace the dormant `<!-- @./.gemini/rules/*.md -->` scaffold in GEMINI.md\nwith no import line at all. When consumers author rules, they add a literal\n@./.gemini/rules/<name>.md line per file. Update .gemini/rules/README.md\nand three cross-reference tables (token-efficiency-add-ons,\n.github/instructions, .agents/skills) to match the corrected pattern.\n\nAddresses #552",
+          "timestamp": "2026-05-06T16:06:13+01:00",
+          "tree_id": "67d740a009485926bbb6b8f067ad963ad0d8e55b",
+          "url": "https://github.com/endavis/pyproject-template/commit/d4b16c8dc3b467cfc96bd6874cabb48b0b1108da"
+        },
+        "date": 1778080006279,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9020515.30116798,
+            "unit": "iter/sec",
+            "range": "stddev: 1.376183731737888e-8",
+            "extra": "mean: 110.85841181052258 nsec\nrounds: 89920"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9117751.105754025,
+            "unit": "iter/sec",
+            "range": "stddev: 3.32624943956073e-8",
+            "extra": "mean: 109.67616777441101 nsec\nrounds: 89358"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5685103.1902522035,
+            "unit": "iter/sec",
+            "range": "stddev: 2.179301201887607e-8",
+            "extra": "mean: 175.89830237639677 nsec\nrounds: 58576"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1686361.8020355452,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7521109318978904e-7",
+            "extra": "mean: 592.9925587693797 nsec\nrounds: 59130"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506059.4570431893,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7201610361377523e-7",
+            "extra": "mean: 1.9760523908451644 usec\nrounds: 54876"
           }
         ]
       }
