@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1777983602433,
+  "lastUpdate": 1778068477570,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -7906,6 +7906,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.727943690897857e-7",
             "extra": "mean: 2.0555077579478844 usec\nrounds: 52978"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7904ce2359258f9efd0ec7cd0c2523618291aa25",
+          "message": "feat: cross-agent delegation matrix (plan/implement/review across all 4 CLIs) (merges PR #551, addresses #550)\n\n* feat: cross-agent delegation matrix (plan/implement/review/adversarial-review)\n\nAdd 48 bridge files (4 sources x 3 non-self targets x 4 actions) so any of the\nfour AI CLIs (Claude, Codex, Gemini, Copilot) can delegate planning,\nimplementation, review, and adversarial review to any of the other three via\nexplicit user-invoked commands. Each bridge uses Hybrid C: prefer the target's\nexisting ghissue-* solo command/skill, fall back to inline workflow if headless\nmode does not resolve the slash/skill.\n\nNon-interactive flags per target:\n- claude -p\n- codex -a never exec\n- gemini -y -p\n- copilot --allow-all -p (order matters: --allow-all before -p)\n\nTwelve delegate-* skill names added to .gemini/settings.json skills.disabled to\nprevent Gemini from auto-loading the Codex-source skills (Gemini also reads\n.agents/skills/ per its own docs).\n\nVerified end-to-end on three target rows from Claude (codex/gemini/copilot\nplans for issue #550); both Hybrid C paths exercised — codex and copilot\nresolved the existing ghissue-plan skill in headless mode, gemini executed the\ninline fallback. tests/test_delegation_matrix.py adds 51 static assertions for\nfile presence and disabled-list completeness.\n\nAddresses #550\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n* docs: update AI_SETUP.md for cross-agent delegation matrix\n\nUpdate slash-command counts in the agent comparison table and\ncorrect the Copilot parity status statement to reflect the new\n.copilot/commands/ delegation tree added in #550.\n\nAddresses #550\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-06T12:54:04+01:00",
+          "tree_id": "72789794774b7102ca14a5e655c31d8c2d7b0faf",
+          "url": "https://github.com/endavis/pyproject-template/commit/7904ce2359258f9efd0ec7cd0c2523618291aa25"
+        },
+        "date": 1778068476903,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11730798.876222106,
+            "unit": "iter/sec",
+            "range": "stddev: 7.7233920469822e-9",
+            "extra": "mean: 85.24568621042194 nsec\nrounds: 110571"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11354781.044498526,
+            "unit": "iter/sec",
+            "range": "stddev: 7.726576667661231e-9",
+            "extra": "mean: 88.06862907184875 nsec\nrounds: 108649"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7935714.072518456,
+            "unit": "iter/sec",
+            "range": "stddev: 1.139235793798353e-8",
+            "extra": "mean: 126.01260464550015 nsec\nrounds: 79435"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2278513.2817098843,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4781717762623394e-7",
+            "extra": "mean: 438.88267320064136 nsec\nrounds: 58597"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 658254.2353525276,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9400771652540103e-7",
+            "extra": "mean: 1.5191698682568304 usec\nrounds: 56638"
           }
         ]
       }
