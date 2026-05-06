@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778083849719,
+  "lastUpdate": 1778087026075,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8083,6 +8083,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.499011459982071e-7",
             "extra": "mean: 2.0786884929774008 usec\nrounds: 50795"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f525a3bd8fef589d790c1745d99842e4d5b6173a",
+          "message": "chore: add uv-lock-check pre-commit hook for uv.lock consistency (merges PR #557, addresses #556)\n\nAdds a pre-commit hook that runs `uv lock --check` whenever `pyproject.toml`\nis staged, catching the case where a dependency change is committed without\nregenerating `uv.lock`. Previously, lock-file drift was caught only by CI.\n\nHook is scoped via `files: ^pyproject\\.toml$`, so commits that don't touch\n`pyproject.toml` are unaffected. `entry:` uses a YAML block scalar because\nthe wrapped recovery message contains `: ` which is invalid in inline form.\n\nAlso adds `uv-lock-check` to the hook tables in docs/development/ci-cd-testing.md\nand docs/development/doit-tasks-reference.md, and links #556 from ADR 9009.\n\nAddresses #556\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-06T18:03:07+01:00",
+          "tree_id": "b1b6dc035cc12489cddf73b7001400dfd6b2e61c",
+          "url": "https://github.com/endavis/pyproject-template/commit/f525a3bd8fef589d790c1745d99842e4d5b6173a"
+        },
+        "date": 1778087024951,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8837180.297968768,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5822823715748126e-8",
+            "extra": "mean: 113.15826613041386 nsec\nrounds: 90745"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8950923.344274681,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0705128019171099e-8",
+            "extra": "mean: 111.72031773008474 nsec\nrounds: 91241"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5687695.567464103,
+            "unit": "iter/sec",
+            "range": "stddev: 1.382081659949166e-8",
+            "extra": "mean: 175.81813023193448 nsec\nrounds: 57697"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1653913.5712311487,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9251165654351806e-7",
+            "extra": "mean: 604.6265157952691 nsec\nrounds: 61767"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 495042.49241870054,
+            "unit": "iter/sec",
+            "range": "stddev: 5.141844917513771e-7",
+            "extra": "mean: 2.0200286143400654 usec\nrounds: 55916"
           }
         ]
       }
