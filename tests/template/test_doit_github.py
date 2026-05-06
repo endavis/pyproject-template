@@ -5,11 +5,12 @@ import json
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from rich.console import Console
 
+import tools.doit.github as github_mod
 from tools.doit.github import (
     _PR_TITLE_PATTERN,
     _check_branch_up_to_date,
@@ -22,8 +23,10 @@ from tools.doit.github import (
     _gh_env_exists,
     _gh_env_list,
     _gh_repo_slug,
+    _is_transient_gh_error,
     _load_labels_file,
     _reconcile_labels,
+    _run_gh_with_retry,
     task_env_create,
     task_env_list,
     task_labels_sync,
@@ -770,8 +773,6 @@ class TestGhEnvExists:
 
         cmd = mock_subprocess.call_args.args[0]
         assert cmd == ["gh", "api", "repos/acme/widgets/environments/pypi", "--silent"]
-        # The helper must not raise on a non-zero exit code.
-        assert mock_subprocess.call_args.kwargs["check"] is False
 
 
 class TestGhEnvCreate:
@@ -1043,3 +1044,272 @@ class TestTaskPublishSetup:
         # The owner/repo values from _gh_repo_slug must appear.
         assert "acme" in collapsed
         assert "widgets" in collapsed
+
+
+class TestIsTransientGhError:
+    """Tests for _is_transient_gh_error string classifier."""
+
+    def test_5xx_gateway_timeout(self) -> None:
+        """HTTP 504 Gateway Timeout is classified as transient."""
+        result = _is_transient_gh_error("non-200 OK status code: 504 Gateway Timeout")
+        assert result is not None
+
+    def test_503_service_unavailable(self) -> None:
+        """503 Service Unavailable substring is classified as transient."""
+        result = _is_transient_gh_error("503 Service Unavailable")
+        assert result is not None
+
+    def test_unicorn_marker(self) -> None:
+        """GitHub's 'Unicorn!' error page is classified as transient."""
+        result = _is_transient_gh_error("Unicorn!")
+        assert result is not None
+
+    def test_connection_refused(self) -> None:
+        """'connection refused' is classified as transient."""
+        result = _is_transient_gh_error("connection refused")
+        assert result is not None
+
+    def test_io_timeout(self) -> None:
+        """'i/o timeout' is classified as transient."""
+        result = _is_transient_gh_error("i/o timeout")
+        assert result is not None
+
+    def test_http_404_not_transient(self) -> None:
+        """HTTP 404 Not Found is NOT transient."""
+        result = _is_transient_gh_error("HTTP 404 Not Found")
+        assert result is None
+
+    def test_validation_error_not_transient(self) -> None:
+        """Validation errors are NOT transient."""
+        result = _is_transient_gh_error("Validation Failed: title required")
+        assert result is None
+
+    def test_empty_string_not_transient(self) -> None:
+        """Empty string returns None (not transient)."""
+        result = _is_transient_gh_error("")
+        assert result is None
+
+
+class TestRunGhWithRetry:
+    """Tests for _run_gh_with_retry retry logic."""
+
+    def test_success_on_first_attempt(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Successful first attempt returns result without calling sleep."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+
+        mock_subprocess.register({("gh", "issue"): {"returncode": 0, "stdout": "ok"}})
+        result = _run_gh_with_retry(["gh", "issue", "list"], check=True)
+
+        assert result.stdout == "ok"
+        sleep_mock.assert_not_called()
+
+    def test_success_after_one_transient_retry(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """First attempt raises transient 504, second attempt succeeds."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "3")
+
+        call_count = 0
+
+        def spec(cmd: list[str]) -> MagicMock | BaseException:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=cmd,
+                    stderr="non-200 OK status code: 504 Gateway Timeout",
+                )
+            return MagicMock(returncode=0, stdout="merged", stderr="")
+
+        mock_subprocess.register({("gh", "pr"): spec})
+        result = _run_gh_with_retry(["gh", "pr", "merge", "42"], check=True)
+
+        assert result.stdout == "merged"
+        assert sleep_mock.call_count == 1
+
+    def test_all_retries_exhausted_check_true(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """All retries exhausted with check=True raises CalledProcessError."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "2")
+
+        mock_subprocess.register(
+            {
+                ("gh", "api"): subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=["gh", "api"],
+                    stderr="503 Service Unavailable",
+                )
+            }
+        )
+
+        with pytest.raises(subprocess.CalledProcessError):
+            _run_gh_with_retry(["gh", "api", "/repos"], check=True)
+
+        # 2 retries means 3 total attempts → 2 sleeps
+        assert sleep_mock.call_count == 2
+
+    def test_non_retryable_4xx_raises_immediately(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Non-transient (4xx) failure with check=True raises without sleeping."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+
+        mock_subprocess.register(
+            {
+                ("gh", "issue"): subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=["gh", "issue"],
+                    stderr="HTTP 422 Validation Failed: title required",
+                )
+            }
+        )
+
+        with pytest.raises(subprocess.CalledProcessError):
+            _run_gh_with_retry(["gh", "issue", "create"], check=True)
+
+        sleep_mock.assert_not_called()
+
+    def test_check_false_transient_returns_after_exhaustion(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """check=False with transient errors retries then returns CompletedProcess."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "2")
+
+        mock_subprocess.register(
+            {
+                ("gh", "api"): subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=["gh", "api"],
+                    stderr="503 Service Unavailable",
+                )
+            }
+        )
+
+        result = _run_gh_with_retry(["gh", "api", "/test"], check=False)
+
+        assert result.returncode == 1
+        assert "503" in result.stderr
+        assert sleep_mock.call_count == 2
+
+    def test_check_false_non_transient_returns_immediately(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """check=False with non-transient error returns immediately without retry."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+
+        mock_subprocess.register(
+            {
+                ("gh", "api"): subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=["gh", "api"],
+                    stderr="HTTP 404 Not Found",
+                )
+            }
+        )
+
+        result = _run_gh_with_retry(["gh", "api", "/missing"], check=False)
+
+        assert result.returncode == 1
+        sleep_mock.assert_not_called()
+
+    def test_doit_gh_retries_zero_no_sleep(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """DOIT_GH_RETRIES=0 means single attempt — failure raises, no sleep."""
+        sleep_mock = MagicMock()
+        monkeypatch.setattr(github_mod.time, "sleep", sleep_mock)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "0")
+
+        mock_subprocess.register(
+            {
+                ("gh", "label"): subprocess.CalledProcessError(
+                    returncode=1,
+                    cmd=["gh", "label"],
+                    stderr="503 Service Unavailable",
+                )
+            }
+        )
+
+        with pytest.raises(subprocess.CalledProcessError):
+            _run_gh_with_retry(["gh", "label", "list"])
+
+        sleep_mock.assert_not_called()
+
+    def test_doit_gh_backoff_base_zero_sleep_near_zero(
+        self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """DOIT_GH_BACKOFF_BASE=0.0 results in sleep called with ~0.0 delay."""
+        sleep_calls: list[float] = []
+        monkeypatch.setattr(github_mod.time, "sleep", lambda s: sleep_calls.append(s))
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "1")
+        monkeypatch.setenv("DOIT_GH_BACKOFF_BASE", "0.0")
+
+        call_count = 0
+
+        def spec(cmd: list[str]) -> MagicMock | BaseException:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return subprocess.CalledProcessError(
+                    returncode=1, cmd=cmd, stderr="503 Service Unavailable"
+                )
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_subprocess.register({("gh", "repo"): spec})
+        _run_gh_with_retry(["gh", "repo", "view"])
+
+        assert len(sleep_calls) == 1
+        assert sleep_calls[0] == pytest.approx(0.0, abs=1e-9)
+
+    def test_retry_banner_printed(
+        self,
+        mock_subprocess: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """Retry banner is printed to console on transient failure."""
+        monkeypatch.setattr(github_mod.time, "sleep", lambda *_: None)
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "1")
+
+        call_count = 0
+
+        def spec(cmd: list[str]) -> MagicMock | BaseException:
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return subprocess.CalledProcessError(
+                    returncode=1, cmd=cmd, stderr="503 Service Unavailable"
+                )
+            return MagicMock(returncode=0, stdout="", stderr="")
+
+        mock_subprocess.register({("gh", "pr"): spec})
+
+        with patch("tools.doit.github.Console") as mock_console_cls:
+            mock_console = MagicMock()
+            mock_console_cls.return_value = mock_console
+            _run_gh_with_retry(["gh", "pr", "view"])
+
+        printed = " ".join(str(call.args[0]) for call in mock_console.print.call_args_list)
+        assert "Retry" in printed
+        assert "1/1" in printed
