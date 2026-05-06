@@ -363,6 +363,7 @@ uv run pre-commit autoupdate
 | `no-commit-to-main` | Prevent direct commits to main branch |
 | `no-local-config` | Prevent committing local config files |
 | `protect-dynamic-version` | Protect `dynamic = ["version"]` in `pyproject.toml` |
+| `uv-lock-check` | Validate `uv.lock` is in sync with `pyproject.toml` when `pyproject.toml` is staged |
 
 **Commit-msg stage** (validates commit messages):
 

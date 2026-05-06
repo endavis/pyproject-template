@@ -1138,6 +1138,7 @@ The following hooks run automatically on `git commit`:
 | `no-commit-to-main` | Prevent direct commits to main |
 | `no-local-config` | Prevent committing local config files |
 | `protect-dynamic-version` | Protect version configuration |
+| `uv-lock-check` | Validate `uv.lock` is in sync with `pyproject.toml` when `pyproject.toml` is staged |
 | `conventional-pre-commit` | Enforce conventional commit format |
 
 ### Dynamic Version Protection
