@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778080006929,
+  "lastUpdate": 1778083849719,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8024,6 +8024,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.7201610361377523e-7",
             "extra": "mean: 1.9760523908451644 usec\nrounds: 54876"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fbb5eaf90395fbebb638f6fba8d0e3638edfb59c",
+          "message": "chore: add retry mechanism for transient gh subprocess failures (merges PR #555, addresses #554)\n\nWraps all 14 gh subprocess.run calls in tools/doit/github.py with a new\n_run_gh_with_retry helper that retries on HTTP 5xx, network errors, and\nGitHub overload pages (Unicorn!). Existing error handling (sys.exit,\nwarn-and-continue, CalledProcessError propagation, check=False inspection)\nis preserved — it only fires after the retry budget is exhausted.\n\nDefaults: 3 attempts with exponential backoff (~2s/5s/11s). Tunable via\nDOIT_GH_RETRIES and DOIT_GH_BACKOFF_BASE; set DOIT_GH_RETRIES=0 for\nfast-fail single-attempt mode.\n\nMotivated by PR #553 where gh issue close 552 returned a 504 after the\nmerge succeeded, leaving the issue open and requiring manual recovery.\n\nAddresses #554",
+          "timestamp": "2026-05-06T17:10:11+01:00",
+          "tree_id": "648d8d8157d55e7798615b180b6aacfe82faf00d",
+          "url": "https://github.com/endavis/pyproject-template/commit/fbb5eaf90395fbebb638f6fba8d0e3638edfb59c"
+        },
+        "date": 1778083849146,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8744593.509285081,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5279482461623188e-8",
+            "extra": "mean: 114.35637333378527 nsec\nrounds: 86716"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8786688.389148094,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0937778807677987e-8",
+            "extra": "mean: 113.80851985544855 nsec\nrounds: 87559"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 4862084.469167351,
+            "unit": "iter/sec",
+            "range": "stddev: 5.780981157631904e-8",
+            "extra": "mean: 205.67310303665982 nsec\nrounds: 52729"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1593150.7961581016,
+            "unit": "iter/sec",
+            "range": "stddev: 3.7362970748443433e-7",
+            "extra": "mean: 627.6869725147861 nsec\nrounds: 60902"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 481072.56252121454,
+            "unit": "iter/sec",
+            "range": "stddev: 6.499011459982071e-7",
+            "extra": "mean: 2.0786884929774008 usec\nrounds: 50795"
           }
         ]
       }
