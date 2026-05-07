@@ -78,4 +78,4 @@ After the agent returns, show the user:
 Tell the user:
 - Review the changes and test as needed
 - Discuss any fixes directly in conversation (no command needed)
-- When satisfied, use `/ghissue-finalize` to commit and create a PR
+- When satisfied, use `/ghi-finalize` to commit and create a PR

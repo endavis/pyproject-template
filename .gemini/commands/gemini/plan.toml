@@ -99,6 +99,6 @@ Tell the user:
 ## See Also
 
 - `/gemini:implement {{args}}` — implement the approved plan.
-- `/ghissue-finalize` — commit changes and create a PR.
+- `/ghi-finalize` — commit changes and create a PR.
 - `/multi-plan claude gemini {{args}}` — multi-agent orchestration variant (runs multiple agents in parallel).
 """

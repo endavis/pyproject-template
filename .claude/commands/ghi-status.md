@@ -53,8 +53,8 @@ Present a status summary and suggest what to do next:
 | :--- | :--- |
 | On feature branch, no plan comment | Run `/<currentai>:plan <N>` to create a plan |
 | On feature branch, plan exists, no code changes | Run `/<currentai>:implement <N>` to start implementation |
-| On feature branch, code changes, not committed | Review changes, then run `/ghissue-finalize` to commit and create PR |
-| On feature branch, committed, no PR | Run `/ghissue-finalize` to create the PR |
+| On feature branch, code changes, not committed | Review changes, then run `/ghi-finalize` to commit and create PR |
+| On feature branch, committed, no PR | Run `/ghi-finalize` to create the PR |
 | On feature branch, PR exists (open) | PR is open — waiting for review/merge |
 | On feature branch, PR exists (merged) | Run `doit pr_merge --auto-close` or `gh issue close <N>` to close the issue |
 | Issue is already closed | Work complete — switch back to `main` |
@@ -71,5 +71,5 @@ Present a status summary and suggest what to do next:
 - **PR:** None
 
 ## Suggested next step
-Run `/ghissue-finalize` to commit your changes and create a PR.
+Run `/ghi-finalize` to commit your changes and create a PR.
 ```

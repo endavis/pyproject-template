@@ -62,6 +62,6 @@ Report to the parent:
 ## Constraints
 
 - **Do NOT switch branches.** The parent `/claude:implement` command has already created and checked out the correct branch.
-- **Do NOT commit.** Committing is handled by the parent's `/ghissue-finalize` step, not by you.
+- **Do NOT commit.** Committing is handled by the parent's `/ghi-finalize` step, not by you.
 - **Do NOT enter plan mode.** Do not call `EnterPlanMode`. You run with `permissionMode: default` so you can edit files directly.
 - **All new code must be type-annotated** (mypy strict mode is enforced by `doit check`).

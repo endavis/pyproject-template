@@ -4,7 +4,7 @@ Delegate a read-only code review of the current changes to Gemini CLI. Optional 
 
 ## Instructions
 
-Use the Bash tool to invoke Gemini non-interactively. There is no existing `/ghissue-review` command, so the prompt is fully inlined.
+Use the Bash tool to invoke Gemini non-interactively. The review prompt is inlined directly.
 
 ```bash
 gemini -y -p 'Review the current uncommitted changes and the current branch vs main, read-only. 1) Run `git status` and `git diff` to see what changed. 2) Run `git log main..HEAD --oneline` for branch context. 3) Read AGENTS.md and any relevant ADRs in docs/decisions/. 4) Identify correctness issues, risks, missing tests, style/convention violations, and concrete suggestions. 5) Print findings to stdout in a structured format (Summary / Issues / Suggestions). Do NOT modify any files. Focus area (optional): $ARGUMENTS'

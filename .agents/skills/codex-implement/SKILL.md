@@ -80,4 +80,4 @@ If the issue number is missing, ask for it before continuing.
    - Fix failures that are part of the issue scope.
    - Do not paper over failing tests by weakening them without user discussion.
 
-10. Summarize what changed, list the changed files, report the validation result, and tell the user the next workflow step is `$ghissue-finalize`.
+10. Summarize what changed, list the changed files, report the validation result, and tell the user the next workflow step is `$ghi-finalize`.
