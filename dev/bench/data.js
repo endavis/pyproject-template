@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778160216260,
+  "lastUpdate": 1778168635112,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8201,6 +8201,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.46824989292871e-7",
             "extra": "mean: 2.132567614570698 usec\nrounds: 57495"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "63df93733cac1321f0a859559bc689ccaf6a730e",
+          "message": "feat: add opt-in Claude Max usage helper for statusline (merges PR #562, addresses #559)\n\n* feat: add opt-in Claude Max usage helper for statusline display\n\nAdds tools/statusline/claude-usage.sh, a bash helper that queries the\nAnthropic OAuth usage API and emits \"5h:N% 7d:N%\" suitable for the\nstatusline. The helper is wired into .claude/statusline-command.sh\nbehind the CLAUDE_USAGE_STATUSLINE env var (default off), so the\ntemplate's default behavior is unchanged. 60s cache, graceful \"?\"\nfallback on any failure (missing creds, network error, schema change).\n\nAddresses #559\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n* fix: skip bash-helper tests on Windows runners\n\nThe Windows GitHub Actions runner's `bash` resolves to `wsl.exe bash`,\nand WSL has no installed distribution — so the subprocess invocations\nreturn immediately with an \"install a distribution\" message instead of\nactually running the script. The helper is a bash script targeting\nLinux/macOS and is not a useful unit on Windows. Skip the whole module\nwith a sys.platform guard.\n\nCo-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-07T16:43:29+01:00",
+          "tree_id": "c18bca8876ce19778161b3f9690c13c181cc29b7",
+          "url": "https://github.com/endavis/pyproject-template/commit/63df93733cac1321f0a859559bc689ccaf6a730e"
+        },
+        "date": 1778168634381,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8692638.26605255,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0593186259040391e-7",
+            "extra": "mean: 115.03987275132687 nsec\nrounds: 88881"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9102305.40003088,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2345092967134922e-8",
+            "extra": "mean: 109.86227730796722 nsec\nrounds: 90001"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5435283.201292708,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5481678242861087e-8",
+            "extra": "mean: 183.9830534979601 nsec\nrounds: 54544"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1692230.0236855843,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6287346666368245e-7",
+            "extra": "mean: 590.936211982609 nsec\nrounds: 60607"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 480247.6069762094,
+            "unit": "iter/sec",
+            "range": "stddev: 7.432799516042039e-7",
+            "extra": "mean: 2.0822592043640067 usec\nrounds: 51959"
           }
         ]
       }
