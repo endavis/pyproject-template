@@ -4,7 +4,7 @@ This directory is the GitHub Copilot CLI configuration directory for this reposi
 
 ## Workflow Skills
 
-Copilot CLI automatically discovers project skills from `.claude/commands/`. No separate Copilot command files are needed — the full workflow (`/ghissue-plan`, `/ghissue-implement`, `/ghissue-finalize`, `/ghissue-close`, `/ghissue-status`, etc.) is available out of the box.
+Copilot CLI ships self-action commands in `.copilot/commands/copilot/` (`/copilot:plan`, `/copilot:implement`, `/copilot:review`, `/copilot:adversarial-review`). It also auto-discovers some commands from `.claude/commands/` (e.g. `/ghissue-finalize`, `/ghissue-status`). Cross-agent bridge commands live in `.copilot/commands/<target>/`.
 
 ## Dangerous Command Hook
 
@@ -18,7 +18,7 @@ No changes to this hook are needed when adding new slash commands.
 
 ## Subagent / Implement Worker
 
-The `implement-worker` subagent used by `/ghissue-implement` is defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when spawning the subagent.
+The `implement-worker` subagent used by `/claude:implement` (and discoverable by Copilot) is defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when spawning the subagent.
 
 ## Temporary Files
 

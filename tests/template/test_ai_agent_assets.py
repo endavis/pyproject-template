@@ -10,8 +10,10 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 def test_codex_workflow_skills_exist() -> None:
     """Codex workflow skills should be present in the repo skills directory."""
     skill_paths = [
-        REPO_ROOT / ".agents" / "skills" / "ghissue-plan" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "ghissue-implement" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-review" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-adversarial-review" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "ghissue-finalize" / "SKILL.md",
     ]
 
@@ -42,6 +44,51 @@ def test_multi_orchestrator_files_exist() -> None:
 
     for path in paths:
         assert path.exists(), f"Missing multi-orchestrator file: {path}"
+
+
+def test_self_action_grid_exists() -> None:
+    """All 16 self-action files (4 agents x 4 actions) should exist."""
+    paths = [
+        # Claude self-action
+        REPO_ROOT / ".claude" / "commands" / "claude" / "plan.md",
+        REPO_ROOT / ".claude" / "commands" / "claude" / "implement.md",
+        REPO_ROOT / ".claude" / "commands" / "claude" / "review.md",
+        REPO_ROOT / ".claude" / "commands" / "claude" / "adversarial-review.md",
+        # Gemini self-action
+        REPO_ROOT / ".gemini" / "commands" / "gemini" / "plan.toml",
+        REPO_ROOT / ".gemini" / "commands" / "gemini" / "implement.toml",
+        REPO_ROOT / ".gemini" / "commands" / "gemini" / "review.toml",
+        REPO_ROOT / ".gemini" / "commands" / "gemini" / "adversarial-review.toml",
+        # Copilot self-action
+        REPO_ROOT / ".copilot" / "commands" / "copilot" / "plan.md",
+        REPO_ROOT / ".copilot" / "commands" / "copilot" / "implement.md",
+        REPO_ROOT / ".copilot" / "commands" / "copilot" / "review.md",
+        REPO_ROOT / ".copilot" / "commands" / "copilot" / "adversarial-review.md",
+        # Codex self-action (skills)
+        REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-review" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-adversarial-review" / "SKILL.md",
+    ]
+
+    for path in paths:
+        assert path.exists(), f"Missing self-action file: {path}"
+
+
+def test_retired_self_action_aliases_are_removed() -> None:
+    """The old ghissue-plan/implement/close self-action aliases should be gone."""
+    removed = [
+        REPO_ROOT / ".claude" / "commands" / "ghissue-plan.md",
+        REPO_ROOT / ".claude" / "commands" / "ghissue-implement.md",
+        REPO_ROOT / ".claude" / "commands" / "ghissue-close.md",
+        REPO_ROOT / ".gemini" / "commands" / "ghissue-plan.toml",
+        REPO_ROOT / ".gemini" / "commands" / "ghissue-implement.toml",
+        REPO_ROOT / ".agents" / "skills" / "ghissue-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "ghissue-implement" / "SKILL.md",
+    ]
+
+    for path in removed:
+        assert not path.exists(), f"Retired self-action file should not exist: {path}"
 
 
 def test_retired_dual_agent_files_are_removed() -> None:
@@ -82,7 +129,7 @@ def test_ai_setup_documents_codex_skills_workflow() -> None:
     content = (REPO_ROOT / "docs" / "development" / "AI_SETUP.md").read_text(encoding="utf-8")
 
     assert ".agents/skills" in content
-    assert "$ghissue-plan" in content
+    assert "$codex-plan" in content
     assert "shared dangerous-command hook" in content
 
 
@@ -94,7 +141,7 @@ def test_slash_commands_doc_mentions_codex_skills_instead_of_custom_commands() -
 
     assert "repo-scoped skills" in content
     assert "/skills" in content
-    assert "$ghissue-implement" in content
+    assert "$codex-implement" in content
 
 
 def test_enforcement_principles_document_codex_hook_support() -> None:

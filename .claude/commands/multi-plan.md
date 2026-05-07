@@ -66,7 +66,7 @@ Save the subagent's output as Claude's plan.
 #### If `gemini` is in the agent list:
 
 ```bash
-gemini -y -p 'Plan the implementation for GitHub issue #<issue> in the current repository. If the /ghissue-plan command is available, run it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Gemini* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.' 2>/dev/null
+gemini -y -p 'Plan the implementation for GitHub issue #<issue> in the current repository. If the /gemini:plan command is available, run it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Gemini* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.' 2>/dev/null
 ```
 
 Capture stdout as Gemini's plan.
@@ -74,7 +74,7 @@ Capture stdout as Gemini's plan.
 #### If `copilot` is in the agent list:
 
 ```bash
-copilot --allow-all -p 'Plan the implementation for GitHub issue #<issue> in the current repository. If the /ghissue-plan command is available, run it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Copilot* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.' 2>/dev/null
+copilot --allow-all -p 'Plan the implementation for GitHub issue #<issue> in the current repository. If the /copilot:plan command is available, run it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Copilot* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.' 2>/dev/null
 ```
 
 Capture stdout as Copilot's plan.
@@ -82,7 +82,7 @@ Capture stdout as Copilot's plan.
 #### If `codex` is in the agent list:
 
 ```bash
-codex -a never exec 'Plan the implementation for GitHub issue #<issue> in the current repository. If the $ghissue-plan skill is available, activate it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Codex* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.'
+codex -a never exec 'Plan the implementation for GitHub issue #<issue> in the current repository. If the $codex-plan skill is available, activate it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Codex* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.'
 ```
 
 Capture stdout as Codex's plan.
@@ -129,4 +129,4 @@ gh issue comment <issue> --body "<synthesized plan>"
 
 Tell the user:
 - All agent plans plus the synthesized plan have been posted to issue #<issue>
-- When ready, use `/ghissue-implement <issue>` to start implementation
+- When ready, use `/<currentai>:implement <issue>` (e.g. `/claude:implement <issue>`) to start implementation

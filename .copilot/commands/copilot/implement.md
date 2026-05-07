@@ -4,9 +4,7 @@ Implement the plan for GitHub issue #$ARGUMENTS.
 
 ## Instructions
 
-The implementation is delegated to a sub-agent (Task tool) so raw tool output stays out of the main conversation context. The agent does the coding; you receive the summary for user review.
-
-**Plan-mode trap:** parent plan-mode state propagates to the spawned sub-agent mid-execution and freezes it after its first non-readonly action (typically the first `Write`). Check your Claude Code status line before running — if it shows "plan mode", exit before invoking.
+This command performs the implementation of an approved plan for the specified issue. Copilot executes the implementation steps directly within the main conversation context.
 
 ### Step 1: Validate preconditions
 
@@ -22,7 +20,7 @@ The implementation is delegated to a sub-agent (Task tool) so raw tool output st
    gh api repos/{owner}/{repo}/issues/$ARGUMENTS/comments --jq '.[].body' | grep -E "^#+ Implementation Plan for"
    ```
    - If no plan comment is found, tell the user:
-     > "No implementation plan found for issue #$ARGUMENTS. Run `/ghissue-plan $ARGUMENTS` first."
+     > "No implementation plan found for issue #$ARGUMENTS. Run `/copilot:plan $ARGUMENTS` first."
    - Stop and wait for the user.
 
 3. **Check current branch state:**
@@ -57,19 +55,27 @@ Only if not already on the correct branch:
    git checkout -b <type>/$ARGUMENTS-<short-description>
    ```
 
-### Step 3: Spawn the implementation subagent
+### Step 3: Implementation
 
-Use the Task tool with `subagent_type: "implement-worker"`. In the prompt, pass:
+Execute the implementation directly in the current context:
 
-- The issue number (so the subagent can fetch the plan).
-- The branch name (for context; the subagent will not switch branches).
-- Any issue-specific notes or scope clarifications.
+1. **Read the plan:** Fetch the plan comment again and use it as your implementation guide.
+2. **Read project rules:**
+   - Read `AGENTS.md` — understand workflow, conventions, and patterns.
+   - Read `.github/CONTRIBUTING.md` — understand commit format.
+3. **Explore the codebase:** Identify relevant files, modules, and tests if not already known from the planning phase.
+4. **Implement changes:**
+   - Create or modify the files as specified in the plan.
+   - Follow existing patterns and conventions.
+   - **Always include tests:** Add or update test files to verify your changes.
 
-The subagent carries its own system prompt covering project rules, plan fetch, implementation, and validation — this command does not repeat them. The subagent has `permissionMode: default`, which (per Claude Code's sub-agent precedence rules) should override parent plan mode for operations inside the subagent's context.
+### Step 4: Run validation
 
-### Step 4: Present changes to user
+1. Run `doit check` and iterate on any failures until they are resolved.
 
-After the agent returns, show the user:
+### Step 5: Present changes to user
+
+Show the user:
 - Summary of what was implemented
 - Files changed
 - Test results
@@ -77,5 +83,5 @@ After the agent returns, show the user:
 
 Tell the user:
 - Review the changes and test as needed
-- Discuss any fixes directly in conversation (no command needed)
+- Discuss any fixes directly in conversation
 - When satisfied, use `/ghissue-finalize` to commit and create a PR

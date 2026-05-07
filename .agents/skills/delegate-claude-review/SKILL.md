@@ -21,7 +21,7 @@ The user may include optional focus text after the trigger.
 ## Instructions
 
 1. Capture any focus text from the user's request.
-2. Run Claude Code non-interactively. There is no existing `/ghissue-review` command — the prompt is fully inlined.
+2. Run Claude Code non-interactively. Hybrid C: prefer the existing `/claude:review` command if available, otherwise the prompt is fully inlined.
 
    ```bash
    claude -p 'Review the current uncommitted changes and the current branch vs main, read-only. 1) Run `git status` and `git diff` to see what changed. 2) Run `git log main..HEAD --oneline` for branch context. 3) Read AGENTS.md and any relevant ADRs in docs/decisions/. 4) Identify correctness issues, risks, missing tests, style/convention violations, and concrete suggestions. 5) Print findings to stdout in a structured format (Summary / Issues / Suggestions). Do NOT modify any files. Focus area (optional): <focus>'

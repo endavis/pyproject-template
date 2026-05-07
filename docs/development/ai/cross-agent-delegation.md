@@ -4,7 +4,7 @@ A consistent, explicit-invocation interface that lets any of the four supported 
 
 ## Why this exists
 
-Each agent already drives *itself* through the issue-driven workflow (`ghissue-plan`, `ghissue-implement`, `ghissue-finalize`). This matrix adds the missing piece: deliberate, user-invoked handoff *between* agents, without depending on third-party plugins like `openai/codex-plugin-cc` or community Gemini/Copilot forks.
+Each agent already drives *itself* through the issue-driven workflow (`/<ai>:plan`, `/<ai>:implement`, `/ghissue-finalize`). This matrix adds the missing piece: deliberate, user-invoked handoff *between* agents, without depending on third-party plugins like `openai/codex-plugin-cc` or community Gemini/Copilot forks.
 
 The matrix replaces what would otherwise be a patchwork of inconsistent third-party plugins. It runs on top of the CLIs' existing non-interactive modes (`-p` / `exec`) and uses the same command names across all hosts, so users learn the surface once.
 
@@ -13,28 +13,30 @@ The matrix replaces what would otherwise be a patchwork of inconsistent third-pa
 `<prefix><target>:<action>` where:
 
 - **Prefix:** `/` on Claude Code, Gemini CLI, and Copilot CLI; `$` on Codex CLI (Codex's repo-defined commands are skills, not slash commands; OpenAI deprecated `~/.codex/prompts/`).
-- **Target:** `claude`, `codex`, `gemini`, `copilot` — the agent being delegated to. Always one of the *other* three.
+- **Target:** `claude`, `codex`, `gemini`, `copilot` — the agent to invoke. Can be the **same** agent (self-action) or one of the other three (cross-agent delegation).
 - **Action:** `plan`, `implement`, `review`, `adversarial-review`.
+
+Self-action (`/claude:plan`, `/gemini:implement`, `$codex-review`, etc.) and cross-agent delegation (`/gemini:plan` from Claude, `/claude:plan` from Gemini, etc.) share the same naming convention. For self-action the command body runs the work natively in the host agent; for cross-agent delegation it shells out to the target CLI.
 
 | Action | Argument | Notes |
 | :--- | :--- | :--- |
-| `plan` | issue number (required) | Prefers the target's existing `ghissue-plan` skill/command if available; otherwise inline workflow. |
-| `implement` | issue number (required) | Prefers the target's existing `ghissue-implement` skill/command if available; otherwise inline workflow. |
-| `review` | optional focus area | No equivalent solo command exists — the prompt is fully inlined. Reviews current uncommitted changes plus branch-vs-main. |
+| `plan` | issue number (required) | Prefers the target's existing `/<target>:plan` or `$<target>-plan` if available; otherwise inline workflow. |
+| `implement` | issue number (required) | Prefers the target's existing `/<target>:implement` or `$<target>-implement` if available; otherwise inline workflow. |
+| `review` | optional focus area | Reviews current PR or branch-vs-main changes. |
 | `adversarial-review` | optional focus | Steerable challenge review — pressure-tests design, hidden assumptions, alternatives, failure modes. |
 
 ## Matrix
 
-The 4 sources × 3 targets × 4 actions = 48 cells. Self-target is excluded (use the corresponding `ghissue-*` self-action instead).
+The 4 sources × 4 targets × 4 actions = 64 cells (including self-action). Cross-agent delegation is 4 × 3 × 4 = 48 cells.
 
-| Source ↓ / Target → | claude | codex | gemini | copilot |
+| Source ↓ / Target → | claude (self) | codex | gemini | copilot |
 | :--- | :--- | :--- | :--- | :--- |
-| **claude** (`.claude/commands/`) | — | `/codex:{plan,implement,review,adversarial-review}` | `/gemini:{...}` | `/copilot:{...}` |
-| **codex** (`.agents/skills/`) | `$delegate-claude-{...}` | — | `$delegate-gemini-{...}` | `$delegate-copilot-{...}` |
-| **gemini** (`.gemini/commands/`) | `/claude:{...}` | `/codex:{...}` | — | `/copilot:{...}` |
-| **copilot** (`.copilot/commands/`) | `/claude:{...}` | `/codex:{...}` | `/gemini:{...}` | — |
+| **claude** (`.claude/commands/`) | `/claude:{plan,implement,review,adversarial-review}` | `/codex:{...}` | `/gemini:{...}` | `/copilot:{...}` |
+| **codex** (`.agents/skills/`) | `$delegate-claude-{...}` | `$codex-{plan,implement,review,adversarial-review}` | `$delegate-gemini-{...}` | `$delegate-copilot-{...}` |
+| **gemini** (`.gemini/commands/`) | `/claude:{...}` | `/codex:{...}` | `/gemini:{plan,implement,review,adversarial-review}` | `/copilot:{...}` |
+| **copilot** (`.copilot/commands/`) | `/claude:{...}` | `/codex:{...}` | `/gemini:{...}` | `/copilot:{plan,implement,review,adversarial-review}` |
 
-Each cell expands to `{plan, implement, review, adversarial-review}`.
+Each cell expands to `{plan, implement, review, adversarial-review}`. The diagonal (self-action) cells use the same `<ai>:<action>` naming convention; they run natively in the host agent rather than shelling out.
 
 ## Non-interactive flags per CLI
 
@@ -53,8 +55,8 @@ These flags are intentional: in delegated invocations, the human is at the *sour
 
 Each command body is a prompt that the source agent reads. The body tells the source agent to invoke the target's CLI in non-interactive mode via the source's tool layer (Bash/exec) and pass a prompt that:
 
-1. **Asks the target to activate its existing solo command if available** (`/ghissue-plan`, `$ghissue-implement`, etc.).
-2. **Falls back to an inline workflow** (steps the target should follow if the solo command isn't available or doesn't activate in non-interactive mode).
+1. **Asks the target to activate its existing self-action command if available** (`/claude:plan`, `$codex-implement`, etc.).
+2. **Falls back to an inline workflow** (steps the target should follow if the self-action command isn't available or doesn't activate in non-interactive mode).
 
 This dual-path design — Hybrid C — works regardless of whether each CLI's non-interactive mode resolves slash commands or skill mentions. If resolution works, the target uses its existing solo command and stays consistent with self-action behavior. If it doesn't, the target falls through to the inline steps and still does the right thing.
 
@@ -149,9 +151,10 @@ These are deliberate omissions to keep v1 small. Synchronous-only invocation onl
 
 ## Relationship to existing artifacts
 
-- `ghissue-plan`, `ghissue-implement`, `ghissue-finalize` — same agent acts on itself for the issue lifecycle. These remain unchanged.
+- `/<ai>:plan`, `/<ai>:implement`, `/<ai>:review`, `/<ai>:adversarial-review` — self-action and cross-agent delegation share the same naming convention. Self-action files live in `.<ai>/commands/<ai>/` (or `.agents/skills/codex-<action>/` for Codex).
+- `ghissue-finalize`, `ghissue-status` — these remain unchanged; they cover the post-implementation steps (commit, PR creation, status reporting).
 - `/multi-plan`, `/multi-review`, `/multi-adversarial-review` — N-to-1 orchestrators that supersede the removed `/ghissue-plan-both`, `/ghissue-review-both`, and `/ghissue-gemini-review` commands. See [Multi-agent orchestration](#multi-agent-orchestration-multi-) above.
-- `.claude/commands/`, `.gemini/commands/`, `.copilot/commands/`, `.agents/skills/` — established per-agent config directories. The matrix adds new subdirectories without changing existing files.
+- `.claude/commands/`, `.gemini/commands/`, `.copilot/commands/`, `.agents/skills/` — established per-agent config directories. Self-action commands are in `<dir>/<ai>/` subdirectories; cross-agent bridges are in `<dir>/<target>/` subdirectories.
 - `.gemini/settings.json` `skills.disabled` — existing pattern, extended with 12 delegation entries and 3 multi-orchestrator entries (to prevent `.agents/skills/multi-*` from conflicting with Gemini's native TOML variants).
 
 ## See also
