@@ -307,6 +307,8 @@ Codex CLI does **not** use repo-defined slash commands in this template. Its rep
 
 **Cross-agent delegation matrix:** in addition to self-action `ghissue-*` commands, every agent can delegate `plan`, `implement`, `review`, and `adversarial-review` to any of the other three via `<target>:<action>` commands (`/codex:plan 42` from Claude, `$delegate-gemini-implement 42` from Codex, etc.). Bridge files live under `.claude/commands/<target>/`, `.gemini/commands/<target>/`, `.copilot/commands/<target>/`, and `.agents/skills/delegate-<target>-<action>/`. See [Cross-Agent Delegation Matrix](docs/development/ai/cross-agent-delegation.md).
 
+**Multi-agent orchestrators (`/multi-*`):** any host agent can also run `/multi-plan <ais...> <issue#>`, `/multi-review <ais...>`, and `/multi-adversarial-review <ais...>` to dispatch a task to **any combination** of agents in parallel and synthesize their outputs. These supersede the older `/ghissue-plan-both` / `/ghissue-review-both` / `/ghissue-gemini-review` commands. Command files live in `.claude/commands/multi-*.md`, `.gemini/commands/multi-*.toml`, `.copilot/commands/multi-*.md`, and `.agents/skills/multi-*/SKILL.md`.
+
 ### Temporary Files
 
 AI agents **must never** write temporary files to generic locations like `/tmp/`. Instead, use the project-scoped directory:

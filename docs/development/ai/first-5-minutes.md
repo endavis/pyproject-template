@@ -74,9 +74,9 @@ Once the plan comment exists, run `/ghissue-implement 42`. Claude checks out `ma
 
 The artifact at the end of this step is an uncommitted working tree on the feature branch. Nothing has been committed yet — that is deliberate.
 
-### 5. (Optional) `/ghissue-gemini-review`
+### 5. (Optional) `/multi-review claude gemini`
 
-If you have the Gemini CLI installed and want a second opinion on the changes, you can run `/ghissue-gemini-review` at this point (after a PR exists) or use `/ghissue-review-both` for a parallel Claude + Gemini review. The template invokes Gemini in an isolated context, captures its stdout, and posts it as a comment on the PR. Gemini never writes to GitHub directly — the orchestrating Claude agent does the posting. Skip this step if you are running single-agent.
+If you have the Gemini CLI installed and want a second opinion on the changes, you can run `/multi-review claude gemini` at this point (after a PR exists). This runs both agents in isolated contexts, posts each review as a separate PR comment, and then synthesizes the findings for you to approve before posting. If you want an adversarial challenge instead of a code review, use `/multi-adversarial-review claude gemini`. Skip this step if you are running single-agent.
 
 ### 6. `/ghissue-finalize`
 

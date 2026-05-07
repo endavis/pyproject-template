@@ -19,6 +19,45 @@ def test_codex_workflow_skills_exist() -> None:
         assert skill_path.exists(), f"Missing Codex skill: {skill_path}"
 
 
+def test_multi_orchestrator_files_exist() -> None:
+    """multi-* orchestrators (plan, review, adversarial-review) should exist for all 4 hosts."""
+    paths = [
+        # Claude
+        REPO_ROOT / ".claude" / "commands" / "multi-plan.md",
+        REPO_ROOT / ".claude" / "commands" / "multi-review.md",
+        REPO_ROOT / ".claude" / "commands" / "multi-adversarial-review.md",
+        # Gemini
+        REPO_ROOT / ".gemini" / "commands" / "multi-plan.toml",
+        REPO_ROOT / ".gemini" / "commands" / "multi-review.toml",
+        REPO_ROOT / ".gemini" / "commands" / "multi-adversarial-review.toml",
+        # Copilot
+        REPO_ROOT / ".copilot" / "commands" / "multi-plan.md",
+        REPO_ROOT / ".copilot" / "commands" / "multi-review.md",
+        REPO_ROOT / ".copilot" / "commands" / "multi-adversarial-review.md",
+        # Codex
+        REPO_ROOT / ".agents" / "skills" / "multi-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "multi-review" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "multi-adversarial-review" / "SKILL.md",
+    ]
+
+    for path in paths:
+        assert path.exists(), f"Missing multi-orchestrator file: {path}"
+
+
+def test_retired_dual_agent_files_are_removed() -> None:
+    """The old hardcoded dual-agent commands should be gone, replaced by multi-* orchestrators."""
+    removed = [
+        REPO_ROOT / ".claude" / "commands" / "ghissue-plan-both.md",
+        REPO_ROOT / ".claude" / "commands" / "ghissue-review-both.md",
+        REPO_ROOT / ".claude" / "commands" / "ghissue-gemini-review.md",
+        REPO_ROOT / ".gemini" / "commands" / "ghissue-plan-stdout.toml",
+        REPO_ROOT / ".gemini" / "commands" / "ghissue-review-pr.toml",
+    ]
+
+    for path in removed:
+        assert not path.exists(), f"Retired file should not exist: {path}"
+
+
 def test_codex_config_keeps_shared_dangerous_command_hook() -> None:
     """Codex config should keep the shared dangerous-command hook wired."""
     config = (REPO_ROOT / ".codex" / "config.toml").read_text(encoding="utf-8")
