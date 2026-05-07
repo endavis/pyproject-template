@@ -129,7 +129,12 @@ jobs:
         run: uv run pip-audit --skip-editable
 
       - name: Run tests with coverage
+        if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest'
         run: uv run pytest --cov=package_name --cov-report=xml:tmp/coverage.xml --cov-report=term -v --ignore=tests/benchmarks/
+
+      - name: Run tests
+        if: "!(matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest')"
+        run: uv run pytest -v --ignore=tests/benchmarks/
 
       - name: Upload coverage to Codecov
         if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest'
