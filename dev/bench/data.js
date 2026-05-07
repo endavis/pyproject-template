@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778087026075,
+  "lastUpdate": 1778160216260,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8142,6 +8142,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.141844917513771e-7",
             "extra": "mean: 2.0200286143400654 usec\nrounds: 55916"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "857d024631799d6537b605e9b2c3686195fbe9df",
+          "message": "chore: parallelize CI pytest and reduce matrix-wide job duplication (merges PR #561, addresses #560)\n\n* chore: skip benchmark tests in regular CI\n\nAdd --ignore=tests/benchmarks/ to the pytest step so benchmark test\nbodies are excluded from the regular matrix run. The dedicated\nbenchmark.yml workflow handles benchmarks with --benchmark-enable.\n\nAddresses #560\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* chore: skip coverage on non-uploading CI matrix cells\n\nReplace the single test step with two mutually exclusive steps using\nstep-level if: conditions (mirroring the existing Codecov upload gate).\nOnly the ubuntu-latest/newest-python cell runs pytest with --cov* flags;\nall other cells run without coverage computation.\n\nAddresses #560\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* chore: extract platform-independent checks into lint job\n\nRemove the six platform-independent steps (format, lint, type-check,\nsecurity, spell-check, audit) from the matrix test job and move them\ninto a new single-runner lint job on ubuntu-latest. The lint job mirrors\nthe docs job's setup/install boilerplate and invokes doit tasks, which\ncover broader paths (tools/) than the previous raw commands.\n\nUpdate ci-complete to include lint in its needs list and gate alongside\ntest and docs results.\n\nAddresses #560\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n* chore: parallelize CI pytest with -n auto\n\nAdd -n auto to both pytest invocations (with-coverage and without-coverage\ncells) so pytest-xdist distributes tests across available CPU cores.\npytest-xdist>=3.5 is already in dev deps; the conftest.py Hypothesis\nprofile already suppresses HealthCheck.differing_executors.\n\nAddresses #560\n\nCo-Authored-By: Claude Sonnet 4.6 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Sonnet 4.6 <noreply@anthropic.com>",
+          "timestamp": "2026-05-07T14:22:53+01:00",
+          "tree_id": "e69991a39c333fa2e08059833dadfe2bed9e70e2",
+          "url": "https://github.com/endavis/pyproject-template/commit/857d024631799d6537b605e9b2c3686195fbe9df"
+        },
+        "date": 1778160215120,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8691545.56585027,
+            "unit": "iter/sec",
+            "range": "stddev: 1.759314750136793e-8",
+            "extra": "mean: 115.05433555213405 nsec\nrounds: 84732"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8718459.547447905,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9677733403604688e-8",
+            "extra": "mean: 114.69916153854534 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5013701.028420661,
+            "unit": "iter/sec",
+            "range": "stddev: 5.309295439674416e-8",
+            "extra": "mean: 199.45345650476582 nsec\nrounds: 54098"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1652364.1907372393,
+            "unit": "iter/sec",
+            "range": "stddev: 2.340067549787371e-7",
+            "extra": "mean: 605.1934589273733 nsec\nrounds: 57697"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 468918.30916287616,
+            "unit": "iter/sec",
+            "range": "stddev: 8.46824989292871e-7",
+            "extra": "mean: 2.132567614570698 usec\nrounds: 57495"
           }
         ]
       }
