@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778176572699,
+  "lastUpdate": 1778180747567,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8437,6 +8437,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.416370837849126e-7",
             "extra": "mean: 2.0539912070000725 usec\nrounds: 55609"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8eb16a19e6994ff62d1411d1a6e07e1b5871abbe",
+          "message": "docs: add AI agent guide for the LSP tool and diagnostic noise (merges PR #567, addresses #566)\n\n* docs: add AI agent guide for the LSP tool and diagnostic noise\n\nDocuments the nine navigation operations the LSP tool exposes\n(goToDefinition, findReferences, hover, documentSymbol,\nworkspaceSymbol, goToImplementation, prepareCallHierarchy,\nincomingCalls, outgoingCalls), the separate side channel that\nauto-injects pyright diagnostics after Edit/Write, and two\nopt-ins agents can flip on themselves: a PostToolUse sleep\nhook to let pyright settle, or typeCheckingMode=\"off\" to drop\npyright diagnostics entirely. LSP stays on by default —\nmypy via doit check remains the authoritative type checker.\n\nReferences upstream Claude Code issues #17979, #21297, #26634\nfor the documented staleness and hint-promotion behaviors.\n\nAddresses #566\n\n* docs: rewrite .claude/lsp-setup.md to reflect current LSP state\n\nThe file's \"Known Issues\" section claimed LSP requests hang and\ndo not return responses — that failure mode is no longer current.\nTrims the misleading \"45s vs 50ms\" performance framing (which only\napplies to navigation, not the diagnostic flow that's actually the\nsore point), drops the placeholder issues URL, notes that\nENABLE_LSP_TOOL is unnecessary on Claude Code 2.0.74+, and\ncross-links docs/development/ai/lsp-tool.md for the behavioral\nguidance an agent needs to choose an opt-in.\n\nThe file remains in .claude/ so an agent stumbling on Claude\nconfig still finds the install steps; the docs/ guide is the\nauthoritative behavioral reference.\n\nAddresses #566",
+          "timestamp": "2026-05-07T20:05:20+01:00",
+          "tree_id": "f74485d8670a21f8ca0bb22522f69a9ae3f84020",
+          "url": "https://github.com/endavis/pyproject-template/commit/8eb16a19e6994ff62d1411d1a6e07e1b5871abbe"
+        },
+        "date": 1778180746553,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9179280.613019174,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2832609794744362e-8",
+            "extra": "mean: 108.94099899088803 nsec\nrounds: 89230"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9100917.381545879,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2628468470458478e-8",
+            "extra": "mean: 109.87903285747007 nsec\nrounds: 86678"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6619357.6022426365,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5279378038138944e-8",
+            "extra": "mean: 151.07206168483788 nsec\nrounds: 66921"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1741250.1602922576,
+            "unit": "iter/sec",
+            "range": "stddev: 2.702062894665778e-7",
+            "extra": "mean: 574.3000189198297 nsec\nrounds: 58323"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 511342.6588715889,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7218116293733435e-7",
+            "extra": "mean: 1.9556357809199045 usec\nrounds: 49926"
           }
         ]
       }
