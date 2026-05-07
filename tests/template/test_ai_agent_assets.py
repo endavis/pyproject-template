@@ -14,7 +14,7 @@ def test_codex_workflow_skills_exist() -> None:
         REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "codex-review" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "codex-adversarial-review" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "ghissue-finalize" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "ghi-finalize" / "SKILL.md",
     ]
 
     for skill_path in skill_paths:
@@ -103,6 +103,19 @@ def test_retired_dual_agent_files_are_removed() -> None:
 
     for path in removed:
         assert not path.exists(), f"Retired file should not exist: {path}"
+
+
+def test_retired_workflow_step_aliases_are_removed() -> None:
+    """The old ghissue-finalize/ghissue-status workflow steps should be renamed to ghi-*."""
+    removed = [
+        REPO_ROOT / ".claude" / "commands" / "ghissue-finalize.md",
+        REPO_ROOT / ".claude" / "commands" / "ghissue-status.md",
+        REPO_ROOT / ".gemini" / "commands" / "ghissue-finalize.toml",
+        REPO_ROOT / ".agents" / "skills" / "ghissue-finalize" / "SKILL.md",
+    ]
+
+    for path in removed:
+        assert not path.exists(), f"Retired workflow step file should not exist: {path}"
 
 
 def test_codex_config_keeps_shared_dangerous_command_hook() -> None:

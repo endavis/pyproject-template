@@ -4,7 +4,7 @@ This directory is the GitHub Copilot CLI configuration directory for this reposi
 
 ## Workflow Skills
 
-Copilot CLI ships self-action commands in `.copilot/commands/copilot/` (`/copilot:plan`, `/copilot:implement`, `/copilot:review`, `/copilot:adversarial-review`). It also auto-discovers some commands from `.claude/commands/` (e.g. `/ghissue-finalize`, `/ghissue-status`). Cross-agent bridge commands live in `.copilot/commands/<target>/`.
+Copilot CLI ships self-action commands in `.copilot/commands/copilot/` (`/copilot:plan`, `/copilot:implement`, `/copilot:review`, `/copilot:adversarial-review`). It also auto-discovers some commands from `.claude/commands/` (e.g. `/ghi-finalize`, `/ghi-status`). Cross-agent bridge commands live in `.copilot/commands/<target>/`.
 
 ## Dangerous Command Hook
 

@@ -31,7 +31,7 @@ The rest of this page assumes you have these working.
 
 Launch Claude Code from the repository root. On startup Claude automatically loads `AGENTS.md` (workflow and conventions), `.claude/CLAUDE.md` (Claude-specific rules on top of `AGENTS.md`), and the project hooks under `tools/hooks/ai/` (which block dangerous commands for every agent, not just Claude). You do not need to paste any context — the template is designed so a fresh session already knows the rules.
 
-If you are not sure what state you are in, run `/ghissue-status` at any time (Claude) or the equivalent for your agent. It inspects the branch, issue state, plan comments, uncommitted changes, unpushed commits, and open PRs, then reports a summary and suggests the next command. It is read-only and safe to run whenever you are unsure.
+If you are not sure what state you are in, run `/ghi-status` at any time (Claude) or the equivalent for your agent. It inspects the branch, issue state, plan comments, uncommitted changes, unpushed commits, and open PRs, then reports a summary and suggests the next command. It is read-only and safe to run whenever you are unsure.
 
 ### 2. Pick an issue
 
@@ -78,9 +78,9 @@ The artifact at the end of this step is an uncommitted working tree on the featu
 
 If you have the Gemini CLI installed and want a second opinion on the changes, you can run `/multi-review claude gemini` at this point (after a PR exists). This runs both agents in isolated contexts, posts each review as a separate PR comment, and then synthesizes the findings for you to approve before posting. If you want an adversarial challenge instead of a code review, use `/multi-adversarial-review claude gemini`. Skip this step if you are running single-agent.
 
-### 6. `/ghissue-finalize`
+### 6. `/ghi-finalize`
 
-Run `/ghissue-finalize` when you are satisfied with the changes. Claude detects the branch and issue number, spawns a finalization subagent that reviews changed files for doc/ADR updates, runs `doit check` one more time, and drafts both a commit message and a PR body. The main conversation then presents the drafts to you and **waits for explicit approval** before staging files, committing, and running `doit pr`. Nothing gets committed without your go-ahead.
+Run `/ghi-finalize` when you are satisfied with the changes. Claude detects the branch and issue number, spawns a finalization subagent that reviews changed files for doc/ADR updates, runs `doit check` one more time, and drafts both a commit message and a PR body. The main conversation then presents the drafts to you and **waits for explicit approval** before staging files, committing, and running `doit pr`. Nothing gets committed without your go-ahead.
 
 What you'll see (illustrative — your drafts will look different):
 
@@ -134,7 +134,7 @@ Every step in the flow produces a specific artifact the next step expects:
 
 - `/<currentai>:plan <n>` → a plan comment on the issue with the header `## Implementation Plan for #<n>`
 - `/<currentai>:implement <n>` → a feature branch with an uncommitted working tree
-- `/ghissue-finalize` → a staged commit plus an open PR referencing `Addresses #<n>`
+- `/ghi-finalize` → a staged commit plus an open PR referencing `Addresses #<n>`
 - Merge → a merged commit on `main` and a closed PR
 - `doit pr_merge --auto-close` (or `gh issue close`) → a closed issue with a closing comment
 
@@ -142,7 +142,7 @@ Knowing the artifact chain is the fastest way to figure out where you are if you
 
 ## If you get lost
 
-Run `/ghissue-status`. It is read-only, has no side effects, and will tell you the current branch, issue state, plan comment status, uncommitted changes, unpushed commits, open PRs, and the suggested next command. Run it any time you are unsure. For the full command-by-command reference and the dual-agent variants, see [Slash Commands and Workflows](slash-commands.md).
+Run `/ghi-status`. It is read-only, has no side effects, and will tell you the current branch, issue state, plan comment status, uncommitted changes, unpushed commits, open PRs, and the suggested next command. Run it any time you are unsure. For the full command-by-command reference and the dual-agent variants, see [Slash Commands and Workflows](slash-commands.md).
 
 ## See also
 

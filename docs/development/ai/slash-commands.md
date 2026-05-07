@@ -26,7 +26,7 @@ The default Claude flow takes an issue from unplanned to closed. Each step produ
 2. **User review of the plan** — read the comment, discuss revisions in chat, re-run `/<currentai>:plan` if needed.
 3. **`/<currentai>:implement <n>`** (e.g. `/claude:implement <n>`) — the host agent verifies the plan comment exists, creates a branch (`<type>/<n>-<short-description>`) off fresh `main`, then spawns a subagent (Task tool) that reads `AGENTS.md`, fetches the plan, implements files and tests, and runs `doit check`. The main context receives only the summary. The artifact is an uncommitted working tree on the feature branch.
 4. **User review of the changes** — inspect the diff and discuss fixes directly in chat; no command is needed for fix-ups.
-5. **`/ghissue-finalize`** — the host agent detects the branch and issue, spawns a finalization subagent that updates docs/ADRs as needed, runs `doit check`, and drafts a commit message and PR body. The main context presents the drafts and waits for explicit user approval before staging, committing, and creating the PR via `doit pr`. The artifact is an open PR referencing `Addresses #<n>`.
+5. **`/ghi-finalize`** — the host agent detects the branch and issue, spawns a finalization subagent that updates docs/ADRs as needed, runs `doit check`, and drafts a commit message and PR body. The main context presents the drafts and waits for explicit user approval before staging, committing, and creating the PR via `doit pr`. The artifact is an open PR referencing `Addresses #<n>`.
 6. **User-driven merge** — the user reviews the PR, adds the `ready-to-merge` label, and merges via `doit pr_merge` (or the web UI). This step is never automated.
 7. **Close the issue** — after the PR merges, run `doit pr_merge --auto-close` (or `gh issue close <n>`) to close the linked issue and post a closing comment.
 
@@ -36,15 +36,15 @@ The multi-agent flow replaces the planning and (optionally) review steps with or
 
 Each agent's output is posted as a separate comment. The orchestrator is the only agent that writes to GitHub — all other agents run in non-interactive mode and emit to stdout only.
 
-1. **`/multi-plan <ais...> <n>`** — replaces `/ghissue-plan-both`. Takes a list of agent names (e.g. `claude gemini`) and an issue number. Each listed agent independently generates a plan in an isolated context; all plans are posted as separate issue comments. The orchestrating agent synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
+1. **`/multi-plan <ais...> <n>`** — takes a list of agent names (e.g. `claude gemini`) and an issue number. Each listed agent independently generates a plan in an isolated context; all plans are posted as separate issue comments. The orchestrating agent synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
 2. **`/<currentai>:implement <n>`** — same as the single-agent flow. The synthesized plan comment is the input.
-3. **`/multi-review <ais...>`** — replaces `/ghissue-review-both`. Takes a list of agent names. Each listed agent independently reviews the current branch's PR; all reviews are posted as separate PR comments. The orchestrating agent synthesizes findings into a combined verdict. A user-approval gate precedes the synthesis post.
-4. **`/multi-adversarial-review <ais...>`** — replaces `/ghissue-gemini-review` and extends it. Takes a list of agent names. Each listed agent independently challenges the current changes; all adversarial reviews are synthesized. If a PR exists the synthesis is posted; otherwise it appears in-conversation only. A user-approval gate precedes posting.
-5. **`/ghissue-finalize`**, merge, and **`doit pr_merge --auto-close`** — same as the single-agent flow.
+3. **`/multi-review <ais...>`** — takes a list of agent names. Each listed agent independently reviews the current branch's PR; all reviews are posted as separate PR comments. The orchestrating agent synthesizes findings into a combined verdict. A user-approval gate precedes the synthesis post.
+4. **`/multi-adversarial-review <ais...>`** — takes a list of agent names. Each listed agent independently challenges the current changes; all adversarial reviews are synthesized. If a PR exists the synthesis is posted; otherwise it appears in-conversation only. A user-approval gate precedes posting.
+5. **`/ghi-finalize`**, merge, and **`doit pr_merge --auto-close`** — same as the single-agent flow.
 
 ### Diagnostic command
 
-**`/ghissue-status`** can be invoked at any point. It inspects the current branch, issue state, plan comment, uncommitted changes, unpushed commits, and open PRs, then reports a status summary and the suggested next command. It has no side effects.
+**`/ghi-status`** can be invoked at any point. It inspects the current branch, issue state, plan comment, uncommitted changes, unpushed commits, and open PRs, then reports a status summary and the suggested next command. It has no side effects.
 
 ## Command reference
 
@@ -54,13 +54,13 @@ Entries are alphabetical. Each one names the command, its arguments, what it doe
 
 **Args:** optional focus area. **Sources:** `.claude/commands/claude/adversarial-review.md`, `.gemini/commands/gemini/adversarial-review.toml`, `.copilot/commands/copilot/adversarial-review.md`, `.agents/skills/codex-adversarial-review/SKILL.md` (self-action); `.claude/commands/<target>/adversarial-review.md` etc. (cross-agent delegation).
 
-Runs an adversarial review using the host agent (self-action) or delegates to a target agent (cross-agent). The review is read-only: it pressure-tests design choices, hidden assumptions, tradeoffs, alternatives, and failure modes. The host agent presents findings in the format Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering. If a PR exists, the user is asked whether to post the review as a PR comment. **Workflow position:** optional adversarial challenge before `/ghissue-finalize`. **Design note:** in the self-action form, the host agent does the review work itself; no external CLI is invoked.
+Runs an adversarial review using the host agent (self-action) or delegates to a target agent (cross-agent). The review is read-only: it pressure-tests design choices, hidden assumptions, tradeoffs, alternatives, and failure modes. The host agent presents findings in the format Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering. If a PR exists, the user is asked whether to post the review as a PR comment. **Workflow position:** optional adversarial challenge before `/ghi-finalize`. **Design note:** in the self-action form, the host agent does the review work itself; no external CLI is invoked.
 
 ### `/<ai>:implement <n>`
 
 **Args:** issue number. **Sources:** `.claude/commands/claude/implement.md`, `.gemini/commands/gemini/implement.toml`, `.copilot/commands/copilot/implement.md`, `.agents/skills/codex-implement/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/implement.md` etc.
 
-Validates that the issue is open and that a plan comment exists (otherwise instructs the user to run `/<currentai>:plan <n>` first). Checks the current branch: if already on `<type>/<n>-*` it resumes work on that branch, otherwise it checks out `main`, pulls, and creates a new branch. For Claude, it then spawns the custom `implement-worker` subagent (defined in `.claude/agents/implement-worker.md`) that reads `AGENTS.md` and `.claude/CLAUDE.md`, fetches the plan via `gh api`, implements files and tests, and runs `doit check`. For Gemini and Copilot, implementation runs inline in the main conversation. For Codex, the `$codex-implement` skill implements inline in the Codex session. **Workflow position:** after plan exists, before `/ghissue-finalize`.
+Validates that the issue is open and that a plan comment exists (otherwise instructs the user to run `/<currentai>:plan <n>` first). Checks the current branch: if already on `<type>/<n>-*` it resumes work on that branch, otherwise it checks out `main`, pulls, and creates a new branch. For Claude, it then spawns the custom `implement-worker` subagent (defined in `.claude/agents/implement-worker.md`) that reads `AGENTS.md` and `.claude/CLAUDE.md`, fetches the plan via `gh api`, implements files and tests, and runs `doit check`. For Gemini and Copilot, implementation runs inline in the main conversation. For Codex, the `$codex-implement` skill implements inline in the Codex session. **Workflow position:** after plan exists, before `/ghi-finalize`.
 
 ### `/<ai>:plan <n>`
 
@@ -72,11 +72,11 @@ Runs in the main conversation context (not a subagent) so the user can ask quest
 
 **Args:** optional focus area. **Sources:** `.claude/commands/claude/review.md`, `.gemini/commands/gemini/review.toml`, `.copilot/commands/copilot/review.md`, `.agents/skills/codex-review/SKILL.md` (self-action); `.claude/commands/<target>/review.md` etc. (cross-agent delegation).
 
-Runs a PR review using the host agent (self-action) or delegates to a target agent (cross-agent). Gets the PR diff and branch context, reads project standards, evaluates correctness, style, testing, security, documentation, architecture, and breaking changes. Presents findings in the format Summary / Findings (Critical / Suggestions / Positive) / Verdict. The user is asked whether to post the review as a PR comment before posting. **Workflow position:** after `/claude:implement`, before `/ghissue-finalize`.
+Runs a PR review using the host agent (self-action) or delegates to a target agent (cross-agent). Gets the PR diff and branch context, reads project standards, evaluates correctness, style, testing, security, documentation, architecture, and breaking changes. Presents findings in the format Summary / Findings (Critical / Suggestions / Positive) / Verdict. The user is asked whether to post the review as a PR comment before posting. **Workflow position:** after `/claude:implement`, before `/ghi-finalize`.
 
-### `/ghissue-finalize`
+### `/ghi-finalize`
 
-**Args:** none. **Source:** `.claude/commands/ghissue-finalize.md`.
+**Args:** none. **Source:** `.claude/commands/ghi-finalize.md`.
 
 Operates on the current feature branch, assuming implementation and review are complete. In the main context it detects the branch, extracts the issue number from the branch name, fetches issue details, and checks for uncommitted changes. It then spawns a general-purpose subagent that reads `AGENTS.md`, `.github/CONTRIBUTING.md`, and `.github/pull_request_template.md`, reviews changed files for doc/ADR updates, runs `doit check`, and drafts a commit message plus a PR body written to a temp file. The main context then presents the drafts to the user, waits for explicit approval, stages files, commits, and creates the PR via `doit pr --title=... --body-file=...`. **Workflow position:** after implementation and review. **Design note:** will not commit or create the PR without explicit user confirmation; stops if run on `main`.
 
@@ -84,23 +84,23 @@ Operates on the current feature branch, assuming implementation and review are c
 
 **Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`). **Sources:** `.claude/commands/multi-adversarial-review.md`, `.gemini/commands/multi-adversarial-review.toml`, `.copilot/commands/multi-adversarial-review.md`, `.agents/skills/multi-adversarial-review/SKILL.md`.
 
-Runs each listed agent in an isolated context to independently challenge the current uncommitted changes and the current branch vs `main`. Each agent outputs an adversarial review (Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering); all reviews are synthesized into a combined challenge with consensus and per-agent-only findings. A user-approval gate precedes posting. If a PR exists the synthesis is posted as a PR comment; otherwise it is presented in-conversation only. **Workflow position:** optional adversarial challenge before `/ghissue-finalize`. **Design note:** no agent sees any other agent's output while drafting; every non-self agent runs in non-interactive mode and writes only to stdout.
+Runs each listed agent in an isolated context to independently challenge the current uncommitted changes and the current branch vs `main`. Each agent outputs an adversarial review (Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering); all reviews are synthesized into a combined challenge with consensus and per-agent-only findings. A user-approval gate precedes posting. If a PR exists the synthesis is posted as a PR comment; otherwise it is presented in-conversation only. **Workflow position:** optional adversarial challenge before `/ghi-finalize`. **Design note:** no agent sees any other agent's output while drafting; every non-self agent runs in non-interactive mode and writes only to stdout.
 
 ### `/multi-plan <ais...> <issue#>`
 
 **Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`) followed by the issue number. **Sources:** `.claude/commands/multi-plan.md`, `.gemini/commands/multi-plan.toml`, `.copilot/commands/multi-plan.md`, `.agents/skills/multi-plan/SKILL.md`.
 
-Multi-agent replacement for the old `/ghissue-plan-both` command. Validates the issue, warns if plan comments already exist, then generates independent plans from each listed agent in isolated contexts. Posts each plan as a separate issue comment, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the multi-agent workflow. **Design note:** isolated contexts are mandatory so no agent can see another's output while drafting; the orchestrating agent is the only one that writes to GitHub.
+Validates the issue, warns if plan comments already exist, then generates independent plans from each listed agent in isolated contexts. Posts each plan as a separate issue comment, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the multi-agent workflow. **Design note:** isolated contexts are mandatory so no agent can see another's output while drafting; the orchestrating agent is the only one that writes to GitHub.
 
 ### `/multi-review <ais...>`
 
 **Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`). **Sources:** `.claude/commands/multi-review.md`, `.gemini/commands/multi-review.toml`, `.copilot/commands/multi-review.md`, `.agents/skills/multi-review/SKILL.md`.
 
-Multi-agent replacement for the old `/ghissue-review-both` command. Verifies a PR exists for the current branch, warns if reviews already exist, then generates independent code reviews from each listed agent in isolated contexts. Posts each review as a separate PR comment, synthesizes findings into a combined verdict (consensus findings, per-agent-only findings, combined verdict). A user-approval gate precedes the synthesis post. **Workflow position:** after `/<currentai>:implement`, before `/ghissue-finalize`, in the multi-agent workflow. **Design note:** same isolation guarantee as `/multi-plan` — no reviewer sees another's output; the synthesis is posted after all raw reviews so readers can audit it against the sources.
+Verifies a PR exists for the current branch, warns if reviews already exist, then generates independent code reviews from each listed agent in isolated contexts. Posts each review as a separate PR comment, synthesizes findings into a combined verdict (consensus findings, per-agent-only findings, combined verdict). A user-approval gate precedes the synthesis post. **Workflow position:** after `/<currentai>:implement`, before `/ghi-finalize`, in the multi-agent workflow. **Design note:** same isolation guarantee as `/multi-plan` — no reviewer sees another's output; the synthesis is posted after all raw reviews so readers can audit it against the sources.
 
-### `/ghissue-status`
+### `/ghi-status`
 
-**Args:** none. **Source:** `.claude/commands/ghissue-status.md`.
+**Args:** none. **Source:** `.claude/commands/ghi-status.md`.
 
 Inspects the current git state (branch, uncommitted changes, recent log), extracts the issue number from the branch name if on a feature branch, checks for a plan comment, unpushed commits, and open PRs, then reports a status summary and suggests the next command to run. **Workflow position:** any time. **Design note:** read-only and side-effect-free — safe to run whenever the user is unsure where they are in the lifecycle.
 
@@ -124,13 +124,13 @@ Gemini-first users can complete the full issue lifecycle using Gemini-native com
 2. **User review of the plan** — same as Claude flow.
 3. **`/gemini:implement <n>`** — Gemini validates the plan comment, creates the feature branch, and implements the changes inline in the conversation. It runs `doit check` to verify the implementation.
 4. **User review of the changes** — same as Claude flow.
-5. **`/ghissue-finalize` (Gemini)** — Gemini detects the branch and issue, checks for doc/ADR updates, runs `doit check`, and drafts the commit message and PR body. After user approval, it stages, commits, and creates the PR via `doit pr`.
+5. **`/ghi-finalize` (Gemini)** — Gemini detects the branch and issue, checks for doc/ADR updates, runs `doit check`, and drafts the commit message and PR body. After user approval, it stages, commits, and creates the PR via `doit pr`.
 
 ### Command reference
 
-#### `/ghissue-finalize` (Gemini)
+#### `/ghi-finalize` (Gemini)
 
-**Args:** none. **Source:** `.gemini/commands/ghissue-finalize.md`.
+**Args:** none. **Source:** `.gemini/commands/ghi-finalize.md`.
 
 Gemini-native implementation of the finalize command. Detects the branch and issue, checks for uncommitted changes, reviews changed files for documentation/ADR updates, runs `doit check`, and drafts a commit message and PR body (written to `tmp/agents/gemini/pr-body-issue-<n>.md`). After user approval, it stages files, commits, and creates the PR via `doit pr`. **Workflow position:** after implementation and review. **Design note:** unlike the Claude version, all operations happen inline in the main conversation context.
 
@@ -138,7 +138,7 @@ Gemini-native implementation of the finalize command. Detects the branch and iss
 
 **Args:** issue number. **Source:** `.gemini/commands/gemini/implement.toml`.
 
-Gemini-native implementation of the implement command. Validates the issue and plan comment, creates the feature branch, and implements the changes inline in the conversation. Runs `doit check` to verify the implementation. **Workflow position:** after plan exists, before `/ghissue-finalize`. **Design note:** performs all implementation steps directly in the main conversation context rather than spawning a subagent.
+Gemini-native implementation of the implement command. Validates the issue and plan comment, creates the feature branch, and implements the changes inline in the conversation. Runs `doit check` to verify the implementation. **Workflow position:** after plan exists, before `/ghi-finalize`. **Design note:** performs all implementation steps directly in the main conversation context rather than spawning a subagent.
 
 #### `/gemini:plan <n>`
 
@@ -148,7 +148,7 @@ Gemini-native standalone planning command. Validates the issue, reads `AGENTS.md
 
 ## Codex
 
-Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghissue-finalize`.
+Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
 
 **Workflow coverage:** the checked-in Codex skills cover planning, implementation, review, adversarial review, and finalization through PR creation. They preserve the same repo artifact contract used by the Claude flow:
 
@@ -156,7 +156,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$codex-implement` creates or resumes the issue branch and finishes with `doit check`
 - `$codex-review` reviews the current branch's PR and posts findings after user approval
 - `$codex-adversarial-review` runs an adversarial challenge review
-- `$ghissue-finalize` drafts the commit and PR artifacts and uses `doit pr` after explicit approval
+- `$ghi-finalize` drafts the commit and PR artifacts and uses `doit pr` after explicit approval
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -164,7 +164,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 
 ## Copilot
 
-GitHub Copilot CLI automatically discovers project skills from `.claude/commands/`. All workflow commands (`/ghissue-finalize`, `/ghissue-status`, etc.) are available in Copilot sessions without any additional files. Self-action commands (`/copilot:plan`, `/copilot:implement`, `/copilot:review`, `/copilot:adversarial-review`) live in `.copilot/commands/copilot/`.
+GitHub Copilot CLI automatically discovers project skills from `.claude/commands/`. All workflow commands (`/ghi-finalize`, `/ghi-status`, etc.) are available in Copilot sessions without any additional files. Self-action commands (`/copilot:plan`, `/copilot:implement`, `/copilot:review`, `/copilot:adversarial-review`) live in `.copilot/commands/copilot/`.
 
 **Config directory:** `.copilot/` — established as the Copilot CLI config directory for this repo, parallel to `.claude/`, `.gemini/`, and `.codex/`.
 
@@ -178,7 +178,7 @@ GitHub Copilot CLI automatically discovers project skills from `.claude/commands
 
 1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Gemini commands live in `.gemini/commands/<name>.md` and become `/<name>` in Gemini CLI. Copilot CLI auto-discovers skills from `.claude/commands/` — no separate `.copilot/commands/<name>.md` is needed unless you want to override Claude-specific behaviour for Copilot sessions.
 2. **Use the CLI file format** — not the `docs/` frontmatter format. Start with a top-level `# Title` heading, follow with a one-line description (which may include the `$ARGUMENTS` placeholder if the command takes arguments), then a `## Instructions` section containing the step-by-step body. **Do not add YAML frontmatter.** The CLIs expect plain markdown; frontmatter would appear verbatim in the rendered prompt.
-3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For commands that take no arguments (like `/ghissue-finalize` or `/ghissue-status`), omit the placeholder.
+3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For commands that take no arguments (like `/ghi-finalize` or `/ghi-status`), omit the placeholder.
 4. **Decide: subagent or main context?** Delegate to a general-purpose subagent via the Task tool when the command does heavy codebase exploration, writes files, or runs long commands whose output would bloat the main conversation — `.claude/commands/claude/implement.md` is the canonical example. Run in the main context when the user needs to interact step by step (plan mode, iteration, explicit approvals) — `.claude/commands/claude/plan.md` is the canonical example.
 5. **Update this document** when you add or remove a command. The command reference section should list every file under `.claude/commands/` and `.gemini/commands/`.
 

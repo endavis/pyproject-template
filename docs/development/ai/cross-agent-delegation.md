@@ -4,7 +4,7 @@ A consistent, explicit-invocation interface that lets any of the four supported 
 
 ## Why this exists
 
-Each agent already drives *itself* through the issue-driven workflow (`/<ai>:plan`, `/<ai>:implement`, `/ghissue-finalize`). This matrix adds the missing piece: deliberate, user-invoked handoff *between* agents, without depending on third-party plugins like `openai/codex-plugin-cc` or community Gemini/Copilot forks.
+Each agent already drives *itself* through the issue-driven workflow (`/<ai>:plan`, `/<ai>:implement`, `/ghi-finalize`). This matrix adds the missing piece: deliberate, user-invoked handoff *between* agents, without depending on third-party plugins like `openai/codex-plugin-cc` or community Gemini/Copilot forks.
 
 The matrix replaces what would otherwise be a patchwork of inconsistent third-party plugins. It runs on top of the CLIs' existing non-interactive modes (`-p` / `exec`) and uses the same command names across all hosts, so users learn the surface once.
 
@@ -138,8 +138,6 @@ Each command is available for all four hosts:
 - Copilot: `.copilot/commands/multi-{plan,review,adversarial-review}.md`
 - Codex: `.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md`
 
-These supersede the old hardcoded `/ghissue-plan-both`, `/ghissue-review-both`, and `/ghissue-gemini-review` commands, which have been removed.
-
 ## Out of scope (v1)
 
 - Background jobs (`status`, `result`, `cancel` analogues)
@@ -152,12 +150,12 @@ These are deliberate omissions to keep v1 small. Synchronous-only invocation onl
 ## Relationship to existing artifacts
 
 - `/<ai>:plan`, `/<ai>:implement`, `/<ai>:review`, `/<ai>:adversarial-review` — self-action and cross-agent delegation share the same naming convention. Self-action files live in `.<ai>/commands/<ai>/` (or `.agents/skills/codex-<action>/` for Codex).
-- `ghissue-finalize`, `ghissue-status` — these remain unchanged; they cover the post-implementation steps (commit, PR creation, status reporting).
-- `/multi-plan`, `/multi-review`, `/multi-adversarial-review` — N-to-1 orchestrators that supersede the removed `/ghissue-plan-both`, `/ghissue-review-both`, and `/ghissue-gemini-review` commands. See [Multi-agent orchestration](#multi-agent-orchestration-multi-) above.
+- `ghi-finalize`, `ghi-status` — these cover the post-implementation steps (commit, PR creation, status reporting).
+- `/multi-plan`, `/multi-review`, `/multi-adversarial-review` — N-to-1 orchestrators that dispatch to any combination of agents. See [Multi-agent orchestration](#multi-agent-orchestration-multi-) above.
 - `.claude/commands/`, `.gemini/commands/`, `.copilot/commands/`, `.agents/skills/` — established per-agent config directories. Self-action commands are in `<dir>/<ai>/` subdirectories; cross-agent bridges are in `<dir>/<target>/` subdirectories.
 - `.gemini/settings.json` `skills.disabled` — existing pattern, extended with 12 delegation entries and 3 multi-orchestrator entries (to prevent `.agents/skills/multi-*` from conflicting with Gemini's native TOML variants).
 
 ## See also
 
-- [Slash Commands & Workflows](slash-commands.md) — reference for the underlying `/ghissue-*` workflow.
+- [Slash Commands & Workflows](slash-commands.md) — reference for the underlying workflow commands.
 - [First 5 Minutes with an AI Agent](first-5-minutes.md) — narrative onboarding for the issue-driven flow this matrix complements.

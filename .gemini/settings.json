@@ -38,7 +38,7 @@
   "skills": {
     "disabled": [
       "restore",
-      "ghissue-finalize",
+      "ghi-finalize",
       "checkpoint",
       "codex-plan",
       "codex-implement",
