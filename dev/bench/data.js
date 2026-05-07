@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778180747567,
+  "lastUpdate": 1778181453429,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8496,6 +8496,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.7218116293733435e-7",
             "extra": "mean: 1.9556357809199045 usec\nrounds: 49926"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "07f129804b2f93edd3b797b43381d62b951001ca",
+          "message": "feat: add -h short alias for --help in example CLI (merges PR #569, addresses #568)\n\nSet help_option_names on the top-level Click group so -h works as a short\nalias for --help. Click propagates this to subcommands automatically, so\nboth `package-name -h` and `package-name greet -h` now print help.\n\nAddresses #568\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-07T20:17:03+01:00",
+          "tree_id": "6dda8a070856cbcd809c28543937297ab8f2c6e1",
+          "url": "https://github.com/endavis/pyproject-template/commit/07f129804b2f93edd3b797b43381d62b951001ca"
+        },
+        "date": 1778181452311,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8679557.42835175,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5565960601449766e-8",
+            "extra": "mean: 115.21324770932475 nsec\nrounds: 88293"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8781542.149367912,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5917167933681996e-8",
+            "extra": "mean: 113.87521496688133 nsec\nrounds: 86618"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5507640.826392181,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3202239098228432e-8",
+            "extra": "mean: 181.56594293659796 nsec\nrounds: 47421"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1605741.9708202046,
+            "unit": "iter/sec",
+            "range": "stddev: 3.380414964629924e-7",
+            "extra": "mean: 622.7650632369067 nsec\nrounds: 62221"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 517538.1090288442,
+            "unit": "iter/sec",
+            "range": "stddev: 6.820553916335971e-7",
+            "extra": "mean: 1.9322248594919733 usec\nrounds: 47692"
           }
         ]
       }
