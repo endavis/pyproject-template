@@ -87,6 +87,7 @@ nav:
           - Architectural Conventions: development/ai/architectural-conventions.md
           - Enforcement Principles: development/ai/enforcement-principles.md
           - Command Blocking: development/ai/command-blocking.md
+          - LSP Tool and Diagnostics: development/ai/lsp-tool.md
           - Token-Efficiency Add-Ons: development/ai/token-efficiency-add-ons.md
   - Deployment:
       - Development: deployment/development.md
