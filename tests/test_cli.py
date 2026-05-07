@@ -38,6 +38,15 @@ def test_top_level_help() -> None:
     assert "greet" in result.output
 
 
+def test_top_level_help_short_option() -> None:
+    """-h is the short alias for --help on the top-level group."""
+    runner = CliRunner()
+    long_result = runner.invoke(main, ["--help"])
+    short_result = runner.invoke(main, ["-h"])
+    assert short_result.exit_code == 0
+    assert short_result.output == long_result.output
+
+
 def test_greet_help() -> None:
     """greet --help documents the --name option without executing the command."""
     runner = CliRunner()
@@ -45,6 +54,15 @@ def test_greet_help() -> None:
     assert result.exit_code == 0
     assert "--name" in result.output
     assert "Hello, Python!" not in result.output
+
+
+def test_greet_help_short_option() -> None:
+    """-h is the short alias for --help on subcommands."""
+    runner = CliRunner()
+    long_result = runner.invoke(main, ["greet", "--help"])
+    short_result = runner.invoke(main, ["greet", "-h"])
+    assert short_result.exit_code == 0
+    assert short_result.output == long_result.output
 
 
 def test_version_option() -> None:
