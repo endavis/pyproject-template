@@ -53,7 +53,10 @@
       "delegate-copilot-plan",
       "delegate-copilot-implement",
       "delegate-copilot-review",
-      "delegate-copilot-adversarial-review"
+      "delegate-copilot-adversarial-review",
+      "multi-plan",
+      "multi-review",
+      "multi-adversarial-review"
     ]
   }
 }

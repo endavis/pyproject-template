@@ -30,16 +30,17 @@ The default Claude flow takes an issue from unplanned to closed. Each step produ
 6. **User-driven merge** — the user reviews the PR, adds the `ready-to-merge` label, and merges via `doit pr_merge` (or the web UI). This step is never automated.
 7. **`/ghissue-close <n>`** — Claude verifies a merged PR addresses `#n`, updates task checkboxes in the issue body, posts `Addressed in PR #<pr>`, closes the issue, and scans the PR for related issues to optionally close as well.
 
-### Dual-agent workflow
+### Multi-agent workflow
 
-The dual-agent flow replaces the planning and (optionally) review steps with orchestrated calls that spawn Claude and Gemini in **isolated contexts**. The design intent is that neither agent can bias the other: each generates its output without seeing the other's work, and the orchestrating Claude agent in the main conversation posts both raw outputs plus a synthesis.
+The multi-agent flow replaces the planning and (optionally) review steps with orchestrated calls that spawn any combination of agents in **isolated contexts**. The design intent is that no agent can bias another: each generates its output without seeing the others' work, and the orchestrating agent in the main conversation posts all raw outputs plus a synthesis.
 
-The Gemini commands invoked from the orchestrator (`/ghissue-plan-stdout` and `/ghissue-review-pr`) are **output-only**: Gemini does not post to GitHub itself. The orchestrating Claude agent captures Gemini's stdout and posts it via `gh`. (Gemini's standalone planning command, `/ghissue-plan`, does post directly — but `/ghissue-plan-both` invokes the stdout-only variant to avoid duplicate comments.)
+Each agent's output is posted as a separate comment. The orchestrator is the only agent that writes to GitHub — all other agents run in non-interactive mode and emit to stdout only.
 
-1. **`/ghissue-plan-both <n>`** — replaces `/ghissue-plan`. Claude validates the issue, then in parallel (a) spawns a general-purpose subagent to produce a Claude plan and (b) invokes `gemini -p "/ghissue-plan-stdout <n>" --yolo` to produce a Gemini plan. Both are posted as separate comments on the issue, Claude synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
+1. **`/multi-plan <ais...> <n>`** — replaces `/ghissue-plan-both`. Takes a list of agent names (e.g. `claude gemini`) and an issue number. Each listed agent independently generates a plan in an isolated context; all plans are posted as separate issue comments. The orchestrating agent synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
 2. **`/ghissue-implement <n>`** — same as the single-agent flow. The synthesized plan comment is the input.
-3. **`/ghissue-review-both`** — runs after a PR exists. In parallel spawns a Claude review subagent and invokes `gemini -p "/ghissue-review-pr" --yolo`, posts both reviews as PR comments, and posts a combined synthesis listing consensus findings, agent-specific findings, and a combined verdict. Alternatively, **`/ghissue-gemini-review`** runs only the Gemini review and posts it (useful when the user wants a second opinion without a full Claude review).
-4. **`/ghissue-finalize`**, merge, and **`/ghissue-close <n>`** — same as the single-agent flow.
+3. **`/multi-review <ais...>`** — replaces `/ghissue-review-both`. Takes a list of agent names. Each listed agent independently reviews the current branch's PR; all reviews are posted as separate PR comments. The orchestrating agent synthesizes findings into a combined verdict. A user-approval gate precedes the synthesis post.
+4. **`/multi-adversarial-review <ais...>`** — replaces `/ghissue-gemini-review` and extends it. Takes a list of agent names. Each listed agent independently challenges the current changes; all adversarial reviews are synthesized. If a PR exists the synthesis is posted; otherwise it appears in-conversation only. A user-approval gate precedes posting.
+5. **`/ghissue-finalize`**, merge, and **`/ghissue-close <n>`** — same as the single-agent flow.
 
 ### Diagnostic command
 
@@ -61,12 +62,6 @@ Verifies a merged PR references `#n`, updates task checkboxes in the issue body,
 
 Operates on the current feature branch, assuming implementation and review are complete. In the main context it detects the branch, extracts the issue number from the branch name, fetches issue details, and checks for uncommitted changes. It then spawns a general-purpose subagent that reads `AGENTS.md`, `.github/CONTRIBUTING.md`, and `.github/pull_request_template.md`, reviews changed files for doc/ADR updates, runs `doit check`, and drafts a commit message plus a PR body written to a temp file. The main context then presents the drafts to the user, waits for explicit approval, stages files, commits, and creates the PR via `doit pr --title=... --body-file=...`. **Workflow position:** after implementation and review. **Design note:** will not commit or create the PR without explicit user confirmation; stops if run on `main`.
 
-### `/ghissue-gemini-review`
-
-**Args:** none. **Source:** `.claude/commands/ghissue-gemini-review.md`.
-
-Runs in the main conversation context. Verifies a PR exists for the current branch, invokes `gemini -p "/ghissue-review-pr" --yolo` to get a Gemini-authored review as stdout markdown, and posts the output as a comment on the PR via `gh pr comment`, then reports a brief summary to the user. **Workflow position:** optional second-opinion review on an open PR. **Design note:** Gemini does not post to GitHub itself — the orchestrating Claude agent posts the captured stdout.
-
 ### `/ghissue-implement <n>`
 
 **Args:** issue number. **Source:** `.claude/commands/ghissue-implement.md`.
@@ -74,23 +69,29 @@ Runs in the main conversation context. Verifies a PR exists for the current bran
 Validates that the issue is open and that a plan comment exists (otherwise instructs the user to run `/ghissue-plan <n>` first). Checks the current branch: if already on `<type>/<n>-*` it resumes work on that branch, otherwise it checks out `main`, pulls, and creates a new branch whose type is derived from the issue's labels (`enhancement`→`feat`, `bug`→`fix`, `refactor`→`refactor`, `documentation`→`docs`, `chore`→`chore`, else `issue`). It then spawns the custom `implement-worker` subagent (defined in `.claude/agents/implement-worker.md`) that reads `AGENTS.md` and `.claude/CLAUDE.md`, fetches the plan via `gh api`, implements files and tests, and runs `doit check`, fixing failures rather than giving up. The main context receives only the summary. **Workflow position:** after plan exists, before `/ghissue-finalize`. **Design note:** the subagent pattern keeps the main conversation context clean. The command now spawns `implement-worker` rather than the built-in `general-purpose` subagent. The custom subagent has `permissionMode: default` in its YAML frontmatter — per Claude Code's documented sub-agent precedence rules, this should escape parent plan mode because plan mode is not in the parent-overrides-child list. The status-line preamble warning (telling the user to check for "plan mode" before running) is retained as belt-and-suspenders while the override is empirically validated; it can be removed in a follow-up once confirmed on the shipping Claude Code version.
 
 
-### `/ghissue-plan-both <n>`
+### `/multi-adversarial-review <ais...>`
 
-**Args:** issue number. **Source:** `.claude/commands/ghissue-plan-both.md`.
+**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`). **Sources:** `.claude/commands/multi-adversarial-review.md`, `.gemini/commands/multi-adversarial-review.toml`, `.copilot/commands/multi-adversarial-review.md`, `.agents/skills/multi-adversarial-review/SKILL.md`.
 
-Dual-agent replacement for `/ghissue-plan`. Validates the issue, warns if plan comments already exist, then generates two plans in isolated contexts — a Claude plan via a spawned subagent and a Gemini plan via `gemini -p "/ghissue-plan-stdout <n>" --yolo` (the stdout-only variant of Gemini's planner) — posts both as separate issue comments, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the dual-agent workflow. **Design note:** isolated contexts are mandatory so neither agent can see the other's output while drafting; Claude is the orchestrator and the only agent that writes to GitHub.
+Runs each listed agent in an isolated context to independently challenge the current uncommitted changes and the current branch vs `main`. Each agent outputs an adversarial review (Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering); all reviews are synthesized into a combined challenge with consensus and per-agent-only findings. A user-approval gate precedes posting. If a PR exists the synthesis is posted as a PR comment; otherwise it is presented in-conversation only. **Workflow position:** optional adversarial challenge before `/ghissue-finalize`. **Design note:** no agent sees any other agent's output while drafting; every non-self agent runs in non-interactive mode and writes only to stdout.
+
+### `/multi-plan <ais...> <issue#>`
+
+**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`) followed by the issue number. **Sources:** `.claude/commands/multi-plan.md`, `.gemini/commands/multi-plan.toml`, `.copilot/commands/multi-plan.md`, `.agents/skills/multi-plan/SKILL.md`.
+
+Multi-agent replacement for the old `/ghissue-plan-both` command. Validates the issue, warns if plan comments already exist, then generates independent plans from each listed agent in isolated contexts. Posts each plan as a separate issue comment, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the multi-agent workflow. **Design note:** isolated contexts are mandatory so no agent can see another's output while drafting; the orchestrating agent is the only one that writes to GitHub.
+
+### `/multi-review <ais...>`
+
+**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`). **Sources:** `.claude/commands/multi-review.md`, `.gemini/commands/multi-review.toml`, `.copilot/commands/multi-review.md`, `.agents/skills/multi-review/SKILL.md`.
+
+Multi-agent replacement for the old `/ghissue-review-both` command. Verifies a PR exists for the current branch, warns if reviews already exist, then generates independent code reviews from each listed agent in isolated contexts. Posts each review as a separate PR comment, synthesizes findings into a combined verdict (consensus findings, per-agent-only findings, combined verdict). A user-approval gate precedes the synthesis post. **Workflow position:** after `/ghissue-implement`, before `/ghissue-finalize`, in the multi-agent workflow. **Design note:** same isolation guarantee as `/multi-plan` — no reviewer sees another's output; the synthesis is posted after all raw reviews so readers can audit it against the sources.
 
 ### `/ghissue-plan <n>`
 
 **Args:** issue number. **Source:** `.claude/commands/ghissue-plan.md`.
 
 Runs in the main conversation context (not a subagent) so the user can ask questions and refine the plan interactively. Enters plan mode, validates the issue, warns if a plan comment already exists, reads `AGENTS.md` and `.claude/CLAUDE.md`, fetches issue details, explores the codebase, and drafts a plan with the standard sections (Overview, Files to Create/Modify, Test Plan, Documentation, Validation). It iterates inside plan mode with `AskUserQuestion` until the user approves, then exits plan mode and posts the approved plan as an issue comment. **Workflow position:** first step of the single-agent workflow. **Design note:** plan mode is preserved throughout iteration; exiting plan mode means "post the approved plan", nothing more.
-
-### `/ghissue-review-both`
-
-**Args:** none. **Source:** `.claude/commands/ghissue-review-both.md`.
-
-Dual-agent PR review. Verifies a PR exists for the current branch, then in parallel spawns a general-purpose Claude review subagent and invokes `gemini -p "/ghissue-review-pr" --yolo`, posts both reviews as separate PR comments, and posts a synthesis listing consensus findings (both agents flagged), Claude-only findings, Gemini-only findings, and a combined verdict. **Workflow position:** after `/ghissue-implement`, before `/ghissue-finalize`, in the dual-agent workflow. **Design note:** same isolation guarantee as `/ghissue-plan-both` — neither reviewer sees the other's output; the synthesis is posted after both raw reviews so readers can audit the synthesis against the sources.
 
 ### `/ghissue-status`
 
@@ -139,18 +140,6 @@ Gemini-native implementation of the implement command. Validates the issue and p
 **Args:** issue number. **Source:** `.gemini/commands/ghissue-plan.md`.
 
 Gemini-native standalone planning command. Validates the issue, reads `AGENTS.md`, explores the codebase, and drafts a plan inline in the conversation. Iterates with the user until the plan is approved, then posts it to the issue as a comment via `gh issue comment`. Mirrors the behavior of Claude's `/ghissue-plan`. **Workflow position:** start of standalone Gemini workflow, before `/ghissue-implement`. **Design note:** Gemini has no plan-mode equivalent, so iteration happens in the regular conversation context.
-
-#### `/ghissue-plan-stdout <n>` (Gemini)
-
-**Args:** issue number. **Source:** `.gemini/commands/ghissue-plan-stdout.md`.
-
-Orchestration-only variant of `/ghissue-plan`. Invoked by Claude's `/ghissue-plan-both` command via `gemini -p "/ghissue-plan-stdout <n>" --yolo`. Fetches the issue, reads `AGENTS.md`, explores the codebase, and outputs a plan in the standard format to stdout, signed `*Plan by: Gemini*`. **Workflow position:** called indirectly from `/ghissue-plan-both`. **Design note:** output-only — the command explicitly instructs Gemini not to post to GitHub; the orchestrating Claude agent captures stdout and posts it. Split from `/ghissue-plan` so the standalone command can post directly without producing duplicate comments under orchestration.
-
-#### `/ghissue-review-pr` (Gemini)
-
-**Args:** none. **Source:** `.gemini/commands/ghissue-review-pr.md`.
-
-Invoked by Claude's `/ghissue-review-both` and `/ghissue-gemini-review` commands via `gemini -p "/ghissue-review-pr" --yolo`. Identifies the current branch's PR, scans for `Addresses #XXX` to find the issue, reads `AGENTS.md` and `.github/CONTRIBUTING.md`, runs `gh pr diff`, reviews the changes for correctness, style, testing, security, documentation, architecture, and breaking changes, and outputs a review in the standard format to stdout, signed `*Review by: Gemini*`. **Workflow position:** called indirectly from `/ghissue-review-both` or `/ghissue-gemini-review`. **Design note:** output-only for the same reason as the Gemini plan command.
 
 ## Codex
 

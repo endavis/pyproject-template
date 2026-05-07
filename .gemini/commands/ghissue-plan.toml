@@ -6,10 +6,6 @@ This command runs in the main conversation context so the user can ask questions
 discuss tradeoffs, and refine the plan interactively. After the user approves it,
 the plan is posted to the issue as a comment.
 
-If you are being invoked non-interactively by a dual-agent orchestrator (Claude's
-`/ghissue-plan-both`), you should be reading `/ghissue-plan-stdout` instead — that variant
-emits the plan to stdout without posting, which is what the orchestrator needs.
-
 ### Step 1: Validate the issue
 
 1. **Verify the issue exists and is open:**
@@ -104,5 +100,5 @@ Tell the user:
 
 - `/ghissue-implement {{args}}` — implement the approved plan.
 - `/ghissue-finalize` — commit changes and create a PR.
-- `/ghissue-plan-stdout {{args}}` — orchestration-only variant (output to stdout, no posting).
+- `/multi-plan claude gemini {{args}}` — multi-agent orchestration variant (runs multiple agents in parallel).
 """

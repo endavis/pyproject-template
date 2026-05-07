@@ -120,22 +120,39 @@ This means the 12 Codex-source delegation skills under `.agents/skills/delegate-
 
 Inverse directions are clean by construction: Codex does not read `.gemini/commands/`, `.claude/commands/`, or `.copilot/commands/`; Claude and Copilot do not read `.agents/skills/`. Only the Gemini ↔ Codex pair shares a path.
 
+## Multi-agent orchestration (`/multi-*`)
+
+In addition to the 1-to-1 delegation matrix above, this template ships three N-to-1 orchestrators that let any host agent run **any combination** of agents in parallel and synthesize the results:
+
+| Command | Args | Description |
+| :--- | :--- | :--- |
+| `/multi-plan <ais...> <issue#>` | agent list + issue number | Each listed agent independently plans the issue; plans posted as separate comments; synthesized plan posted after user approval. |
+| `/multi-review <ais...>` | agent list | Each listed agent independently reviews the current PR; reviews posted as separate comments; synthesis posted after user approval. |
+| `/multi-adversarial-review <ais...>` | agent list | Each listed agent independently challenges the current changes; synthesis posted to PR (if exists) after user approval. |
+
+Each command is available for all four hosts:
+- Claude: `.claude/commands/multi-{plan,review,adversarial-review}.md`
+- Gemini: `.gemini/commands/multi-{plan,review,adversarial-review}.toml`
+- Copilot: `.copilot/commands/multi-{plan,review,adversarial-review}.md`
+- Codex: `.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md`
+
+These supersede the old hardcoded `/ghissue-plan-both`, `/ghissue-review-both`, and `/ghissue-gemini-review` commands, which have been removed.
+
 ## Out of scope (v1)
 
 - Background jobs (`status`, `result`, `cancel` analogues)
 - Session resume across delegations
 - ACP-style brokering for long-running tasks
 - Streaming output
-- Consolidating the existing `/ghissue-gemini-review` and `/ghissue-review-both` family into the matrix
 
 These are deliberate omissions to keep v1 small. Synchronous-only invocation only.
 
 ## Relationship to existing artifacts
 
 - `ghissue-plan`, `ghissue-implement`, `ghissue-finalize` — same agent acts on itself for the issue lifecycle. These remain unchanged.
-- `ghissue-review-both`, `ghissue-gemini-review` — existing dual-agent review skills. They overlap with `/gemini:review` from Claude; consolidation is deferred.
+- `/multi-plan`, `/multi-review`, `/multi-adversarial-review` — N-to-1 orchestrators that supersede the removed `/ghissue-plan-both`, `/ghissue-review-both`, and `/ghissue-gemini-review` commands. See [Multi-agent orchestration](#multi-agent-orchestration-multi-) above.
 - `.claude/commands/`, `.gemini/commands/`, `.copilot/commands/`, `.agents/skills/` — established per-agent config directories. The matrix adds new subdirectories without changing existing files.
-- `.gemini/settings.json` `skills.disabled` — existing pattern, extended with 12 new entries.
+- `.gemini/settings.json` `skills.disabled` — existing pattern, extended with 12 delegation entries and 3 multi-orchestrator entries (to prevent `.agents/skills/multi-*` from conflicting with Gemini's native TOML variants).
 
 ## See also
 
