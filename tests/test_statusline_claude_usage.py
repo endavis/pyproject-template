@@ -5,8 +5,19 @@ from __future__ import annotations
 import json
 import os
 import subprocess
+import sys
 import time
 from pathlib import Path
+
+import pytest
+
+# The helper is a bash script targeting Linux/macOS; the Windows GitHub Actions
+# runner's `bash` resolves to wsl.exe (which has no installed distribution),
+# so subprocess invocations cannot exercise the real shell behavior.
+pytestmark = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="bash helper is Linux/macOS only; Windows runner has no usable bash",
+)
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = REPO_ROOT / "tools" / "statusline" / "claude-usage.sh"
