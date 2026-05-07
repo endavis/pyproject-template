@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778174584007,
+  "lastUpdate": 1778176572699,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8378,6 +8378,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.222596693616329e-7",
             "extra": "mean: 2.019963765690176 usec\nrounds: 48214"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f106d5fef19d846040268a1bfe27cdad8b84e544",
+          "message": "refactor: rename ghissue-finalize/status to ghi-finalize/status (PR 3 of 3, #558) (merges PR #565, addresses #558)\n\nrefactor: rename ghissue-finalize/status to ghi-finalize/status\n\n- Rename 2 surviving ghissue-* workflow-step commands (ghissue-finalize,\n  ghissue-status) to ghi-finalize/ghi-status across 4 host files (Claude,\n  Gemini, Codex skill directory)\n- Clean up 10 stale ghissue-* line-references in AGENTS.md, README.md,\n  docs/development/ai/slash-commands.md, first-5-minutes.md,\n  cross-agent-delegation.md, bridge-file comments, and next-step suggestions\n- Add test_retired_workflow_step_aliases_are_removed retirement assertion;\n  update fixture path ghissue-finalize -> ghi-finalize\n- Completes issue #558: unified slash-command surface now fully in place\n\nAddresses #558\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-07T18:55:46+01:00",
+          "tree_id": "5fc4410224baa92ccc94c561c3625b00b86a57fe",
+          "url": "https://github.com/endavis/pyproject-template/commit/f106d5fef19d846040268a1bfe27cdad8b84e544"
+        },
+        "date": 1778176572224,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8731439.07488043,
+            "unit": "iter/sec",
+            "range": "stddev: 1.128817132589647e-8",
+            "extra": "mean: 114.52865803953333 nsec\nrounds: 77670"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8915026.089563873,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1950651420507604e-8",
+            "extra": "mean: 112.17017089502654 nsec\nrounds: 89119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5202945.448246792,
+            "unit": "iter/sec",
+            "range": "stddev: 1.624416834679036e-8",
+            "extra": "mean: 192.19882467477427 nsec\nrounds: 52343"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1642702.4422880516,
+            "unit": "iter/sec",
+            "range": "stddev: 2.781644352680627e-7",
+            "extra": "mean: 608.7529757410854 nsec\nrounds: 56456"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 486857.001428227,
+            "unit": "iter/sec",
+            "range": "stddev: 5.416370837849126e-7",
+            "extra": "mean: 2.0539912070000725 usec\nrounds: 55609"
           }
         ]
       }
