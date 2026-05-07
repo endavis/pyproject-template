@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778172740396,
+  "lastUpdate": 1778174584007,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8319,6 +8319,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.3532277963640315e-7",
             "extra": "mean: 1.9785273770048568 usec\nrounds: 45677"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ad8b293ba2e8439213df3c5dc343c7f1ce9f0b9b",
+          "message": "refactor: add self-action grid and retire ghissue-plan/implement/close (PR 2 of 3, #558) (merges PR #564, addresses #558)\n\nrefactor: add self-action grid and retire ghissue-plan/implement/close\n\nIntroduce 16 new self-action command files (plan, implement, review,\nadversarial-review × Claude Code, Gemini CLI, Copilot CLI, Codex CLI)\nfollowing the <currentai>:<action> naming convention established in PR 1\n(#563). Delete the 7 retired ghissue-plan/implement/close aliases across\n.claude/commands/, .gemini/commands/, and .agents/skills/. Retarget all\n36 cross-agent bridge files and the 4 multi-* orchestrators to the new\nprimitive names. Add self-action grid existence + retirement assertions to\ntests/template/test_ai_agent_assets.py. Update AGENTS.md, README,\nAI_SETUP.md, slash-commands.md, first-5-minutes.md, and\ncross-agent-delegation.md to reflect the new surface.\n\nAddresses #558\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-07T18:22:35+01:00",
+          "tree_id": "d7d2aede10bf278702c43c7ec47cb5734442bff9",
+          "url": "https://github.com/endavis/pyproject-template/commit/ad8b293ba2e8439213df3c5dc343c7f1ce9f0b9b"
+        },
+        "date": 1778174583325,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8943835.112014355,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3273755704563137e-8",
+            "extra": "mean: 111.80885911645315 nsec\nrounds: 88598"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8899889.618216015,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6430210020611236e-8",
+            "extra": "mean: 112.36094411252374 nsec\nrounds: 86155"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6347610.377822202,
+            "unit": "iter/sec",
+            "range": "stddev: 1.606687663689103e-8",
+            "extra": "mean: 157.53960001922638 nsec\nrounds: 61828"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1762368.8734576465,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7874176521768955e-7",
+            "extra": "mean: 567.4181013184084 nsec\nrounds: 57156"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 495058.3851974803,
+            "unit": "iter/sec",
+            "range": "stddev: 5.222596693616329e-7",
+            "extra": "mean: 2.019963765690176 usec\nrounds: 48214"
           }
         ]
       }
