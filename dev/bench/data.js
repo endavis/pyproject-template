@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778168635112,
+  "lastUpdate": 1778172740396,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8260,6 +8260,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.432799516042039e-7",
             "extra": "mean: 2.0822592043640067 usec\nrounds: 51959"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2b55fbbfdde54663e013916017851eb15a1b16a6",
+          "message": "refactor: add /multi-* orchestrators and retire dual-agent commands (PR 1/3) (merges PR #563, addresses #558)\n\nrefactor: add /multi-* orchestrators, retire dual-agent commands\n\n- Add multi-plan, multi-review, multi-adversarial-review for all four\n  agent hosts (Claude, Gemini, Copilot, Codex)\n- Delete ghissue-plan-both, ghissue-review-both, ghissue-gemini-review,\n  ghissue-plan-stdout, ghissue-review-pr (superseded by multi-*)\n- Update docs (slash-commands.md, cross-agent-delegation.md,\n  first-5-minutes.md, AGENTS.md, AI_SETUP.md) and tests\n\nAddresses #558\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-07T17:51:45+01:00",
+          "tree_id": "e8123f85123befe9fe8b19fd1c93cbef349e900b",
+          "url": "https://github.com/endavis/pyproject-template/commit/2b55fbbfdde54663e013916017851eb15a1b16a6"
+        },
+        "date": 1778172739723,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8918015.033283375,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3451762932919888e-8",
+            "extra": "mean: 112.1325761694558 nsec\nrounds: 87207"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8817956.036115656,
+            "unit": "iter/sec",
+            "range": "stddev: 1.144808696573853e-8",
+            "extra": "mean: 113.40496549362521 nsec\nrounds: 85347"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6469510.610695256,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3789171823397984e-8",
+            "extra": "mean: 154.57119713921196 nsec\nrounds: 62641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1751205.3529927677,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3604620600724084e-7",
+            "extra": "mean: 571.0352576818156 nsec\nrounds: 55534"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505426.4154352135,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3532277963640315e-7",
+            "extra": "mean: 1.9785273770048568 usec\nrounds: 45677"
           }
         ]
       }
