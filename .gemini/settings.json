@@ -38,10 +38,12 @@
   "skills": {
     "disabled": [
       "restore",
-      "ghissue-plan",
-      "ghissue-implement",
       "ghissue-finalize",
       "checkpoint",
+      "codex-plan",
+      "codex-implement",
+      "codex-review",
+      "codex-adversarial-review",
       "delegate-claude-plan",
       "delegate-claude-implement",
       "delegate-claude-review",

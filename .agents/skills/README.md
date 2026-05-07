@@ -41,7 +41,7 @@ Each rule-shaped skill lives in its own subdirectory:
 
 Use a short, lowercase, hyphenated name that reflects the domain (e.g., `codegen`, `db-migrations`,
 `api-contracts`). Keep rule-shaped skills in separate directories from the workflow skills that
-already exist here (`ghissue-plan`, `ghissue-implement`, etc.).
+already exist here (`codex-plan`, `codex-implement`, etc.).
 
 ## File structure
 
@@ -148,4 +148,4 @@ See [`.claude/rules/README.md`](../../.claude/rules/README.md),
 - **Anything not tied to an observed failure** — if you cannot cite a PR or issue where the rule was
   violated, the rule-shaped skill is not ready to be written yet.
 - **Workflow logic** — do not mix rule-shaped skills (self-check checklists) with workflow skills
-  (multi-step instructions like `ghissue-plan`). Keep them in separate subdirectories.
+  (multi-step instructions like `codex-plan`). Keep them in separate subdirectories.

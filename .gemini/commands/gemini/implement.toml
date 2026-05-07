@@ -22,7 +22,7 @@ This command performs the implementation of an approved plan for the specified i
    gh api repos/{owner}/{repo}/issues/{{args}}/comments --jq '.[].body' | grep -E "^#+ Implementation Plan for"
    ```
    - If no plan comment is found, tell the user:
-     > "No implementation plan found for issue #{{args}}. Run `/ghissue-plan {{args}}` first."
+     > "No implementation plan found for issue #{{args}}. Run `/gemini:plan {{args}}` first."
    - Stop and wait for the user.
 
 3. **Check current branch state:**

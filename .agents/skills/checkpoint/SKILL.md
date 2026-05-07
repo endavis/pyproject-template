@@ -51,7 +51,7 @@ Structure:
 - **User direction recorded** — decisions, preferences, or constraints surfaced in the current conversation that future sessions need to honor (e.g., "no cross-provider X", "always prefer Y pattern").
 - **Pre-action reads** — files/docs the future session should read before starting, scoped per option.
 - **Workflow** — short reminder of project conventions (Issue → Branch → PR per `AGENTS.md`, etc.).
-- **Start by:** — concrete first command (e.g., `$ghissue-plan 714`, or `git checkout main && git pull`).
+- **Start by:** — concrete first command (e.g., `$codex-plan 714`, or `git checkout main && git pull`).
 
 Add anything else load-bearing — open blockers, runtime gotchas, manual prerequisite steps. Keep tight; this is a paste-block, not a doc.
 
