@@ -22,7 +22,7 @@ import click
 from package_name.core import greet as _greet
 
 
-@click.group()
+@click.group(context_settings={"help_option_names": ["-h", "--help"]})
 @click.version_option(package_name="package_name")
 def main() -> None:
     """package_name command-line interface."""
