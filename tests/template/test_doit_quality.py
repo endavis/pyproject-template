@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from tools.doit.quality import (
+    task_check,
     task_format,
     task_format_check,
     task_lint,
@@ -103,6 +104,28 @@ class TestTaskFormatCheck:
         assert isinstance(action, str)
         assert "bootstrap.py" not in action
         assert "ruff format --check" in action
+
+
+class TestTaskCheck:
+    """``task_check`` aggregates the pre-PR check tasks via ``task_dep``."""
+
+    def test_task_dep_includes_audit(self) -> None:
+        """``audit`` must run as part of ``doit check`` so dep CVEs fail locally."""
+        task = task_check()
+        assert "audit" in task["task_dep"]
+
+    def test_task_dep_covers_full_check_set(self) -> None:
+        """``task_check`` must depend on every pre-PR quality/security task."""
+        task = task_check()
+        assert set(task["task_dep"]) == {
+            "format_check",
+            "lint",
+            "type_check",
+            "security",
+            "audit",
+            "spell_check",
+            "test",
+        }
 
 
 class TestTaskTypeCheck:
