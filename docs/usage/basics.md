@@ -98,7 +98,7 @@ uv run doit lint
 # Run type checking
 uv run doit type_check
 
-# Run all checks (format, lint, type check, test)
+# Run all checks (format, lint, type check, security, audit, spell, test)
 uv run doit check
 ```
 

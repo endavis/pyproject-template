@@ -73,9 +73,17 @@ def task_maintainability() -> dict[str, Any]:
 
 
 def task_check() -> dict[str, Any]:
-    """Run all checks (format, lint, type check, security, spelling, test)."""
+    """Run all checks (format, lint, type check, security, audit, spelling, test)."""
     return {
         "actions": [success_message],
-        "task_dep": ["format_check", "lint", "type_check", "security", "spell_check", "test"],
+        "task_dep": [
+            "format_check",
+            "lint",
+            "type_check",
+            "security",
+            "audit",
+            "spell_check",
+            "test",
+        ],
         "title": title_with_actions,
     }

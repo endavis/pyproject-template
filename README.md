@@ -245,7 +245,7 @@ doit coverage      # Run tests with coverage report
 doit format        # Format code with ruff
 doit lint          # Run linting
 doit type_check    # Run type checking with mypy
-doit check         # Run ALL checks (format, lint, type check, test)
+doit check         # Run ALL checks (format, lint, type check, security, audit, spell, test)
 
 # Security
 doit security      # Run security scan with bandit
