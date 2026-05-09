@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778181453429,
+  "lastUpdate": 1778337818614,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8555,6 +8555,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.820553916335971e-7",
             "extra": "mean: 1.9322248594919733 usec\nrounds: 47692"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "937bdd718ec33b2a2aba11ef4ba8e8e4de458688",
+          "message": "feat: include pip-audit in 'doit check' so dependency CVEs fail locally (merges PR #571, addresses #570)\n\nAdds 'audit' to task_check's task_dep so pip-audit runs as part of\n'doit check'. Dependency CVEs now surface locally before opening a PR\ninstead of only in CI after pushing.\n\nThe audit task already uses install_check_or_skip, so it skips\ngracefully when the security extras are not installed (same pattern\nas the existing security and spell_check deps).\n\nAddresses #570",
+          "timestamp": "2026-05-09T15:43:10+01:00",
+          "tree_id": "42798e3164d8d6bcff77089a797430aa5452239c",
+          "url": "https://github.com/endavis/pyproject-template/commit/937bdd718ec33b2a2aba11ef4ba8e8e4de458688"
+        },
+        "date": 1778337817902,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8526139.451836785,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2377355258842718e-8",
+            "extra": "mean: 117.28637628423613 nsec\nrounds: 85749"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8765384.917916106,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3636212255744949e-8",
+            "extra": "mean: 114.08512111727562 nsec\nrounds: 85165"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5497695.706319955,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4454139052109152e-8",
+            "extra": "mean: 181.8943887437123 nsec\nrounds: 55795"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1674352.8983840258,
+            "unit": "iter/sec",
+            "range": "stddev: 2.903468122660352e-7",
+            "extra": "mean: 597.2456588841777 nsec\nrounds: 60238"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491622.79028211656,
+            "unit": "iter/sec",
+            "range": "stddev: 5.41476806917992e-7",
+            "extra": "mean: 2.034079826580359 usec\nrounds: 50259"
           }
         ]
       }
