@@ -195,7 +195,12 @@ output+="\n${C_ACCENT}${model}${C_GRAY} | ${ctx}${C_RESET}"
 # See docs/development/ai/statusline.md#opt-in-claude-max-usage-display
 if [[ -n "$CLAUDE_USAGE_STATUSLINE" ]]; then
     usage=$(bash "$CLAUDE_PROJECT_DIR/tools/statusline/claude-usage.sh" 2>/dev/null)
-    [[ -n "$usage" && "$usage" != "?" ]] && output+="${C_GRAY} | ${usage}${C_RESET}"
+    if [[ -n "$usage" && "$usage" != "?" ]]; then
+        # Accent the bucket labels; insert middle-dot separator between gauges.
+        colored="${usage//5h:/${C_ACCENT}5h:${C_GRAY}}"
+        colored="${colored// wk:/ · ${C_ACCENT}wk:${C_GRAY}}"
+        output+="${C_GRAY} | ${colored}${C_RESET}"
+    fi
 fi
 
 printf '%b\n' "$output"
