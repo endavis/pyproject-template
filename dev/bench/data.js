@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778777389572,
+  "lastUpdate": 1778802334272,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8791,6 +8791,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.974399979722882e-7",
             "extra": "mean: 1.9809515453735433 usec\nrounds: 53741"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ef6b85d61fb085f11510a4a964abe1313faee77d",
+          "message": "feat: show usage bucket end times in the statusline (merges PR #581, addresses #580)\n\nAdd _fmt_ts (python3 ISO→strftime) and parse_usage helpers to\nclaude-usage.sh so each gauge appends its reset time in local timezone.\nFormat: 5h:N%@HHMM wk:N%@aaa-HHMM. Rename 7d: → wk: to fit.\nFall back to ? when resets_at is absent or malformed.\n\nWrapper accents 5h:/wk: labels and inserts a · separator between gauges\nso they don't visually run together.\n\nAddresses #580.",
+          "timestamp": "2026-05-15T00:45:10+01:00",
+          "tree_id": "4b8d1ac641e3aa0204a0f520f012108a3bb1aa54",
+          "url": "https://github.com/endavis/pyproject-template/commit/ef6b85d61fb085f11510a4a964abe1313faee77d"
+        },
+        "date": 1778802333340,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8728131.883364882,
+            "unit": "iter/sec",
+            "range": "stddev: 8.825735948394909e-9",
+            "extra": "mean: 114.57205429101266 nsec\nrounds: 45164"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8919565.232780581,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1379100392485204e-8",
+            "extra": "mean: 112.11308779096854 nsec\nrounds: 87982"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6380464.5898936335,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2905686401089445e-7",
+            "extra": "mean: 156.728398992129 nsec\nrounds: 64297"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1694114.8307816233,
+            "unit": "iter/sec",
+            "range": "stddev: 3.462197791840842e-7",
+            "extra": "mean: 590.2787590488329 nsec\nrounds: 58086"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506446.2725010931,
+            "unit": "iter/sec",
+            "range": "stddev: 5.006729500331325e-7",
+            "extra": "mean: 1.9745431140434382 usec\nrounds: 43930"
           }
         ]
       }
