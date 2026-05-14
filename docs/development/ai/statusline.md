@@ -72,6 +72,17 @@ COLOR="blue"
 | slate    | 60        | Dark blue-gray |
 | cyan     | 37        | Bright, tech |
 
+The usage segment (opt-in, see below) uses three additional fixed colors that are independent
+of the `COLOR` theme:
+
+| Field | Variable | ANSI Code | Description |
+|-------|----------|-----------|-------------|
+| Percent value | `C_PCT` | 71 (green) | "value" semantics — current consumption |
+| `@` separator | `C_DIM` | 238 (dark gray) | dim join between percent and time |
+| Reset time | `C_TIME` | 136 (gold) | "schedule" semantics — when the bucket ends |
+
+Edit `.claude/statusline-command.sh` to change these.
+
 ### Removing Features
 
 Comment out or remove lines in the "Build output" section of the script:
