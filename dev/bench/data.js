@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778337818614,
+  "lastUpdate": 1778773141938,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8614,6 +8614,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.41476806917992e-7",
             "extra": "mean: 2.034079826580359 usec\nrounds: 50259"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "41a8d148cdb34006e1291e30d432a5a07636a691",
+          "message": "chore: bump urllib3 to 2.7.0 to clear pip-audit CVEs (merges PR #577, addresses #576)\n\nBumps urllib3 from 2.6.3 to 2.7.0 (transitive via requests) to\nclear CVE-2026-44431 and CVE-2026-44432. Unblocks the audit step\nin `doit check` (added in #571), which was failing on every PR.\n\nAddresses #576",
+          "timestamp": "2026-05-14T16:38:35+01:00",
+          "tree_id": "728f8941739487dd58e91a91b3d3a41f44e0ae27",
+          "url": "https://github.com/endavis/pyproject-template/commit/41a8d148cdb34006e1291e30d432a5a07636a691"
+        },
+        "date": 1778773141282,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8708058.757795224,
+            "unit": "iter/sec",
+            "range": "stddev: 1.572942341785373e-8",
+            "extra": "mean: 114.83615669276763 nsec\nrounds: 85390"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9038956.229274003,
+            "unit": "iter/sec",
+            "range": "stddev: 9.52236894189863e-9",
+            "extra": "mean: 110.63224277614614 nsec\nrounds: 87628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5594563.963108294,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2347170765293905e-8",
+            "extra": "mean: 178.74494001573774 nsec\nrounds: 54431"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1642263.2838623917,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7778995367637745e-7",
+            "extra": "mean: 608.9157626712135 nsec\nrounds: 60104"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 513640.97697611,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3252132777864167e-7",
+            "extra": "mean: 1.9468851684831818 usec\nrounds: 46799"
           }
         ]
       }
