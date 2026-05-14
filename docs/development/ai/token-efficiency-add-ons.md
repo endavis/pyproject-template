@@ -199,7 +199,6 @@ raw output bypasses every other token-efficiency control and lands in context un
 **What it blocks:**
 
 - Leading banned commands: `cat`, `head`, `tail`, `find`, `grep`, `rg`, `wc`
-- Piped truncators: `... | head`, `... | tail` (regardless of arguments)
 
 Each block message names the offending command, suggests the native replacement, and reminds the
 agent about the escape hatch.
