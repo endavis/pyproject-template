@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778773561328,
+  "lastUpdate": 1778777389572,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8732,6 +8732,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.899298856523694e-7",
             "extra": "mean: 1.8691261629650826 usec\nrounds: 51592"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f434102594731da923c16eea75262ac79d0e311",
+          "message": "refactor: remove piped-truncator block from bash-ban-raw-tools hook (merges PR #579, addresses #578)\n\nStream-mode head/tail (e.g. grep foo | head -20) is a legitimate pipeline\npattern with no native-tool replacement. Only file-read mode (leading head/tail)\nbelongs in the ban. Addresses #578.",
+          "timestamp": "2026-05-14T17:49:18+01:00",
+          "tree_id": "f274eeb2aea5e695fe27b7147ed7280259b38359",
+          "url": "https://github.com/endavis/pyproject-template/commit/8f434102594731da923c16eea75262ac79d0e311"
+        },
+        "date": 1778777388482,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9097623.182105087,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6998623102187118e-8",
+            "extra": "mean: 109.91881945242442 nsec\nrounds: 194629"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9442480.46678914,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1293074491580312e-8",
+            "extra": "mean: 105.90437581705096 nsec\nrounds: 90278"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6709990.807072111,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6994434833047096e-8",
+            "extra": "mean: 149.03150075049768 nsec\nrounds: 65907"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1797516.9850512256,
+            "unit": "iter/sec",
+            "range": "stddev: 2.669700625209612e-7",
+            "extra": "mean: 556.322976815433 nsec\nrounds: 59190"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 504807.905239011,
+            "unit": "iter/sec",
+            "range": "stddev: 4.974399979722882e-7",
+            "extra": "mean: 1.9809515453735433 usec\nrounds: 53741"
           }
         ]
       }
