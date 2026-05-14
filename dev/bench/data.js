@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778802334272,
+  "lastUpdate": 1778802953445,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8850,6 +8850,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.006729500331325e-7",
             "extra": "mean: 1.9745431140434382 usec\nrounds: 43930"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ba1277055360eb23533ccd7bb9f9fe4a9e46e24d",
+          "message": "feat: split usage-segment coloring into per-field semantic colors (merges PR #582, addresses #580)\n\nPrevious round colored only the 5h:/wk: labels, leaving 18%@2240 and\nMon-1500 in uniform gray. Split values into three semantic fixed colors:\npercent green (value), `@` dim (join), time gold (schedule). Theme-\nindependent so they look consistent across all COLOR themes. Falls back\nto uncolored output if the helper format doesn't match.\n\nAddresses #580.",
+          "timestamp": "2026-05-15T00:55:19+01:00",
+          "tree_id": "07c0388b3a5702c9548632a5247ae8b51577ad70",
+          "url": "https://github.com/endavis/pyproject-template/commit/ba1277055360eb23533ccd7bb9f9fe4a9e46e24d"
+        },
+        "date": 1778802951458,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11723876.957747135,
+            "unit": "iter/sec",
+            "range": "stddev: 7.743319853776174e-9",
+            "extra": "mean: 85.29601629256268 nsec\nrounds: 112689"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11438612.763512358,
+            "unit": "iter/sec",
+            "range": "stddev: 7.557330684873638e-9",
+            "extra": "mean: 87.42318851721826 nsec\nrounds: 111820"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8256117.563828396,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7081460723193965e-8",
+            "extra": "mean: 121.12230624975449 nsec\nrounds: 82116"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2127306.7223520833,
+            "unit": "iter/sec",
+            "range": "stddev: 3.015242963868646e-7",
+            "extra": "mean: 470.07795796101163 nsec\nrounds: 62213"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 634650.1521495439,
+            "unit": "iter/sec",
+            "range": "stddev: 5.183817874127716e-7",
+            "extra": "mean: 1.5756712522844678 usec\nrounds: 49430"
           }
         ]
       }
