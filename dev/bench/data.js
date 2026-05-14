@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778773141938,
+  "lastUpdate": 1778773561328,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8673,6 +8673,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.3252132777864167e-7",
             "extra": "mean: 1.9468851684831818 usec\nrounds: 46799"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b42275bbf7e2db58ebebad8332c7b88d76e14a40",
+          "message": "feat: add human-only env var to permit AI to apply ready-to-merge label (merges PR #575, addresses #574)\n\nfeat: add ALLOW_AI_READY_TO_MERGE env-var opt-in with persistence blocks\n\nCloses the loop on AI label self-promotion: a human can grant a\nsession-scoped pass via ALLOW_AI_READY_TO_MERGE=1 in the launching\nshell, while the hook now blocks every persistence path (shell rc\nfiles, .env* files, AI CLI settings files) via Edit/Write/MultiEdit\ncoverage added to Claude, Codex, and Gemini hook matchers.\n\nBash-side detection requires an actual write operation (>, >>, tee,\ncp, mv, dd, sed -i, or script-interpreter -c) targeting a persistence\nfile - plain mention of the var name (commit messages, git add args,\ngrep/cat reads) is allowed. 102 tests, 0 failures.\n\nAddresses #574",
+          "timestamp": "2026-05-14T16:45:28+01:00",
+          "tree_id": "ebb74d22cae9d38fba41937b74b892fe7df76ead",
+          "url": "https://github.com/endavis/pyproject-template/commit/b42275bbf7e2db58ebebad8332c7b88d76e14a40"
+        },
+        "date": 1778773560495,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9167397.138771744,
+            "unit": "iter/sec",
+            "range": "stddev: 7.741938067520638e-9",
+            "extra": "mean: 109.0822165618518 nsec\nrounds: 90099"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9294931.770024955,
+            "unit": "iter/sec",
+            "range": "stddev: 9.155662834827385e-9",
+            "extra": "mean: 107.58551270111315 nsec\nrounds: 91291"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5912391.579311298,
+            "unit": "iter/sec",
+            "range": "stddev: 9.729205262946636e-9",
+            "extra": "mean: 169.13629393208836 nsec\nrounds: 57020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1805450.32119913,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6599989846600344e-7",
+            "extra": "mean: 553.8784358994867 nsec\nrounds: 57081"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 535009.3641692186,
+            "unit": "iter/sec",
+            "range": "stddev: 2.899298856523694e-7",
+            "extra": "mean: 1.8691261629650826 usec\nrounds: 51592"
           }
         ]
       }
