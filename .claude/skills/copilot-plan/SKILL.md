@@ -1,26 +1,42 @@
-# Plan Issue
+---
+name: copilot-plan
+description: Use when planning work for a GitHub issue in this repository from a Copilot CLI session. Drafts an implementation plan, iterates with the user, and posts the approved plan as a comment with the repo's required header format.
+---
 
-Plan the implementation for GitHub issue #$ARGUMENTS.
+# Plan Issue (Copilot)
+
+Plan the implementation for a GitHub issue in this repository.
+
+## When to use
+
+Use this skill when the user wants Copilot to plan a GitHub issue. This is Copilot's self-action equivalent of `/claude:plan` / `/gemini:plan` / `$codex-plan`.
+
+Expected prompt shape:
+
+- `/copilot-plan 399`
+- `/copilot-plan plan issue 399`
+
+If the issue number is missing, ask for it before continuing.
 
 ## Instructions
 
-This command runs in the main conversation context so the user can ask questions, discuss tradeoffs, and refine the plan interactively. After the user approves it, the plan is posted to the issue as a comment.
+This skill runs inline in the active Copilot session so the user can ask questions, discuss tradeoffs, and refine the plan interactively. After the user approves it, the plan is posted to the issue as a comment.
 
 ### Step 1: Validate the issue
 
 1. **Verify the issue exists and is open:**
    ```bash
-   gh issue view $ARGUMENTS --json number,title,state,labels
+   gh issue view <issue-number> --json number,title,state,labels
    ```
    - If the issue does not exist, tell the user and stop.
    - If the issue is closed, tell the user and ask if they want to reopen it or stop.
 
 2. **Check for an existing plan comment:**
    ```bash
-   gh issue view $ARGUMENTS --json comments --jq '.comments[].body' | grep -lE "^#+ Implementation Plan for"
+   gh issue view <issue-number> --json comments --jq '.comments[].body' | grep -lE "^#+ Implementation Plan for"
    ```
    - If a plan comment already exists, warn the user:
-     > "Issue #$ARGUMENTS already has an implementation plan comment. Continuing will post a new one. Proceed?"
+     > "Issue #<n> already has an implementation plan comment. Continuing will post a new one. Proceed?"
    - Wait for user confirmation before continuing.
 
 ### Step 2: Read the project rules
@@ -31,7 +47,7 @@ This command runs in the main conversation context so the user can ask questions
 ### Step 3: Fetch the issue details
 
 ```bash
-gh issue view $ARGUMENTS --json title,body,labels,assignees
+gh issue view <issue-number> --json title,body,labels,assignees
 ```
 
 - Parse the issue body to understand what needs to be done.
@@ -89,9 +105,9 @@ Then:
 Only after the user explicitly approves the plan, post it as a comment:
 
 ```bash
-gh issue comment $ARGUMENTS --body "<approved plan>"
+gh issue comment <issue-number> --body "<approved plan>"
 ```
 
 Tell the user:
-- The plan has been posted as a comment on issue #$ARGUMENTS.
-- When ready, use `/copilot:implement $ARGUMENTS` to start implementation.
+- The plan has been posted as a comment on issue #<n>.
+- When ready, use `/copilot-implement <n>` to start implementation.

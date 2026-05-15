@@ -122,4 +122,4 @@ gh issue comment <issue> --body "<synthesized plan>"
 
 Tell the user:
 - All agent plans plus the synthesized plan have been posted to issue #<issue>
-- When ready, use `/<currentai>:implement <issue>` (e.g. `/copilot:implement <issue>`) to start implementation
+- When ready, use `/<currentai>:implement <issue>` (e.g. `/copilot-implement <issue>` in Copilot) to start implementation

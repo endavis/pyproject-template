@@ -29,13 +29,18 @@ def _cross_pairs() -> list[tuple[str, str]]:
 
 
 def _expected_path(source: str, target: str, action: str) -> Path:
-    """Map a (source, target, action) cell to its on-disk location."""
+    """Map a (source, target, action) cell to its on-disk location.
+
+    Copilot bridges live under .claude/skills/<target>-<action>/SKILL.md because
+    Copilot CLI discovers project skills from skills/ paths only (per @github/copilot
+    SDK index.d.ts) and skill names cannot contain colons.
+    """
     if source == "claude":
         return REPO_ROOT / ".claude" / "commands" / target / f"{action}.md"
     if source == "gemini":
         return REPO_ROOT / ".gemini" / "commands" / target / f"{action}.toml"
     if source == "copilot":
-        return REPO_ROOT / ".copilot" / "commands" / target / f"{action}.md"
+        return REPO_ROOT / ".claude" / "skills" / f"{target}-{action}" / "SKILL.md"
     if source == "codex":
         return REPO_ROOT / ".agents" / "skills" / f"delegate-{target}-{action}" / "SKILL.md"
     raise ValueError(f"unknown source agent: {source}")

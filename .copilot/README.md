@@ -2,9 +2,22 @@
 
 This directory is the GitHub Copilot CLI configuration directory for this repository, parallel to `.claude/`, `.gemini/`, and `.codex/`.
 
+**Important:** Copilot CLI does **not** read any `commands/` directory. Per the installed `@github/copilot` SDK (`sdk/index.d.ts`), Copilot only discovers project skills from `skills/` paths: `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (plus the corresponding personal paths under `~/`). Repo-local `.copilot/commands/<name>.md` files are never loaded.
+
 ## Workflow Skills
 
-Copilot CLI ships self-action commands in `.copilot/commands/copilot/` (`/copilot:plan`, `/copilot:implement`, `/copilot:review`, `/copilot:adversarial-review`). It also auto-discovers some commands from `.claude/commands/` (e.g. `/ghi-finalize`, `/ghi-status`). Cross-agent bridge commands live in `.copilot/commands/<target>/`.
+All Copilot-host workflow skills (self-action and cross-agent bridges, 16 total) live under `.claude/skills/<target>-<action>/SKILL.md`. Because skill names are directory names and cannot contain colons, the slash surface uses hyphen naming:
+
+- **Self-action:** `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
+- **To Claude:** `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
+- **To Codex:** `/codex-plan`, `/codex-implement`, `/codex-review`, `/codex-adversarial-review`
+- **To Gemini:** `/gemini-plan`, `/gemini-implement`, `/gemini-review`, `/gemini-adversarial-review`
+
+The `multi-*` orchestrators (`/multi-plan`, `/multi-review`, `/multi-adversarial-review`) and `/ghi-finalize` / `/ghi-status` come from `.agents/skills/` (interoperable Codex skill path) and are auto-discovered by Copilot.
+
+## Known limitation: delegate-* skill bleed
+
+Copilot reads `.agents/skills/`, which contains the 12 Codex-only `delegate-<target>-<action>` skills. Those surface as `/delegate-...` slash commands alongside the canonical Copilot ones — they shell out to Codex's syntax and are wasted noise in a Copilot session. Copilot supports a `disabledSkills` array, but **only in user config** (`~/.copilot/config.json`) — there is no repo-level setting for it. See [`docs/development/ai/slash-commands.md`](../docs/development/ai/slash-commands.md#copilot) for the user-side config snippet.
 
 ## Dangerous Command Hook
 
@@ -18,7 +31,7 @@ No changes to this hook are needed when adding new slash commands.
 
 ## Subagent / Implement Worker
 
-The `implement-worker` subagent used by `/claude:implement` (and discoverable by Copilot) is defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when spawning the subagent.
+The `implement-worker` subagent used by `/copilot-implement` (and shared with Claude's `/claude:implement`) is defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when spawning the subagent.
 
 ## Temporary Files
 
@@ -40,9 +53,11 @@ file structure, and a worked example.
 
 ## See Also
 
-- `.claude/commands/` — slash command definitions (auto-discovered by Copilot CLI)
+- `.claude/skills/<target>-<action>/SKILL.md` — Copilot-host workflow skills (16 files)
+- `.agents/skills/` — interoperable Codex skill path, also read by Copilot
 - `.claude/agents/implement-worker.md` — implement-worker subagent definition
 - `.github/hooks/copilot-hooks.json` — dangerous command hook wiring
 - `.github/instructions/README.md` — per-stack instruction file pattern for Copilot
 - `docs/development/ai/slash-commands.md` — full workflow and command reference
+- `docs/development/ai/cross-agent-delegation.md` — cross-agent matrix and per-host invocation
 - `docs/development/ai/command-blocking.md` — hook documentation
