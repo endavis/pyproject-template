@@ -1,10 +1,21 @@
+---
+name: copilot-adversarial-review
+description: Use when running a steerable adversarial review of the current changes from a Copilot CLI session. Pressure-tests direction, hidden assumptions, failure modes, and alternatives. Read-only — no files are modified.
+---
+
 # Adversarial Review (Copilot)
 
-Run a steerable adversarial review using GitHub Copilot — pressure-tests design choices, assumptions, and alternative approaches. Optional focus: $ARGUMENTS.
+Run a steerable adversarial review using GitHub Copilot — pressure-tests design choices, assumptions, and alternative approaches.
+
+## When to use
+
+Use this skill when the user wants Copilot to challenge the current changes. This is Copilot's self-action equivalent of `/claude:adversarial-review` / `/gemini:adversarial-review` / `$codex-adversarial-review`.
+
+Optional focus area can be given as a freeform argument.
 
 ## Instructions
 
-This command runs in the main conversation context. Copilot performs the adversarial review directly.
+This skill runs inline in the active Copilot session. Copilot performs the adversarial review directly.
 
 ### Step 1: Gather review context
 
@@ -27,7 +38,7 @@ Be skeptical and steerable. Pressure-test:
 - **Failure Modes:** What are the auth, data loss, race condition, rollback, and reliability failure modes? What happens at scale or under adversarial input?
 - **Alternatives Worth Considering:** What other approaches exist? Are there simpler paths that achieve the same goal with less risk or complexity?
 
-Focus area (optional): $ARGUMENTS
+Apply the optional focus area if the user supplied one.
 
 ### Step 3: Present findings
 

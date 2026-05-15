@@ -59,11 +59,12 @@ def test_self_action_grid_exists() -> None:
         REPO_ROOT / ".gemini" / "commands" / "gemini" / "implement.toml",
         REPO_ROOT / ".gemini" / "commands" / "gemini" / "review.toml",
         REPO_ROOT / ".gemini" / "commands" / "gemini" / "adversarial-review.toml",
-        # Copilot self-action
-        REPO_ROOT / ".copilot" / "commands" / "copilot" / "plan.md",
-        REPO_ROOT / ".copilot" / "commands" / "copilot" / "implement.md",
-        REPO_ROOT / ".copilot" / "commands" / "copilot" / "review.md",
-        REPO_ROOT / ".copilot" / "commands" / "copilot" / "adversarial-review.md",
+        # Copilot self-action (skills under .github/skills/ — see docstring in
+        # tests/test_delegation_matrix.py::_expected_path for why .github/ vs .claude/)
+        REPO_ROOT / ".github" / "skills" / "copilot-plan" / "SKILL.md",
+        REPO_ROOT / ".github" / "skills" / "copilot-implement" / "SKILL.md",
+        REPO_ROOT / ".github" / "skills" / "copilot-review" / "SKILL.md",
+        REPO_ROOT / ".github" / "skills" / "copilot-adversarial-review" / "SKILL.md",
         # Codex self-action (skills)
         REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",

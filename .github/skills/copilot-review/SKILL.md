@@ -1,10 +1,21 @@
+---
+name: copilot-review
+description: Use when reviewing the current branch's PR from a Copilot CLI session. Reads the diff, evaluates correctness/style/testing/security/architecture, drafts a structured review, and posts it after user approval.
+---
+
 # Review PR (Copilot)
 
-Run a single-agent PR review using GitHub Copilot. Optional focus area: $ARGUMENTS.
+Run a single-agent PR review using GitHub Copilot.
+
+## When to use
+
+Use this skill when the user wants Copilot to review the PR for the current branch. This is Copilot's self-action equivalent of `/claude:review` / `/gemini:review` / `$codex-review`.
+
+Optional focus area can be given as a freeform argument.
 
 ## Instructions
 
-This command runs in the main conversation context. Copilot reviews the current branch's PR directly.
+This skill runs inline in the active Copilot session. Copilot reviews the current branch's PR directly.
 
 ### Step 1: Verify a PR exists
 
@@ -40,7 +51,7 @@ Evaluate the diff for:
 - **Architecture:** does it respect layering rules from `docs/development/ai/architectural-conventions.md`?
 - **Breaking changes:** any signature changes, removed APIs, or behavior changes?
 
-Focus area (optional): $ARGUMENTS
+Apply the optional focus area if the user supplied one.
 
 ### Step 4: Present findings and post review
 
