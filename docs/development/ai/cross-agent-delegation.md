@@ -25,7 +25,7 @@ Self-action and cross-agent delegation share the same naming convention within e
 | :--- | :--- | :--- | :--- |
 | Claude Code | `/claude:<action>` | `/<target>:<action>` | `.claude/commands/<target>/<action>.md` |
 | Gemini CLI | `/gemini:<action>` | `/<target>:<action>` | `.gemini/commands/<target>/<action>.toml` |
-| Copilot CLI | `/copilot-<action>` | `/<target>-<action>` | `.claude/skills/<target>-<action>/SKILL.md` |
+| Copilot CLI | `/copilot-<action>` | `/<target>-<action>` | `.github/skills/<target>-<action>/SKILL.md` |
 | Codex CLI | `$codex-<action>` | `$delegate-<target>-<action>` | `.agents/skills/<dir>/SKILL.md` |
 
 | Action | Argument | Notes |
@@ -44,7 +44,7 @@ The 4 sources × 4 targets × 4 actions = 64 cells (including self-action). Cros
 | **claude** (`.claude/commands/`) | `/claude:{plan,implement,review,adversarial-review}` | `/codex:{...}` | `/gemini:{...}` | `/copilot:{...}` |
 | **codex** (`.agents/skills/`) | `$delegate-claude-{...}` | `$codex-{plan,implement,review,adversarial-review}` | `$delegate-gemini-{...}` | `$delegate-copilot-{...}` |
 | **gemini** (`.gemini/commands/`) | `/claude:{...}` | `/codex:{...}` | `/gemini:{plan,implement,review,adversarial-review}` | `/copilot:{...}` |
-| **copilot** (`.claude/skills/`) | `/claude-{...}` | `/codex-{...}` | `/gemini-{...}` | `/copilot-{plan,implement,review,adversarial-review}` |
+| **copilot** (`.github/skills/`) | `/claude-{...}` | `/codex-{...}` | `/gemini-{...}` | `/copilot-{plan,implement,review,adversarial-review}` |
 
 Each cell expands to `{plan, implement, review, adversarial-review}`. The diagonal (self-action) cells run natively in the host agent rather than shelling out. **Naming asymmetry:** Claude and Gemini use `<target>:<action>` (colon); Copilot and Codex use `<target>-<action>` (hyphen) because their command surface is skills, and skill names — being directory names — cannot contain colons. The functional behavior is identical; only the slash name differs.
 
@@ -142,13 +142,13 @@ Copilot CLI also reads `.agents/skills/` (per `@github/copilot` SDK, `sdk/index.
 
 ### Claude ↔ Copilot
 
-Copilot also reads `.claude/skills/`, which is where the 16 Copilot-host bridges in this repo live. Those skills are therefore also visible to Claude Code as a duplicate surface alongside Claude's native `<ai>:<action>` slash commands.
+Copilot also reads `.claude/skills/`, but this repo deliberately places the 16 Copilot-host bridges in `.github/skills/<target>-<action>/SKILL.md` instead. `.github/skills/` is read by Copilot but **not** by Claude — so the bridges do not surface as a second set of slash commands in Claude.
 
-**Mitigation:** none required. The duplicate surface is harmless — same skill body, different entry point. Claude users can prefer `/claude:plan` (slash command) over `/claude-plan` (skill); both do the same thing.
+**Mitigation by construction.** Placing the bridges in `.github/skills/` was the explicit fix for the duplication that would otherwise occur if they lived in `.claude/skills/`. See PR #584 / issue #583 for the original report.
 
 ### What's clean by construction
 
-Codex does not read `.gemini/commands/`, `.claude/commands/`, `.copilot/commands/`, or `.claude/skills/`. Gemini does not read `.copilot/commands/` or `.copilot/skills/`. Claude does not read `.agents/skills/` or `.gemini/commands/`. The conflicts above are the only ones the layout creates.
+Codex does not read `.gemini/commands/`, `.claude/commands/`, `.copilot/commands/`, or `.github/skills/`. Gemini does not read `.copilot/commands/`, `.copilot/skills/`, or `.github/skills/`. Claude does not read `.agents/skills/`, `.gemini/commands/`, or `.github/skills/`. The conflicts above are the only ones the layout creates.
 
 ## Multi-agent orchestration (`/multi-*`)
 
@@ -177,10 +177,10 @@ These are deliberate omissions to keep v1 small. Synchronous-only invocation onl
 
 ## Relationship to existing artifacts
 
-- `/<ai>:plan`, `/<ai>:implement`, `/<ai>:review`, `/<ai>:adversarial-review` (Claude, Gemini) and `/<ai>-<action>` (Copilot), `$codex-<action>` / `$delegate-<target>-<action>` (Codex) — self-action and cross-agent delegation. Self-action files live in `.<ai>/commands/<ai>/` (Claude, Gemini), `.claude/skills/<ai>-<action>/` (Copilot), or `.agents/skills/<dir>/` (Codex).
+- `/<ai>:plan`, `/<ai>:implement`, `/<ai>:review`, `/<ai>:adversarial-review` (Claude, Gemini) and `/<ai>-<action>` (Copilot), `$codex-<action>` / `$delegate-<target>-<action>` (Codex) — self-action and cross-agent delegation. Self-action files live in `.<ai>/commands/<ai>/` (Claude, Gemini), `.github/skills/<ai>-<action>/` (Copilot), or `.agents/skills/<dir>/` (Codex).
 - `ghi-finalize`, `ghi-status` — these cover the post-implementation steps (commit, PR creation, status reporting).
 - `/multi-plan`, `/multi-review`, `/multi-adversarial-review` — N-to-1 orchestrators that dispatch to any combination of agents. See [Multi-agent orchestration](#multi-agent-orchestration-multi-) above.
-- `.claude/commands/`, `.gemini/commands/`, `.agents/skills/`, `.claude/skills/` — per-agent discovery paths. Claude reads `.claude/commands/` and `.claude/skills/`; Gemini reads `.gemini/commands/` and `.agents/skills/`; Codex reads `.agents/skills/`; Copilot reads `.github/skills/`, `.agents/skills/`, and `.claude/skills/`. Self-action and cross-agent bridges are placed wherever the host reads from.
+- `.claude/commands/`, `.gemini/commands/`, `.agents/skills/`, `.github/skills/` — per-agent discovery paths. Claude reads `.claude/commands/` and `.claude/skills/`; Gemini reads `.gemini/commands/` and `.agents/skills/`; Codex reads `.agents/skills/`; Copilot reads `.github/skills/`, `.agents/skills/`, and `.claude/skills/`. Copilot-host bridges in this repo live in `.github/skills/` (not `.claude/skills/`) to avoid duplicating slash commands in Claude.
 - `.gemini/settings.json` `skills.disabled` — existing pattern, extended with 12 delegation entries and 3 multi-orchestrator entries (to prevent `.agents/skills/multi-*` from conflicting with Gemini's native TOML variants).
 
 ## See also

@@ -52,25 +52,25 @@ Entries are alphabetical. Each one names the command, its arguments, what it doe
 
 ### `/<ai>:adversarial-review [focus]` (Copilot: `/<ai>-adversarial-review`)
 
-**Args:** optional focus area. **Sources:** `.claude/commands/claude/adversarial-review.md`, `.gemini/commands/gemini/adversarial-review.toml`, `.agents/skills/codex-adversarial-review/SKILL.md` (self-action); `.claude/commands/<target>/adversarial-review.md`, `.gemini/commands/<target>/adversarial-review.toml`, `.claude/skills/<target>-adversarial-review/SKILL.md` (cross-agent delegation). Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
+**Args:** optional focus area. **Sources:** `.claude/commands/claude/adversarial-review.md`, `.gemini/commands/gemini/adversarial-review.toml`, `.agents/skills/codex-adversarial-review/SKILL.md` (self-action); `.claude/commands/<target>/adversarial-review.md`, `.gemini/commands/<target>/adversarial-review.toml`, `.github/skills/<target>-adversarial-review/SKILL.md` (cross-agent delegation). Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
 
 Runs an adversarial review using the host agent (self-action) or delegates to a target agent (cross-agent). The review is read-only: it pressure-tests design choices, hidden assumptions, tradeoffs, alternatives, and failure modes. The host agent presents findings in the format Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering. If a PR exists, the user is asked whether to post the review as a PR comment. **Workflow position:** optional adversarial challenge before `/ghi-finalize`. **Design note:** in the self-action form, the host agent does the review work itself; no external CLI is invoked.
 
 ### `/<ai>:implement <n>` (Copilot: `/<ai>-implement <n>`)
 
-**Args:** issue number. **Sources:** `.claude/commands/claude/implement.md`, `.gemini/commands/gemini/implement.toml`, `.agents/skills/codex-implement/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/implement.md`, `.gemini/commands/<target>/implement.toml`, `.claude/skills/<target>-implement/SKILL.md`. Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
+**Args:** issue number. **Sources:** `.claude/commands/claude/implement.md`, `.gemini/commands/gemini/implement.toml`, `.agents/skills/codex-implement/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/implement.md`, `.gemini/commands/<target>/implement.toml`, `.github/skills/<target>-implement/SKILL.md`. Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
 
 Validates that the issue is open and that a plan comment exists (otherwise instructs the user to run `/<currentai>:plan <n>` first). Checks the current branch: if already on `<type>/<n>-*` it resumes work on that branch, otherwise it checks out `main`, pulls, and creates a new branch. For Claude, it then spawns the custom `implement-worker` subagent (defined in `.claude/agents/implement-worker.md`) that reads `AGENTS.md` and `.claude/CLAUDE.md`, fetches the plan via `gh api`, implements files and tests, and runs `doit check`. For Gemini and Copilot, implementation runs inline in the main conversation. For Codex, the `$codex-implement` skill implements inline in the Codex session. **Workflow position:** after plan exists, before `/ghi-finalize`.
 
 ### `/<ai>:plan <n>` (Copilot: `/<ai>-plan <n>`)
 
-**Args:** issue number. **Sources:** `.claude/commands/claude/plan.md`, `.gemini/commands/gemini/plan.toml`, `.agents/skills/codex-plan/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/plan.md`, `.gemini/commands/<target>/plan.toml`, `.claude/skills/<target>-plan/SKILL.md`. Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
+**Args:** issue number. **Sources:** `.claude/commands/claude/plan.md`, `.gemini/commands/gemini/plan.toml`, `.agents/skills/codex-plan/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/plan.md`, `.gemini/commands/<target>/plan.toml`, `.github/skills/<target>-plan/SKILL.md`. Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
 
 Runs in the main conversation context (not a subagent) so the user can ask questions and refine the plan interactively. For Claude, enters plan mode. Validates the issue, warns if a plan comment already exists, reads `AGENTS.md`, fetches issue details, explores the codebase, and drafts a plan with the standard sections (Overview, Files to Create/Modify, Test Plan, Documentation, Validation). Iterates until the user approves, then posts the approved plan as an issue comment. **Workflow position:** first step of the single-agent workflow. **Design note:** Claude and Gemini share the `<ai>:<action>` naming convention. Copilot uses `<ai>-<action>` (hyphen) because skill names cannot contain colons; Codex uses `$<ai>-<action>` and `$delegate-<ai>-<action>`.
 
 ### `/<ai>:review [focus]` (Copilot: `/<ai>-review`)
 
-**Args:** optional focus area. **Sources:** `.claude/commands/claude/review.md`, `.gemini/commands/gemini/review.toml`, `.agents/skills/codex-review/SKILL.md` (self-action); `.claude/commands/<target>/review.md`, `.gemini/commands/<target>/review.toml`, `.claude/skills/<target>-review/SKILL.md` (cross-agent delegation). Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
+**Args:** optional focus area. **Sources:** `.claude/commands/claude/review.md`, `.gemini/commands/gemini/review.toml`, `.agents/skills/codex-review/SKILL.md` (self-action); `.claude/commands/<target>/review.md`, `.gemini/commands/<target>/review.toml`, `.github/skills/<target>-review/SKILL.md` (cross-agent delegation). Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
 
 Runs a PR review using the host agent (self-action) or delegates to a target agent (cross-agent). Gets the PR diff and branch context, reads project standards, evaluates correctness, style, testing, security, documentation, architecture, and breaking changes. Presents findings in the format Summary / Findings (Critical / Suggestions / Positive) / Verdict. The user is asked whether to post the review as a PR comment before posting. **Workflow position:** after `/claude:implement`, before `/ghi-finalize`.
 
@@ -168,14 +168,14 @@ GitHub Copilot CLI **does not** discover slash commands from `.claude/commands/`
 
 Because skill names are derived from their directory name and **cannot contain colons**, Copilot's surface for the cross-agent matrix uses `<target>-<action>` (hyphen), not `<target>:<action>` (colon). The functional behavior is identical to the other CLIs — only the slash name differs.
 
-**Self-action and cross-agent skills:** All 16 cells of the cross-agent matrix for Copilot host live under `.claude/skills/<target>-<action>/SKILL.md`:
+**Self-action and cross-agent skills:** All 16 cells of the cross-agent matrix for Copilot host live under `.github/skills/<target>-<action>/SKILL.md`:
 
 - Self-action: `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
 - To Claude: `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
 - To Codex: `/codex-plan`, `/codex-implement`, `/codex-review`, `/codex-adversarial-review`
 - To Gemini: `/gemini-plan`, `/gemini-implement`, `/gemini-review`, `/gemini-adversarial-review`
 
-Because `.claude/skills/` is also a Claude Code skills path, these skills are visible to Claude as well (as a duplicate surface alongside Claude's `<ai>:<action>` slash commands). That's expected — same behavior, two entry points.
+**Why `.github/skills/` and not `.claude/skills/`?** Copilot reads both, but Claude also reads `.claude/skills/`. Placing the bridges there would surface them as a second set of slash commands in Claude alongside the native `<ai>:<action>` commands — visible noise. `.github/skills/` is read by Copilot but not by Claude (or by Gemini/Codex), so it's the only Copilot-only project skill path.
 
 **Config directory:** `.copilot/` — established as the Copilot CLI config directory for this repo, parallel to `.claude/`, `.gemini/`, and `.codex/`. Note that no `.copilot/commands/<target>/` files are needed (or read).
 
@@ -210,7 +210,7 @@ Because `.claude/skills/` is also a Claude Code skills path, these skills are vi
 
 ## Adding a new slash command
 
-1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Gemini commands live in `.gemini/commands/<name>.md` and become `/<name>` in Gemini CLI. Copilot CLI discovers **skills only** from `skills/` directories (`.github/skills/`, `.agents/skills/`, `.claude/skills/`) — never from `commands/`. To expose a command to Copilot, author it as `.claude/skills/<name>/SKILL.md` (with YAML frontmatter); the slash name becomes `/<name>` because skill names cannot contain colons.
+1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Gemini commands live in `.gemini/commands/<name>.md` and become `/<name>` in Gemini CLI. Copilot CLI discovers **skills only** from `skills/` directories (`.github/skills/`, `.agents/skills/`, `.claude/skills/`) — never from `commands/`. To expose a Copilot-only command, author it as `.github/skills/<name>/SKILL.md` (with YAML frontmatter) — `.github/skills/` is the only Copilot project skill path that Claude does **not** also read. The slash name becomes `/<name>` because skill names cannot contain colons.
 2. **Use the CLI file format** — not the `docs/` frontmatter format. Start with a top-level `# Title` heading, follow with a one-line description (which may include the `$ARGUMENTS` placeholder if the command takes arguments), then a `## Instructions` section containing the step-by-step body. **Do not add YAML frontmatter.** The CLIs expect plain markdown; frontmatter would appear verbatim in the rendered prompt.
 3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For commands that take no arguments (like `/ghi-finalize` or `/ghi-status`), omit the placeholder.
 4. **Decide: subagent or main context?** Delegate to a general-purpose subagent via the Task tool when the command does heavy codebase exploration, writes files, or runs long commands whose output would bloat the main conversation — `.claude/commands/claude/implement.md` is the canonical example. Run in the main context when the user needs to interact step by step (plan mode, iteration, explicit approvals) — `.claude/commands/claude/plan.md` is the canonical example.

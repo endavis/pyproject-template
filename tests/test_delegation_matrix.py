@@ -31,16 +31,20 @@ def _cross_pairs() -> list[tuple[str, str]]:
 def _expected_path(source: str, target: str, action: str) -> Path:
     """Map a (source, target, action) cell to its on-disk location.
 
-    Copilot bridges live under .claude/skills/<target>-<action>/SKILL.md because
-    Copilot CLI discovers project skills from skills/ paths only (per @github/copilot
-    SDK index.d.ts) and skill names cannot contain colons.
+    Copilot bridges live under .github/skills/<target>-<action>/SKILL.md.
+    Copilot CLI discovers project skills from .github/skills/, .agents/skills/,
+    and .claude/skills/ (per @github/copilot SDK index.d.ts), but we use
+    .github/skills/ specifically because it's the only one of those paths that
+    Claude does not also read — placing the bridges there avoids surfacing
+    duplicate slash commands in Claude alongside its native /<target>:<action>.
+    Skill names use hyphen because skill names cannot contain colons.
     """
     if source == "claude":
         return REPO_ROOT / ".claude" / "commands" / target / f"{action}.md"
     if source == "gemini":
         return REPO_ROOT / ".gemini" / "commands" / target / f"{action}.toml"
     if source == "copilot":
-        return REPO_ROOT / ".claude" / "skills" / f"{target}-{action}" / "SKILL.md"
+        return REPO_ROOT / ".github" / "skills" / f"{target}-{action}" / "SKILL.md"
     if source == "codex":
         return REPO_ROOT / ".agents" / "skills" / f"delegate-{target}-{action}" / "SKILL.md"
     raise ValueError(f"unknown source agent: {source}")

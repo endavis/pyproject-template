@@ -6,7 +6,7 @@ This directory is the GitHub Copilot CLI configuration directory for this reposi
 
 ## Workflow Skills
 
-All Copilot-host workflow skills (self-action and cross-agent bridges, 16 total) live under `.claude/skills/<target>-<action>/SKILL.md`. Because skill names are directory names and cannot contain colons, the slash surface uses hyphen naming:
+All Copilot-host workflow skills (self-action and cross-agent bridges, 16 total) live under `.github/skills/<target>-<action>/SKILL.md`. Because skill names are directory names and cannot contain colons, the slash surface uses hyphen naming:
 
 - **Self-action:** `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
 - **To Claude:** `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
@@ -53,7 +53,7 @@ file structure, and a worked example.
 
 ## See Also
 
-- `.claude/skills/<target>-<action>/SKILL.md` — Copilot-host workflow skills (16 files)
+- `.github/skills/<target>-<action>/SKILL.md` — Copilot-host workflow skills (16 files). `.github/skills/` is used (instead of `.claude/skills/`) because it's the only Copilot project skill path that Claude does not also read — avoids surfacing duplicate slash commands in Claude.
 - `.agents/skills/` — interoperable Codex skill path, also read by Copilot
 - `.claude/agents/implement-worker.md` — implement-worker subagent definition
 - `.github/hooks/copilot-hooks.json` — dangerous command hook wiring
