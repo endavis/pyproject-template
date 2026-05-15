@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778802953445,
+  "lastUpdate": 1778871296700,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8909,6 +8909,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.183817874127716e-7",
             "extra": "mean: 1.5756712522844678 usec\nrounds: 49430"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cff09f38e423b58f7c4975065c456498936fad94",
+          "message": "fix: route Copilot CLI cross-agent matrix through .claude/skills/ (merges PR #584, addresses #583)\n\n* fix: route Copilot CLI cross-agent matrix through .claude/skills/ (#583)\n\nCopilot CLI does not read commands/ directories — per the installed\n@github/copilot SDK (sdk/index.d.ts), it discovers project skills only\nfrom .github/skills/, .agents/skills/, and .claude/skills/. The 16\n.copilot/commands/<target>/<action>.md files in this repo were dead\ncode: never loaded, so the documented /<target>:<action> matrix never\nworked from Copilot.\n\nMove the Copilot-host bridges to .claude/skills/<target>-<action>/SKILL.md\n(16 files: 4 self-action + 12 cross-agent). Use hyphen naming because\nskill names are directory names and cannot contain colons. Update all\nbridges that target Copilot (.claude, .gemini, .agents/skills, multi-*)\nto reference the hyphen form. Update docs (AGENTS.md, README.md,\nAI_SETUP.md, slash-commands.md, cross-agent-delegation.md, .copilot/README.md)\nto reflect the actual discovery paths and the naming asymmetry across\nhosts. Update the delegation-matrix test to encode the new layout.\n\nDocument a known limitation: Copilot's disabledSkills config is\nuser-level only (~/.copilot/config.json); there is no repo-level\nsetting, so the Codex delegate-* skill bleed must be silenced\nper-user if desired.\n\n* fix: move Copilot skills to .github/skills/ to avoid Claude duplication\n\nThe 16 Copilot-host bridges placed in .claude/skills/<target>-<action>/\nsurfaced as a second set of slash commands in Claude Code alongside its\nnative /<target>:<action> commands — same behavior, duplicate noise in\nthe slash list.\n\nMove to .github/skills/, which per the @github/copilot SDK is a Copilot\nproject skill path but is not read by Claude, Codex, or Gemini. The\nduplication is now avoided by construction rather than accepted.\n\nTests and docs updated to reflect the new path; the reason is captured\nin the test docstring and the cross-agent-delegation.md path-conflicts\nsection so it survives future refactors.\n\nAddresses feedback on #583 / PR #584.",
+          "timestamp": "2026-05-15T19:54:26+01:00",
+          "tree_id": "2094c1fb9e2d2f9e1c38d2ec50c8b2586b966fbc",
+          "url": "https://github.com/endavis/pyproject-template/commit/cff09f38e423b58f7c4975065c456498936fad94"
+        },
+        "date": 1778871295541,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9173453.649764279,
+            "unit": "iter/sec",
+            "range": "stddev: 7.151454656218709e-9",
+            "extra": "mean: 109.0101981412089 nsec\nrounds: 92056"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9462574.34787182,
+            "unit": "iter/sec",
+            "range": "stddev: 7.066928088062513e-9",
+            "extra": "mean: 105.67948670595176 nsec\nrounds: 91059"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6031703.497756518,
+            "unit": "iter/sec",
+            "range": "stddev: 9.229497239054061e-9",
+            "extra": "mean: 165.79064278805285 nsec\nrounds: 58573"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1826518.4702308087,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5945483898274694e-7",
+            "extra": "mean: 547.4896730026686 nsec\nrounds: 58439"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 530521.5554160776,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1480406934421627e-7",
+            "extra": "mean: 1.884937548325854 usec\nrounds: 49126"
           }
         ]
       }
