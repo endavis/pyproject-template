@@ -238,11 +238,17 @@ Do **not** add it to the committed `.claude/settings.json`.
 **Escape hatch:**
 
 ```bash
-touch /tmp/bash-raw-unlock
+mkdir -p tmp/agents/claude && touch tmp/agents/claude/bash-raw-unlock
 ```
 
-Allows all banned commands for 10 minutes. The file auto-expires — no cleanup needed. Useful when
-you need a one-off raw shell command without disabling the hook permanently.
+Run this from the project root. Allows all banned commands for 10 minutes. The file auto-expires —
+no cleanup needed. Useful when you need a one-off raw shell command without disabling the hook
+permanently.
+
+The unlock file is scoped to the project directory, so enabling the escape hatch in one project
+does not affect any other project running concurrently on the same machine. If you work across
+multiple projects, you must re-touch the file in each project root where you want raw commands
+allowed.
 
 **Why disabled by default:** humans share the repo. Raw shell commands are legitimate in human
 workflows. The hook is only beneficial when an AI agent is the primary operator of the terminal.
