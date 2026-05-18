@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1778871296700,
+  "lastUpdate": 1779112569286,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -8968,6 +8968,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.1480406934421627e-7",
             "extra": "mean: 1.884937548325854 usec\nrounds: 49126"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9386de40d8c8015db8a02724ea85b45cb76434f",
+          "message": "fix: scope bash-ban-raw-tools unlock file to project directory (merges PR #586, addresses #585)\n\nThe unlock file was hardcoded to /tmp/bash-raw-unlock, a single global\npath. Touching it in one project unlocked raw cat/grep/find/etc. for\nevery other Claude session on the machine for the full 10-minute window\n— even sessions that never opted in.\n\nResolve the unlock file from CLAUDE_PROJECT_DIR (env), falling back to\nthe cwd field on the hook's stdin payload, joined with the relative\npath tmp/agents/claude/bash-raw-unlock (per the tmp/agents/<agent>/\nconvention in AGENTS.md). Fail closed when neither is available.\n\nTests cover the bug repro (project A unlock does not unlock project B),\nfail-closed behavior, and env-over-cwd precedence.\n\nAddresses #585",
+          "timestamp": "2026-05-18T14:55:40+01:00",
+          "tree_id": "d8f18847f52b68c0d8d474d455765cd0aff2a5d9",
+          "url": "https://github.com/endavis/pyproject-template/commit/a9386de40d8c8015db8a02724ea85b45cb76434f"
+        },
+        "date": 1779112568800,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8946550.402488135,
+            "unit": "iter/sec",
+            "range": "stddev: 8.94912122188429e-9",
+            "extra": "mean: 111.77492497241047 nsec\nrounds: 46183"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8878326.663559614,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1703620201917512e-8",
+            "extra": "mean: 112.63383719641905 nsec\nrounds: 89310"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6525646.1065353835,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6623439351047717e-8",
+            "extra": "mean: 153.24153098012897 nsec\nrounds: 64671"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1772666.13140902,
+            "unit": "iter/sec",
+            "range": "stddev: 3.7366269876551414e-7",
+            "extra": "mean: 564.1220206566144 nsec\nrounds: 54122"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 513830.35687185446,
+            "unit": "iter/sec",
+            "range": "stddev: 4.507870317056432e-7",
+            "extra": "mean: 1.9461676147121698 usec\nrounds: 46058"
           }
         ]
       }
