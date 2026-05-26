@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779112569286,
+  "lastUpdate": 1779802491382,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9027,6 +9027,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.507870317056432e-7",
             "extra": "mean: 1.9461676147121698 usec\nrounds: 46058"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9f0881c02a625388d2274e586d9175a2b2f2eecc",
+          "message": "chore(deps): patch idna and pymdown-extensions CVEs (merges PR #600, addresses #599)\n\nBump idna 3.11 -> 3.16 (CVE-2026-45409) and pymdown-extensions\n10.21.2 -> 10.21.3 (CVE-2026-46338) to clear `doit audit`.\n\nidna is transitive (via requests), so it is upgraded in uv.lock\nonly; pymdown-extensions is a direct dev dependency, so its floor\nis also raised in pyproject.toml.\n\nAddresses #599\n\nCo-authored-by: Claude Opus 4.7 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-05-26T14:34:23+01:00",
+          "tree_id": "de714d6397a5f1e25bd8f42bef291fc3b1f8205b",
+          "url": "https://github.com/endavis/pyproject-template/commit/9f0881c02a625388d2274e586d9175a2b2f2eecc"
+        },
+        "date": 1779802490933,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9033988.935633805,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0679496133918558e-8",
+            "extra": "mean: 110.6930733616005 nsec\nrounds: 195389"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9150462.636709666,
+            "unit": "iter/sec",
+            "range": "stddev: 2.26352401506616e-8",
+            "extra": "mean: 109.2840919308514 nsec\nrounds: 93853"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6480425.83797562,
+            "unit": "iter/sec",
+            "range": "stddev: 1.764164904349293e-8",
+            "extra": "mean: 154.3108470032864 nsec\nrounds: 64923"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1806678.8899437177,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3934225300657847e-7",
+            "extra": "mean: 553.5017902551307 nsec\nrounds: 57255"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 512263.7238558213,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6509028478806666e-7",
+            "extra": "mean: 1.9521194912514515 usec\nrounds: 52916"
           }
         ]
       }
