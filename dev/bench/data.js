@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782906949032,
+  "lastUpdate": 1782910135773,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9558,6 +9558,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.049130540837875e-7",
             "extra": "mean: 1.957795488070848 usec\nrounds: 54921"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c7c50d0f128bd869394b80d3eca704a54a98ee62",
+          "message": "fix: make get_recommended_action() pure by injecting template_downloaded flag (merges PR #630, addresses #629)\n\nReading tmp/extracted/pyproject-template-main/.template_commit directly\ninside get_recommended_action() made unit tests non-hermetic — tests ran\ndifferently depending on whether that file existed locally. Extracted the\nfilesystem check to both call sites (interactive_menu() and main()) and\npassed the result as a required keyword-only argument template_downloaded.\nBehavior at both call sites is identical; the function is now pure and\nfully testable without filesystem side effects.\n\nAddresses #629\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-01T13:48:22+01:00",
+          "tree_id": "c00edebed961fb64a2ccddc2b071d9b33182f03e",
+          "url": "https://github.com/endavis/pyproject-template/commit/c7c50d0f128bd869394b80d3eca704a54a98ee62"
+        },
+        "date": 1782910134698,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8199074.991871497,
+            "unit": "iter/sec",
+            "range": "stddev: 1.295521760791451e-8",
+            "extra": "mean: 121.96497787755239 nsec\nrounds: 83174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8230969.119912949,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2132039123732722e-8",
+            "extra": "mean: 121.49237658791945 nsec\nrounds: 82488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5702560.532904968,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5360444852064693e-8",
+            "extra": "mean: 175.35982200097496 nsec\nrounds: 57697"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1714945.7576033608,
+            "unit": "iter/sec",
+            "range": "stddev: 2.603295667849117e-7",
+            "extra": "mean: 583.1088217026183 nsec\nrounds: 59841"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 499695.18303168844,
+            "unit": "iter/sec",
+            "range": "stddev: 5.255604715544575e-7",
+            "extra": "mean: 2.001220011633741 usec\nrounds: 60165"
           }
         ]
       }
