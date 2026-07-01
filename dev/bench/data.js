@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1779802491382,
+  "lastUpdate": 1782900599421,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9086,6 +9086,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.6509028478806666e-7",
             "extra": "mean: 1.9521194912514515 usec\nrounds: 52916"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "244d1747ca42e49d4c3917865c9809201d8ef02a",
+          "message": "chore(deps): bump msgpack to 1.2.1 to fix GHSA-6v7p-g79w-8964 (merges PR #621, addresses #620)\n\npip-audit flagged msgpack 1.1.2 (GHSA-6v7p-g79w-8964), a transitive\ndependency pulled in via pip-audit[filecache] -> cachecontrol. The\n`audit` step of the `lint` job exited 1, failing the required\n`ci-complete` check and blocking every PR — including the Dependabot\nminor/patch queue that already had auto-merge armed.\n\nRelock only (uv lock --upgrade-package msgpack); no pyproject.toml\nconstraint change required.\n\nAddresses #620\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-01T11:07:39+01:00",
+          "tree_id": "1a41c642176e6b6c33d909386e5553c438b10ca8",
+          "url": "https://github.com/endavis/pyproject-template/commit/244d1747ca42e49d4c3917865c9809201d8ef02a"
+        },
+        "date": 1782900598723,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8219966.075114266,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3251182837500727e-8",
+            "extra": "mean: 121.65500330074038 nsec\nrounds: 83313"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8524849.997865895,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2545686664843166e-8",
+            "extra": "mean: 117.30411681734451 nsec\nrounds: 83669"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5861822.630818071,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4753157770506823e-8",
+            "extra": "mean: 170.5954040203432 nsec\nrounds: 59341"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1686528.714694506,
+            "unit": "iter/sec",
+            "range": "stddev: 3.245564940562024e-7",
+            "extra": "mean: 592.933871381572 nsec\nrounds: 58235"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490117.30465964385,
+            "unit": "iter/sec",
+            "range": "stddev: 5.917199902910793e-7",
+            "extra": "mean: 2.0403278776178655 usec\nrounds: 54072"
           }
         ]
       }
