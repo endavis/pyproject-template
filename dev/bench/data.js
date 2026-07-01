@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782903822815,
+  "lastUpdate": 1782904077854,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9263,6 +9263,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.058175594372161e-7",
             "extra": "mean: 1.9865423687927994 usec\nrounds: 57861"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8015695c0051faeca92ac10df8224cfb23cd3a25",
+          "message": "chore(deps): bump the dev-dependencies group across 1 directory with 3 updates (merges PR #615)\n\nBumps the dev-dependencies group with 3 updates in the / directory: [pytest](https://github.com/pytest-dev/pytest), [ruff](https://github.com/astral-sh/ruff) and [mypy](https://github.com/python/mypy).\n\n\nUpdates `pytest` from 9.0.3 to 9.1.1\n- [Release notes](https://github.com/pytest-dev/pytest/releases)\n- [Changelog](https://github.com/pytest-dev/pytest/blob/main/CHANGELOG.rst)\n- [Commits](https://github.com/pytest-dev/pytest/compare/9.0.3...9.1.1)\n\nUpdates `ruff` from 0.15.12 to 0.15.19\n- [Release notes](https://github.com/astral-sh/ruff/releases)\n- [Changelog](https://github.com/astral-sh/ruff/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/astral-sh/ruff/compare/0.15.12...0.15.19)\n\nUpdates `mypy` from 1.20.2 to 2.1.0\n- [Changelog](https://github.com/python/mypy/blob/master/CHANGELOG.md)\n- [Commits](https://github.com/python/mypy/compare/v1.20.2...v2.1.0)\n\n---\nupdated-dependencies:\n- dependency-name: mypy\n  dependency-version: 2.1.0\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n  dependency-group: dev-dependencies\n- dependency-name: pytest\n  dependency-version: 9.1.0\n  dependency-type: direct:production\n  update-type: version-update:semver-minor\n  dependency-group: dev-dependencies\n- dependency-name: ruff\n  dependency-version: 0.15.17\n  dependency-type: direct:production\n  update-type: version-update:semver-patch\n  dependency-group: dev-dependencies\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-07-01T12:07:31+01:00",
+          "tree_id": "e79e2099bf1e0a1cfebf70310b2b8d64eb4e261a",
+          "url": "https://github.com/endavis/pyproject-template/commit/8015695c0051faeca92ac10df8224cfb23cd3a25"
+        },
+        "date": 1782904077157,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9254285.37444095,
+            "unit": "iter/sec",
+            "range": "stddev: 8.63905755095624e-9",
+            "extra": "mean: 108.05804657395383 nsec\nrounds: 92627"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9257378.33976128,
+            "unit": "iter/sec",
+            "range": "stddev: 8.736866019471844e-9",
+            "extra": "mean: 108.02194350261233 nsec\nrounds: 82871"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6083194.060904956,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1853758790406843e-8",
+            "extra": "mean: 164.38732514333705 nsec\nrounds: 59992"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1676138.4459022598,
+            "unit": "iter/sec",
+            "range": "stddev: 2.844113130220366e-7",
+            "extra": "mean: 596.6094283230306 nsec\nrounds: 72696"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501686.2664231603,
+            "unit": "iter/sec",
+            "range": "stddev: 6.432785409838667e-7",
+            "extra": "mean: 1.9932776058025954 usec\nrounds: 56854"
           }
         ]
       }
