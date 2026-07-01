@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782906602051,
+  "lastUpdate": 1782906949032,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9499,6 +9499,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.903120737610576e-7",
             "extra": "mean: 1.9582137245158253 usec\nrounds: 54093"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ecc5faa053315369924040087372ec54f2c7076c",
+          "message": "refactor: make codeql-action version tests resilient to dependabot bumps (merges PR #628, addresses #626)\n\nThe init and analyze tests asserted the exact pinned version (github/codeql-action/*@v4), so every dependabot bump of github/codeql-action would turn all test matrix jobs red on a stale assertion -- the same failure mode fixed for actions/checkout in #625. Loosen both assertions to require a major-version tag (@vN) via regex, preserving the 'must be pinned to a version tag' guard while surviving routine bumps.\n\nAddresses #626\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-01T12:55:23+01:00",
+          "tree_id": "8713bc63a7659d973cdf9d2c16111ffad6e6b4a1",
+          "url": "https://github.com/endavis/pyproject-template/commit/ecc5faa053315369924040087372ec54f2c7076c"
+        },
+        "date": 1782906948602,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9087797.6768688,
+            "unit": "iter/sec",
+            "range": "stddev: 1.773093084900868e-8",
+            "extra": "mean: 110.03766099957343 nsec\nrounds: 46056"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8805059.802229226,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3433781056125711e-8",
+            "extra": "mean: 113.57106282762831 nsec\nrounds: 90852"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6595754.029481644,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4461376394259109e-8",
+            "extra": "mean: 151.612688334072 nsec\nrounds: 66305"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1696172.9942262438,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0702176967968774e-7",
+            "extra": "mean: 589.5625053600018 nsec\nrounds: 58323"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 510778.5803436342,
+            "unit": "iter/sec",
+            "range": "stddev: 7.049130540837875e-7",
+            "extra": "mean: 1.957795488070848 usec\nrounds: 54921"
           }
         ]
       }
