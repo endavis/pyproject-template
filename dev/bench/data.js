@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1782900599421,
+  "lastUpdate": 1782903444387,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9145,6 +9145,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.917199902910793e-7",
             "extra": "mean: 2.0403278776178655 usec\nrounds: 54072"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a78f4e2f181d90e6138b6f9cea3514bdab22a412",
+          "message": "chore: add daily doit check workflow with issue-on-failure (merges PR #623, addresses #622)\n\nNew scheduled workflow .github/workflows/daily-check.yml runs\n`uv run doit check` daily (06:17 UTC) and on manual dispatch. On\nfailure it opens — or comments on an existing — tracking issue\n(labels `automated` + `needs-triage`, assigned to the repo owner),\nso out-of-band breakage (e.g. a freshly published CVE flagged by\npip-audit, as in #620) surfaces without waiting for the next PR.\n\nEnvironment mirrors the ci.yml lint job (uv, python-versions action,\n`uv sync --all-extras --dev`). No secrets required: uses the built-in\nGITHUB_TOKEN with issues:write.\n\nAddresses #622\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-01T11:56:58+01:00",
+          "tree_id": "38271d6c72e72e99a5082633b6952e51ada32785",
+          "url": "https://github.com/endavis/pyproject-template/commit/a78f4e2f181d90e6138b6f9cea3514bdab22a412"
+        },
+        "date": 1782903443915,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9192111.416982625,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1538581951350837e-8",
+            "extra": "mean: 108.78893375383575 nsec\nrounds: 45346"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8766003.02107415,
+            "unit": "iter/sec",
+            "range": "stddev: 3.7445297044075195e-8",
+            "extra": "mean: 114.0770768155022 nsec\nrounds: 87131"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6309446.282155219,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7000709774763946e-8",
+            "extra": "mean: 158.49251349175665 nsec\nrounds: 66521"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1757386.246047528,
+            "unit": "iter/sec",
+            "range": "stddev: 6.836133795087386e-7",
+            "extra": "mean: 569.0268728625041 nsec\nrounds: 49604"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 507713.98442016664,
+            "unit": "iter/sec",
+            "range": "stddev: 7.589705649767502e-7",
+            "extra": "mean: 1.9696128739531316 usec\nrounds: 35296"
           }
         ]
       }
