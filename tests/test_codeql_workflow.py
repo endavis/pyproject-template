@@ -10,6 +10,7 @@ GitHub's "default setup" to this advanced workflow file).
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -162,12 +163,22 @@ class TestAnalyzeJob:
         job = workflow["jobs"]["analyze"]
         assert job["strategy"]["fail-fast"] is False
 
-    def test_analyze_uses_checkout_v6(self) -> None:
-        """``actions/checkout`` should be pinned to ``@v6`` (repo convention)."""
+    def test_analyze_pins_checkout_major_version(self) -> None:
+        """``actions/checkout`` must be pinned to a major-version tag (``@vN``).
+
+        The exact major version is intentionally not asserted. Dependabot bumps
+        ``actions/checkout`` routinely; pinning this test to a specific number
+        turns every such bump into a false CI failure (see #625). The repo
+        convention this guards is that the action is pinned to a version tag,
+        not a floating ref/branch.
+        """
         steps = _analyze_steps()
         checkout_steps = [s for s in steps if s.get("uses", "").startswith("actions/checkout@")]
         assert checkout_steps, "expected an actions/checkout step"
-        assert checkout_steps[0]["uses"] == "actions/checkout@v6"
+        uses = checkout_steps[0]["uses"]
+        assert re.fullmatch(r"actions/checkout@v\d+", uses), (
+            f"expected actions/checkout pinned to a major-version tag, got {uses!r}"
+        )
 
     def test_analyze_uses_codeql_init_v4(self) -> None:
         """``github/codeql-action/init`` should be pinned to ``@v4``."""
