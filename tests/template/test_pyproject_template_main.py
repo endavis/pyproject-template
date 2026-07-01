@@ -374,7 +374,9 @@ class TestMainModule:
         settings = ProjectSettings()
         template_state = TemplateState()
 
-        result = get_recommended_action(context, settings, template_state, None)
+        result = get_recommended_action(
+            context, settings, template_state, None, template_downloaded=False
+        )
         assert result == 2  # Configure project (has placeholders)
 
     def test_get_recommended_action_placeholder_values(self) -> None:
@@ -388,7 +390,9 @@ class TestMainModule:
         )
         template_state = TemplateState()
 
-        result = get_recommended_action(context, settings, template_state, None)
+        result = get_recommended_action(
+            context, settings, template_state, None, template_downloaded=False
+        )
         assert result == 2  # Re-run configuration
 
     def test_get_recommended_action_outdated_template(self) -> None:
@@ -409,7 +413,11 @@ class TestMainModule:
         template_state = TemplateState(commit="oldcommit123", commit_date="2025-01-01")
 
         result = get_recommended_action(
-            context, settings, template_state, ("newcommit456", "2025-01-15")
+            context,
+            settings,
+            template_state,
+            ("newcommit456", "2025-01-15"),
+            template_downloaded=False,
         )
         assert result == 3  # Check for template updates
 
@@ -431,9 +439,39 @@ class TestMainModule:
         template_state = TemplateState(commit="samecommit12", commit_date="2025-01-15")
 
         result = get_recommended_action(
-            context, settings, template_state, ("samecommit12", "2025-01-15")
+            context,
+            settings,
+            template_state,
+            ("samecommit12", "2025-01-15"),
+            template_downloaded=False,
         )
         assert result is None  # No recommendation, up to date
+
+    def test_get_recommended_action_template_downloaded(self) -> None:
+        """Test recommended action when template has been downloaded and reviewed."""
+        from tools.pyproject_template.manage import get_recommended_action
+
+        context = ProjectContext(has_git=True, has_pyproject=True)
+        settings = ProjectSettings(
+            project_name="My Project",
+            package_name="my_project",
+            pypi_name="my-project",
+            author_name="Test Author",
+            author_email="test@example.com",
+            github_user="testuser",
+            github_repo="my-project",
+            description="A project",
+        )
+        template_state = TemplateState(commit="samecommit12", commit_date="2025-01-15")
+
+        result = get_recommended_action(
+            context,
+            settings,
+            template_state,
+            ("samecommit12", "2025-01-15"),
+            template_downloaded=True,
+        )
+        assert result == 5  # Mark as synced
 
 
 class TestConfigureModule:

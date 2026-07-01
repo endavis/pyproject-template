@@ -151,6 +151,8 @@ def get_recommended_action(
     settings: ProjectSettings,
     template_state: TemplateState,
     latest_commit: tuple[str, str] | None,
+    *,
+    template_downloaded: bool,
 ) -> int | None:
     """Determine the recommended action based on context."""
     # No git repo - need to create new project
@@ -162,8 +164,7 @@ def get_recommended_action(
         return 2  # Configure project
 
     # Template already downloaded and reviewed - recommend marking as synced
-    template_commit_file = Path("tmp/extracted/pyproject-template-main/.template_commit")
-    if template_commit_file.exists():
+    if template_downloaded:
         return 5  # Mark as synced
 
     # Existing repo with outdated template
@@ -763,7 +764,13 @@ def interactive_menu(manager: SettingsManager, dry_run: bool = False, *, yes: bo
 
         # Get recommended action
         recommended = get_recommended_action(
-            manager.context, manager.settings, manager.template_state, latest_commit
+            manager.context,
+            manager.settings,
+            manager.template_state,
+            latest_commit,
+            template_downloaded=Path(
+                "tmp/extracted/pyproject-template-main/.template_commit"
+            ).exists(),
         )
 
         # Show menu
@@ -896,7 +903,13 @@ def main(argv: list[str] | None = None) -> int:
         # Run recommended action non-interactively
         latest_commit = get_template_latest_commit()
         recommended = get_recommended_action(
-            manager.context, manager.settings, manager.template_state, latest_commit
+            manager.context,
+            manager.settings,
+            manager.template_state,
+            latest_commit,
+            template_downloaded=Path(
+                "tmp/extracted/pyproject-template-main/.template_commit"
+            ).exists(),
         )
         if recommended:
             return run_action(recommended, manager, args.dry_run, yes=True)
