@@ -67,7 +67,11 @@
       "delegate-copilot-adversarial-review",
       "multi-plan",
       "multi-review",
-      "multi-adversarial-review"
+      "multi-adversarial-review",
+      "antigravity-plan",
+      "antigravity-implement",
+      "antigravity-review",
+      "antigravity-adversarial-review"
     ]
   }
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -166,3 +167,68 @@ def test_enforcement_principles_document_codex_hook_support() -> None:
 
     assert "Codex uses the shared hook" in content
     assert "no hook support" not in content
+
+
+def test_antigravity_workflow_skills_exist() -> None:
+    """Antigravity self-action skills should be present in the shared .agents/skills directory."""
+    for action in ("plan", "implement", "review", "adversarial-review"):
+        skill_path = REPO_ROOT / ".agents" / "skills" / f"antigravity-{action}" / "SKILL.md"
+        assert skill_path.exists(), f"Missing Antigravity skill: {skill_path}"
+
+
+def test_antigravity_hooks_json_wires_shared_hook() -> None:
+    """.agents/hooks.json should wire the shared dangerous-command hook on PreToolUse."""
+    hooks_path = REPO_ROOT / ".agents" / "hooks.json"
+    assert hooks_path.exists(), f"Missing Antigravity hooks config: {hooks_path}"
+
+    config = json.loads(hooks_path.read_text(encoding="utf-8"))
+    commands = [
+        handler.get("command", "")
+        for group in config.values()
+        for entry in group.get("PreToolUse", [])
+        for handler in entry.get("hooks", [])
+    ]
+    assert any("block-dangerous-commands.py" in c for c in commands), (
+        "Antigravity .agents/hooks.json must wire block-dangerous-commands.py on PreToolUse"
+    )
+
+    matchers = [
+        entry.get("matcher", "")
+        for group in config.values()
+        for entry in group.get("PreToolUse", [])
+    ]
+    assert any("run_command" in m for m in matchers), (
+        "Antigravity hook matcher must target the run_command tool"
+    )
+
+
+def test_gemini_disabled_list_contains_antigravity_skills() -> None:
+    """Gemini reads .agents/skills/; antigravity-* skills must be disabled to avoid bleed."""
+    settings_path = REPO_ROOT / ".gemini" / "settings.json"
+    settings = json.loads(settings_path.read_text(encoding="utf-8"))
+    disabled = set(settings["skills"]["disabled"])
+
+    expected = {
+        "antigravity-plan",
+        "antigravity-implement",
+        "antigravity-review",
+        "antigravity-adversarial-review",
+    }
+    missing = expected - disabled
+    assert not missing, (
+        f"the following antigravity skills must be added to "
+        f".gemini/settings.json skills.disabled: {sorted(missing)}"
+    )
+
+
+def test_docs_document_antigravity_agent() -> None:
+    """AI setup and command-blocking docs should register Antigravity as a supported agent."""
+    ai_setup = (REPO_ROOT / "docs" / "development" / "AI_SETUP.md").read_text(encoding="utf-8")
+    assert "Antigravity" in ai_setup
+    assert ".agents/hooks.json" in ai_setup
+
+    blocking = (REPO_ROOT / "docs" / "development" / "ai" / "command-blocking.md").read_text(
+        encoding="utf-8"
+    )
+    assert ".agents/hooks.json" in blocking
+    assert "write_to_file" in blocking

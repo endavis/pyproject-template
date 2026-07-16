@@ -382,6 +382,42 @@ COPILOT_EDIT_TESTS = [
     ),
 ]
 
+# ---------------------------------------------------------------------------
+# Antigravity (agy) test cases
+# agy sends {"toolCall": {"name": ..., "args": {...}}} with PascalCase args and
+# blocks via a stdout JSON {"decision": "deny"} contract (exit 0), NOT exit 2.
+# Shell tool is run_command (args.CommandLine); file-write is write_to_file
+# (args.TargetFile / args.CodeContent).
+# ---------------------------------------------------------------------------
+# run_command tests: (command, expected, description)
+AGY_COMMAND_TESTS = [
+    ("git status", "ALLOW", "safe command"),
+    ("doit check", "ALLOW", "doit check"),
+    ('echo "--admin in quotes"', "ALLOW", "quoted flag is text"),
+    ("git push --force origin feat/x", "ALLOW", "force push feature branch"),
+    ("gh pr merge --admin", "BLOCK", "--admin flag"),
+    ("git commit --no-verify", "BLOCK", "--no-verify flag"),
+    ("git reset --hard HEAD", "BLOCK", "git reset --hard"),
+    ("git push --force origin main", "BLOCK", "force push to main"),
+    ("rm -rf /", "BLOCK", "rm -rf /"),
+    ("gh pr create --fill", "BLOCK", "gh pr create"),
+    ("uv add requests", "BLOCK", "uv add"),
+    ("cd /path && git push --force origin main", "BLOCK", "chained force push main"),
+]
+
+# write_to_file tests: (target_file, code_content, expected, description)
+AGY_EDIT_TESTS = [
+    ("~/.bashrc", "export ALLOW_AI_READY_TO_MERGE=1", "BLOCK", "write_to_file .bashrc rtm var"),
+    (".envrc", "export ALLOW_AI_READY_TO_MERGE=1\n", "BLOCK", "write_to_file .envrc rtm var"),
+    (
+        "/tmp/scratch.txt",  # nosec B108 - test data, not a real tmp file
+        "export ALLOW_AI_READY_TO_MERGE=1",
+        "ALLOW",
+        "write_to_file non-protected target",
+    ),
+    ("~/.bashrc", "export PATH=$PATH:/usr/local/bin", "ALLOW", "write_to_file .bashrc no var"),
+]
+
 
 def run_test(
     cmd: str,
@@ -474,6 +510,43 @@ def run_edit_test(
     return passed
 
 
+def run_agy_test(tool_name: str, args: dict, expected: str, desc: str) -> bool:
+    """Run a single Antigravity (agy) test and return True if it passed.
+
+    agy sends a nested ``toolCall`` payload and blocks via a stdout JSON
+    ``{"decision": "deny"}`` contract (exit 0), so parse stdout rather than
+    checking the exit code. A safe command prints nothing (defer).
+    """
+    json_input = json.dumps({"toolCall": {"name": tool_name, "args": args}})
+    result = subprocess.run(
+        ["python3", str(HOOK_PATH)],
+        input=json_input,
+        capture_output=True,
+        text=True,
+        env={**os.environ},
+    )
+
+    actual = "ALLOW"
+    if result.stdout.strip():
+        try:
+            if json.loads(result.stdout).get("decision") == "deny":
+                actual = "BLOCK"
+        except json.JSONDecodeError:
+            actual = "ALLOW"
+
+    passed = actual == expected
+    mark = "+" if passed else "X"
+    color = GREEN if passed else RED
+    print(
+        f"{color}{mark} {actual:5} (expected {expected:5}) | [agy] {desc:29} | {tool_name}{RESET}"
+    )
+
+    if not passed:
+        print(f"{RED}  stdout: {result.stdout[:200] if result.stdout else '(none)'}{RESET}")
+
+    return passed
+
+
 def main() -> int:
     """Run all tests and return exit code."""
     print(f"Testing hook: {HOOK_PATH}\n")
@@ -511,6 +584,24 @@ def main() -> int:
     print("\n[File-edit tests — Copilot format]")
     for tool_name, tool_input, expected, desc in COPILOT_EDIT_TESTS:
         if run_edit_test(tool_name, tool_input, expected, desc, copilot_format=True):
+            passed += 1
+        else:
+            failed += 1
+
+    # --- Antigravity (agy) run_command tests ---
+    print("\n[Antigravity (agy) run_command tests]")
+    for cmd, expected, desc in AGY_COMMAND_TESTS:
+        if run_agy_test("run_command", {"CommandLine": cmd}, expected, desc):
+            passed += 1
+        else:
+            failed += 1
+
+    # --- Antigravity (agy) write_to_file tests ---
+    print("\n[Antigravity (agy) write_to_file tests]")
+    for target, content, expected, desc in AGY_EDIT_TESTS:
+        if run_agy_test(
+            "write_to_file", {"TargetFile": target, "CodeContent": content}, expected, desc
+        ):
             passed += 1
         else:
             failed += 1

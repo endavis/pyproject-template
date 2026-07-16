@@ -2,6 +2,8 @@
 
 A consistent, explicit-invocation interface that lets any of the four supported AI CLIs (Claude Code, Codex CLI, Gemini CLI, Copilot CLI) hand a task — `plan`, `implement`, `review`, or `adversarial-review` — to any of the other three.
 
+> **Antigravity CLI (`agy`) onboarding is phased.** Its self-action workflow skills (`antigravity-plan`, `antigravity-implement`, `antigravity-review`, `antigravity-adversarial-review`) exist now under `.agents/skills/`, but its cross-agent delegation bridges are **not yet implemented**. When they land, `agy` becomes the fifth source and target, expanding this matrix from 48 to 80 cross-agent cells (5 × 4 × 4). Until then the matrix below covers the four wired agents.
+
 ## Why this exists
 
 Each agent already drives *itself* through the issue-driven workflow (`/<ai>:plan`, `/<ai>:implement`, `/ghi-finalize`). This matrix adds the missing piece: deliberate, user-invoked handoff *between* agents, without depending on third-party plugins like `openai/codex-plugin-cc` or community Gemini/Copilot forks.

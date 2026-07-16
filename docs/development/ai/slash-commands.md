@@ -162,6 +162,22 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 
 **Out of scope for Codex in this template:** no repo-defined custom slash commands, no dual-agent orchestration, and no Codex-specific close-issue automation.
 
+## Antigravity
+
+Antigravity (`agy`) does not use repo-defined slash commands in this template. Instead, the Antigravity workflow is provided through **repo-scoped skills** under `.agents/skills/` (the same directory and `SKILL.md` format Codex uses), which `agy` activates by matching your request against each skill's `description:` frontmatter — there is no slash or `$` prefix.
+
+**Workflow coverage:** the checked-in Antigravity skills cover planning, implementation, review, and adversarial review. They preserve the same repo artifact contract used by the Claude flow:
+
+- `antigravity-plan` posts the approved plan comment with the header `## Implementation Plan for #<n>: <title>`
+- `antigravity-implement` creates or resumes the issue branch and finishes with `doit check`
+- `antigravity-review` reviews the current branch's PR and posts findings after user approval
+- `antigravity-adversarial-review` runs an adversarial challenge review
+- The shared `ghi-finalize` skill (from `.agents/skills/`) drafts the commit and PR artifacts
+
+**Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
+
+**Out of scope for Antigravity in this phase:** cross-agent delegation bridges and multi-agent orchestration for `agy` land in a later phase.
+
 ## Copilot
 
 GitHub Copilot CLI **does not** discover slash commands from `.claude/commands/` or `.copilot/commands/`. Per the installed `@github/copilot` SDK (`sdk/index.d.ts`), Copilot CLI discovers project skills only from `skills/` directories: `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (plus the corresponding personal paths under `~/`). It does not read any `commands/` directory.
