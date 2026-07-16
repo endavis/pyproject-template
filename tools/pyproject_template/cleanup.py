@@ -34,7 +34,7 @@ _script_dir = Path(__file__).parent
 if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
-from utils import Logger  # noqa: E402
+from utils import TEMPLATE_OWNED_TEST_FILES, Logger  # noqa: E402
 
 
 class CleanupMode(Enum):
@@ -54,13 +54,16 @@ class CleanupResult(NamedTuple):
 
 
 # Files to delete when removing setup files only
-# These are only needed for initial project creation
+# These are only needed for initial project creation.
+# TEMPLATE_OWNED_TEST_FILES are included so that SETUP_ONLY sheds tooling
+# tests from downstream projects (they only run in the template's own CI).
 SETUP_FILES = [
     "bootstrap.py",
     "tools/pyproject_template/setup_repo.py",
     "tools/pyproject_template/migrate_existing_project.py",
     "docs/template/new-project.md",
     "docs/template/migration.md",
+    *TEMPLATE_OWNED_TEST_FILES,
 ]
 
 # Additional files to delete when removing all template files

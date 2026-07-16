@@ -7,9 +7,11 @@ from pathlib import Path
 import pytest
 
 from tools.pyproject_template.check_template_updates import (
+    _emit_coupling_warnings,
     compare_files,
     load_sync_excludes,
 )
+from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
 
 
 def _make_template(
@@ -158,3 +160,139 @@ class TestCompareFilesWithExcludes:
         diff, excluded = compare_files(project, template_root, excludes=["a.py"])
         assert [p.as_posix() for p in diff] == ["b.py"]
         assert [p.as_posix() for p in excluded] == ["a.py"]
+
+
+class TestCompareFilesExcludesTemplateOwnedTests:
+    """``compare_files`` silently skips template-owned tooling test files."""
+
+    @pytest.fixture
+    def project(self, tmp_path: Path) -> Path:
+        p = tmp_path / "project"
+        p.mkdir()
+        return p
+
+    @pytest.fixture
+    def template(self, tmp_path: Path) -> Path:
+        return tmp_path / "template"
+
+    def test_template_owned_test_not_in_different_files(
+        self, project: Path, template: Path
+    ) -> None:
+        """A template-owned test that differs must NOT appear in different_files."""
+        # Use the first entry in the constant as the representative case.
+        owned = TEMPLATE_OWNED_TEST_FILES[0]  # e.g. tests/template/test_pyproject_template_main.py
+        template_root = _make_template(
+            template,
+            {
+                owned: "upstream-content",
+                "README.md": "upstream-readme",
+            },
+        )
+        # Project has different content for the owned test and different README.
+        (project / "README.md").write_text("project-readme", encoding="utf-8")
+        diff, _excluded = compare_files(project, template_root)
+        diff_strs = [p.as_posix() for p in diff]
+        assert owned not in diff_strs, f"Template-owned test must be excluded: {owned}"
+        assert "README.md" in diff_strs, "Non-owned drifted file must still appear"
+
+    def test_all_template_owned_tests_silently_skipped(self, project: Path, template: Path) -> None:
+        """Every entry in TEMPLATE_OWNED_TEST_FILES is suppressed, regardless of content."""
+        files: dict[str, str] = dict.fromkeys(TEMPLATE_OWNED_TEST_FILES, "upstream")
+        files["tools/pyproject_template/utils.py"] = "upstream-tooling"
+        template_root = _make_template(template, files)
+        diff, _excluded = compare_files(project, template_root)
+        diff_strs = [p.as_posix() for p in diff]
+        for owned in TEMPLATE_OWNED_TEST_FILES:
+            assert owned not in diff_strs, f"Owned test must be skipped: {owned}"
+        # The non-owned tooling file still surfaces.
+        assert "tools/pyproject_template/utils.py" in diff_strs
+
+    def test_non_owned_test_still_surfaces(self, project: Path, template: Path) -> None:
+        """Tests NOT in TEMPLATE_OWNED_TEST_FILES surface normally as drift."""
+        template_root = _make_template(
+            template,
+            {"tests/template/test_templates.py": "upstream"},
+        )
+        diff, _excluded = compare_files(project, template_root)
+        assert "tests/template/test_templates.py" in [p.as_posix() for p in diff]
+
+
+class TestEmitCouplingWarnings:
+    """Tests for ``_emit_coupling_warnings``."""
+
+    def test_warns_when_drifted_test_imports_tooling_and_tooling_drifted(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Warning emitted when a non-owned test imports tooling AND tooling has drifted."""
+        project = tmp_path / "project"
+        project.mkdir()
+        # Create a local non-template-owned test that imports tooling.
+        test_dir = project / "tests" / "template"
+        test_dir.mkdir(parents=True)
+        drifted_test = test_dir / "test_custom.py"
+        drifted_test.write_text(
+            "from tools.pyproject_template.utils import validate_package_name\n",
+            encoding="utf-8",
+        )
+        different_files = [
+            Path("tests/template/test_custom.py"),
+            Path("tools/pyproject_template/utils.py"),  # tooling has also drifted
+        ]
+        _emit_coupling_warnings(different_files, project)
+        captured = capsys.readouterr()
+        assert "bootstrap --sync" in captured.out
+        assert "tests/template/test_custom.py" in captured.out
+
+    def test_silent_when_no_tooling_drift(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """No warning when the drifted test imports tooling but tooling itself has NOT drifted."""
+        project = tmp_path / "project"
+        project.mkdir()
+        test_dir = project / "tests" / "template"
+        test_dir.mkdir(parents=True)
+        drifted_test = test_dir / "test_custom.py"
+        drifted_test.write_text(
+            "from tools.pyproject_template.utils import validate_package_name\n",
+            encoding="utf-8",
+        )
+        # No tooling file in different_files.
+        different_files = [Path("tests/template/test_custom.py")]
+        _emit_coupling_warnings(different_files, project)
+        captured = capsys.readouterr()
+        assert "bootstrap" not in captured.out
+
+    def test_silent_when_drifted_test_does_not_import_tooling(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """No warning when the drifted test does not import tooling (even if tooling drifted)."""
+        project = tmp_path / "project"
+        project.mkdir()
+        test_dir = project / "tests" / "template"
+        test_dir.mkdir(parents=True)
+        drifted_test = test_dir / "test_custom.py"
+        drifted_test.write_text(
+            "from package_name.core import greet\n",
+            encoding="utf-8",
+        )
+        different_files = [
+            Path("tests/template/test_custom.py"),
+            Path("tools/pyproject_template/utils.py"),
+        ]
+        _emit_coupling_warnings(different_files, project)
+        captured = capsys.readouterr()
+        assert "bootstrap" not in captured.out
+
+    def test_silent_when_no_drifted_tests(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """No warning when different_files contains only non-test files."""
+        project = tmp_path / "project"
+        project.mkdir()
+        different_files = [
+            Path("tools/pyproject_template/utils.py"),
+            Path("README.md"),
+        ]
+        _emit_coupling_warnings(different_files, project)
+        captured = capsys.readouterr()
+        assert "bootstrap" not in captured.out
