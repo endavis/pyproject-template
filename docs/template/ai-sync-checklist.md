@@ -33,9 +33,11 @@ This checklist guides an AI agent through synchronizing a downstream project wit
 
 ---
 
-## Phase 1: Install Template Management Tools (First-Time Only)
+## Phase 1: Sync Template Management Tools (Always Run First)
 
-If the project does NOT yet have `tools/pyproject_template/manage.py`, install it using the bootstrap script. Skip this phase if already present.
+Run `bootstrap --sync` at the start of **every** sync, not just the first time.
+This ensures the tooling suite in `tools/pyproject_template/` matches the version of the template
+you are about to adopt. Applying file diffs with a stale tooling version can produce incorrect results.
 
 ```bash
 curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync
@@ -43,16 +45,25 @@ curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/boot
 
 This will:
 
-1. Download the management suite to `tools/pyproject_template/`:
+1. Overwrite the management suite in `tools/pyproject_template/` with the latest template version:
     - `__init__.py`, `utils.py`, `settings.py`, `check_template_updates.py`, `manage.py`, `configure.py`, `cleanup.py`
-2. Detect project settings from `pyproject.toml`
-3. Create `.config/pyproject_template/settings.toml` with detected values
-4. Verify the installation
+2. Detect project settings from `pyproject.toml` (first-time only creates `.config/pyproject_template/settings.toml`)
+3. Verify the installation
 
-After installation:
+**Version-skew caveat:** The drift checker (`check_template_updates.py`) compares your files against the
+template version it was fetched with. If your local tooling is older than the template version you are
+comparing against, the checker may miss or misreport differences. Always run `bootstrap --sync` before running
+the drift check.
 
-- [ ] Review `.config/pyproject_template/settings.toml` and correct any values
-- [ ] Decide: Track `.config/pyproject_template/` in git or add to `.gitignore`
+**Template-owned tests:** The files listed in `TEMPLATE_OWNED_TEST_FILES` (e.g. `tests/template/test_check_template_updates.py`)
+are tooling tests that run only in the template's own CI. They are silently excluded from the drift report and
+will be shed from your project by `cleanup --setup`. You do not need to adopt or maintain them.
+
+After running bootstrap:
+
+- [ ] Review `.config/pyproject_template/settings.toml` and correct any values (first-time only)
+- [ ] Decide: Track `.config/pyproject_template/` in git or add to `.gitignore` (first-time only)
+- [ ] **Existing projects:** run `cleanup --setup` once to shed any template-owned tests adopted in an earlier sync
 - [ ] Verify: `python tools/pyproject_template/manage.py --dry-run check`
 
 ---

@@ -26,6 +26,7 @@ import filecmp
 import fnmatch
 import json
 import os
+import re
 import shutil
 import subprocess  # nosec B404
 import sys
@@ -44,12 +45,16 @@ if str(_script_dir) not in sys.path:
 
 # Import shared utilities
 from utils import (  # noqa: E402
+    TEMPLATE_OWNED_TEST_FILES,
     TEMPLATE_REPO,
     TEMPLATE_URL,
     Colors,
     Logger,
     download_and_extract_archive,
 )
+
+# Frozen set for O(1) membership tests in the hot path of compare_files.
+_TEMPLATE_OWNED_TEST_SET: frozenset[str] = frozenset(TEMPLATE_OWNED_TEST_FILES)
 
 # Default archive URL derived from template constants
 DEFAULT_ARCHIVE_URL = f"{TEMPLATE_URL}/archive/refs/heads/main.zip"
@@ -222,12 +227,77 @@ def compare_files(
 
         # File differs (or is missing). Bucket it.
         rel_str = rel_path.as_posix()
+
+        # Template-owned tooling tests are never adoptable drift: they live and
+        # run in the template's own CI only. Skip them silently so they never
+        # appear in different_files (and therefore never show up as "please
+        # adopt this test" suggestions to downstream projects).
+        if rel_str in _TEMPLATE_OWNED_TEST_SET:
+            continue
+
         if excludes and any(fnmatch.fnmatch(rel_str, pat) for pat in excludes):
             excluded_files.append(rel_path)
         else:
             different_files.append(rel_path)
 
     return sorted(different_files), sorted(excluded_files)
+
+
+def _imports_pyproject_tooling(content: str) -> bool:
+    """Return True if ``content`` has a real import of the pyproject_template tooling.
+
+    Anchored to actual ``import`` / ``from`` statements so that docstring or comment
+    mentions of ``tools.pyproject_template`` (for example the note left behind in the
+    split-out ``tests/template/test_properties.py``) do not count. This also keeps the
+    coupling guard from matching ``tools.doit`` imports, which ``bootstrap --sync`` does
+    not refresh.
+    """
+    return bool(
+        re.search(
+            r"^\s*(?:from|import)\s+tools\.pyproject_template\b",
+            content,
+            re.MULTILINE,
+        )
+    )
+
+
+def _emit_coupling_warnings(different_files: list[Path], project_root: Path) -> None:
+    """Warn when a drifted non-template-owned test imports tooling that has also drifted.
+
+    This is a backstop for future straddlers: if a ``tests/template/test_*.py``
+    file is NOT in ``TEMPLATE_OWNED_TEST_FILES`` (so it shows up as normal drift)
+    but its local copy imports from ``tools.pyproject_template``, AND the tooling
+    itself has also drifted, the downstream needs to run ``bootstrap --sync``
+    first so the tooling matches what the test expects.
+
+    Args:
+        different_files: Paths (upstream-relative) returned by ``compare_files``.
+        project_root: Downstream project root.
+    """
+    # Only engage the guard when the tooling itself has also drifted.
+    tooling_drifted = any(
+        file_path.as_posix().startswith("tools/pyproject_template/")
+        for file_path in different_files
+    )
+    if not tooling_drifted:
+        return
+
+    for file_path in different_files:
+        rel_str = file_path.as_posix()
+        if not (rel_str.startswith("tests/template/test_") and rel_str.endswith(".py")):
+            continue
+        local_file = project_root / file_path
+        if not local_file.is_file():
+            continue
+        try:
+            content = local_file.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        if _imports_pyproject_tooling(content):
+            Logger.warning(
+                f"{rel_str}: imports tools/pyproject_template/ which has also drifted — "
+                "run 'bootstrap --sync' to refresh tooling before adopting this test."
+            )
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
@@ -349,6 +419,10 @@ def run_check_updates(
                 print(f"  {file_path}")
             else:
                 print(f"  {file_path} {Colors.CYAN}(new in template){Colors.NC}")
+
+        # Coupling guard: warn when a non-template-owned drifted test imports
+        # tooling that has also drifted — the user needs to bootstrap --sync first.
+        _emit_coupling_warnings(different_files, project_root)
 
         # Show how to compare
         Logger.header("How to Review Changes")

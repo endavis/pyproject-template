@@ -583,6 +583,69 @@ class TestGitHubCLI:
             assert GitHubCLI.is_authenticated() is False
 
 
+class TestTemplateOwnedTestFilesInvariant:
+    """Invariants that enforce TEMPLATE_OWNED_TEST_FILES as the single source of truth."""
+
+    def test_every_path_exists_on_disk(self) -> None:
+        """Every path listed in TEMPLATE_OWNED_TEST_FILES must exist in the repo."""
+        from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
+
+        # Repo root: two parents up from tests/template/
+        repo_root = Path(__file__).parent.parent.parent
+        for rel in TEMPLATE_OWNED_TEST_FILES:
+            full = repo_root / rel
+            assert full.is_file(), f"Listed path does not exist on disk: {rel}"
+
+    def test_checker_exclusion_set_matches_constant(self) -> None:
+        """_TEMPLATE_OWNED_TEST_SET must equal frozenset(TEMPLATE_OWNED_TEST_FILES)."""
+        from tools.pyproject_template.check_template_updates import _TEMPLATE_OWNED_TEST_SET
+        from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
+
+        assert frozenset(TEMPLATE_OWNED_TEST_FILES) == _TEMPLATE_OWNED_TEST_SET, (
+            "_TEMPLATE_OWNED_TEST_SET has diverged from TEMPLATE_OWNED_TEST_FILES. "
+            "Update check_template_updates.py to re-derive from the constant."
+        )
+
+    def test_cleanup_setup_files_includes_all_owned_tests(self) -> None:
+        """cleanup.SETUP_FILES must contain every entry in TEMPLATE_OWNED_TEST_FILES."""
+        from tools.pyproject_template.cleanup import SETUP_FILES
+        from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
+
+        missing = [p for p in TEMPLATE_OWNED_TEST_FILES if p not in SETUP_FILES]
+        assert not missing, (
+            f"SETUP_FILES is missing template-owned test paths: {missing}. "
+            "Add them to cleanup.py SETUP_FILES via *TEMPLATE_OWNED_TEST_FILES."
+        )
+
+    def test_every_tooling_importing_test_is_classified(self) -> None:
+        """Every tests/template/test_*.py that imports the tooling must be classified.
+
+        Guards the *inverse* of the checks above: a new tooling test that someone
+        forgets to add to TEMPLATE_OWNED_TEST_FILES would otherwise ship to
+        downstream projects and only trip the runtime coupling guard at sync time
+        (a warning), never failing template CI. Reuses the guard's own import
+        detection so the two definitions cannot drift apart.
+        """
+        from tools.pyproject_template.check_template_updates import (
+            _imports_pyproject_tooling,
+        )
+        from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
+
+        template_tests_dir = Path(__file__).parent
+        owned = set(TEMPLATE_OWNED_TEST_FILES)
+        unclassified = [
+            f"tests/template/{test_file.name}"
+            for test_file in sorted(template_tests_dir.glob("test_*.py"))
+            if _imports_pyproject_tooling(test_file.read_text(encoding="utf-8"))
+            and f"tests/template/{test_file.name}" not in owned
+        ]
+        assert not unclassified, (
+            "These tests import tools.pyproject_template but are not in "
+            f"TEMPLATE_OWNED_TEST_FILES: {unclassified}. Add them to the constant "
+            "in utils.py (or drop the tooling import if the test is downstream-owned)."
+        )
+
+
 class TestFilesToUpdate:
     """Tests for FILES_TO_UPDATE constant."""
 

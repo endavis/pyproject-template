@@ -23,6 +23,21 @@ except ModuleNotFoundError:  # pragma: no cover
 TEMPLATE_REPO = "endavis/pyproject-template"
 TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 
+# Tooling tests that are template-owned: they live in the template's own CI,
+# are excluded from the drift checker, and are shed from downstreams by cleanup.
+# Both check_template_updates.py and cleanup.py import this list — never
+# hardcode it in either consumer.
+TEMPLATE_OWNED_TEST_FILES: list[str] = [
+    "tests/template/test_pyproject_template_main.py",
+    "tests/template/test_check_template_updates.py",
+    "tests/template/test_cleanup.py",
+    "tests/template/test_repo_settings.py",
+    "tests/template/test_setup_repo.py",
+    "tests/template/test_bootstrap.py",
+    "tests/template/test_utils.py",
+    "tests/template/test_utils_properties.py",
+]
+
 # Files to update during placeholder replacement (single source of truth)
 # Used by both configure.py and setup_repo.py
 FILES_TO_UPDATE: tuple[str, ...] = (

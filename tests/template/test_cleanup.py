@@ -1310,3 +1310,41 @@ class TestCheckStaleTemplateReferences:
         assert path == readme
         assert line_no == 3
         assert "tools/doit/template_clean" in content
+
+
+class TestSetupFilesIncludesTemplateOwnedTests:
+    """SETUP_FILES must include every template-owned test so downstream sheds them.
+
+    This is the structural invariant: the single source of truth
+    ``TEMPLATE_OWNED_TEST_FILES`` must be fully reflected in ``SETUP_FILES``.
+    A mismatch means a tooling test could silently remain in a downstream project.
+    """
+
+    def test_setup_files_contains_all_template_owned_test_files(self) -> None:
+        """Every path in TEMPLATE_OWNED_TEST_FILES is present in SETUP_FILES."""
+        from tools.pyproject_template.cleanup import SETUP_FILES
+        from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
+
+        missing = [p for p in TEMPLATE_OWNED_TEST_FILES if p not in SETUP_FILES]
+        assert not missing, (
+            f"SETUP_FILES is missing template-owned test paths: {missing}. "
+            "Ensure SETUP_FILES uses *TEMPLATE_OWNED_TEST_FILES in cleanup.py."
+        )
+
+    def test_setup_only_cleanup_targets_include_owned_tests(self, tmp_path: Path) -> None:
+        """``get_files_to_delete`` for SETUP_ONLY lists template-owned tests when present."""
+        from tools.pyproject_template.cleanup import CleanupMode, get_files_to_delete
+        from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
+
+        # Create one of the owned test files on disk so get_files_to_delete can find it.
+        sample_rel = TEMPLATE_OWNED_TEST_FILES[0]
+        sample_path = tmp_path / sample_rel
+        sample_path.parent.mkdir(parents=True, exist_ok=True)
+        sample_path.write_text("# placeholder\n", encoding="utf-8")
+
+        files = get_files_to_delete(CleanupMode.SETUP_ONLY, tmp_path)
+        file_posix = [f.relative_to(tmp_path).as_posix() for f in files]
+        assert sample_rel in file_posix, (
+            f"{sample_rel!r} was not targeted by SETUP_ONLY cleanup. "
+            "Check that SETUP_FILES includes *TEMPLATE_OWNED_TEST_FILES."
+        )
