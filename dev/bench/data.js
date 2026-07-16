@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1783338738528,
+  "lastUpdate": 1784201138650,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9676,6 +9676,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000012276515164407422",
             "extra": "mean: 2.40494276082774 usec\nrounds: 58439"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c323df74840e039bd34b6086d535228eda7507a1",
+          "message": "refactor: make template tooling tests template-owned (merges PR #639, addresses #631)\n\nDraw a consistent sync boundary for tests/template/test_*.py that exercise\ntools/pyproject_template/: they are template-owned — they run only in the\ntemplate's own CI, are excluded from the drift checker, and are shed from\ndownstream projects by `cleanup --setup`. Previously the drift checker\nsurfaced them as adoptable while bootstrap refreshed only the tooling, so a\ndownstream could adopt a test against un-refreshed tooling (the PR #630 shape).\n\n- Add TEMPLATE_OWNED_TEST_FILES to utils.py as the single source of truth;\n  both check_template_updates.py and cleanup.py import it (never hardcode).\n- Exclude template-owned tests from compare_files(); shed them via SETUP_FILES.\n- Split the test_properties.py straddler: skeleton (greet) assertions stay\n  downstream-owned; tooling property tests move to test_utils_properties.py.\n- Add a coupling guard that warns when a drifted, non-owned tests/template\n  test imports the tooling and the tooling has also drifted; detection is\n  import-anchored and shared with the CI invariant so they cannot diverge.\n- Invariants: forward (every listed path exists; checker and cleanup agree)\n  and inverse (every tooling-importing test is classified, else CI fails).\n- Docs: ai-sync-checklist.md now refreshes tooling first, notes the version\n  skew caveat, and marks tooling tests template-owned; new ADR-9017.\n\nAddresses #631\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-16T12:25:06+01:00",
+          "tree_id": "06641a3ac85d528c03c9efa658f98b8994ffd77f",
+          "url": "https://github.com/endavis/pyproject-template/commit/c323df74840e039bd34b6086d535228eda7507a1"
+        },
+        "date": 1784201137142,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8141540.558292652,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1565006868011298e-8",
+            "extra": "mean: 122.82687690862629 nsec\nrounds: 83174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8062233.699109029,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9572245153364424e-8",
+            "extra": "mean: 124.0351045778432 nsec\nrounds: 82761"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5490241.090507683,
+            "unit": "iter/sec",
+            "range": "stddev: 4.578928013028032e-8",
+            "extra": "mean: 182.14136383353795 nsec\nrounds: 57661"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1368533.4577614458,
+            "unit": "iter/sec",
+            "range": "stddev: 6.562734664689593e-7",
+            "extra": "mean: 730.7092086997509 nsec\nrounds: 62973"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 469151.80368264683,
+            "unit": "iter/sec",
+            "range": "stddev: 9.684899306469337e-7",
+            "extra": "mean: 2.1315062462734136 usec\nrounds: 52591"
           }
         ]
       }
