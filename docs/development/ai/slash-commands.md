@@ -82,19 +82,19 @@ Operates on the current feature branch, assuming implementation and review are c
 
 ### `/multi-adversarial-review <ais...>`
 
-**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`). **Sources:** `.claude/commands/multi-adversarial-review.md`, `.gemini/commands/multi-adversarial-review.toml`, `.copilot/commands/multi-adversarial-review.md`, `.agents/skills/multi-adversarial-review/SKILL.md`.
+**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`, `antigravity`). **Sources:** `.claude/commands/multi-adversarial-review.md`, `.gemini/commands/multi-adversarial-review.toml`, `.copilot/commands/multi-adversarial-review.md`, `.agents/skills/multi-adversarial-review/SKILL.md`.
 
 Runs each listed agent in an isolated context to independently challenge the current uncommitted changes and the current branch vs `main`. Each agent outputs an adversarial review (Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering); all reviews are synthesized into a combined challenge with consensus and per-agent-only findings. A user-approval gate precedes posting. If a PR exists the synthesis is posted as a PR comment; otherwise it is presented in-conversation only. **Workflow position:** optional adversarial challenge before `/ghi-finalize`. **Design note:** no agent sees any other agent's output while drafting; every non-self agent runs in non-interactive mode and writes only to stdout.
 
 ### `/multi-plan <ais...> <issue#>`
 
-**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`) followed by the issue number. **Sources:** `.claude/commands/multi-plan.md`, `.gemini/commands/multi-plan.toml`, `.copilot/commands/multi-plan.md`, `.agents/skills/multi-plan/SKILL.md`.
+**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`, `antigravity`) followed by the issue number. **Sources:** `.claude/commands/multi-plan.md`, `.gemini/commands/multi-plan.toml`, `.copilot/commands/multi-plan.md`, `.agents/skills/multi-plan/SKILL.md`.
 
 Validates the issue, warns if plan comments already exist, then generates independent plans from each listed agent in isolated contexts. Posts each plan as a separate issue comment, synthesizes a combined plan that highlights agreements and divergences, reviews the synthesis with the user, and only posts the synthesized plan after explicit approval. **Workflow position:** first step of the multi-agent workflow. **Design note:** isolated contexts are mandatory so no agent can see another's output while drafting; the orchestrating agent is the only one that writes to GitHub.
 
 ### `/multi-review <ais...>`
 
-**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`). **Sources:** `.claude/commands/multi-review.md`, `.gemini/commands/multi-review.toml`, `.copilot/commands/multi-review.md`, `.agents/skills/multi-review/SKILL.md`.
+**Args:** one or more agent names (`claude`, `gemini`, `copilot`, `codex`, `antigravity`). **Sources:** `.claude/commands/multi-review.md`, `.gemini/commands/multi-review.toml`, `.copilot/commands/multi-review.md`, `.agents/skills/multi-review/SKILL.md`.
 
 Verifies a PR exists for the current branch, warns if reviews already exist, then generates independent code reviews from each listed agent in isolated contexts. Posts each review as a separate PR comment, synthesizes findings into a combined verdict (consensus findings, per-agent-only findings, combined verdict). A user-approval gate precedes the synthesis post. **Workflow position:** after `/<currentai>:implement`, before `/ghi-finalize`, in the multi-agent workflow. **Design note:** same isolation guarantee as `/multi-plan` — no reviewer sees another's output; the synthesis is posted after all raw reviews so readers can audit it against the sources.
 

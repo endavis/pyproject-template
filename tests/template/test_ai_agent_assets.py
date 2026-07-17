@@ -232,3 +232,27 @@ def test_docs_document_antigravity_agent() -> None:
     )
     assert ".agents/hooks.json" in blocking
     assert "write_to_file" in blocking
+
+
+def test_multi_orchestrators_recognize_antigravity() -> None:
+    """All 12 multi-* orchestrator files list antigravity and include an agy invocation block."""
+    actions = ("plan", "review", "adversarial-review")
+    multi_files = (
+        [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
+        + [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
+        + [REPO_ROOT / ".gemini" / "commands" / f"multi-{a}.toml" for a in actions]
+        + [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
+    )
+    assert len(multi_files) == 12
+    for f in multi_files:
+        content = f.read_text(encoding="utf-8")
+        assert "`antigravity`" in content, f"{f} does not list antigravity as an allowed agent"
+        assert "agy -p" in content, f"{f} has no agy invocation block"
+
+
+def test_migration_tool_copies_agents_dir() -> None:
+    """The migration tool must copy the shared .agents/ dir (Codex + Antigravity config)."""
+    src = (REPO_ROOT / "tools" / "pyproject_template" / "migrate_existing_project.py").read_text(
+        encoding="utf-8"
+    )
+    assert '".agents"' in src, "migrate_existing_project.py must include .agents in the copy list"
