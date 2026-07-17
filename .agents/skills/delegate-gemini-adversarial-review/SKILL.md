@@ -1,15 +1,15 @@
 ---
 name: delegate-gemini-adversarial-review
-description: Delegate a steerable adversarial review of current changes from a Codex session to Gemini CLI. Hands the challenge to Gemini via `gemini -p` and returns it to Codex.
+description: Delegate a steerable adversarial review of current changes to Gemini CLI. Hands the challenge to Gemini via `gemini -p` and returns it to the calling agent.
 ---
 
 # Delegate Adversarial Review to Gemini
 
-Hand off a steerable adversarial review to Gemini CLI from a Codex session — pressure-tests design choices, assumptions, and alternative approaches.
+Hand off a steerable adversarial review to Gemini CLI — pressure-tests design choices, assumptions, and alternative approaches.
 
 ## When to use
 
-Use this skill when the user explicitly wants an adversarial / challenge review done by Gemini (not Codex itself).
+Use this skill when the user explicitly wants an adversarial / challenge review done by Gemini (not the host agent itself).
 
 Expected prompt shape:
 

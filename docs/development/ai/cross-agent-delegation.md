@@ -1,8 +1,8 @@
 # Cross-Agent Delegation Matrix
 
-A consistent, explicit-invocation interface that lets any of the four supported AI CLIs (Claude Code, Codex CLI, Gemini CLI, Copilot CLI) hand a task — `plan`, `implement`, `review`, or `adversarial-review` — to any of the other three.
+A consistent, explicit-invocation interface that lets any of the five supported AI CLIs (Claude Code, Codex CLI, Gemini CLI, Copilot CLI, Antigravity CLI) hand a task — `plan`, `implement`, `review`, or `adversarial-review` — to any of the others.
 
-> **Antigravity CLI (`agy`) onboarding is phased.** Its self-action workflow skills (`antigravity-plan`, `antigravity-implement`, `antigravity-review`, `antigravity-adversarial-review`) exist now under `.agents/skills/`, but its cross-agent delegation bridges are **not yet implemented**. When they land, `agy` becomes the fifth source and target, expanding this matrix from 48 to 80 cross-agent cells (5 × 4 × 4). Until then the matrix below covers the four wired agents.
+> **Antigravity CLI (`agy`) is wired into the matrix as the fifth agent** (both source and target). Its self-action skills (`antigravity-*`) live in `.agents/skills/`, and its outbound bridges **reuse Codex's host-agnostic `delegate-*` skills** in that same directory (both CLIs read it). Inbound bridges to `agy` live in each host's own directory. This brings cross-agent delegation to 80 cells across 68 distinct files. Only multi-agent orchestration (`/multi-*`) for `agy` remains for a later phase.
 
 ## Why this exists
 
@@ -16,7 +16,7 @@ The matrix replaces what would otherwise be a patchwork of inconsistent third-pa
 
 - **Prefix:** `/` on Claude Code, Gemini CLI, and Copilot CLI; `$` on Codex CLI (Codex's repo-defined commands are skills, not slash commands; OpenAI deprecated `~/.codex/prompts/`).
 - **Separator:** `:` (colon) on Claude Code and Gemini CLI — these read `commands/<scope>/<name>` directory layouts that support colon-namespaced slash commands. `-` (hyphen) on Copilot CLI and Codex CLI — these are skill-based and skill names are derived from directory names, which cannot contain colons.
-- **Target:** `claude`, `codex`, `gemini`, `copilot` — the agent to invoke. Can be the **same** agent (self-action) or one of the other three (cross-agent delegation).
+- **Target:** `claude`, `codex`, `gemini`, `copilot`, `antigravity` — the agent to invoke. Can be the **same** agent (self-action) or one of the other four (cross-agent delegation). Antigravity (`agy`) has no slash/`$` prefix — it activates skills by matching the `description:` frontmatter.
 - **Action:** `plan`, `implement`, `review`, `adversarial-review`.
 
 Self-action and cross-agent delegation share the same naming convention within each host. For self-action the command body runs the work natively in the host agent; for cross-agent delegation it shells out to the target CLI.
@@ -29,6 +29,7 @@ Self-action and cross-agent delegation share the same naming convention within e
 | Gemini CLI | `/gemini:<action>` | `/<target>:<action>` | `.gemini/commands/<target>/<action>.toml` |
 | Copilot CLI | `/copilot-<action>` | `/<target>-<action>` | `.github/skills/<target>-<action>/SKILL.md` |
 | Codex CLI | `$codex-<action>` | `$delegate-<target>-<action>` | `.agents/skills/<dir>/SKILL.md` |
+| Antigravity CLI | `antigravity-<action>` (by description) | `delegate-<target>-<action>` (by description) | `.agents/skills/<dir>/SKILL.md` (shared with Codex) |
 
 | Action | Argument | Notes |
 | :--- | :--- | :--- |
@@ -39,16 +40,17 @@ Self-action and cross-agent delegation share the same naming convention within e
 
 ## Matrix
 
-The 4 sources × 4 targets × 4 actions = 64 cells (including self-action). Cross-agent delegation is 4 × 3 × 4 = 48 cells.
+The 5 sources × 5 targets × 4 actions = 100 cells (including self-action). Cross-agent delegation is 5 × 4 × 4 = 80 cells, across **68 distinct files** — Codex and Antigravity share the host-agnostic `.agents/skills/delegate-*` files, so the 12 `antigravity → {claude, gemini, copilot}` cells reuse Codex's files.
 
-| Source ↓ / Target → | claude | codex | gemini | copilot |
-| :--- | :--- | :--- | :--- | :--- |
-| **claude** (`.claude/commands/`) | `/claude:{plan,implement,review,adversarial-review}` | `/codex:{...}` | `/gemini:{...}` | `/copilot:{...}` |
-| **codex** (`.agents/skills/`) | `$delegate-claude-{...}` | `$codex-{plan,implement,review,adversarial-review}` | `$delegate-gemini-{...}` | `$delegate-copilot-{...}` |
-| **gemini** (`.gemini/commands/`) | `/claude:{...}` | `/codex:{...}` | `/gemini:{plan,implement,review,adversarial-review}` | `/copilot:{...}` |
-| **copilot** (`.github/skills/`) | `/claude-{...}` | `/codex-{...}` | `/gemini-{...}` | `/copilot-{plan,implement,review,adversarial-review}` |
+| Source ↓ / Target → | claude | codex | gemini | copilot | antigravity |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **claude** (`.claude/commands/`) | `/claude:{plan,implement,review,adversarial-review}` | `/codex:{...}` | `/gemini:{...}` | `/copilot:{...}` | `/antigravity:{...}` |
+| **codex** (`.agents/skills/`) | `$delegate-claude-{...}` | `$codex-{plan,implement,review,adversarial-review}` | `$delegate-gemini-{...}` | `$delegate-copilot-{...}` | `$delegate-antigravity-{...}` |
+| **gemini** (`.gemini/commands/`) | `/claude:{...}` | `/codex:{...}` | `/gemini:{plan,implement,review,adversarial-review}` | `/copilot:{...}` | `/antigravity:{...}` |
+| **copilot** (`.github/skills/`) | `/claude-{...}` | `/codex-{...}` | `/gemini-{...}` | `/copilot-{plan,implement,review,adversarial-review}` | `/antigravity-{...}` |
+| **antigravity** (`.agents/skills/`) | `delegate-claude-{...}` | `delegate-codex-{...}` | `delegate-gemini-{...}` | `delegate-copilot-{...}` | `antigravity-{plan,implement,review,adversarial-review}` |
 
-Each cell expands to `{plan, implement, review, adversarial-review}`. The diagonal (self-action) cells run natively in the host agent rather than shelling out. **Naming asymmetry:** Claude and Gemini use `<target>:<action>` (colon); Copilot and Codex use `<target>-<action>` (hyphen) because their command surface is skills, and skill names — being directory names — cannot contain colons. The functional behavior is identical; only the slash name differs.
+Each cell expands to `{plan, implement, review, adversarial-review}`. The diagonal (self-action) cells run natively in the host agent rather than shelling out. **Naming asymmetry:** Claude and Gemini use `<target>:<action>` (colon); Copilot and Codex use `<target>-<action>` (hyphen) because their command surface is skills, and skill names — being directory names — cannot contain colons. Antigravity is also skill-based and has **no prefix at all** — it activates the matching skill by its `description:`. The functional behavior is identical across hosts; only the invocation surface differs.
 
 ## Non-interactive flags per CLI
 
@@ -60,6 +62,7 @@ Each bridge invokes the target CLI in headless mode. Each CLI requires a flag to
 | Codex CLI | `codex -a never exec '<prompt>'` | `-a never` (`--ask-for-approval never`) prevents Codex from asking the (absent) user before running shell commands. Without it, every tool call in the delegated session is denied. |
 | Gemini CLI | `gemini -y -p '<prompt>'` | `-y` (`--yolo`) auto-accepts all tool calls. Without it, `run_shell_command` calls are denied by policy in non-interactive mode. |
 | Copilot CLI | `copilot --allow-all -p '<prompt>'` | `--allow-all` enables all permissions (equivalent to `--allow-all-tools --allow-all-paths --allow-all-urls`). Without it, Copilot prompts for path or URL access mid-session, which the absent user can't answer. **Order matters:** `--allow-all` must precede `-p`, since `-p <text>` consumes its argument and would otherwise grab the next flag. |
+| Antigravity CLI | `agy -p '<prompt>' --dangerously-skip-permissions --add-dir "$(git rev-parse --show-toplevel)"` | `-p` runs headless; `--dangerously-skip-permissions` auto-approves tool calls the absent user can't confirm. `--add-dir <repo-root>` is **required** so `agy` treats the repo as an active workspace and loads `.agents/` (skills + the shared dangerous-command hook) — a headless `agy -p` otherwise falls back to its own home workspace and ignores the repo's `.agents/`. The safety hook's stdout `{"decision":"deny"}` still hard-blocks dangerous commands even under `--dangerously-skip-permissions`. |
 
 These flags are intentional: in delegated invocations, the human is at the *source* agent and not at the target's prompt. Approval prompts in the target session can never be answered, so they must be bypassed. The source agent retains full visibility through captured stdout and can stop the chain at any point.
 

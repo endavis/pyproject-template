@@ -1,15 +1,15 @@
 ---
 name: delegate-copilot-review
-description: Delegate a read-only code review of current changes from a Codex session to GitHub Copilot CLI. Hands the review to Copilot via `copilot --allow-all -p` and returns findings to Codex.
+description: Delegate a read-only code review of current changes to GitHub Copilot CLI. Hands the review to Copilot via `copilot --allow-all -p` and returns findings to the calling agent.
 ---
 
 # Delegate Review to Copilot
 
-Hand off a read-only code review of current changes to GitHub Copilot CLI from a Codex session.
+Hand off a read-only code review of current changes to GitHub Copilot CLI.
 
 ## When to use
 
-Use this skill when the user explicitly wants a review done by Copilot (not Codex itself).
+Use this skill when the user explicitly wants a review done by Copilot (not the host agent itself).
 
 Expected prompt shape:
 

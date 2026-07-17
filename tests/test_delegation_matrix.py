@@ -2,12 +2,14 @@
 
 Static test only — no CLI or model invocations. Verifies that:
 
-- All 48 source x target x action command/skill files exist at the documented paths.
-- `.gemini/settings.json` `skills.disabled` contains all 12 Codex-source delegation
-  skill names (preventing Gemini from loading them).
+- All 80 source x target x action command/skill cells resolve to files at the
+  documented paths (Codex and Antigravity share the host-agnostic
+  `.agents/skills/delegate-*` files, so distinct files number 68, not 80).
+- `.gemini/settings.json` `skills.disabled` contains all 20 `.agents/skills/`
+  delegation skill names (preventing Gemini from loading them).
 - The matrix documentation page exists.
 
-See `docs/development/ai/cross-agent-delegation.md` and issue #550.
+See `docs/development/ai/cross-agent-delegation.md` and issues #550, #640.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
-AGENTS = ("claude", "codex", "gemini", "copilot")
+AGENTS = ("claude", "codex", "gemini", "copilot", "antigravity")
 ACTIONS = ("plan", "implement", "review", "adversarial-review")
 
 
@@ -45,7 +47,12 @@ def _expected_path(source: str, target: str, action: str) -> Path:
         return REPO_ROOT / ".gemini" / "commands" / target / f"{action}.toml"
     if source == "copilot":
         return REPO_ROOT / ".github" / "skills" / f"{target}-{action}" / "SKILL.md"
-    if source == "codex":
+    if source in ("codex", "antigravity"):
+        # Antigravity shares Codex's host-agnostic delegate-* skills in
+        # .agents/skills/ (both CLIs read that directory). antigravity->codex
+        # uses the new delegate-codex-*, codex->antigravity uses
+        # delegate-antigravity-*, and delegate-{claude,gemini,copilot}-* are
+        # reused by both sources.
         return REPO_ROOT / ".agents" / "skills" / f"delegate-{target}-{action}" / "SKILL.md"
     raise ValueError(f"unknown source agent: {source}")
 
@@ -59,33 +66,40 @@ def test_delegation_file_exists(source: str, target: str, action: str) -> None:
 
 
 def test_total_file_count() -> None:
-    """4 sources x 3 targets x 4 actions = 48 files."""
-    paths = [_expected_path(s, t, a) for s, t in _cross_pairs() for a in ACTIONS]
-    existing = [p for p in paths if p.is_file()]
-    assert len(existing) == 48, (
-        f"expected 48 delegation files, found {len(existing)}; "
-        f"missing: {[str(p.relative_to(REPO_ROOT)) for p in paths if p not in existing]}"
-    )
+    """5 sources x 4 targets x 4 actions = 80 cross-agent cells.
+
+    Codex and Antigravity share the host-agnostic .agents/skills/delegate-*
+    files, so the 12 antigravity->{claude,gemini,copilot} cells reuse Codex's
+    files and the distinct-file count is 68, not 80.
+    """
+    cells = [(s, t, a) for s, t in _cross_pairs() for a in ACTIONS]
+    assert len(cells) == 80
+
+    missing = [
+        str(_expected_path(s, t, a).relative_to(REPO_ROOT))
+        for s, t, a in cells
+        if not _expected_path(s, t, a).is_file()
+    ]
+    assert not missing, f"missing delegation files: {missing}"
+
+    distinct = {_expected_path(s, t, a) for s, t, a in cells}
+    assert len(distinct) == 68, f"expected 68 distinct files, found {len(distinct)}"
 
 
 def test_gemini_disabled_list_contains_delegation_skills() -> None:
-    """All 12 Codex-source delegation skill names are disabled in .gemini/settings.json.
+    """All 20 .agents/skills/ delegation skill names are disabled in .gemini/settings.json.
 
     Without this, Gemini auto-loads the skills from .agents/skills/ (its docs document
-    that path as cross-agent interop) and may mis-activate them. See
-    docs/development/ai/cross-agent-delegation.md → "Path conflict between Codex and Gemini".
+    that path as cross-agent interop) and may mis-activate them. Codex and Antigravity
+    both read .agents/skills/, so every delegate-<target>-<action> across all five agents
+    exists there. See docs/development/ai/cross-agent-delegation.md.
     """
     settings_path = REPO_ROOT / ".gemini" / "settings.json"
     settings = json.loads(settings_path.read_text())
     disabled = set(settings["skills"]["disabled"])
 
-    expected_skills = {
-        f"delegate-{target}-{action}"
-        for target in AGENTS
-        if target != "codex"
-        for action in ACTIONS
-    }
-    assert len(expected_skills) == 12
+    expected_skills = {f"delegate-{target}-{action}" for target in AGENTS for action in ACTIONS}
+    assert len(expected_skills) == 20
 
     missing = expected_skills - disabled
     assert not missing, (

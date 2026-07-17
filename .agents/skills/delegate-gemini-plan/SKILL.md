@@ -1,15 +1,15 @@
 ---
 name: delegate-gemini-plan
-description: Delegate planning for a GitHub issue from a Codex session to Gemini CLI. Hands the planning work to Gemini via `gemini -p` and returns the plan to Codex.
+description: Delegate planning for a GitHub issue to Gemini CLI. Hands the planning work to Gemini via `gemini -p` and returns the plan to the calling agent.
 ---
 
 # Delegate Plan to Gemini
 
-Hand off planning work for a GitHub issue to Gemini CLI from a Codex session.
+Hand off planning work for a GitHub issue to Gemini CLI.
 
 ## When to use
 
-Use this skill when the user explicitly wants planning done by Gemini (not Codex itself).
+Use this skill when the user explicitly wants planning done by Gemini (not the host agent itself).
 
 Expected prompt shape:
 

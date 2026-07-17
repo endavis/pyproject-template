@@ -1,15 +1,15 @@
 ---
 name: delegate-claude-implement
-description: Delegate implementation of a GitHub issue from a Codex session to Claude Code. Hands implementation work to Claude via `claude -p` and returns the result to Codex.
+description: Delegate implementation of a GitHub issue to Claude Code. Hands implementation work to Claude via `claude -p` and returns the result to the calling agent.
 ---
 
 # Delegate Implement to Claude
 
-Hand off implementation work for a GitHub issue to Claude Code from a Codex session.
+Hand off implementation work for a GitHub issue to Claude Code.
 
 ## When to use
 
-Use this skill when the user explicitly wants implementation done by Claude (not Codex itself).
+Use this skill when the user explicitly wants implementation done by Claude (not the host agent itself).
 
 Expected prompt shape:
 

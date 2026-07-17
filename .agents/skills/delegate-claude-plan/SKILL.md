@@ -1,15 +1,15 @@
 ---
 name: delegate-claude-plan
-description: Delegate planning for a GitHub issue from a Codex session to Claude Code. Hands the planning work to Claude via `claude -p` and returns the plan to Codex.
+description: Delegate planning for a GitHub issue to Claude Code. Hands the planning work to Claude via `claude -p` and returns the plan to the calling agent.
 ---
 
 # Delegate Plan to Claude
 
-Hand off planning work for a GitHub issue to Claude Code from a Codex session.
+Hand off planning work for a GitHub issue to Claude Code.
 
 ## When to use
 
-Use this skill when the user explicitly wants planning done by Claude (not Codex itself).
+Use this skill when the user explicitly wants planning done by Claude (not the host agent itself).
 
 Expected prompt shape:
 
