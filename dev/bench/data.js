@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784251442302,
+  "lastUpdate": 1784252438560,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9853,6 +9853,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.18643056236636e-7",
             "extra": "mean: 2.0586116408090427 usec\nrounds: 57264"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8956ab6f60601218aa9ea2d85f61ba410f3118ff",
+          "message": "feat: recognize Antigravity (agy) in multi-agent orchestrators (merges PR #643, addresses #640)\n\nPhase 3 (final) of Antigravity onboarding (#640):\n\n- Add agy to all 12 /multi-{plan,review,adversarial-review} orchestrator files\n  (.claude, .gemini, .copilot, .agents/skills): list `antigravity` as an allowed\n  agent and add an `agy -p ... --dangerously-skip-permissions --add-dir` block\n- Add .copilot and .agents to migrate_existing_project.py's copy list so\n  downstream syncs pick up the Codex/Antigravity/Copilot config dirs (a\n  pre-existing gap for .agents that also dropped Codex's skills)\n- Add tests: all 12 multi-* files recognize antigravity; migration copies .agents\n- Update AGENTS.md, cross-agent-delegation.md, AI_SETUP.md, and slash-commands.md\n  (agy now fully supported; drop the \"later phase\" notes)\n\nAddresses #640\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-17T02:40:08+01:00",
+          "tree_id": "83d2b3bb3999aef6ea21f14e87b3e4e33ec51bc6",
+          "url": "https://github.com/endavis/pyproject-template/commit/8956ab6f60601218aa9ea2d85f61ba410f3118ff"
+        },
+        "date": 1784252437093,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18791150.900743406,
+            "unit": "iter/sec",
+            "range": "stddev: 1.029896144265409e-8",
+            "extra": "mean: 53.21653821429525 nsec\nrounds: 95003"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 18589311.24236496,
+            "unit": "iter/sec",
+            "range": "stddev: 5.010038128689525e-9",
+            "extra": "mean: 53.79435456010894 nsec\nrounds: 185943"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12718248.9784159,
+            "unit": "iter/sec",
+            "range": "stddev: 8.123987882561658e-9",
+            "extra": "mean: 78.62717593413188 nsec\nrounds: 126711"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3451570.1941588167,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3225702289998377e-7",
+            "extra": "mean: 289.72321110326146 nsec\nrounds: 72250"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 949884.0790300062,
+            "unit": "iter/sec",
+            "range": "stddev: 2.263299278627718e-7",
+            "extra": "mean: 1.0527600389104015 usec\nrounds: 62681"
           }
         ]
       }
