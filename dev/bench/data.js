@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784201138650,
+  "lastUpdate": 1784249728988,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9735,6 +9735,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.684899306469337e-7",
             "extra": "mean: 2.1315062462734136 usec\nrounds: 52591"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66667af529d662c25a8ab79a3a7b14f5f9015214",
+          "message": "feat: add Antigravity CLI (agy) self-action skills and safety hook (merges PR #641, addresses #640)\n\nOnboard Google's Antigravity CLI (agy) as a supported AI agent (Phase 1 of a\nphased rollout tracked in #640):\n\n- Add antigravity-{plan,implement,review,adversarial-review} skills under\n  .agents/skills/ (shared SKILL.md format, description-gated activation)\n- Wire the shared dangerous-command hook via .agents/hooks.json and extend\n  block-dangerous-commands.py to parse agy's toolCall payload and emit its\n  stdout {\"decision\":\"deny\"} block contract, which holds even under\n  --dangerously-skip-permissions\n- Disable the antigravity-* skills in .gemini/settings.json to prevent bleed\n  into Gemini (which also reads .agents/skills/)\n- Register Antigravity across AGENTS.md and the AI docs; add asset tests and\n  agy hook-payload test cases\n\nCross-agent delegation bridges, multi-agent orchestration, and an optional\nstatusline land in later phases.\n\nAddresses #640\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-17T01:54:55+01:00",
+          "tree_id": "4862aae13d1e94147229b88ade5564241ae22fd8",
+          "url": "https://github.com/endavis/pyproject-template/commit/66667af529d662c25a8ab79a3a7b14f5f9015214"
+        },
+        "date": 1784249727551,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8278172.417427959,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0298494087726934e-8",
+            "extra": "mean: 120.79961005580283 nsec\nrounds: 87474"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8497126.714615146,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3806130153720714e-8",
+            "extra": "mean: 117.68684092706181 nsec\nrounds: 86193"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 4750483.647130382,
+            "unit": "iter/sec",
+            "range": "stddev: 6.66731289514905e-8",
+            "extra": "mean: 210.50488208796776 nsec\nrounds: 51691"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1531282.7138352294,
+            "unit": "iter/sec",
+            "range": "stddev: 9.431751489925018e-7",
+            "extra": "mean: 653.0472726982033 nsec\nrounds: 62700"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 483581.6744313524,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011553751987970392",
+            "extra": "mean: 2.0679030097158004 usec\nrounds: 61501"
           }
         ]
       }
