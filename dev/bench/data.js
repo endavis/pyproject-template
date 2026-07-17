@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784249728988,
+  "lastUpdate": 1784251442302,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9794,6 +9794,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000011553751987970392",
             "extra": "mean: 2.0679030097158004 usec\nrounds: 61501"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "76acba8f8a7bc0d58b623d848d8517ade48fd4e0",
+          "message": "feat: wire Antigravity CLI (agy) cross-agent delegation bridges (merges PR #642, addresses #640)\n\nPhase 2 of Antigravity onboarding (#640): make agy a full source and target in\nthe cross-agent delegation matrix, expanding it from 48 to 80 cross-agent cells\nacross 68 distinct files.\n\n- Rework the 12 existing delegate-{claude,gemini,copilot}-* skills to be\n  host-agnostic so both Codex and Antigravity can use them\n- Add 4 delegate-codex-* skills (agy -> Codex); agy reuses the shared\n  delegate-* skills for its other outbound bridges\n- Add 16 inbound bridges to agy: .claude/commands/antigravity/*,\n  .gemini/commands/antigravity/*, .github/skills/antigravity-*, and\n  .agents/skills/delegate-antigravity-* (each invokes\n  agy -p ... --dangerously-skip-permissions --add-dir <repo-root>)\n- Restructure test_delegation_matrix.py for 5 agents (Codex and Antigravity\n  share the host-agnostic .agents/skills/delegate-* files)\n- Disable the 8 new delegate skills in .gemini/settings.json; update\n  cross-agent-delegation.md, AGENTS.md, AI_SETUP.md, and .copilot/README.md\n  (bridge counts and the 5x5 matrix)\n\nMulti-agent orchestration (/multi-*) for agy lands in a later phase.\n\nAddresses #640\n\nCo-authored-by: Claude Opus 4.8 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-07-17T02:23:32+01:00",
+          "tree_id": "65a23fa0e51f3f38c8d9f2a504393221f79a1c1e",
+          "url": "https://github.com/endavis/pyproject-template/commit/76acba8f8a7bc0d58b623d848d8517ade48fd4e0"
+        },
+        "date": 1784251441340,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8445150.553745579,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0912000397975794e-8",
+            "extra": "mean: 118.41115130345209 nsec\nrounds: 88795"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8920315.758462645,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5762616952062902e-8",
+            "extra": "mean: 112.10365496886213 nsec\nrounds: 87169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5452892.794334918,
+            "unit": "iter/sec",
+            "range": "stddev: 1.528014328718879e-8",
+            "extra": "mean: 183.38889791468358 nsec\nrounds: 56874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1721074.3589751194,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3818550147093335e-7",
+            "extra": "mean: 581.0324201189592 nsec\nrounds: 65885"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 485764.27927270246,
+            "unit": "iter/sec",
+            "range": "stddev: 6.18643056236636e-7",
+            "extra": "mean: 2.0586116408090427 usec\nrounds: 57264"
           }
         ]
       }
