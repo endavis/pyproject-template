@@ -9,7 +9,7 @@ Run multiple AI agents in parallel to create independent implementation plans fo
 Arguments: `<ais...> [issue#]` from `$ARGUMENTS`
 
 The last argument is the issue number if it is an integer. Everything before it is the agent list.
-Allowed agent names: `claude`, `gemini`, `copilot`, `codex`.
+Allowed agent names: `claude`, `gemini`, `copilot`, `codex`, `antigravity`.
 
 - If the issue number is missing, tell the user the required syntax and stop.
 - If any agent name is not in the allowed list, report the unknown name, list allowed names, and stop.
@@ -79,6 +79,14 @@ codex -a never exec 'Plan the implementation for GitHub issue #<issue> in the cu
 ```
 
 Capture stdout as Codex's plan.
+
+#### If `antigravity` is in the agent list:
+
+```bash
+agy -p 'Plan the implementation for GitHub issue #<issue> in the current repository. If an Antigravity planning skill (antigravity-plan) is available, use it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels`. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Antigravity* | *Date: <today>*. 5) Print ONLY the plan to stdout. Do NOT post to GitHub.' --dangerously-skip-permissions --add-dir "$(git rev-parse --show-toplevel)" 2>/dev/null
+```
+
+Capture stdout as Antigravity's plan.
 
 If any agent fails or produces empty output, report the error and ask the user whether to continue with remaining plans or retry.
 

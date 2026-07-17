@@ -65,6 +65,8 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
     ".claude",
     ".codex",
     ".gemini",
+    ".copilot",
+    ".agents",
     "tools",
     "tmp/.gitkeep",
 )
