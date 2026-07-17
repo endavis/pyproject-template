@@ -1,15 +1,15 @@
 ---
 name: delegate-gemini-review
-description: Delegate a read-only code review of current changes from a Codex session to Gemini CLI. Hands the review to Gemini via `gemini -p` and returns findings to Codex.
+description: Delegate a read-only code review of current changes to Gemini CLI. Hands the review to Gemini via `gemini -p` and returns findings to the calling agent.
 ---
 
 # Delegate Review to Gemini
 
-Hand off a read-only code review of current changes to Gemini CLI from a Codex session.
+Hand off a read-only code review of current changes to Gemini CLI.
 
 ## When to use
 
-Use this skill when the user explicitly wants a review done by Gemini (not Codex itself).
+Use this skill when the user explicitly wants a review done by Gemini (not the host agent itself).
 
 Expected prompt shape:
 

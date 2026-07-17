@@ -1,15 +1,15 @@
 ---
 name: delegate-copilot-plan
-description: Delegate planning for a GitHub issue from a Codex session to GitHub Copilot CLI. Hands the planning work to Copilot via `copilot --allow-all -p` and returns the plan to Codex.
+description: Delegate planning for a GitHub issue to GitHub Copilot CLI. Hands the planning work to Copilot via `copilot --allow-all -p` and returns the plan to the calling agent.
 ---
 
 # Delegate Plan to Copilot
 
-Hand off planning work for a GitHub issue to GitHub Copilot CLI from a Codex session.
+Hand off planning work for a GitHub issue to GitHub Copilot CLI.
 
 ## When to use
 
-Use this skill when the user explicitly wants planning done by Copilot (not Codex itself).
+Use this skill when the user explicitly wants planning done by Copilot (not the host agent itself).
 
 Expected prompt shape:
 

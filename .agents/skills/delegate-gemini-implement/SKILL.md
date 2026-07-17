@@ -1,15 +1,15 @@
 ---
 name: delegate-gemini-implement
-description: Delegate implementation of a GitHub issue from a Codex session to Gemini CLI. Hands implementation work to Gemini via `gemini -p` and returns the result to Codex.
+description: Delegate implementation of a GitHub issue to Gemini CLI. Hands implementation work to Gemini via `gemini -p` and returns the result to the calling agent.
 ---
 
 # Delegate Implement to Gemini
 
-Hand off implementation work for a GitHub issue to Gemini CLI from a Codex session.
+Hand off implementation work for a GitHub issue to Gemini CLI.
 
 ## When to use
 
-Use this skill when the user explicitly wants implementation done by Gemini (not Codex itself).
+Use this skill when the user explicitly wants implementation done by Gemini (not the host agent itself).
 
 Expected prompt shape:
 

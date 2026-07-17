@@ -6,18 +6,19 @@ This directory is the GitHub Copilot CLI configuration directory for this reposi
 
 ## Workflow Skills
 
-All Copilot-host workflow skills (self-action and cross-agent bridges, 16 total) live under `.github/skills/<target>-<action>/SKILL.md`. Because skill names are directory names and cannot contain colons, the slash surface uses hyphen naming:
+All Copilot-host workflow skills (self-action and cross-agent bridges, 20 total) live under `.github/skills/<target>-<action>/SKILL.md`. Because skill names are directory names and cannot contain colons, the slash surface uses hyphen naming:
 
 - **Self-action:** `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
 - **To Claude:** `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
 - **To Codex:** `/codex-plan`, `/codex-implement`, `/codex-review`, `/codex-adversarial-review`
 - **To Gemini:** `/gemini-plan`, `/gemini-implement`, `/gemini-review`, `/gemini-adversarial-review`
+- **To Antigravity:** `/antigravity-plan`, `/antigravity-implement`, `/antigravity-review`, `/antigravity-adversarial-review`
 
 The `multi-*` orchestrators (`/multi-plan`, `/multi-review`, `/multi-adversarial-review`) and `/ghi-finalize` / `/ghi-status` come from `.agents/skills/` (interoperable Codex skill path) and are auto-discovered by Copilot.
 
 ## Known limitation: delegate-* skill bleed
 
-Copilot reads `.agents/skills/`, which contains the 12 Codex-only `delegate-<target>-<action>` skills. Those surface as `/delegate-...` slash commands alongside the canonical Copilot ones — they shell out to Codex's syntax and are wasted noise in a Copilot session. Copilot supports a `disabledSkills` array, but **only in user config** (`~/.copilot/config.json`) — there is no repo-level setting for it. See [`docs/development/ai/slash-commands.md`](../docs/development/ai/slash-commands.md#copilot) for the user-side config snippet.
+Copilot reads `.agents/skills/`, which contains the 20 `delegate-<target>-<action>` skills (shared by Codex and Antigravity). Those surface as `/delegate-...` slash commands alongside the canonical Copilot ones — they shell out to Codex/Antigravity syntax and are wasted noise in a Copilot session. Copilot supports a `disabledSkills` array, but **only in user config** (`~/.copilot/config.json`) — there is no repo-level setting for it. See [`docs/development/ai/slash-commands.md`](../docs/development/ai/slash-commands.md#copilot) for the user-side config snippet.
 
 ## Dangerous Command Hook
 

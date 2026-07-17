@@ -1,15 +1,15 @@
 ---
 name: delegate-copilot-implement
-description: Delegate implementation of a GitHub issue from a Codex session to GitHub Copilot CLI. Hands implementation work to Copilot via `copilot --allow-all -p` and returns the result to Codex.
+description: Delegate implementation of a GitHub issue to GitHub Copilot CLI. Hands implementation work to Copilot via `copilot --allow-all -p` and returns the result to the calling agent.
 ---
 
 # Delegate Implement to Copilot
 
-Hand off implementation work for a GitHub issue to GitHub Copilot CLI from a Codex session.
+Hand off implementation work for a GitHub issue to GitHub Copilot CLI.
 
 ## When to use
 
-Use this skill when the user explicitly wants implementation done by Copilot (not Codex itself).
+Use this skill when the user explicitly wants implementation done by Copilot (not the host agent itself).
 
 Expected prompt shape:
 
