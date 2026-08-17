@@ -55,7 +55,7 @@ dev = [
 security = [
     "pip-audit>=2.10.1",
     "bandit>=1.7",
-    "pip>=26.2",
+    "pip>=26.2.1",
     "pip-licenses>=4.0",
     "cyclonedx-bom>=7.3.1",
 ]
