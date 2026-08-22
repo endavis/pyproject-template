@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1784252438560,
+  "lastUpdate": 1787412017817,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9912,6 +9912,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.263299278627718e-7",
             "extra": "mean: 1.0527600389104015 usec\nrounds: 62681"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0949a9ca15c0d80de33c65897b18e1e238d06c21",
+          "message": "feat: add optional Antigravity CLI (agy) statusline (merges PR #673, addresses #644)\n\n* feat: add optional Antigravity CLI (agy) statusline\n\nMirror the Claude Code statusline for agy: compute directory, venv,\nPython version, git branch + status, and GitHub user locally (agy's\npayload carries only vcs.type), and render agy's model, context window,\nand agent state. Opt-in AGY_STATUSLINE_EXTRAS=1 appends agy's real 5h +\nweekly quota and a sandbox indicator. Ships as a committed script plus\ndocumented global opt-in wiring, since agy's statusline lives in the\nuser's global settings and can't be auto-provisioned per-clone.\n\nAddresses #644\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n* fix: make agy statusline portable to macOS bash 3.2 (drop mapfile)\n\nmacOS ships bash 3.2, which has no `mapfile` builtin. The agy statusline\nused `mapfile` to read jq output into an array; on macOS that printed\n\"mapfile: command not found\", left the field array empty, and fell back\nto all defaults — failing every payload-derived assertion in CI (Ubuntu\nand Windows use bash 4/5 and passed). Replace it with a bash-3.2-compatible\n`while IFS= read -r` loop fed by the same process substitution.\n\nAddresses #644\n\nCo-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 4.8 <noreply@anthropic.com>",
+          "timestamp": "2026-08-22T16:19:49+01:00",
+          "tree_id": "a8fa6b8c92ed82825724b98b2ad431e4c92e34d9",
+          "url": "https://github.com/endavis/pyproject-template/commit/0949a9ca15c0d80de33c65897b18e1e238d06c21"
+        },
+        "date": 1787412016723,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8390664.15888287,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0852048062883523e-8",
+            "extra": "mean: 119.18007693602405 nsec\nrounds: 84876"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9193238.013318473,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1423713662745567e-8",
+            "extra": "mean: 108.77560208397466 nsec\nrounds: 87712"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5833791.810897088,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3830908191298633e-8",
+            "extra": "mean: 171.4150988611 nsec\nrounds: 190477"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1767176.9883830755,
+            "unit": "iter/sec",
+            "range": "stddev: 2.598917748757553e-7",
+            "extra": "mean: 565.874276642192 nsec\nrounds: 61691"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492416.16551474744,
+            "unit": "iter/sec",
+            "range": "stddev: 4.769034205745283e-7",
+            "extra": "mean: 2.030802540681518 usec\nrounds: 58645"
           }
         ]
       }
