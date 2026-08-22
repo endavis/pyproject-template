@@ -36,8 +36,16 @@ input=$(cat)
 
 # Extract agy-native fields in one jq pass; fall back to defaults on missing/invalid JSON.
 # The last three fields feed the opt-in quota segment (AGY_STATUSLINE_EXTRAS).
+#
+# Populate the array with a `while read` loop rather than `mapfile`: `mapfile`
+# is a bash 4+ builtin, and macOS ships bash 3.2 by default. Process
+# substitution keeps the loop in this shell so the array persists. jq emits one
+# newline-terminated line per field (empty fields become empty lines), so the
+# array always has the same nine elements read positionally below.
 _fields=()
-mapfile -t _fields < <(
+while IFS= read -r _line; do
+    _fields+=("$_line")
+done < <(
     printf '%s' "$input" | jq -r '
         (.workspace.current_dir // .cwd // ""),
         (.model.display_name // .model.id // "?"),
