@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787412017817,
+  "lastUpdate": 1787412710241,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -9971,6 +9971,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.769034205745283e-7",
             "extra": "mean: 2.030802540681518 usec\nrounds: 58645"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "322c7a46c0e68b1cf26a9ad753c0852540934e6c",
+          "message": "fix: prevent gh api error body from leaking into statusline (merges PR #675, addresses #674)\n\n`gh api` writes the HTTP response body to stdout even on failure, so\n`$(gh api user --jq \".login\" 2>/dev/null || echo \"\")` captured the JSON\nerror body into `gh_user` — the `|| echo \"\"` appended to the capture\nrather than replacing it. Any gh failure (invalid token, network outage,\nrate limit) rendered a multi-line 401 blob into the statusline.\n\nClear the variable on non-zero exit instead, so the `@username` segment\nis omitted and the statusline degrades cleanly. Applied to both the\nClaude and Antigravity (agy) statuslines, which shared the bug.\n\nAddresses #674\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-22T16:31:20+01:00",
+          "tree_id": "672719e91d3c49226291531d2ba5b232e1e2f6c3",
+          "url": "https://github.com/endavis/pyproject-template/commit/322c7a46c0e68b1cf26a9ad753c0852540934e6c"
+        },
+        "date": 1787412708077,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8651633.590690276,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6605855415824005e-8",
+            "extra": "mean: 115.58510765828841 nsec\nrounds: 193424"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8966868.151790854,
+            "unit": "iter/sec",
+            "range": "stddev: 1.432818835927464e-8",
+            "extra": "mean: 111.52165762583238 nsec\nrounds: 88488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6306035.053291132,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4989944188958127e-8",
+            "extra": "mean: 158.57824949420447 nsec\nrounds: 63256"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1740350.7441857478,
+            "unit": "iter/sec",
+            "range": "stddev: 2.639094029795227e-7",
+            "extra": "mean: 574.5968181074136 nsec\nrounds: 63862"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492055.3215841688,
+            "unit": "iter/sec",
+            "range": "stddev: 5.309114881484467e-7",
+            "extra": "mean: 2.0322918097512015 usec\nrounds: 60865"
           }
         ]
       }
