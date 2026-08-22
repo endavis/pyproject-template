@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787412710241,
+  "lastUpdate": 1787413397366,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10030,6 +10030,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.309114881484467e-7",
             "extra": "mean: 2.0322918097512015 usec\nrounds: 60865"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "30a72f402e80234cabbf662a75e991978ac63573",
+          "message": "fix: suppress python command-not-found noise in statusline (merges PR #677, addresses #676)\n\n`.claude/statusline-command.sh` captured the active Python version without\nredirecting stderr, so on any host with no unversioned `python` on PATH —\nDebian/Ubuntu without python-is-python3, or any shell outside an activated\nvirtualenv — the shell's `command not found` diagnostic was written on\nevery statusline render.\n\nAdd `2>/dev/null`, matching the sibling Antigravity statusline, which\nalready redirected stderr on the same call. Rendered output is unaffected:\npython writes diagnostics to stderr, so the captured value was already\ncorrectly empty and the segment already degraded away.\n\nAddresses #676\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-22T16:42:54+01:00",
+          "tree_id": "578c36de5ee52b24a50bc986cc0f838b02996a08",
+          "url": "https://github.com/endavis/pyproject-template/commit/30a72f402e80234cabbf662a75e991978ac63573"
+        },
+        "date": 1787413396439,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13560720.292900013,
+            "unit": "iter/sec",
+            "range": "stddev: 7.579981412669263e-9",
+            "extra": "mean: 73.74239556607994 nsec\nrounds: 121967"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13846679.919533143,
+            "unit": "iter/sec",
+            "range": "stddev: 7.629979010465811e-9",
+            "extra": "mean: 72.2194783017499 nsec\nrounds: 137685"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9495951.181452403,
+            "unit": "iter/sec",
+            "range": "stddev: 9.433334207850288e-9",
+            "extra": "mean: 105.30803927817269 nsec\nrounds: 94251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2283343.357826198,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4390398154458207e-7",
+            "extra": "mean: 437.9542816337644 nsec\nrounds: 70978"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 652348.7210461764,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2924376597681814e-7",
+            "extra": "mean: 1.532922450428496 usec\nrounds: 59549"
           }
         ]
       }
