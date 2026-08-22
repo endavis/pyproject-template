@@ -28,7 +28,7 @@ Claude Opus 4.5 | ▓▓░░░░░░░░ ~10% of 200k tokens
 
 - **Current directory** and Python virtual environment name
 - **Python version** currently active
-- **GitHub username** (from `gh` CLI)
+- **GitHub username** (from `gh` CLI; omitted when `gh` is missing or unauthenticated)
 - **Git branch** with uncommitted file count
 - **Sync status** showing ahead/behind commits and last fetch time
 - **Model name** with context usage bar (visual + percentage)
@@ -255,7 +255,8 @@ will not reach it. To disable: `unset AGY_STATUSLINE_EXTRAS` and restart `agy`.
 - `bash` — shell runtime
 - `jq` — JSON processor (already required by the base Claude statusline)
 - `git` — for branch and status (computed locally; `agy` reports only `vcs.type`)
-- `gh` — GitHub CLI (optional, for the `@username` segment)
+- `gh` — GitHub CLI (optional, for the `@username` segment; the segment is
+  dropped if `gh` is absent or its token is invalid)
 - `python` — optional, for the active Python version
 - `awk` — for the opt-in quota percentages (part of coreutils/busybox; already present)
 
