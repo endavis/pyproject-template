@@ -35,7 +35,7 @@ dir=$(basename "$cwd" 2>/dev/null || echo "?")
 # line goes to stderr), so clear the capture on non-zero exit — `|| echo ""`
 # would append to the error body instead of replacing it.
 gh_user=$(gh api user --jq ".login" 2>/dev/null) || gh_user=""
-python_version=$(python -c "import sys; print('.'.join(map(str, sys.version_info[:3])))" || echo "")
+python_version=$(python -c "import sys; print('.'.join(map(str, sys.version_info[:3])))" 2>/dev/null || echo "")
 
 # Extract Python .venv
 venv_name=""
