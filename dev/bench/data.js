@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787507789427,
+  "lastUpdate": 1787508103268,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10797,6 +10797,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.587700084868191e-7",
             "extra": "mean: 2.0620984417285486 usec\nrounds: 64688"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5724e7e29d275d5245d5c75a580e69771f8ee16e",
+          "message": "chore: stop the test suite writing gh state into the repository (merges PR #718, addresses #698)\n\n`.local/` was the only entry in `git status` on a clean checkout, which\ntrains everyone -- human and agent -- to ignore a dirty status line.\n\nIt was not a stale artifact: tests/test_statusline_agy.py built its child\nenvironment as {\"PATH\": ...} with no HOME, and passed no cwd, so the script's\n`gh api user` call resolved gh's state dir as a *relative* `.local/state` and\nwrote `.local/state/gh/device-id` into the repository root on every run. The\ntwo sibling statusline modules already pinned HOME to a tmp dir; this one,\nthe newest, did not.\n\nPin HOME via an autouse fixture and add a guard asserting `.local/` never\nappears at the repo root. The guard is an absolute assertion, not a\nbefore/after diff: a diff passes vacuously once an earlier test in the module\nhas already created the directory, which is how the first version of it\nfailed to catch the bug being reintroduced.\n\nAlso gitignore `.local/` as belt-and-braces, and `.claude/settings.local.json`\nwhich was only covered by a maintainer's global ignore file -- a fresh clone\nby anyone else showed it untracked.\n\nFinally, widen the pre-commit mypy hook to `src/ tools/ tests/ bootstrap.py`.\nIts comment claimed the scope matched `doit type_check`; #700 widened that\ntask and left the hook behind, so a commit could pass the hook and be\nrejected by CI. Warm-cache cost of the wider scope is ~60ms.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T19:01:16+01:00",
+          "tree_id": "ae50f945c14acfa91ec805ee11e5ee90d6e7ca0b",
+          "url": "https://github.com/endavis/pyproject-template/commit/5724e7e29d275d5245d5c75a580e69771f8ee16e"
+        },
+        "date": 1787508101980,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11942340.517469281,
+            "unit": "iter/sec",
+            "range": "stddev: 2.372363093602655e-7",
+            "extra": "mean: 83.73567966322832 nsec\nrounds: 116646"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12324671.663095344,
+            "unit": "iter/sec",
+            "range": "stddev: 8.289055690213401e-9",
+            "extra": "mean: 81.13806414773485 nsec\nrounds: 119162"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8554682.723949945,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0281200907369457e-8",
+            "extra": "mean: 116.89504243101501 nsec\nrounds: 85786"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2321078.4356442005,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7467596164886068e-7",
+            "extra": "mean: 430.8342125122783 nsec\nrounds: 69004"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 648195.775107196,
+            "unit": "iter/sec",
+            "range": "stddev: 3.618571539812259e-7",
+            "extra": "mean: 1.5427437795851482 usec\nrounds: 68484"
           }
         ]
       }
