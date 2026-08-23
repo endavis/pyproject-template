@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787483624558,
+  "lastUpdate": 1787486162136,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10207,6 +10207,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.548738704940676e-7",
             "extra": "mean: 1.99577399837467 usec\nrounds: 53712"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "279a8650ce9e1e2ee71858f91089a8d675fd488a",
+          "message": "chore: widen doit check to cover tools/ and tests/ (merges PR #705, addresses #700)\n\ndoit check reported success on files it never inspected. type_check targeted\nsrc/ tools/doit/ and vulture's paths were [\"src\", \"tests\"], so tools/hooks/ --\n2,654 lines including the hook that gates all five AI agents -- was neither\ntype-checked nor dead-code-checked, and tests/ was not type-checked. Two real\ndefects escaped through that gap in PR #699. deadcode was also defined as a\ntask but absent from task_check's task_dep, so vulture never ran in the gate.\n\ntools/pyproject_template/ was excluded at the config layer, so widening the\ncommand scope alone would not have reached it. The stated reason is accurate --\nthese scripts sys.path.insert and import siblings by bare name -- but excluding\nthe directory to silence 16 import errors also silenced 5 real findings.\nReplace the exclude with module-name ignore_missing_imports overrides, which\nsuppress only the import artifact. mypy now checks 108 files, up from 23.\n\nFixes the 15 errors this surfaces: 7 no-any-return in workflow tests, 3 stale\ntype: ignore comments, 1 arg-type, 1 assignment/unreachable pair, and 2\nfunc-returns-value. The last two keep their assertions and suppress instead --\nthey document a runtime contract and would catch the signature being widened.\n\nAdds TestQualityGateScope, which fails if type_check narrows back to\ntools/doit/ or if the pyproject_template exclusion returns.\n\nDocuments the residual blind spot: no tool in the stack detects an unused\nunderscore-prefixed module constant. vulture skips such names at any\nconfidence; ruff's F841 is locals-only; pyright's hint is editor-only.\n\nAddresses #700\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T12:55:32+01:00",
+          "tree_id": "8a80ef1b842e732817b4e2dd600477d31702466a",
+          "url": "https://github.com/endavis/pyproject-template/commit/279a8650ce9e1e2ee71858f91089a8d675fd488a"
+        },
+        "date": 1787486160251,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11928590.355233777,
+            "unit": "iter/sec",
+            "range": "stddev: 7.710018863862182e-9",
+            "extra": "mean: 83.83220231561066 nsec\nrounds: 110461"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11350124.510238543,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1116203937660205e-8",
+            "extra": "mean: 88.1047603572926 nsec\nrounds: 113857"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8254790.257499584,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8736721558904623e-8",
+            "extra": "mean: 121.14178177834222 nsec\nrounds: 82659"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2383378.7968179127,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6364398437263386e-7",
+            "extra": "mean: 419.57241598990305 nsec\nrounds: 69301"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 636488.9868665733,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0335472903118375e-7",
+            "extra": "mean: 1.5711190933923092 usec\nrounds: 59298"
           }
         ]
       }
