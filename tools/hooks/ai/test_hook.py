@@ -154,6 +154,24 @@ EOF
         "BLOCK",
         "persist rtm var to .zshrc",
     ),
+    # === SHOULD BLOCK - Refspec and global-option forms (issue #678) ===
+    ("git push --force origin HEAD:main", "BLOCK", "force push HEAD:main refspec"),
+    ("git push origin +main", "BLOCK", "push +main force-push marker"),
+    ("git -C . push --force origin main", "BLOCK", "git -C global option push force"),
+    ("git -c core.pager=cat push --force origin main", "BLOCK", "git -c global option push force"),
+    ("git --git-dir=.git push --force origin main", "BLOCK", "git --git-dir push force"),
+    ("git push --force-with-lease=main origin HEAD:main", "BLOCK", "force-with-lease= prefix form"),
+    ('bash -c "git push --force origin main"', "BLOCK", "bash -c push force"),
+    ('sh -c "git push --force origin main"', "BLOCK", "sh -c push force"),
+    ('eval "git push --force origin main"', "BLOCK", "eval push force"),
+    ("git -C . branch -D main", "BLOCK", "git -C branch -D main"),
+    ('bash -c "git branch -D main"', "BLOCK", "bash -c branch -D main"),
+    ('bash -c "gh pr merge 1 --admin"', "BLOCK", "bash -c gh pr merge --admin"),
+    # === SHOULD ALLOW - Refspec destination is a feature branch (issue #678) ===
+    ("git push origin main:feature", "ALLOW", "refspec dst is feature"),
+    ("git push origin HEAD:refs/heads/feature", "ALLOW", "refspec HEAD to refs feature"),
+    ("git -C /other/repo push origin feature", "ALLOW", "git -C push feature"),
+    ('bash -c "echo main"', "ALLOW", "bash -c echo main is safe"),
     # === SHOULD ALLOW - Bash write to non-protected target ===
     (
         'echo "ALLOW_AI_READY_TO_MERGE=1" >> /tmp/notes.txt',

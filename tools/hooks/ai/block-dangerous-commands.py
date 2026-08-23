@@ -41,7 +41,7 @@ DANGEROUS_SEQUENCES = [
     (["sudo", "rm"], "Privileged deletion"),
 ]
 
-# Force push flags
+# Force push flags (matched as exact token OR as prefix before "=")
 FORCE_PUSH_FLAGS = {"--force", "-f", "--force-with-lease"}
 
 # Blocked workflow commands - use doit wrappers or require user approval
@@ -172,6 +172,114 @@ def tokenize(command: str) -> list[str]:
             return command.split()
 
 
+def _normalize_branch_ref(token: str) -> str:
+    """Return the destination branch name from a git refspec token.
+
+    Strips a leading ``+`` (force-push marker), takes the last segment after
+    ``:`` (the *destination* side of a refspec — ``src:dst`` pushes local
+    ``src`` to remote ``dst``), then takes the last segment after ``/``
+    (strip remote or ``refs/heads/`` prefix).
+
+    Examples::
+
+        "HEAD:main"           -> "main"
+        "+main"               -> "main"
+        "main:feature"        -> "feature"
+        "HEAD:refs/heads/dev" -> "dev"
+        "origin/main"         -> "main"
+        "main"                -> "main"
+    """
+    if token.startswith("+"):
+        token = token[1:]
+    # Take destination side of refspec (last segment after ":")
+    token = token.split(":")[-1]
+    # Strip remote/refs prefix (last segment after "/")
+    token = token.split("/")[-1]
+    return token
+
+
+# Git global options that consume a SEPARATE following token (value).
+# Options written as "--opt=val" already consume one token; these are the
+# ones that use "--opt val" (two-token) form and must skip an extra token.
+_GIT_GLOBAL_OPTS_WITH_VALUE = frozenset(
+    {
+        "-C",
+        "-c",
+        "--git-dir",
+        "--work-tree",
+        "--namespace",
+        "--exec-path",
+        "--super-prefix",
+        "--list-cmds",
+    }
+)
+
+# Note: git global flags that consume no value (``--paginate``, ``--bare``,
+# ``--no-pager``, ...) need no explicit list — ``_git_subcommand_index`` treats
+# any token starting with "-" that is not in _GIT_GLOBAL_OPTS_WITH_VALUE as a
+# single-token flag, which covers them and any future additions.
+
+
+def _git_subcommand_index(tokens: list[str], git_idx: int) -> int | None:
+    """Return the index of the git subcommand token, skipping global options.
+
+    ``git`` global options appear between the ``git`` token and the subcommand.
+    For example::
+
+        git -C /path push ...       => subcommand index is git_idx + 3
+        git -c k=v push ...         => subcommand index is git_idx + 3
+        git --git-dir=.git push ... => subcommand index is git_idx + 2
+        git push ...                => subcommand index is git_idx + 1
+
+    Options written in ``--opt=val`` form (one token) consume only themselves.
+    Options written in ``--opt val`` form (two tokens) consume themselves plus
+    the next token.
+
+    Returns ``None`` if the end of ``tokens`` is reached before finding a
+    subcommand (malformed or truncated input).
+    """
+    i = git_idx + 1
+    while i < len(tokens):
+        tok = tokens[i]
+        if tok.startswith("-"):
+            # Check if it's a known two-token option (written without "=")
+            if tok in _GIT_GLOBAL_OPTS_WITH_VALUE:
+                i += 2  # skip option AND its value
+            else:
+                # Either a one-token flag or an "--opt=val" option
+                i += 1
+        else:
+            # First non-flag token is the subcommand
+            return i
+    return None
+
+
+def _wrapped_payloads(tokens: list[str]) -> list[str]:
+    """Return shell payloads from ``bash/sh/zsh/dash -c <payload>`` and ``eval ...``.
+
+    Yields (as a list) the payload strings that would be re-executed by the
+    shell wrapper so ``check_command`` can recurse into them.
+    """
+    shell_names = frozenset({"bash", "sh", "zsh", "dash"})
+    payloads: list[str] = []
+    i = 0
+    while i < len(tokens):
+        tok = tokens[i].lower()
+        if tok in shell_names:
+            # Look for a -c flag immediately after (possibly with --login etc.)
+            j = i + 1
+            while j < len(tokens) and tokens[j].startswith("-") and tokens[j] != "-c":
+                j += 1
+            if j < len(tokens) and tokens[j] == "-c" and j + 1 < len(tokens):
+                payloads.append(tokens[j + 1])
+        elif tok == "eval" and i + 1 < len(tokens):
+            # eval "..." — join all remaining tokens as a single payload
+            payloads.append(" ".join(tokens[i + 1 :]))
+            break
+        i += 1
+    return payloads
+
+
 def check_dangerous_flags(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if any dangerous flag appears as a standalone token.
@@ -209,6 +317,12 @@ def check_push_to_protected(tokens: list[str]) -> tuple[bool, str]:
     Force pushes to protected branches are also blocked even from feature branches.
 
     Scans all positions to handle chained commands (e.g., git status; git push --force).
+    Handles git global options (e.g., ``git -C /path push ...``).
+    Handles refspec forms (e.g., ``HEAD:main``, ``+main``).
+
+    Tokens beginning with ``:`` are deletion refspecs — they are owned by
+    ``check_delete_protected_branch`` and skipped here to preserve correct
+    block-reason messages.
     """
     tokens_lower = [t.lower() for t in tokens]
 
@@ -221,34 +335,37 @@ def check_push_to_protected(tokens: list[str]) -> tuple[bool, str]:
         if tokens_lower[git_idx] != "git":
             continue
 
-        # Ensure "push" is the git subcommand, not part of another command like "git stash push"
-        subcommand_idx = git_idx + 1
+        # Resolve subcommand index, skipping git global options
+        subcommand_idx = _git_subcommand_index(tokens, git_idx)
+        if subcommand_idx is None:
+            continue
         if tokens_lower[subcommand_idx] != "push":
             continue
 
         # Determine the end of this git push command (next git/doit/gh/uv token or end)
         cmd_end = len(tokens)
         for j in range(subcommand_idx + 1, len(tokens_lower)):
-            # A new command starts at a token that is a known command root
-            # Also handle shell operators that got merged with tokens (e.g., "status;")
             if tokens_lower[j] in ("git", "doit", "gh", "uv"):
                 cmd_end = j
                 break
         cmd_tokens = tokens[git_idx:cmd_end]
 
-        # Check if any force flag is present in this git push command
-        has_force_flag = any(flag in cmd_tokens for flag in FORCE_PUSH_FLAGS)
+        # Check if any force flag is present (prefix-aware for --force-with-lease=<ref>)
+        has_force_flag = any(
+            t == flag or t.startswith(flag + "=") for t in cmd_tokens for flag in FORCE_PUSH_FLAGS
+        )
 
-        # Look for branch name in tokens after 'push'
-        # Skip flags (tokens starting with -)
-        push_idx = subcommand_idx
-        after_push = [t for t in tokens[push_idx + 1 : cmd_end] if not t.startswith("-")]
+        # Look for branch name in tokens after 'push'.
+        # Skip flags (tokens starting with -) and deletion refspecs (start with :).
+        after_push = [
+            t
+            for t in tokens[subcommand_idx + 1 : cmd_end]
+            if not t.startswith("-") and not t.startswith(":")
+        ]
 
-        # Check if explicitly pushing to a protected branch
+        # Check if explicitly pushing to a protected branch via refspec or branch name
         for token in after_push:
-            # Handle origin/main format
-            branch = token.split("/")[-1] if "/" in token else token
-
+            branch = _normalize_branch_ref(token)
             if branch.lower() in PROTECTED_BRANCHES:
                 action = "Force push" if has_force_flag else "Push"
                 return True, f"{action} to protected branch '{branch}'"
@@ -294,14 +411,15 @@ def check_delete_protected_branch(tokens: list[str]) -> tuple[bool, str]:
         if tokens_lower[git_idx] != "git":
             continue
 
-        if git_idx + 1 >= len(tokens_lower):
+        subcommand_idx = _git_subcommand_index(tokens, git_idx)
+        if subcommand_idx is None:
             continue
 
-        subcommand = tokens_lower[git_idx + 1]
+        subcommand = tokens_lower[subcommand_idx]
 
         # Determine the end of this git command (next command root or end)
         cmd_end = len(tokens)
-        for j in range(git_idx + 2, len(tokens_lower)):
+        for j in range(subcommand_idx + 1, len(tokens_lower)):
             if tokens_lower[j] in ("git", "doit", "gh", "uv"):
                 cmd_end = j
                 break
@@ -603,7 +721,7 @@ def check_merge_to_protected(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
-def check_command(command: str) -> tuple[bool, str]:
+def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     """
     Check if command contains dangerous patterns.
 
@@ -615,6 +733,8 @@ def check_command(command: str) -> tuple[bool, str]:
     5. Merge commits on protected branches
     6. Blocked workflow commands
     7. Governance labels
+    8. Shell-wrapper payloads (``bash -c``, ``sh -c``, ``eval``) — recursed up
+       to depth 3 so all seven checks above gain wrapper coverage.
 
     Returns:
         (is_dangerous, reason)
@@ -660,6 +780,14 @@ def check_command(command: str) -> tuple[bool, str]:
     is_dangerous, reason = check_env_persistence_in_bash(tokens)
     if is_dangerous:
         return True, reason
+
+    # Recurse into shell-wrapper payloads (bash/sh/zsh/dash -c <payload>, eval ...)
+    # Depth cap of 3 prevents infinite loops on adversarial inputs.
+    if _depth < 3:
+        for payload in _wrapped_payloads(tokens):
+            is_dangerous, reason = check_command(payload, _depth + 1)
+            if is_dangerous:
+                return True, reason
 
     return False, ""
 
