@@ -300,3 +300,110 @@ def test_bare_push_allowed_when_on_feature(
     """
     # A bare "git push" with no force flag on a feature branch is allowed
     assert _run(hook, monkeypatch, "git push", branch="feature/my-work") == 0
+
+
+# ---------------------------------------------------------------------------
+# Multi-agent input-schema parsing (``_parse_input``)
+#
+# The hook serves five CLIs across three input schemas. Everything above uses
+# the Claude/Gemini/Codex schema. These cover the other two, which deny via
+# stdout JSON with exit 0 rather than via exit code 2 — so an exit-code-only
+# assertion would pass even if their parsing broke entirely.
+# ---------------------------------------------------------------------------
+
+DANGEROUS = "git push --force origin HEAD:main"
+
+
+def _copilot_payload(command: str) -> str:
+    """Build a Copilot CLI payload (camelCase keys; ``toolArgs`` is a JSON string)."""
+    return json.dumps({"toolName": "bash", "toolArgs": json.dumps({"command": command})})
+
+
+def _agy_payload(command: str) -> str:
+    """Build an Antigravity CLI payload (nested ``toolCall``, PascalCase args)."""
+    return json.dumps({"toolCall": {"name": "run_command", "args": {"CommandLine": command}}})
+
+
+def _run_raw(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    payload: str,
+    *,
+    branch: str = "feature/test",
+) -> tuple[int, str]:
+    """Run the hook on a raw payload; return ``(exit_code, stdout)``."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: branch)
+    _set_stdin(monkeypatch, payload)
+    code = int(hook.main())
+    return code, capsys.readouterr().out
+
+
+def test_copilot_schema_denies_via_stdout(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Copilot payloads deny with ``permissionDecision`` on stdout and exit 0."""
+    code, out = _run_raw(hook, monkeypatch, capsys, _copilot_payload(DANGEROUS))
+    assert code == 0
+    assert json.loads(out)["permissionDecision"] == "deny"
+
+
+def test_antigravity_schema_denies_via_stdout(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Antigravity payloads deny with ``decision`` on stdout and exit 0."""
+    code, out = _run_raw(hook, monkeypatch, capsys, _agy_payload(DANGEROUS))
+    assert code == 0
+    assert json.loads(out)["decision"] == "deny"
+
+
+def test_copilot_schema_allows_safe_command(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A safe command through the Copilot schema emits no deny payload."""
+    code, out = _run_raw(hook, monkeypatch, capsys, _copilot_payload("git status"))
+    assert code == 0
+    assert out.strip() == ""
+
+
+def test_antigravity_schema_allows_safe_command(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A safe command through the Antigravity schema emits no deny payload."""
+    code, out = _run_raw(hook, monkeypatch, capsys, _agy_payload("git status"))
+    assert code == 0
+    assert out.strip() == ""
+
+
+def test_copilot_schema_survives_malformed_tool_args(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A non-JSON ``toolArgs`` string is tolerated rather than raising."""
+    payload = json.dumps({"toolName": "bash", "toolArgs": "{not valid json"})
+    code, _ = _run_raw(hook, monkeypatch, capsys, payload)
+    assert code == 0
+
+
+def test_non_dict_tool_input_is_tolerated(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A non-dict ``tool_input`` falls back to an empty dict instead of raising.
+
+    Guards the ``isinstance`` check in ``_parse_input``: without it, ``.get()``
+    would raise ``AttributeError`` on a string payload.
+    """
+    payload = json.dumps({"tool_name": "Bash", "tool_input": "oops"})
+    code, _ = _run_raw(hook, monkeypatch, capsys, payload)
+    assert code == 0

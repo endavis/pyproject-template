@@ -830,7 +830,11 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
         tool_name = input_data.get("toolName", "")
         tool_args_raw = input_data.get("toolArgs", "{}")
         try:
-            tool_input: dict = (
+            # No ``: dict`` annotation here — the Antigravity branch above already
+            # binds ``tool_input``, so annotating in this branch reads as a
+            # redefinition to mypy. Annotating at function scope instead would
+            # narrow the Claude/Gemini branch's ``isinstance`` guard to dead code.
+            tool_input = (
                 json.loads(tool_args_raw) if isinstance(tool_args_raw, str) else tool_args_raw
             )
         except json.JSONDecodeError:
