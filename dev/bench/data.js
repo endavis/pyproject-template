@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787486162136,
+  "lastUpdate": 1787488081305,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10266,6 +10266,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.0335472903118375e-7",
             "extra": "mean: 1.5711190933923092 usec\nrounds: 59298"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f143f32027f4e8fa3937c08050371dcca928367",
+          "message": "fix: fail closed when the dangerous-command hook cannot evaluate a command (merges PR #706, addresses #679)\n\nThe hook used two deny contracts that diverged on failure: exit code 2\n(Claude/Gemini/Codex) and stdout JSON (Antigravity/Copilot). A script that\nproduced no output read as \"allow\" for the stdout-contract CLIs, so any\ninternal error silently removed protection. Malformed stdin returned 1,\nwhich no CLI treats as a block, so all five failed open.\n\nAdd _fail_closed(), which emits every contract at once because the calling\nCLI is unknown at that point, and route both failure paths through it.\nExtract the entry point into run() so the guard is testable.\n\nAlso correct _log's docstring, which named HOOK_DEBUG while the code reads\nHOOK_BLOCKCOMMAND_DEBUG -- the mismatch made a hook-firing probe read as a\nfalse negative.\n\nVerified live: agy, copilot, and Claude Code all block on the combined\npayload.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T13:27:36+01:00",
+          "tree_id": "0563688c1ef48e882680baaadca5a30430ce56db",
+          "url": "https://github.com/endavis/pyproject-template/commit/8f143f32027f4e8fa3937c08050371dcca928367"
+        },
+        "date": 1787488080095,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9252350.438407289,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0320941962480765e-8",
+            "extra": "mean: 108.08064465964405 nsec\nrounds: 86821"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8504732.97528862,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2110346141663595e-8",
+            "extra": "mean: 117.58158697111398 nsec\nrounds: 87897"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6394113.579570536,
+            "unit": "iter/sec",
+            "range": "stddev: 3.081596908812458e-8",
+            "extra": "mean: 156.3938437370025 nsec\nrounds: 66836"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1837540.3818142181,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4503301931918167e-7",
+            "extra": "mean: 544.2057273390053 nsec\nrounds: 59190"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 511806.64045023645,
+            "unit": "iter/sec",
+            "range": "stddev: 4.249129747961898e-7",
+            "extra": "mean: 1.953862886812683 usec\nrounds: 57551"
           }
         ]
       }
