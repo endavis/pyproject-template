@@ -37,10 +37,11 @@ The hook uses Python's `shlex` module to properly parse shell quoting:
 1. **Tokenize** the command with `shlex.split()`
 2. **Check** for dangerous flags as standalone tokens
 3. **Check** for dangerous token sequences (e.g., `rm -rf ~`)
-4. **Check** for force push to protected branches (main/master)
-5. **Check** for deletion of protected branches
+4. **Check** for force push to protected branches (main/master) — including refspec forms (`HEAD:main`, `+main`) and commands preceded by git global options (`-C`, `-c`, `--git-dir`, …)
+5. **Check** for deletion of protected branches — also handles git global options
 6. **Check** for merge commits on protected branches (linear history)
-7. **Block** or **Allow** — Claude/Gemini/Codex block via exit code 2; Copilot and Antigravity block via a stdout decision JSON (exit code 0)
+7. **Recurse** into shell-wrapper payloads (`bash -c "..."`, `sh -c "..."`, `eval "..."`) — up to depth 3, so all checks above apply inside wrappers
+8. **Block** or **Allow** — Claude/Gemini/Codex block via exit code 2; Copilot and Antigravity block via a stdout decision JSON (exit code 0)
 
 #### Key Feature: Chained Command Detection
 
@@ -54,6 +55,51 @@ cd /path && doit release
 # ALLOWED - all commands in the chain are safe
 cd /path && doit check
 git status; git push origin feat/branch
+```
+
+#### Key Feature: Git Global Option Handling
+
+Git global options (e.g., `-C <path>`, `-c <k>=<v>`, `--git-dir=<dir>`) appear between the `git`
+token and the subcommand. The hook walks past them to find the real subcommand, so these are all
+caught:
+
+```bash
+# BLOCKED - global options shift the subcommand position, but hook handles them
+git -C . push --force origin main
+git -c core.pager=cat push --force origin main
+git --git-dir=.git push --force origin main
+git -C . branch -D main
+```
+
+#### Key Feature: Refspec-Aware Branch Extraction
+
+Force push to a protected branch is detected regardless of refspec form:
+
+```bash
+# BLOCKED - all target the 'main' branch
+git push --force origin HEAD:main
+git push origin +main
+git push --force-with-lease=HEAD origin HEAD:main
+
+# ALLOWED - destination branch is a feature branch
+git push origin main:feature        # pushes local 'main' to remote 'feature'
+git push origin HEAD:refs/heads/dev
+```
+
+#### Key Feature: Shell-Wrapper Payload Unwrapping
+
+The hook recurses into `bash -c`, `sh -c`, `zsh -c`, `dash -c`, and `eval` payloads (up to depth
+3), so all checks apply inside wrappers:
+
+```bash
+# BLOCKED - dangerous command inside a wrapper
+bash -c "git push --force origin main"
+sh -c "git branch -D main"
+eval "gh pr merge 1 --admin"
+
+# ALLOWED - safe command inside a wrapper
+bash -c "echo main"
+bash -c "git status"
 ```
 
 #### Key Feature: Quote-Aware Parsing
@@ -79,7 +125,8 @@ EOF
 | File | Description |
 |------|-------------|
 | [`block-dangerous-commands.py`](../../../tools/hooks/ai/block-dangerous-commands.py) | The hook script (shared by Claude, Gemini, Copilot, Codex, and Antigravity) |
-| [`test_hook.py`](../../../tools/hooks/ai/test_hook.py) | Test suite to verify hook behavior |
+| [`test_hook.py`](../../../tools/hooks/ai/test_hook.py) | Manual test suite (run with `python3 tools/hooks/ai/test_hook.py`) |
+| [`tests/test_hook_block_dangerous_commands.py`](../../../tests/test_hook_block_dangerous_commands.py) | Pytest test suite — collected by CI via `testpaths = ["tests"]` |
 
 ### Configuration
 
@@ -252,7 +299,7 @@ Testing hook: /path/to/block-dangerous-commands.py
 + BLOCK (expected BLOCK) | actual --admin flag       | gh pr merge --admin
 ================================================================================
 
-Results: 14 passed, 0 failed
+Results: 134 passed, 0 failed
 ```
 
 ### Blocked Patterns

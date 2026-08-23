@@ -21,6 +21,7 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 - Issue #166: Block uv add in AI agent hooks
 - Issue #362: Add Copilot CLI command-blocking hook integration
 - Issue #409: Complete Copilot CLI coverage in AI_SETUP, enforcement-principles, first-5-minutes
+- Issue #678: Fix dangerous-command hook for git global options, refspecs, and shell wrappers
 
 ## Related Documentation
 
