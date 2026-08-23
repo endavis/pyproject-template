@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787514141150,
+  "lastUpdate": 1787515508324,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11092,6 +11092,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.300523661699854e-7",
             "extra": "mean: 2.043768013651942 usec\nrounds: 51003"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a1ff7a258f59370a86ee1c168c40dc5003b42bc6",
+          "message": "feat: add secret-exposure controls that reach every agent (merges PR #723, addresses #682)\n\n.codex/config.toml was the only agent config with a secret control. #682\nproposed propagating it \"using each CLI's native mechanism\" -- but those\nmechanisms do not exist. Claude's permissions block supports allow/ask/deny/\nadditionalDirectories/defaultMode and nothing environmental; Copilot's\n--deny-tool is tool-level and --bash-env enables BASH_ENV rather than\nrestricting it; Antigravity has no environment options at all.\n\nSo document that gap per-agent, and add the control that does reach all four:\nthe shared PreToolUse hook, which had no secret awareness whatsoever --\n`env`, `printenv`, and reads of ~/.pypirc were allowed for every agent.\n\nThe hook now blocks environment dumps and credential-store reads. Two\ndistinctions are load-bearing, and the control found both by firing on this\nrepository's own workflow within minutes:\n\n  invocation vs dump -- `env -u FORCE_COLOR doit check` must keep working\n  running vs mentioning -- a heredoc body tokenizes like an argument list, so\n  scanning every token treats test fixtures and docs as invocations\n\nBoth checks are therefore anchored to command position, and two matrix cases\npin the second distinction so it cannot regress.\n\nVariable interpolation is deliberately not blocked: legitimate uses are\ncommon, and blocking it gives false assurance while being trivially avoided.\nThat is stated in the docs rather than left implied.\n\nSECRET_ENV_PATTERNS is the single source of truth; a test fails if the Codex\nexclude list drifts from it, and another fails if the patterns are duplicated\nanywhere else in the tree.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T21:04:39+01:00",
+          "tree_id": "682a0dd443d179f56e8a03e5449a9f2bb676cf55",
+          "url": "https://github.com/endavis/pyproject-template/commit/a1ff7a258f59370a86ee1c168c40dc5003b42bc6"
+        },
+        "date": 1787515506240,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8872007.883879969,
+            "unit": "iter/sec",
+            "range": "stddev: 1.079562690288709e-8",
+            "extra": "mean: 112.71405673759084 nsec\nrounds: 88645"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9225423.74461305,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3680017530179587e-8",
+            "extra": "mean: 108.39610490346575 nsec\nrounds: 93284"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6164674.215946049,
+            "unit": "iter/sec",
+            "range": "stddev: 2.869715756760161e-8",
+            "extra": "mean: 162.21457370988372 nsec\nrounds: 62190"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1722646.7964290844,
+            "unit": "iter/sec",
+            "range": "stddev: 3.12913990403511e-7",
+            "extra": "mean: 580.5020518848808 nsec\nrounds: 60673"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492807.14143171546,
+            "unit": "iter/sec",
+            "range": "stddev: 5.83461580489845e-7",
+            "extra": "mean: 2.0291913731095197 usec\nrounds: 55729"
           }
         ]
       }
