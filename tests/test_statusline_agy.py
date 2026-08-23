@@ -31,9 +31,27 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 AGY = REPO_ROOT / "tools" / "statusline" / "agy-statusline.sh"
 
 
+@pytest.fixture(autouse=True)
+def _isolated_home(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """Point HOME at a throwaway directory for every test in this module.
+
+    The script calls `gh api user`. `gh` resolves its state directory as
+    ``$XDG_STATE_HOME``, falling back to ``$HOME/.local/state`` — and with HOME
+    unset that fallback is *relative*, so `gh` wrote ``.local/state/gh/device-id``
+    into the current working directory, which under pytest is the repository
+    root. Every run of this module dirtied the working tree (#698).
+
+    The sibling statusline modules already pin HOME to a tmp dir; this one did
+    not.
+    """
+    monkeypatch.setenv("HOME", str(tmp_path))
+
+
 def _run(payload: str, extra_env: dict[str, str] | None = None) -> subprocess.CompletedProcess[str]:
     """Invoke the statusline script with the given JSON payload on stdin."""
-    env = {"PATH": os.environ["PATH"]}
+    # HOME is forwarded deliberately — see `_isolated_home`. A child without it
+    # writes into the repository.
+    env = {"PATH": os.environ["PATH"], "HOME": os.environ["HOME"]}
     if extra_env:
         env.update(extra_env)
     return subprocess.run(
@@ -191,3 +209,28 @@ def test_sandbox_absent_when_disabled() -> None:
     result = _run(payload, {"AGY_STATUSLINE_EXTRAS": "1"})
     assert result.returncode == 0
     assert "🔒" not in result.stdout
+
+
+def test_invocation_does_not_write_into_the_repository() -> None:
+    """No invocation may leave `gh`'s state directory in the repository.
+
+    `.local/` at the repository root only ever appears from this bug: real
+    `gh` usage writes to `~/.local/state`, and only a child launched without
+    HOME falls back to a relative path (#698).
+
+    Asserted absolutely rather than as a before/after diff. A diff passes
+    vacuously when an earlier test in the module already created the
+    directory — which is exactly what happened while developing this guard, so
+    the first assertion below covers sibling tests and the second covers this
+    one.
+    """
+    local_state = REPO_ROOT / ".local"
+
+    assert not local_state.exists(), (
+        "another test already wrote .local/ into the repository root; "
+        "HOME isolation has regressed (see _isolated_home)"
+    )
+
+    _run(json.dumps({"model": {"display_name": "Gemini 3 Pro"}}))
+
+    assert not local_state.exists(), "this invocation created .local/ in the repository root"

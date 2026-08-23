@@ -56,10 +56,13 @@ repos:
         stages: [pre-commit]
 
       # Type checking (uses project's mypy version)
-      # Only checks src/ to match doit type_check behavior
+      # Scope matches `doit type_check`. It was src/ only, which stopped
+      # matching when #700 widened the doit task to tools/ and tests/ --
+      # leaving the hook able to pass on code CI would then reject. Warm-cache
+      # cost of the wider scope is ~60ms.
       - id: mypy
         name: mypy
-        entry: uv run mypy src/
+        entry: uv run mypy src/ tools/ tests/ bootstrap.py
         language: system
         types: [python]
         pass_filenames: false
