@@ -25,6 +25,6 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 
 ## Related Documentation
 
-- [AI Command Blocking](../../development/ai/command-blocking.md)
-- [AI Enforcement Principles](../../development/ai/enforcement-principles.md)
-- [AI Setup Guide](../../development/AI_SETUP.md)
+- [AI Command Blocking](../development/ai/command-blocking.md)
+- [AI Enforcement Principles](../development/ai/enforcement-principles.md)
+- [AI Setup Guide](../development/AI_SETUP.md)
