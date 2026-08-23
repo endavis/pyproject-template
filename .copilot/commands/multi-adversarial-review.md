@@ -55,7 +55,7 @@ Capture stdout as Claude's adversarial review.
 #### If `codex` is in the agent list:
 
 ```bash
-codex -a never exec 'Run an adversarial review of the current uncommitted changes and the current branch vs main. Read-only. Be skeptical: pressure-test design choices, hidden assumptions, tradeoffs, alternatives, failure modes. 1) Run `git status`, `git diff`, `git log main..HEAD`. 2) Read AGENTS.md and related ADRs. 3) Ask: right approach? Safer alternative? Edge cases? Hidden coupling? 4) Output ONLY the review: ## Adversarial Review / ### Direction Critique / ### Hidden Assumptions / ### Failure Modes / ### Alternatives Worth Considering. End with --- and *Adversarial Review by: Codex* | *Date: <today>*. Do NOT modify any files.'
+codex -a never --dangerously-bypass-hook-trust exec 'Run an adversarial review of the current uncommitted changes and the current branch vs main. Read-only. Be skeptical: pressure-test design choices, hidden assumptions, tradeoffs, alternatives, failure modes. 1) Run `git status`, `git diff`, `git log main..HEAD`. 2) Read AGENTS.md and related ADRs. 3) Ask: right approach? Safer alternative? Edge cases? Hidden coupling? 4) Output ONLY the review: ## Adversarial Review / ### Direction Critique / ### Hidden Assumptions / ### Failure Modes / ### Alternatives Worth Considering. End with --- and *Adversarial Review by: Codex* | *Date: <today>*. Do NOT modify any files.'
 ```
 
 Capture stdout as Codex's adversarial review.

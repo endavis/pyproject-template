@@ -120,7 +120,7 @@ Settings-based enforcement in agent config files:
 **Example**: Codex CLI approval policy (`.codex/config.toml`):
 
 ```toml
-approval_policy = "untrusted"
+approval_policy = "on-request"
 
 [shell_environment_policy]
 inherit = "core"

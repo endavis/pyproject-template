@@ -1006,3 +1006,86 @@ def test_subprocess_blocks_via_stdout_for_copilot() -> None:
     proc = _run_subprocess(payload)
     assert proc.returncode == 0
     assert json.loads(proc.stdout)["permissionDecision"] == "deny"
+
+
+# --- Codex apply_patch cases (issue #681) ----------------------------------
+#
+# Codex's shell tool is `Bash` with the default payload schema, so every case in
+# BASH_CASES above already covers Codex's command path. Its *file-edit* tool is
+# `apply_patch`, which no other agent has: the payload is command-shaped, so it
+# is checked both as a command and as a set of file edits.
+#
+# Before this was handled, an apply_patch persisting ALLOW_AI_READY_TO_MERGE to
+# ~/.bashrc was ALLOWED, while the identical edit through Claude's Write tool
+# was blocked.
+
+_PATCH_HEADER = "apply_patch <<PATCH\n*** Begin Patch\n"
+_PATCH_FOOTER = "*** End Patch\nPATCH"
+
+
+def _patch(*sections: str) -> str:
+    """Build an apply_patch envelope from ``*** … File:`` sections."""
+    return _PATCH_HEADER + "".join(sections) + _PATCH_FOOTER
+
+
+APPLY_PATCH_CASES: list[tuple[str, str, str]] = [
+    (
+        _patch("*** Update File: ~/.bashrc\n+export ALLOW_AI_READY_TO_MERGE=1\n"),
+        "BLOCK",
+        "apply_patch persists rtm var to .bashrc",
+    ),
+    (
+        _patch("*** Update File: .envrc\n+export ALLOW_AI_READY_TO_MERGE=1\n"),
+        "BLOCK",
+        "apply_patch persists rtm var to .envrc",
+    ),
+    (
+        # The bypass hides in the second file: the parser must check every target.
+        _patch(
+            "*** Update File: src/ok.py\n+print(1)\n",
+            "*** Update File: ~/.zshrc\n+export ALLOW_AI_READY_TO_MERGE=1\n",
+        ),
+        "BLOCK",
+        "apply_patch rtm var in the second of two files",
+    ),
+    (
+        _patch("*** Add File: src/new.py\n+print('hello')\n"),
+        "ALLOW",
+        "apply_patch ordinary source edit",
+    ),
+    (
+        _patch("*** Update File: README.md\n+Mentions ALLOW_AI_READY_TO_MERGE in prose.\n"),
+        "ALLOW",
+        "apply_patch names the var in an unprotected file",
+    ),
+    (
+        # The envelope is a shell command, so command scanning applies to it.
+        "git commit --no-verify && " + _patch("*** Update File: src/ok.py\n+print(1)\n"),
+        "BLOCK",
+        "apply_patch envelope carrying a dangerous flag",
+    ),
+]
+
+
+@pytest.mark.parametrize(
+    ("command", "expected", "description"), APPLY_PATCH_CASES, ids=_ids(APPLY_PATCH_CASES, 2)
+)
+def test_codex_apply_patch(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+    expected: str,
+    description: str,
+) -> None:
+    """Codex file edits are checked as both a command and a set of file writes."""
+    payload = json.dumps({"tool_name": "apply_patch", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
+
+
+def test_codex_shell_tool_uses_the_default_schema() -> None:
+    """Codex's shell tool name and payload shape, as observed from a live session.
+
+    Recorded as a test rather than a comment because it is the premise the
+    `^Bash$` matcher in `.codex/config.toml` rests on.
+    """
+    assert "Bash" in _load_hook()._BASH_TOOL_NAMES

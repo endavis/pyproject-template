@@ -109,7 +109,12 @@ def test_codex_config_keeps_shared_dangerous_command_hook() -> None:
     """Codex config should keep the shared dangerous-command hook wired."""
     config = (REPO_ROOT / ".codex" / "config.toml").read_text(encoding="utf-8")
 
-    assert "codex_hooks = true" in config
+    # `codex_hooks` is the deprecated spelling; Codex warns on it and would
+    # silently stop running the hook if it were removed (#681).
+    assert "hooks = true" in config
+    # Match the assignment, not the bare word: the config explains the rename
+    # in a comment, which a substring check would trip over.
+    assert "codex_hooks = true" not in config
     assert "[[hooks.PreToolUse]]" in config
     assert "block-dangerous-commands.py" in config
 
@@ -118,7 +123,7 @@ def test_codex_config_uses_current_schema() -> None:
     """Codex config should avoid obsolete keys from older Codex releases."""
     config = (REPO_ROOT / ".codex" / "config.toml").read_text(encoding="utf-8")
 
-    assert 'approval_policy = "untrusted"' in config
+    assert 'approval_policy = "on-request"' in config
     assert "default_policy" not in config
     assert "[[approval_policy]]" not in config
     assert "[shell_env_policy]" not in config

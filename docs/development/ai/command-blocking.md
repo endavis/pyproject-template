@@ -186,10 +186,10 @@ No change needed for Copilot — the hook fires on every tool call (no `matcher`
 
 `.codex/config.toml`:
 ```toml
-approval_policy = "untrusted"
+approval_policy = "on-request"
 
 [features]
-codex_hooks = true
+hooks = true
 
 [[hooks.PreToolUse]]
 matcher = "^Bash$"
@@ -201,7 +201,7 @@ timeout = 30
 statusMessage = "Checking Bash command"
 
 [[hooks.PreToolUse]]
-matcher = "^(Edit|Write|MultiEdit)$"
+matcher = "^apply_patch$"
 
 [[hooks.PreToolUse.hooks]]
 type = "command"
@@ -211,6 +211,49 @@ statusMessage = "Checking file edit"
 ```
 
 Codex uses the shared hook as the primary defense layer. Project docs should not rely on the obsolete `[[approval_policy]]` command-rule format.
+
+##### Codex's tool names, verified by probe
+
+These were confirmed against a live Codex session with `HOOK_BLOCKCOMMAND_DEBUG=1`, not inferred
+(#681):
+
+| Operation | `tool_name` | Payload |
+| :--- | :--- | :--- |
+| Shell command | `Bash` | `default` schema — `tool_name` / `tool_input.command`, same as Claude |
+| File edit | **`apply_patch`** | command-shaped: `tool_input.command` holds an `apply_patch <<PATCH …` heredoc |
+
+The shell name matches Claude's, so `^Bash$` was correct. The file-edit matcher was **not**: Codex
+has no `Edit`/`Write`/`MultiEdit`. Because `apply_patch` appeared in neither
+`_BASH_TOOL_NAMES` nor `_FILE_EDIT_TOOL_NAMES`, it fell through to *allow* — so a patch persisting
+`ALLOW_AI_READY_TO_MERGE` to `~/.bashrc` succeeded through Codex while the identical edit through
+Claude's `Write` was blocked.
+
+`apply_patch` is now checked on its own path, as **both** a command and a set of file edits: the
+envelope goes through the dangerous-flag scanning, and each `*** Add/Update/Delete File:` target is
+normalised into the `file_path`/`content` shape the env-persistence check expects, so the protected
+target list stays in one place.
+
+##### Codex requires hook trust
+
+Codex will not run a hook it has not been told to trust; trust is persisted per hook (`trusted_hash`
+in the hooks config). **An untrusted hook is skipped silently** — no warning, no log line — which is
+why this hook appeared to work for as long as nobody checked.
+
+Headless invocations therefore pass `--dangerously-bypass-hook-trust`, the way Antigravity's pass
+`--dangerously-skip-permissions`:
+
+```bash
+codex -a never --dangerously-bypass-hook-trust exec '<prompt>'
+```
+
+The flag makes the safety hook **run**; it does not weaken it. What it bypasses is Codex's check
+that the hook *source* has been vetted, and here that source is this repository's own checked-in
+script.
+
+> **Trade-off, stated deliberately:** with the flag, any hook defined in the repository's `.codex/`
+> config runs without a prompt — so a hook added by a malicious pull request would execute. A
+> consumer who would rather not accept that can trust the hook once in an interactive Codex session
+> (the trust persists) and drop the flag from the bridges.
 
 #### Antigravity CLI (`agy`)
 

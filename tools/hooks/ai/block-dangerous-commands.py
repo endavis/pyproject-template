@@ -18,6 +18,7 @@ For full documentation, see: docs/development/ai/command-blocking.md
 
 import json
 import os
+import re
 import shlex
 import subprocess  # nosec B404 - needed for git branch detection
 import sys
@@ -639,6 +640,62 @@ def check_env_persistence_in_bash(tokens: list[str]) -> tuple[bool, str]:
     )
 
 
+# Codex's file-edit tool is ``apply_patch``. Unlike every other agent's
+# file-edit tool it carries a *command* rather than ``file_path``/``content``:
+#
+#     {"tool_name": "apply_patch",
+#      "tool_input": {"command": "apply_patch <<PATCH\n*** Begin Patch\n
+#                                 *** Update File: ~/.bashrc\n
+#                                 +export ALLOW_AI_READY_TO_MERGE=1\n
+#                                 *** End Patch\nPATCH"}}
+#
+# so neither the Bash path nor the file-edit path handled it and the operation
+# fell through to "allow" -- letting Codex persist the governance bypass that
+# the same edit through Claude's Write tool is blocked from doing (#681).
+_APPLY_PATCH_TARGET_RE = re.compile(
+    r"^\*\*\* (?:Add|Update|Delete) File: (.+)$",
+    re.MULTILINE,
+)
+
+
+def _apply_patch_edits(command: str) -> list[tuple[str, str]]:
+    """Return ``(target_path, added_content)`` for each file in a patch.
+
+    Added content is every ``+``-prefixed line under that target, joined -- the
+    lines the patch would introduce. Context and removed lines are ignored
+    because only new content can persist a value.
+    """
+    edits: list[tuple[str, str]] = []
+    matches = list(_APPLY_PATCH_TARGET_RE.finditer(command))
+    for index, match in enumerate(matches):
+        body_start = match.end()
+        body_end = matches[index + 1].start() if index + 1 < len(matches) else len(command)
+        added = [
+            line[1:]
+            for line in command[body_start:body_end].splitlines()
+            # ``+++`` is a diff header, not added content.
+            if line.startswith("+") and not line.startswith("+++")
+        ]
+        edits.append((match.group(1).strip(), "\n".join(added)))
+    return edits
+
+
+def check_env_persistence_in_apply_patch(command: str) -> tuple[bool, str]:
+    """Block a Codex ``apply_patch`` that persists the bypass env var.
+
+    Reuses :func:`check_env_persistence_in_file_edit` by normalising each patch
+    target into the ``file_path``/``content`` shape that check expects, so the
+    protected-target list stays in one place.
+    """
+    for target, added in _apply_patch_edits(command):
+        is_dangerous, reason = check_env_persistence_in_file_edit(
+            "apply_patch", {"file_path": target, "content": added}
+        )
+        if is_dangerous:
+            return True, reason
+    return False, ""
+
+
 def check_env_persistence_in_file_edit(
     tool_name: str, tool_input: dict[str, object]
 ) -> tuple[bool, str]:
@@ -664,9 +721,11 @@ def check_env_persistence_in_file_edit(
 
     tool_lower = tool_name.lower()
 
-    if tool_lower in ("write", "write_file", "write_to_file"):
+    if tool_lower in ("write", "write_file", "write_to_file", "apply_patch"):
         # Write/write_file (Claude/Gemini) and write_to_file (agy, normalized in
         # _parse_input): full file content lives in the 'content' key.
+        # apply_patch (Codex) is normalised into the same shape by
+        # check_env_persistence_in_apply_patch, one entry per patch target.
         content = str(tool_input.get("content", "") or "")
         new_content_parts.append(content)
 
@@ -891,6 +950,10 @@ _BASH_TOOL_NAMES = frozenset({"Bash", "run_shell_command", "bash", "run_command"
 # Claude/Codex: Edit, Write, MultiEdit
 # Gemini: write_file, replace
 # Antigravity (agy): write_to_file
+# Codex: apply_patch. Handled on its own path -- see the parser above -- because
+# its payload is command-shaped rather than file_path/content.
+_APPLY_PATCH_TOOL_NAME = "apply_patch"
+
 _FILE_EDIT_TOOL_NAMES = frozenset(
     {"Edit", "Write", "MultiEdit", "write_file", "replace", "write_to_file"}
 )
@@ -989,6 +1052,21 @@ def main() -> int:
         is_dangerous, reason = check_command(command)
         if is_dangerous:
             return _block_response(fmt, reason, command)
+        return 0
+
+    # --- Codex apply_patch path ---
+    #
+    # Checked as *both* a command and a file edit: the envelope is a shell
+    # command (so the dangerous-flag scanning applies to it) and the patch body
+    # writes files (so the env-persistence check must see its targets).
+    if tool_name == _APPLY_PATCH_TOOL_NAME:
+        if command:
+            is_dangerous, reason = check_command(command)
+            if is_dangerous:
+                return _block_response(fmt, reason, command)
+            is_dangerous, reason = check_env_persistence_in_apply_patch(command)
+            if is_dangerous:
+                return _block_response(fmt, reason, f"{tool_name} {command[:60]}")
         return 0
 
     # --- File-edit tool path (Edit/Write/MultiEdit/write_file/replace) ---

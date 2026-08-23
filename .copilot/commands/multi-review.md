@@ -66,7 +66,7 @@ Capture stdout as Claude's review.
 #### If `codex` is in the agent list:
 
 ```bash
-codex -a never exec 'Review the pull request for the current branch. 1) Run `gh pr view --json number,title,body,headRefName`. 2) Run `gh pr diff`. 3) Read AGENTS.md and .github/CONTRIBUTING.md. 4) Review for correctness, style, testing, security, documentation, architecture, breaking changes. 5) Output ONLY the review: ## PR Review: #<number> — <title> / ### Summary / ### Findings / #### Critical / #### Suggestions / #### Positive / ### Verdict. End with --- and *Review by: Codex* | *Date: <today>*. Do NOT post to GitHub.'
+codex -a never --dangerously-bypass-hook-trust exec 'Review the pull request for the current branch. 1) Run `gh pr view --json number,title,body,headRefName`. 2) Run `gh pr diff`. 3) Read AGENTS.md and .github/CONTRIBUTING.md. 4) Review for correctness, style, testing, security, documentation, architecture, breaking changes. 5) Output ONLY the review: ## PR Review: #<number> — <title> / ### Summary / ### Findings / #### Critical / #### Suggestions / #### Positive / ### Verdict. End with --- and *Review by: Codex* | *Date: <today>*. Do NOT post to GitHub.'
 ```
 
 Capture stdout as Codex's review.
