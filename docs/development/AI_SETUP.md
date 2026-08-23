@@ -462,7 +462,8 @@ gemini --yolo
 **Hook not firing (dangerous commands going through):**
 - Verify `.github/hooks/copilot-hooks.json` exists and is valid JSON
 - The hook uses a relative `bash` path (`python3 ../../tools/hooks/ai/block-dangerous-commands.py`) and a `cwd` of `.github/hooks`; both must match your layout
-- Run `python3 tools/hooks/ai/test_hook.py` to confirm the shared hook script still passes its test suite
+- Run `doit test` to confirm the shared hook script still passes its test suite
+  (`tests/test_hook_dangerous_command_matrix.py` — 134 block/allow cases, collected by CI)
 
 **Slash commands not appearing:**
 - Copilot CLI auto-discovers skills from `.claude/commands/` — make sure that directory exists and contains `.md` files with the CLI file format (no YAML frontmatter; leading `# Title` and `## Instructions` sections)

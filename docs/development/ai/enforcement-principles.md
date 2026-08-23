@@ -245,7 +245,7 @@ Does the rule apply to ALL contributors (humans + AI)?
 | 2 | Prefer shared enforcement | One hook for multiple agents is better than separate configs |
 | 3 | Block by default | Allowlists are safer than denylists |
 | 4 | Fail closed | If enforcement fails, block the action rather than allow it |
-| 5 | Test enforcement | Run `tools/hooks/ai/test_hook.py` after AI hook changes |
+| 5 | Test enforcement | Hook tests run in CI via `doit check`; no manual step |
 
 ## Block and Redirect Pattern
 

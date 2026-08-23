@@ -1,0 +1,1008 @@
+"""Matrix tests for the ``block-dangerous-commands`` PreToolUse hook.
+
+These 134 cases were migrated verbatim from ``tools/hooks/ai/test_hook.py``,
+a standalone script that pytest never collected and no workflow, ``doit`` task
+or pre-commit hook ever ran (#702). That script has been deleted; this file is
+authoritative.
+
+**The branch is pinned deliberately.** The old script shelled out to the real
+hook with the real environment, so ``get_current_branch()`` returned whatever
+was checked out. Two cases -- "merge on feature branch" and "merge origin/main
+on feat" -- expect ALLOW and therefore only passed on a feature branch. Run on
+``main`` the suite was red (132/134) and had been for as long as nothing ran
+it. Pinning the branch here states the assumption those cases always had.
+
+Cases run in-process for speed and coverage; a handful of subprocess smoke
+tests at the end keep the real ``__main__`` path covered, which is what the
+CLIs actually invoke.
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import io
+import json
+import subprocess
+import sys
+import types
+from pathlib import Path
+from typing import TYPE_CHECKING
+
+import pytest
+
+if TYPE_CHECKING:
+    from collections.abc import Iterator
+
+HOOK_PATH = (
+    Path(__file__).resolve().parents[1] / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
+)
+
+# Branch the hook sees. The migrated cases were authored against a feature
+# branch; see the module docstring.
+FEATURE_BRANCH = "feature/test"
+
+# --- Bash command cases (no bypass env var) ---
+BASH_CASES = [
+    (
+        "git status",
+        "ALLOW",
+        "safe command",
+    ),
+    (
+        "git log --oneline",
+        "ALLOW",
+        "safe with flag",
+    ),
+    (
+        'git commit -m "text with --admin"',
+        "ALLOW",
+        "double quoted",
+    ),
+    (
+        'echo "--force flag"',
+        "ALLOW",
+        "double quoted 2",
+    ),
+    (
+        "echo '--no-verify test'",
+        "ALLOW",
+        "single quoted",
+    ),
+    (
+        'git commit -m "do not use --force"',
+        "ALLOW",
+        "flag in message",
+    ),
+    (
+        "git commit -m \"$(cat <<'EOF'\n--admin mentioned in docs\nEOF\n)\"",
+        "ALLOW",
+        "heredoc with --admin",
+    ),
+    (
+        "doit pr --body=\"$(cat <<'EOF'\n## Blocked Patterns\n- `--admin` (bypasses branch protection)\n- `rm -rf ~` (destructive)\nEOF\n)\"",  # noqa: E501 - migrated test data, kept verbatim
+        "ALLOW",
+        "heredoc with markdown",
+    ),
+    (
+        "git push --force origin feat/my-feature",
+        "ALLOW",
+        "force push feature branch",
+    ),
+    (
+        "git push -f origin fix/bugfix",
+        "ALLOW",
+        "-f push feature branch",
+    ),
+    (
+        "git push --force-with-lease origin dev",
+        "ALLOW",
+        "force-with-lease feature",
+    ),
+    (
+        "gh pr merge --admin",
+        "BLOCK",
+        "actual --admin flag",
+    ),
+    (
+        "git commit --no-verify",
+        "BLOCK",
+        "actual --no-verify",
+    ),
+    (
+        "git reset --hard HEAD",
+        "BLOCK",
+        "git reset --hard",
+    ),
+    (
+        "git push --force origin main",
+        "BLOCK",
+        "force push to main",
+    ),
+    (
+        "git push --force origin master",
+        "BLOCK",
+        "force push to master",
+    ),
+    (
+        "git push -f origin main",
+        "BLOCK",
+        "force push -f to main",
+    ),
+    (
+        "git push --force-with-lease origin main",
+        "BLOCK",
+        "force-with-lease to main",
+    ),
+    (
+        "git push --force",
+        "BLOCK",
+        "force push no branch",
+    ),
+    (
+        "git push -f",
+        "BLOCK",
+        "-f push no branch",
+    ),
+    (
+        "git push --force origin",
+        "BLOCK",
+        "force push origin only",
+    ),
+    (
+        "git push origin --delete main",
+        "BLOCK",
+        "delete remote main",
+    ),
+    (
+        "git push origin :main",
+        "BLOCK",
+        "delete main colon syntax",
+    ),
+    (
+        "git branch -D main",
+        "BLOCK",
+        "force delete local main",
+    ),
+    (
+        "git branch -d master",
+        "BLOCK",
+        "delete local master",
+    ),
+    (
+        "git push origin --delete feat/old-feature",
+        "ALLOW",
+        "delete remote feature",
+    ),
+    (
+        "git branch -D feat/old-feature",
+        "ALLOW",
+        "delete local feature",
+    ),
+    (
+        "git merge --ff-only some-branch",
+        "ALLOW",
+        "merge --ff-only",
+    ),
+    (
+        "git merge --ff-only origin/main",
+        "ALLOW",
+        "merge --ff-only origin",
+    ),
+    (
+        "git merge some-branch",
+        "ALLOW",
+        "merge on feature branch",
+    ),
+    (
+        "git merge origin/main",
+        "ALLOW",
+        "merge origin/main on feat",
+    ),
+    (
+        "gh issue create --title 'test'",
+        "BLOCK",
+        "gh issue create",
+    ),
+    (
+        "gh pr create --title 'test'",
+        "BLOCK",
+        "gh pr create",
+    ),
+    (
+        'gh issue create --title "test" --body "body"',
+        "BLOCK",
+        "gh issue create full",
+    ),
+    (
+        "gh pr create --fill",
+        "BLOCK",
+        "gh pr create fill",
+    ),
+    (
+        "gh pr merge 123",
+        "BLOCK",
+        "gh pr merge",
+    ),
+    (
+        "gh pr merge --squash",
+        "BLOCK",
+        "gh pr merge squash",
+    ),
+    (
+        "gh pr merge 123 --squash --delete-branch",
+        "BLOCK",
+        "gh pr merge full",
+    ),
+    (
+        "uv add requests",
+        "BLOCK",
+        "uv add single package",
+    ),
+    (
+        "uv add requests httpx",
+        "BLOCK",
+        "uv add multiple packages",
+    ),
+    (
+        "uv add 'requests>=2.0'",
+        "BLOCK",
+        "uv add with version",
+    ),
+    (
+        "uv add --dev pytest",
+        "BLOCK",
+        "uv add dev dependency",
+    ),
+    (
+        "uv sync",
+        "ALLOW",
+        "uv sync",
+    ),
+    (
+        "uv run pytest",
+        "ALLOW",
+        "uv run",
+    ),
+    (
+        "uv pip list",
+        "ALLOW",
+        "uv pip list",
+    ),
+    (
+        "uv remove requests",
+        "ALLOW",
+        "uv remove",
+    ),
+    (
+        "doit release",
+        "BLOCK",
+        "doit release",
+    ),
+    (
+        "doit release --dry-run",
+        "BLOCK",
+        "doit release dry-run",
+    ),
+    (
+        "doit release_tag",
+        "BLOCK",
+        "doit release_tag",
+    ),
+    (
+        "doit check",
+        "ALLOW",
+        "doit check",
+    ),
+    (
+        "doit test",
+        "ALLOW",
+        "doit test",
+    ),
+    (
+        "doit pr",
+        "ALLOW",
+        "doit pr",
+    ),
+    (
+        "doit issue --type=bug",
+        "ALLOW",
+        "doit issue",
+    ),
+    (
+        "gh pr edit 123 --add-label ready-to-merge",
+        "BLOCK",
+        "add ready-to-merge",
+    ),
+    (
+        "gh pr edit --add-label ready-to-merge",
+        "BLOCK",
+        "add ready-to-merge no PR",
+    ),
+    (
+        "gh issue edit 45 --add-label ready-to-merge",
+        "BLOCK",
+        "issue ready-to-merge",
+    ),
+    (
+        "gh pr edit 123 --add-label bug",
+        "ALLOW",
+        "add bug label",
+    ),
+    (
+        "gh pr edit 123 --add-label enhancement",
+        "ALLOW",
+        "add enhancement label",
+    ),
+    (
+        "cd /path && doit release",
+        "BLOCK",
+        "chained doit release",
+    ),
+    (
+        "cd /path && gh pr create --fill",
+        "BLOCK",
+        "chained gh pr create",
+    ),
+    (
+        "cd /path && uv add requests",
+        "BLOCK",
+        "chained uv add",
+    ),
+    (
+        "cd /path && git push --force origin main",
+        "BLOCK",
+        "chained force push main",
+    ),
+    (
+        "git status; git push --force origin main",
+        "BLOCK",
+        "semicolon force push main",
+    ),
+    (
+        "git status; git push origin --delete main",
+        "BLOCK",
+        "semicolon delete main",
+    ),
+    (
+        "git log; git branch -D main",
+        "BLOCK",
+        "semicolon branch -D main",
+    ),
+    (
+        "cd /path && doit check",
+        "ALLOW",
+        "chained doit check",
+    ),
+    (
+        "cd /path && git status",
+        "ALLOW",
+        "chained git status",
+    ),
+    (
+        "git status; git push origin feat/branch",
+        "ALLOW",
+        "semicolon push feature",
+    ),
+    (
+        "gh issue list",
+        "ALLOW",
+        "gh issue list",
+    ),
+    (
+        "gh pr list",
+        "ALLOW",
+        "gh pr list",
+    ),
+    (
+        "gh issue view 123",
+        "ALLOW",
+        "gh issue view",
+    ),
+    (
+        "gh pr view 456",
+        "ALLOW",
+        "gh pr view",
+    ),
+    (
+        "gh issue close 123",
+        "ALLOW",
+        "gh issue close",
+    ),
+    (
+        "gh pr close 123",
+        "ALLOW",
+        "gh pr close",
+    ),
+    (
+        'echo "ALLOW_AI_READY_TO_MERGE=1" >> ~/.bashrc',
+        "BLOCK",
+        "persist rtm var to .bashrc",
+    ),
+    (
+        "tee -a ~/.zshrc <<< 'export ALLOW_AI_READY_TO_MERGE=1'",
+        "BLOCK",
+        "persist rtm var to .zshrc",
+    ),
+    (
+        "git push --force origin HEAD:main",
+        "BLOCK",
+        "force push HEAD:main refspec",
+    ),
+    (
+        "git push origin +main",
+        "BLOCK",
+        "push +main force-push marker",
+    ),
+    (
+        "git -C . push --force origin main",
+        "BLOCK",
+        "git -C global option push force",
+    ),
+    (
+        "git -c core.pager=cat push --force origin main",
+        "BLOCK",
+        "git -c global option push force",
+    ),
+    (
+        "git --git-dir=.git push --force origin main",
+        "BLOCK",
+        "git --git-dir push force",
+    ),
+    (
+        "git push --force-with-lease=main origin HEAD:main",
+        "BLOCK",
+        "force-with-lease= prefix form",
+    ),
+    (
+        'bash -c "git push --force origin main"',
+        "BLOCK",
+        "bash -c push force",
+    ),
+    (
+        'sh -c "git push --force origin main"',
+        "BLOCK",
+        "sh -c push force",
+    ),
+    (
+        'eval "git push --force origin main"',
+        "BLOCK",
+        "eval push force",
+    ),
+    (
+        "git -C . branch -D main",
+        "BLOCK",
+        "git -C branch -D main",
+    ),
+    (
+        'bash -c "git branch -D main"',
+        "BLOCK",
+        "bash -c branch -D main",
+    ),
+    (
+        'bash -c "gh pr merge 1 --admin"',
+        "BLOCK",
+        "bash -c gh pr merge --admin",
+    ),
+    (
+        "git push origin main:feature",
+        "ALLOW",
+        "refspec dst is feature",
+    ),
+    (
+        "git push origin HEAD:refs/heads/feature",
+        "ALLOW",
+        "refspec HEAD to refs feature",
+    ),
+    (
+        "git -C /other/repo push origin feature",
+        "ALLOW",
+        "git -C push feature",
+    ),
+    (
+        'bash -c "echo main"',
+        "ALLOW",
+        "bash -c echo main is safe",
+    ),
+    (
+        'echo "ALLOW_AI_READY_TO_MERGE=1" >> /tmp/notes.txt',
+        "ALLOW",
+        "rtm var to non-protected file",
+    ),
+    (
+        'echo "PATH=/foo" >> ~/.bashrc',
+        "ALLOW",
+        "no var name write to .bashrc",
+    ),
+    (
+        'git add .claude/settings.json && git commit -m "doc: mention ALLOW_AI_READY_TO_MERGE"',
+        "ALLOW",
+        "git add + commit message mentions var",
+    ),
+    (
+        'echo "ALLOW_AI_READY_TO_MERGE is the env var" ',
+        "ALLOW",
+        "var name in echo without redirect",
+    ),
+    (
+        "grep ALLOW_AI_READY_TO_MERGE .claude/settings.json",
+        "ALLOW",
+        "grep var name in protected file",
+    ),
+    (
+        "cat .claude/settings.json | head -5 # ALLOW_AI_READY_TO_MERGE",
+        "ALLOW",
+        "read protected file with var in comment",
+    ),
+    (
+        "sed -i 's/X/ALLOW_AI_READY_TO_MERGE=1/' ~/.bashrc",
+        "BLOCK",
+        "sed -i in-place edit on .bashrc",
+    ),
+    (
+        "python -c \"open('/home/me/.bashrc','a').write('ALLOW_AI_READY_TO_MERGE=1')\"",
+        "BLOCK",
+        "python -c writing var to .bashrc",
+    ),
+    (
+        'echo "ALLOW_AI_READY_TO_MERGE=1" >>~/.bashrc',
+        "BLOCK",
+        "no-space redirect to .bashrc",
+    ),
+    (
+        "sed 's/X/ALLOW_AI_READY_TO_MERGE=1/' ~/.bashrc",
+        "ALLOW",
+        "sed without -i (read-only) on .bashrc",
+    ),
+    (
+        "python script.py # ALLOW_AI_READY_TO_MERGE",
+        "ALLOW",
+        "python without -c flag",
+    ),
+    (
+        "python -c \"print('ALLOW_AI_READY_TO_MERGE')\"",
+        "ALLOW",
+        "python -c print var name only",
+    ),
+]
+
+# --- Governance label bypass cases (ALLOW_AI_READY_TO_MERGE=1 injected) ---
+BYPASS_CASES = [
+    (
+        "gh pr edit 123 --add-label ready-to-merge",
+        "ALLOW",
+        "rtm label with bypass var",
+    ),
+    (
+        "gh pr edit --add-label ready-to-merge",
+        "ALLOW",
+        "rtm label no PR with bypass var",
+    ),
+    (
+        "gh issue edit 45 --add-label ready-to-merge",
+        "ALLOW",
+        "issue rtm label with bypass var",
+    ),
+]
+
+# --- File-edit cases (Claude/Codex format) ---
+EDIT_CASES: list[tuple[str, dict, str, str]] = [
+    (
+        "Edit",
+        {
+            "file_path": "~/.bashrc",
+            "old_string": "",
+            "new_string": "export ALLOW_AI_READY_TO_MERGE=1",
+        },
+        "BLOCK",
+        "Edit .bashrc adding rtm var",
+    ),
+    (
+        "Edit",
+        {"file_path": ".envrc", "old_string": "", "new_string": "export ALLOW_AI_READY_TO_MERGE=1"},
+        "BLOCK",
+        "Edit .envrc adding rtm var",
+    ),
+    (
+        "Write",
+        {
+            "file_path": ".claude/settings.local.json",
+            "content": '{"env": {"ALLOW_AI_READY_TO_MERGE": "1"}}',
+        },
+        "BLOCK",
+        "Write claude settings.local.json with rtm var",
+    ),
+    (
+        "Edit",
+        {
+            "file_path": "~/.bashrc",
+            "old_string": "",
+            "new_string": "export PATH=$PATH:/usr/local/bin",
+        },
+        "ALLOW",
+        "Edit .bashrc unrelated content",
+    ),
+    (
+        "Edit",
+        {
+            "file_path": "/tmp/scratch.txt",
+            "old_string": "",
+            "new_string": "export ALLOW_AI_READY_TO_MERGE=1",
+        },
+        "ALLOW",
+        "Edit non-protected file with rtm var",
+    ),
+    (
+        "MultiEdit",
+        {
+            "file_path": "~/.zshrc",
+            "edits": [
+                {"old_string": "# aliases", "new_string": "# aliases\nalias ll='ls -la'"},
+                {"old_string": "# env", "new_string": "# env\nexport ALLOW_AI_READY_TO_MERGE=1"},
+            ],
+        },
+        "BLOCK",
+        "MultiEdit .zshrc one edit has rtm var",
+    ),
+    (
+        "write_file",
+        {"file_path": ".envrc", "content": "export ALLOW_AI_READY_TO_MERGE=1\n"},
+        "BLOCK",
+        "Gemini write_file to .envrc with rtm var",
+    ),
+    (
+        "replace",
+        {
+            "file_path": "~/.bashrc",
+            "old_string": "",
+            "new_string": "export ALLOW_AI_READY_TO_MERGE=1",
+        },
+        "BLOCK",
+        "Gemini replace .bashrc with rtm var",
+    ),
+    (
+        "write_file",
+        {"file_path": "/tmp/scratch.txt", "content": "export ALLOW_AI_READY_TO_MERGE=1\n"},
+        "ALLOW",
+        "Gemini write_file non-protected with rtm var",
+    ),
+]
+
+# --- File-edit cases (Copilot format) ---
+COPILOT_EDIT_CASES: list[tuple[str, dict, str, str]] = [
+    (
+        "Edit",
+        {
+            "file_path": "~/.bashrc",
+            "old_string": "",
+            "new_string": "export ALLOW_AI_READY_TO_MERGE=1",
+        },
+        "BLOCK",
+        "Copilot Edit .bashrc adding rtm var",
+    ),
+    (
+        "Edit",
+        {
+            "file_path": "~/.bashrc",
+            "old_string": "",
+            "new_string": "export PATH=$PATH:/usr/local/bin",
+        },
+        "ALLOW",
+        "Copilot Edit .bashrc unrelated content",
+    ),
+]
+
+# --- Antigravity run_command cases ---
+AGY_COMMAND_CASES = [
+    (
+        "git status",
+        "ALLOW",
+        "safe command",
+    ),
+    (
+        "doit check",
+        "ALLOW",
+        "doit check",
+    ),
+    (
+        'echo "--admin in quotes"',
+        "ALLOW",
+        "quoted flag is text",
+    ),
+    (
+        "git push --force origin feat/x",
+        "ALLOW",
+        "force push feature branch",
+    ),
+    (
+        "gh pr merge --admin",
+        "BLOCK",
+        "--admin flag",
+    ),
+    (
+        "git commit --no-verify",
+        "BLOCK",
+        "--no-verify flag",
+    ),
+    (
+        "git reset --hard HEAD",
+        "BLOCK",
+        "git reset --hard",
+    ),
+    (
+        "git push --force origin main",
+        "BLOCK",
+        "force push to main",
+    ),
+    (
+        "rm -rf /",
+        "BLOCK",
+        "rm -rf /",
+    ),
+    (
+        "gh pr create --fill",
+        "BLOCK",
+        "gh pr create",
+    ),
+    (
+        "uv add requests",
+        "BLOCK",
+        "uv add",
+    ),
+    (
+        "cd /path && git push --force origin main",
+        "BLOCK",
+        "chained force push main",
+    ),
+]
+
+# --- Antigravity write_to_file cases ---
+AGY_EDIT_CASES: list[tuple[str, str, str, str]] = [
+    (
+        "~/.bashrc",
+        "export ALLOW_AI_READY_TO_MERGE=1",
+        "BLOCK",
+        "write_to_file .bashrc rtm var",
+    ),
+    (
+        ".envrc",
+        "export ALLOW_AI_READY_TO_MERGE=1\n",
+        "BLOCK",
+        "write_to_file .envrc rtm var",
+    ),
+    (
+        "/tmp/scratch.txt",
+        "export ALLOW_AI_READY_TO_MERGE=1",
+        "ALLOW",
+        "write_to_file non-protected target",
+    ),
+    (
+        "~/.bashrc",
+        "export PATH=$PATH:/usr/local/bin",
+        "ALLOW",
+        "write_to_file .bashrc no var",
+    ),
+]
+
+
+def _load_hook() -> types.ModuleType:
+    """Load the hook script as a fresh module instance.
+
+    The filename contains hyphens, so it is not importable by name.
+    """
+    spec = importlib.util.spec_from_file_location("block_dangerous_commands", HOOK_PATH)
+    if spec is None or spec.loader is None:  # pragma: no cover - defensive
+        raise RuntimeError(f"could not load hook from {HOOK_PATH}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+@pytest.fixture
+def hook() -> Iterator[types.ModuleType]:
+    """Load a fresh copy of the hook module for each test."""
+    module = _load_hook()
+    sys.modules["block_dangerous_commands"] = module
+    try:
+        yield module
+    finally:
+        sys.modules.pop("block_dangerous_commands", None)
+
+
+def _outcome_exit_code(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    payload: str,
+) -> str:
+    """Run the hook on *payload*; BLOCK is exit 2 (Claude/Gemini/Codex)."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: FEATURE_BRANCH)
+    monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
+    return "BLOCK" if int(hook.main()) == 2 else "ALLOW"
+
+
+def _outcome_stdout(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    payload: str,
+    key: str,
+) -> str:
+    """Run the hook on *payload*; BLOCK is a stdout deny (Copilot/Antigravity).
+
+    A safe operation prints nothing and defers to the CLI's own permission
+    flow, which reads as ALLOW.
+    """
+    monkeypatch.setattr(hook, "get_current_branch", lambda: FEATURE_BRANCH)
+    monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
+    hook.main()
+    out = capsys.readouterr().out
+    try:
+        return "BLOCK" if json.loads(out).get(key) == "deny" else "ALLOW"
+    except json.JSONDecodeError:
+        return "ALLOW"
+
+
+def _ids(cases: list, desc_index: int) -> list[str]:
+    """Build unique, readable test ids from each case's description."""
+    return [f"{i:03d}-{case[desc_index]}" for i, case in enumerate(cases)]
+
+
+@pytest.mark.parametrize(
+    ("command", "expected", "description"), BASH_CASES, ids=_ids(BASH_CASES, 2)
+)
+def test_bash_command(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+    expected: str,
+    description: str,
+) -> None:
+    """Bash-tool commands block or allow as the migrated matrix specifies."""
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
+
+
+@pytest.mark.parametrize(
+    ("command", "expected", "description"), BYPASS_CASES, ids=_ids(BYPASS_CASES, 2)
+)
+def test_governance_label_bypass(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+    expected: str,
+    description: str,
+) -> None:
+    """With ALLOW_AI_READY_TO_MERGE=1 the human has opted in, so the label is allowed."""
+    monkeypatch.setenv("ALLOW_AI_READY_TO_MERGE", "1")
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "tool_input", "expected", "description"), EDIT_CASES, ids=_ids(EDIT_CASES, 3)
+)
+def test_file_edit_claude_format(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    tool_name: str,
+    tool_input: dict,
+    expected: str,
+    description: str,
+) -> None:
+    """File edits that would persist the bypass env var are blocked."""
+    payload = json.dumps({"tool_name": tool_name, "tool_input": tool_input})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
+
+
+@pytest.mark.parametrize(
+    ("tool_name", "tool_input", "expected", "description"),
+    COPILOT_EDIT_CASES,
+    ids=_ids(COPILOT_EDIT_CASES, 3),
+)
+def test_file_edit_copilot_format(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tool_name: str,
+    tool_input: dict,
+    expected: str,
+    description: str,
+) -> None:
+    """Copilot sends camelCase keys and blocks via a stdout deny payload."""
+    payload = json.dumps({"toolName": tool_name, "toolArgs": json.dumps(tool_input)})
+    outcome = _outcome_stdout(hook, monkeypatch, capsys, payload, "permissionDecision")
+    assert outcome == expected, description
+
+
+@pytest.mark.parametrize(
+    ("command", "expected", "description"), AGY_COMMAND_CASES, ids=_ids(AGY_COMMAND_CASES, 2)
+)
+def test_antigravity_run_command(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    command: str,
+    expected: str,
+    description: str,
+) -> None:
+    """Antigravity sends a nested toolCall and blocks via a stdout deny payload."""
+    payload = json.dumps({"toolCall": {"name": "run_command", "args": {"CommandLine": command}}})
+    assert _outcome_stdout(hook, monkeypatch, capsys, payload, "decision") == expected, description
+
+
+@pytest.mark.parametrize(
+    ("target", "content", "expected", "description"), AGY_EDIT_CASES, ids=_ids(AGY_EDIT_CASES, 3)
+)
+def test_antigravity_write_to_file(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    target: str,
+    content: str,
+    expected: str,
+    description: str,
+) -> None:
+    """Antigravity's write_to_file uses TargetFile / CodeContent."""
+    payload = json.dumps(
+        {
+            "toolCall": {
+                "name": "write_to_file",
+                "args": {"TargetFile": target, "CodeContent": content},
+            }
+        }
+    )
+    assert _outcome_stdout(hook, monkeypatch, capsys, payload, "decision") == expected, description
+
+
+# --- Subprocess smoke tests -------------------------------------------------
+#
+# The parametrized cases above run in-process, which is fast and reports
+# coverage but bypasses the script's entry point. These few exercise the real
+# `__main__` path -- the exit code and stdout a CLI actually observes -- which
+# is what the deleted standalone script used to be the only check on.
+
+
+def _run_subprocess(payload: str) -> subprocess.CompletedProcess[str]:
+    """Invoke the hook as a real subprocess, the way a CLI does."""
+    return subprocess.run(
+        [sys.executable, str(HOOK_PATH)],
+        input=payload,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+
+def test_subprocess_blocks_a_dangerous_bash_command() -> None:
+    """Exit code 2 is what Claude/Gemini/Codex read as a block."""
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": "git commit --no-verify"}})
+    proc = _run_subprocess(payload)
+    assert proc.returncode == 2
+    assert "BLOCKED" in proc.stderr
+
+
+def test_subprocess_allows_a_safe_bash_command() -> None:
+    """A safe command exits 0 and says nothing."""
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": "git status"}})
+    proc = _run_subprocess(payload)
+    assert proc.returncode == 0
+    assert proc.stdout.strip() == ""
+
+
+def test_subprocess_blocks_via_stdout_for_antigravity() -> None:
+    """Antigravity reads a stdout deny payload and exit 0, not the exit code."""
+    payload = json.dumps(
+        {"toolCall": {"name": "run_command", "args": {"CommandLine": "git commit --no-verify"}}}
+    )
+    proc = _run_subprocess(payload)
+    assert proc.returncode == 0
+    assert json.loads(proc.stdout)["decision"] == "deny"
+
+
+def test_subprocess_blocks_via_stdout_for_copilot() -> None:
+    """Copilot reads ``permissionDecision`` from stdout."""
+    payload = json.dumps(
+        {"toolName": "bash", "toolArgs": json.dumps({"command": "git commit --no-verify"})}
+    )
+    proc = _run_subprocess(payload)
+    assert proc.returncode == 0
+    assert json.loads(proc.stdout)["permissionDecision"] == "deny"

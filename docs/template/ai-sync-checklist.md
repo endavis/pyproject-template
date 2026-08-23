@@ -204,8 +204,8 @@ AI coding assistants (Claude Code, Gemini CLI, Codex) use hooks to block dangero
 ### 8.1 Hook Scripts
 
 - [ ] Compare `tools/hooks/ai/block-dangerous-commands.py` for new blocked patterns
-- [ ] Compare `tools/hooks/ai/test_hook.py` for new test cases
-- [ ] Run `python3 tools/hooks/ai/test_hook.py` to verify hooks work
+- [ ] Compare `tests/test_hook_dangerous_command_matrix.py` for new block/allow cases
+- [ ] Run `doit test` to verify hooks work
 
 ### 8.2 AI Agent Configuration
 

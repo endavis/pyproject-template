@@ -70,13 +70,3 @@ def test_coverage_invocations_are_config_driven() -> None:
             f"so [tool.coverage.run] source drives it"
         )
         assert "--cov" in text, f"{path.name} must still enable coverage"
-
-
-def test_manual_harness_is_omitted() -> None:
-    """The standalone harness is run directly, not collected, so it is excluded.
-
-    Pinning it here keeps the denominator — and therefore the threshold —
-    stable rather than dependent on pytest-cov's default file filtering.
-    """
-    omit = _coverage_config()["run"].get("omit", [])
-    assert any("test_hook.py" in entry for entry in omit)
