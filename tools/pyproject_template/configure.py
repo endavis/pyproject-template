@@ -276,7 +276,6 @@ def run_configure(
             defaults["github_user"],
             "GitHub user (from Repository URL or git remote)",
         )
-        enable_dependabot = False
     else:
         project_name = prompt(
             "Project name (human-readable)",
@@ -310,14 +309,6 @@ def run_configure(
 
         github_user = prompt("GitHub username", defaults["github_user"] or "username")
 
-    # Optional features
-    if auto:
-        enable_dependabot = False
-    else:
-        print()
-        Logger.step("Optional Features")
-        enable_dependabot = prompt_confirm("Enable Dependabot for automatic dependency updates?")
-
     # Confirm configuration
     Logger.header("Configuration Summary")
     print(f"Project Name:     {project_name}")
@@ -326,7 +317,10 @@ def run_configure(
     print(f"Description:      {description}")
     print(f"Author:           {author_name} <{author_email}>")
     print(f"GitHub:           {github_user}")
-    print(f"Dependabot:       {'Enabled' if enable_dependabot else 'Disabled'}")
+    # Stated, not asked. Dependabot is part of the template's automation
+    # surface -- .github/dependabot.yml plus two workflows, a docs page and
+    # their tests -- and ships with every project.
+    print("Dependabot:       Enabled (ships with the template)")
     print("━" * 60)
 
     if not yes and not prompt_confirm("\nProceed with configuration?"):
@@ -450,13 +444,6 @@ def run_configure(
     if template_tests_dir.exists():
         print("  ✓ Removing template-only tests (tests/template/)")
         shutil.rmtree(template_tests_dir)
-
-    # Enable Dependabot if requested
-    dependabot_example = Path(".github/dependabot.yml.example")
-    dependabot_config = Path(".github/dependabot.yml")
-    if enable_dependabot and dependabot_example.exists():
-        print("  ✓ Enabling Dependabot")
-        shutil.copy(dependabot_example, dependabot_config)
 
     # Seed v0.0.0 baseline tag so `doit release --prerelease=alpha` works on the
     # first release (see issue #447). Idempotent and skipped gracefully when
