@@ -74,7 +74,7 @@ Capture stdout as Copilot's plan.
 #### If `codex` is in the agent list:
 
 ```bash
-codex -a never exec 'Plan the implementation for GitHub issue #<issue> in the current repository. If the $codex-plan skill is available, activate it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Codex* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.'
+codex -a never --dangerously-bypass-hook-trust exec 'Plan the implementation for GitHub issue #<issue> in the current repository. If the $codex-plan skill is available, activate it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan in the standard format: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Codex* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.'
 ```
 
 Capture stdout as Codex's plan.

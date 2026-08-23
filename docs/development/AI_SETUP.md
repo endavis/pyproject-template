@@ -201,7 +201,7 @@ copilot
 - [GitHub Copilot CLI](https://github.com/github/copilot-cli)
 - [Copilot CLI Hooks](https://docs.github.com/en/copilot/how-tos/use-copilot-for-common-tasks/use-copilot-in-the-cli)
 
-**Copilot parity status:** Copilot CLI exposes 16 cross-agent matrix cells under `.github/skills/<target>-<action>/SKILL.md` — 4 self-action skills (`/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`) plus 12 cross-agent bridges (`/{claude,codex,antigravity}-{plan,implement,review,adversarial-review}`). The bridge bodies cannot be shared with Claude because each target CLI requires a different invocation (`claude -p`, `codex -a never exec`, `agy -p`). The other workflow skills (`/ghi-finalize`, `/ghi-status`, `/multi-*`) come from `.agents/skills/`. The `.github/skills/` location was chosen because it's the only Copilot project skill path that Claude does not also read — bridges there do not surface as duplicate slash commands in Claude. Hyphen naming is a structural constraint (skill names cannot contain colons), not a stylistic choice. The project-level hooks under `tools/hooks/ai/` apply to Copilot via `.github/hooks/copilot-hooks.json` — see [Command Blocking](ai/command-blocking.md). For the broader slash-command picture, see [Slash Commands and Workflows](ai/slash-commands.md).
+**Copilot parity status:** Copilot CLI exposes 16 cross-agent matrix cells under `.github/skills/<target>-<action>/SKILL.md` — 4 self-action skills (`/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`) plus 12 cross-agent bridges (`/{claude,codex,antigravity}-{plan,implement,review,adversarial-review}`). The bridge bodies cannot be shared with Claude because each target CLI requires a different invocation (`claude -p`, `codex -a never --dangerously-bypass-hook-trust exec`, `agy -p`). The other workflow skills (`/ghi-finalize`, `/ghi-status`, `/multi-*`) come from `.agents/skills/`. The `.github/skills/` location was chosen because it's the only Copilot project skill path that Claude does not also read — bridges there do not surface as duplicate slash commands in Claude. Hyphen naming is a structural constraint (skill names cannot contain colons), not a stylistic choice. The project-level hooks under `tools/hooks/ai/` apply to Copilot via `.github/hooks/copilot-hooks.json` — see [Command Blocking](ai/command-blocking.md). For the broader slash-command picture, see [Slash Commands and Workflows](ai/slash-commands.md).
 
 ### 4. Antigravity CLI (Google)
 
@@ -285,10 +285,10 @@ When using this template for a new project:
 
 **Codex CLI** (`.codex/config.toml`):
 ```toml
-approval_policy = "untrusted"
+approval_policy = "on-request"
 
 [features]
-codex_hooks = true
+hooks = true
 
 [[hooks.PreToolUse]]
 matcher = "^Bash$"
