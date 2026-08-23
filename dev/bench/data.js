@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787488081305,
+  "lastUpdate": 1787489635396,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10325,6 +10325,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.249129747961898e-7",
             "extra": "mean: 1.953862886812683 usec\nrounds: 57551"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eaff6f2076e9ea94e010a563388411e003bb0997",
+          "message": "fix: pin the Antigravity hook path and fail closed when the hook cannot start (merges PR #707, addresses #680)\n\n.agents/hooks.json was the only one of five wirings using a bare relative\npath. A probe confirmed it did resolve -- agy runs handlers with CWD set to\nthe directory containing hooks.json -- but that is agy behaviour, not a\ndocumented contract, and the hook is agy's only gate because delegated\ninvocations pass --dangerously-skip-permissions. Pin it with\n$(git rev-parse --show-toplevel), which agy shell-interprets.\n\nThe in-script guards from #679 cannot cover a script that never starts,\nwhich is the failure a misresolved path would cause. Add\nblock-dangerous-commands.sh, which denies when python3 or the hook script is\nunavailable, and route both stdout-contract CLIs through it.\n\nThe launcher checks preconditions rather than the hook's exit status: the\nhook exits 2 on its own fail-closed path, indistinguishable from \"python3\ncould not find the file\", so branching on exit status would put two JSON\nobjects on stdout.\n\nRetarget the Antigravity wiring test at the launcher and add the assertion\nthe old one lacked -- that the path resolves independently of CWD. The old\ntest passed on the broken relative path.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T13:53:25+01:00",
+          "tree_id": "49f65427c9ce0cab1a33b3291dee502e41e7bae4",
+          "url": "https://github.com/endavis/pyproject-template/commit/eaff6f2076e9ea94e010a563388411e003bb0997"
+        },
+        "date": 1787489633309,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8745424.23713021,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2730300936836411e-8",
+            "extra": "mean: 114.34551062192355 nsec\nrounds: 88402"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9239116.438169647,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0680712516762098e-8",
+            "extra": "mean: 108.2354580865212 nsec\nrounds: 92679"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5825512.9603105,
+            "unit": "iter/sec",
+            "range": "stddev: 8.871909036628353e-8",
+            "extra": "mean: 171.6587031585112 nsec\nrounds: 62151"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1701638.0783575617,
+            "unit": "iter/sec",
+            "range": "stddev: 3.422185665655198e-7",
+            "extra": "mean: 587.6690306350044 nsec\nrounds: 48929"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 421403.6905774953,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011379433344748935",
+            "extra": "mean: 2.3730214574760633 usec\nrounds: 61051"
           }
         ]
       }
