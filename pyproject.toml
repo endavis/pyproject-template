@@ -179,13 +179,25 @@ warmup = true
 
 [tool.coverage.run]
 branch = true
-source = ["package_name"]
+# `tools/` is the code that runs releases, creates PRs and blocks dangerous
+# commands; gating only the package would measure the skeleton every downstream
+# project deletes. See docs/development/ci-cd-testing.md for the downstream/template
+# split.
+source = ["package_name", "tools"]
+omit = [
+    # Standalone manual harness, run directly rather than collected by pytest.
+    "tools/hooks/ai/test_hook.py",
+]
 
 [tool.coverage.report]
 skip_covered = false
 show_missing = true
 precision = 2
-fail_under = 80
+# Measured over package_name + tools/. Currently 54.71% here, and 56.92% in a
+# downstream project once `cleanup` sheds tools/pyproject_template/, so the same
+# gate holds in both shapes. Ratchet upward as tooling coverage improves; treat
+# lowering it as a change that needs justification.
+fail_under = 54
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",

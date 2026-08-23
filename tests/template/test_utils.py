@@ -703,6 +703,9 @@ class TestFilesToUpdate:
         config_files = [
             ".envrc",
             ".pre-commit-config.yaml",
+            # Carries a `package_name` example string; without rewriting it the
+            # help text names a module the project no longer has (#684).
+            ".vscode/launch.json",
         ]
         for f in config_files:
             assert f in FILES_TO_UPDATE, f"Missing config file: {f}"
