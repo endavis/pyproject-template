@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787510914733,
+  "lastUpdate": 1787514141150,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11033,6 +11033,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.93049552023969e-7",
             "extra": "mean: 1.9939579940237138 usec\nrounds: 52802"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b1ddc15dc49f78e502882a0e130100cc5ae8728",
+          "message": "fix: repair the Codex hook, which had never fired (merges PR #722, addresses #681)\n\n#681 suspected .codex/config.toml matched on Claude's tool names rather than\nCodex's. Probing found the matcher was right and three other things were\nwrong.\n\napproval_policy = \"untrusted\" is no longer a supported value, and an\nunsupported value is a fatal config error -- Codex refused to start in this\nrepository at all, taking every delegation bridge with it. Use \"on-request\".\n\nCodex gates hooks behind persisted trust and skips untrusted hooks silently.\nHeadless `codex exec` therefore never ran the hook. Pass\n--dangerously-bypass-hook-trust from the 30 headless invocations, the way the\nAntigravity bridges pass --dangerously-skip-permissions. The flag makes the\nsafety hook run; what it bypasses is Codex's vetting of the hook source,\nwhich here is this repo's own script. The trade-off is documented.\n\nCodex's file-edit tool is apply_patch, not Edit/Write/MultiEdit, and its\npayload is command-shaped. It matched neither _BASH_TOOL_NAMES nor\n_FILE_EDIT_TOOL_NAMES, so it fell through to allow: a patch persisting\nALLOW_AI_READY_TO_MERGE to ~/.bashrc succeeded through Codex while the same\nedit through Claude's Write was blocked. Check it as both a command and a set\nof file edits, normalising each patch target into the file_path/content shape\nthe persistence check already understands.\n\n[features].codex_hooks is deprecated in favour of [features].hooks. It still\nworks, but a removed flag would silently disable the hook again.\n\nVerified live throughout: both tool names observed from real sessions, a\ndangerous command blocked, and an apply_patch persisting the bypass var\nblocked with the target file left unmodified.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T20:41:49+01:00",
+          "tree_id": "460e3529cddecd6b1a2be4f5ea70aa2c86d58563",
+          "url": "https://github.com/endavis/pyproject-template/commit/8b1ddc15dc49f78e502882a0e130100cc5ae8728"
+        },
+        "date": 1787514139054,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7995099.088313227,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5754959859212336e-8",
+            "extra": "mean: 125.07662368584553 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9206819.798356166,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2761261535146166e-8",
+            "extra": "mean: 108.61513768071634 nsec\nrounds: 90245"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6068171.421497086,
+            "unit": "iter/sec",
+            "range": "stddev: 1.588377251742063e-8",
+            "extra": "mean: 164.7942898345625 nsec\nrounds: 60676"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1729193.8169962545,
+            "unit": "iter/sec",
+            "range": "stddev: 2.68352702573334e-7",
+            "extra": "mean: 578.3041728295551 nsec\nrounds: 54663"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 489292.3234536452,
+            "unit": "iter/sec",
+            "range": "stddev: 5.300523661699854e-7",
+            "extra": "mean: 2.043768013651942 usec\nrounds: 51003"
           }
         ]
       }
