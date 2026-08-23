@@ -37,7 +37,10 @@ def _load_workflow() -> dict[Any, Any]:
     Return type is ``dict[Any, Any]`` (not ``dict[str, Any]``) because
     PyYAML parses the ``on`` key as the boolean ``True`` (YAML 1.1 alias).
     """
-    return yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    # Bind to an annotated local first: yaml.safe_load returns Any,
+    # and returning Any from a typed function trips warn_return_any.
+    data: dict[Any, Any] = yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    return data
 
 
 def _enable_automerge_steps() -> list[dict[str, Any]]:

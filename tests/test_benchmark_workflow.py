@@ -13,7 +13,10 @@ def _load_workflow() -> dict:
     """Load and parse the benchmark workflow YAML."""
     # Windows read_text() defaults to cp1252 which can't decode non-ASCII
     # characters like ✅ in workflow files — always specify utf-8.
-    return yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    # Bind to an annotated local first: yaml.safe_load returns Any,
+    # and returning Any from a typed function trips warn_return_any.
+    data: dict = yaml.safe_load(WORKFLOW_PATH.read_text(encoding="utf-8"))
+    return data
 
 
 class TestBenchmarkWorkflowExists:
@@ -68,7 +71,10 @@ class TestBenchmarkWorkflowSteps:
     def _get_steps(self) -> list[dict]:
         """Get the steps from the benchmark job."""
         workflow = _load_workflow()
-        return workflow["jobs"]["benchmark"]["steps"]
+        # Indexing an untyped mapping yields Any; bind to an annotated local so
+        # warn_return_any does not fire on the return.
+        steps: list[dict] = workflow["jobs"]["benchmark"]["steps"]
+        return steps
 
     def _find_step(self, name: str) -> dict | None:
         """Find a step by name."""

@@ -269,7 +269,9 @@ BYPASS_TESTS = [
 # File-edit test cases: (tool_name, tool_input_dict, expected, description)
 # expected: 'ALLOW' or 'BLOCK'
 # ---------------------------------------------------------------------------
-EDIT_TESTS = [
+# Annotated so the tuple unpacking in main() sees the element types
+# directly; mypy widens a heterogeneous literal list to `object`.
+EDIT_TESTS: list[tuple[str, dict, str, str]] = [
     # Edit ~/.bashrc adding the env var name → BLOCK
     (
         "Edit",
@@ -377,7 +379,7 @@ EDIT_TESTS = [
 
 # Copilot-format file-edit tests: same shape but using camelCase hook input
 # (tool_name, tool_input_dict, expected, description)
-COPILOT_EDIT_TESTS = [
+COPILOT_EDIT_TESTS: list[tuple[str, dict, str, str]] = [
     (
         "Edit",
         {
@@ -424,7 +426,7 @@ AGY_COMMAND_TESTS = [
 ]
 
 # write_to_file tests: (target_file, code_content, expected, description)
-AGY_EDIT_TESTS = [
+AGY_EDIT_TESTS: list[tuple[str, str, str, str]] = [
     ("~/.bashrc", "export ALLOW_AI_READY_TO_MERGE=1", "BLOCK", "write_to_file .bashrc rtm var"),
     (".envrc", "export ALLOW_AI_READY_TO_MERGE=1\n", "BLOCK", "write_to_file .envrc rtm var"),
     (

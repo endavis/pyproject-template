@@ -46,9 +46,9 @@ from utils import Colors, Logger, prompt, validate_package_name  # noqa: E402
 try:
     from cleanup import CleanupMode, cleanup_template_files, prompt_cleanup
 except ImportError:
-    CleanupMode = None  # type: ignore[misc,assignment]
-    cleanup_template_files = None  # type: ignore[assignment]
-    prompt_cleanup = None  # type: ignore[assignment]
+    CleanupMode = None
+    cleanup_template_files = None
+    prompt_cleanup = None
 
 
 def print_banner() -> None:

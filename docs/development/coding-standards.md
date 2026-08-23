@@ -327,8 +327,32 @@ All checks should pass in CI:
 - Code formatting (ruff format)
 - Linting (ruff check)
 - Type checking (mypy)
+- Dead code (vulture)
 - Test suite (pytest)
 - Coverage threshold (pytest-cov)
+
+### Known gate blind spot: unused module-level constants
+
+`doit check` does **not** detect an unused module-level constant whose name begins with an
+underscore. Verified against each tool in the stack:
+
+| Tool | Behaviour |
+| :--- | :--- |
+| vulture | Skips underscore-prefixed names entirely, at any `min_confidence` |
+| ruff | `F841` covers unused *locals* only; there is no module-level rule |
+| pyright (CLI) | "is not accessed" is an editor-only hint, absent from `--outputjson` |
+| mypy | Out of scope by design |
+
+Two independent reasons vulture cannot see it: a leading `_` marks a name as deliberately
+private, and even a *public* unused module variable is reported at only 60% confidence — below
+the configured `min_confidence = 80`.
+
+Lowering that threshold is not a workable fix: at 60% this repo produces 57 findings, 55 of them
+`unused function` for `task_*` and `test_*` names that doit and pytest discover dynamically.
+
+**What this means in practice:** an editor with a Python language server will grey out an unused
+private constant, but CI will not fail on it. Treat the "unused symbol" hint as real signal even
+though `doit check` is green. See issue #700.
 
 ### Import Compatibility
 

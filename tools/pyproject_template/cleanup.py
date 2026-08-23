@@ -773,7 +773,11 @@ def main() -> int:
 
     args = parser.parse_args()
 
-    # Determine mode
+    # Determine mode. Annotated up front because ``prompt_cleanup()`` in the
+    # else-branch returns ``CleanupMode | None``; without this, mypy infers
+    # ``CleanupMode`` from the first branch and then reports the ``is None``
+    # guard below as unreachable.
+    mode: CleanupMode | None
     if args.setup and args.all:
         Logger.error("Cannot specify both --setup and --all")
         return 1
