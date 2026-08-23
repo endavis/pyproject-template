@@ -115,12 +115,17 @@ class TestTaskCheck:
         assert "audit" in task["task_dep"]
 
     def test_task_dep_covers_full_check_set(self) -> None:
-        """``task_check`` must depend on every pre-PR quality/security task."""
+        """``task_check`` must depend on every pre-PR quality/security task.
+
+        ``deadcode`` joined the set in #700: it was defined as a task but never
+        gated, so unused imports in ``tools/`` accumulated unnoticed.
+        """
         task = task_check()
         assert set(task["task_dep"]) == {
             "format_check",
             "lint",
             "type_check",
+            "deadcode",
             "security",
             "audit",
             "spell_check",
@@ -152,3 +157,59 @@ class TestTaskTypeCheck:
         assert isinstance(action, str)
         assert "bootstrap.py" not in action
         assert "mypy" in action
+
+
+class TestQualityGateScope:
+    """The quality gate must cover the directories it claims to.
+
+    Before #700, ``type_check`` targeted only ``src/ tools/doit/`` and vulture's
+    configured paths omitted ``tools/`` entirely — so real errors in
+    ``tools/hooks/`` and ``tests/`` passed a green ``doit check``. Two escaped
+    that way in PR #699. These tests pin the scope so it cannot silently narrow
+    again.
+    """
+
+    def test_type_check_covers_tools_and_tests(self) -> None:
+        """``type_check`` must check all of ``src/``, ``tools/`` and ``tests/``."""
+        action = task_type_check()["actions"][0]
+        assert isinstance(action, str)
+        for root in ("src/", "tools/", "tests/"):
+            assert root in action, f"type_check no longer covers {root}"
+
+    def test_type_check_does_not_narrow_to_tools_subdir(self) -> None:
+        """Guard the specific regression: narrowing ``tools/`` to one subdirectory."""
+        action = task_type_check()["actions"][0]
+        assert isinstance(action, str)
+        assert "tools/doit/" not in action, (
+            "type_check narrowed back to tools/doit/; this hides tools/hooks/"
+        )
+
+    def test_check_gates_on_deadcode(self) -> None:
+        """``deadcode`` must run as part of ``doit check``, not just on demand."""
+        assert "deadcode" in task_check()["task_dep"]
+
+    def test_vulture_paths_include_tools(self) -> None:
+        """Vulture's configured paths must include ``tools/``."""
+        import tomllib
+
+        pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        with pyproject.open("rb") as handle:
+            config = tomllib.load(handle)
+        paths = config["tool"]["vulture"]["paths"]
+        assert "tools" in paths, f"vulture paths missing 'tools': {paths}"
+
+    def test_mypy_does_not_exclude_pyproject_template(self) -> None:
+        """The tooling package must not be excluded from type checking wholesale.
+
+        Its bare ``sys.path`` imports are suppressed by module-name overrides
+        instead, so the other ~5,300 lines stay checked.
+        """
+        import tomllib
+
+        pyproject = Path(__file__).resolve().parents[2] / "pyproject.toml"
+        with pyproject.open("rb") as handle:
+            config = tomllib.load(handle)
+        excludes = config["tool"]["mypy"].get("exclude", [])
+        assert not any("pyproject_template" in entry for entry in excludes), (
+            f"tools/pyproject_template/ is excluded from mypy again: {excludes}"
+        )

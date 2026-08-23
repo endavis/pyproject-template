@@ -135,18 +135,29 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
-# tools/pyproject_template/ uses sys.path manipulation for standalone execution
-exclude = ["tools/pyproject_template/", ".claude/", ".gemini/", ".codex/"]
+exclude = [".claude/", ".gemini/", ".codex/"]
 
 [[tool.mypy.overrides]]
 module = "doit.*"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
-# Standalone scripts using sys.path manipulation; excluded from discovery
-# but still followed via imports from bootstrap.py
-module = "tools.pyproject_template.*"
-follow_imports = "skip"
+# tools/pyproject_template/ scripts run standalone and do `sys.path.insert`
+# before importing their siblings by bare name (`from utils import ...`).
+# mypy cannot resolve those, so suppress the import errors by naming the
+# sibling modules. Suppressing only the imports — rather than excluding the
+# directory, as this config previously did — keeps the other ~5,300 lines
+# type-checked. See issue #700.
+module = [
+    "check_template_updates",
+    "cleanup",
+    "configure",
+    "repo_settings",
+    "settings",
+    "setup_repo",
+    "utils",
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
@@ -219,13 +230,17 @@ ignore-words-list = "crate"
 
 [tool.vulture]
 min_confidence = 80
-paths = ["src", "tests"]
+paths = ["src", "tests", "tools"]
 exclude = [
     "*/tests/*",      # Test fixtures often appear unused
     "*/__pycache__/*",
 ]
 # Common false positives in Python projects
 ignore_names = [
+    # Imported under `if TYPE_CHECKING:` and referenced only from string
+    # annotations (e.g. `console: "ConsoleType"`), which vulture does not
+    # parse. Deleting these imports would break type checking.
+    "ConsoleType",
     "test_*",         # Pytest test functions
     "fixture_*",      # Pytest fixtures
     "*_fixture",      # Pytest fixtures

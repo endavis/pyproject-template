@@ -44,7 +44,11 @@ class TestRunStreamed:
 
     def test_success_returns_none(self) -> None:
         """A zero-exit command returns ``None`` and does not raise."""
-        result = run_streamed([sys.executable, "-c", "print('hi')"])
+        # run_streamed is annotated `-> None`, so mypy calls the binding below
+        # pointless. The assertion is kept deliberately: it documents the
+        # contract at runtime and would catch the signature being widened to
+        # return something. Suppressing beats deleting a real check.
+        result = run_streamed([sys.executable, "-c", "print('hi')"])  # type: ignore[func-returns-value]
         assert result is None
 
     def test_failure_with_check_true_raises(self) -> None:
@@ -56,7 +60,9 @@ class TestRunStreamed:
     def test_failure_with_check_false_does_not_raise(self) -> None:
         """Non-zero exit with ``check=False`` returns without raising."""
         # Must not raise.
-        result = run_streamed(
+        # See the note in test_success_returns_none for why this is suppressed
+        # rather than the assertion removed.
+        result = run_streamed(  # type: ignore[func-returns-value]
             [sys.executable, "-c", "import sys; sys.exit(3)"],
             check=False,
         )
