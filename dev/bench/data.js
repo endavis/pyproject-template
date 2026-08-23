@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787496311913,
+  "lastUpdate": 1787497617402,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10502,6 +10502,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.341325338941394e-7",
             "extra": "mean: 2.0570865334725372 usec\nrounds: 37708"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d9881fa1e3de544f07ee5d247f0c78ab1e98696e",
+          "message": "refactor: migrate the hook test matrix into CI and delete the manual script (merges PR #713, addresses #702)\n\ntools/hooks/ai/test_hook.py held 134 block/allow cases for the most\nsecurity-critical script in the repo, and nothing ever ran it: pytest did not\ncollect it (testpaths = [\"tests\"]), and no workflow, doit task or pre-commit\nhook referenced it. Three documents presented it as a manual step.\n\nIt had rotted accordingly. Run on main it was red -- 132/134 -- because two\ncases expect ALLOW on a merge that main correctly blocks. The script shelled\nout with the real environment, so the hook saw whatever branch was checked\nout. The migrated cases pin the branch, stating the assumption they always\nhad.\n\nMove all 134 cases to tests/, extracted programmatically rather than retyped,\nand add subprocess smoke tests so the real __main__ path stays covered -- the\none thing the standalone script did that the in-process harness does not.\nDelete the script and point the five docs at the suite.\n\nCoverage rises 55.05% -> 58.29%: these cases always exercised the hook, just\nnever anywhere that counted. Verified the matrix fails when a blocked pattern\nregresses, across all three deny contracts.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T16:06:31+01:00",
+          "tree_id": "4969d4470cf77e4cfca98fb8af7b60d0965193d0",
+          "url": "https://github.com/endavis/pyproject-template/commit/d9881fa1e3de544f07ee5d247f0c78ab1e98696e"
+        },
+        "date": 1787497615790,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9412694.900640046,
+            "unit": "iter/sec",
+            "range": "stddev: 1.03464906892117e-8",
+            "extra": "mean: 106.23950001099065 nsec\nrounds: 91442"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9194902.571951326,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2017020597106712e-8",
+            "extra": "mean: 108.75591037260787 nsec\nrounds: 90441"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5984479.129910657,
+            "unit": "iter/sec",
+            "range": "stddev: 4.108015713951493e-8",
+            "extra": "mean: 167.09892010517032 nsec\nrounds: 66525"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1425476.7151000607,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3341033932491726e-7",
+            "extra": "mean: 701.5197017299615 nsec\nrounds: 53371"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498528.373426502,
+            "unit": "iter/sec",
+            "range": "stddev: 5.307868909004067e-7",
+            "extra": "mean: 2.005903882915964 usec\nrounds: 52332"
           }
         ]
       }
