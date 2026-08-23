@@ -1,4 +1,4 @@
-"""Validate every relative link in `docs/` against the real repository tree.
+"""Validate every relative link in the repository's markdown against the tree.
 
 `mkdocs build --strict` only resolves links that land inside `docs_dir`. This
 repository deliberately links out of `docs/` to canonical files that live
@@ -23,6 +23,13 @@ import pytest
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS_DIR = REPO_ROOT / "docs"
 
+# Markdown that ships with the template and is read by humans or agents.
+# Root-level files matter as much as `docs/`: README.md and
+# .github/CONTRIBUTING.md are the first thing a new contributor opens, and
+# their links were broken for as long as nothing checked them (#686).
+_ROOT_MARKDOWN = ("README.md", "AGENTS.md", "CHANGELOG.md")
+_GITHUB_MARKDOWN_DIR = REPO_ROOT / ".github"
+
 # Markdown inline links: [text](target). Reference-style and bare autolinks are
 # not used for repo paths in this docs tree.
 _LINK_RE = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
@@ -36,7 +43,11 @@ _PLACEHOLDER_PARTS = ("path/to/", "<", "{{", "$")
 
 
 def _iter_markdown() -> list[Path]:
-    return sorted(DOCS_DIR.rglob("*.md"))
+    """Every checked markdown file: docs/, the repo root, and .github/."""
+    paths = list(DOCS_DIR.rglob("*.md"))
+    paths += [REPO_ROOT / name for name in _ROOT_MARKDOWN if (REPO_ROOT / name).is_file()]
+    paths += list(_GITHUB_MARKDOWN_DIR.glob("*.md"))
+    return sorted(set(paths))
 
 
 def _link_targets(path: Path) -> list[str]:
