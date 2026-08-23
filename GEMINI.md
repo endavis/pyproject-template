@@ -1,4 +1,5 @@
 @./AGENTS.md
+@./.gemini/rules/typing-branch-narrowing.md
 
 # Gemini CLI Instructions
 

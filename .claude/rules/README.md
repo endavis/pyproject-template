@@ -50,23 +50,44 @@ Target: **30 lines or fewer** per rule file. If a file grows past 30 lines, spli
 
 ## How to load
 
-Uncomment the `@./rules/*.md` line in `.claude/CLAUDE.md`:
-
-```
-@../AGENTS.md
-<!-- Uncomment when you add rule files. See .claude/rules/README.md for the pattern. -->
-<!-- @./rules/*.md -->
-```
-
-becomes:
+`.claude/CLAUDE.md` glob-imports every rule file in this directory:
 
 ```
 @../AGENTS.md
 @./rules/*.md
 ```
 
-Note: the line stays commented out in this template repository. Downstream consumers uncomment it
-after authoring their first rule file.
+**This loader is enabled in the template.** It was previously commented out, on the reasoning that
+a template ships no rule files and downstream consumers would opt in after authoring their first.
+That reasoning expired when the template authored its own: `typing-branch-narrowing.md` documents
+a trap that produced defects in two consecutive PRs **in this repository's code**. A rule file that
+ships but never loads is a mechanism built and not used, so the loader is on and downstream
+projects inherit it.
+
+If you fork this template and delete the shipped rule file, remove the import too — Claude Code
+tolerates a glob matching nothing, but leaving it invites a future file to load unnoticed.
+
+## Mirroring across agent surfaces
+
+Every agent in the delegation matrix edits this codebase, so a rule that only Claude loads is a
+half-installed control. `typing-branch-narrowing` is mirrored to all four surfaces, each with its
+own format and loading mechanism:
+
+| Surface | Path | Loading |
+| :--- | :--- | :--- |
+| Claude | `.claude/rules/*.md` | glob import in `.claude/CLAUDE.md` |
+| Gemini | `.gemini/rules/*.md` | **explicit per-file** `@`-import in `GEMINI.md` — globs are not supported |
+| Copilot | `.github/instructions/*.instructions.md` | auto-discovered; requires `applyTo:` frontmatter |
+| Codex / Antigravity | `.agents/skills/<name>/SKILL.md` | `description:` frontmatter is the skill gate |
+
+The checklist body is identical in all four; only the frontmatter and loading differ. **When you
+change one, change all four** — a rule that disagrees with itself across agents is worse than no
+rule, because whichever agent is driving determines which version applies.
+`tests/template/test_rule_files.py` enforces that the four bodies stay byte-identical.
+
+Note that Copilot reads `.agents/skills/` in addition to `.github/instructions/`, so it sees the
+rule on two surfaces at once. That is harmless while the bodies match — which is exactly what the
+sync test guarantees — but it is another reason not to let them drift.
 
 ## Discipline: build from observed failures, not generic best-practices
 
