@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787508103268,
+  "lastUpdate": 1787509496779,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10856,6 +10856,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.618571539812259e-7",
             "extra": "mean: 1.5427437795851482 usec\nrounds: 68484"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9b0ab6c67d920feb8d57e44998165a2b6c79c528",
+          "message": "fix: remove the inert Dependabot option from configure (merges PR #719, addresses #685)\n\nconfigure.py asked \"Enable Dependabot for automatic dependency updates?\",\nprinted the answer in the Configuration Summary, then gated the action on\n.github/dependabot.yml.example -- a file that has never existed in this\nrepository. The `and` short-circuited, so the branch never ran, printed\nnothing and raised nothing.\n\nThe option was not merely inert, it misreported in both directions: a user\nwho declined saw \"Dependabot: Disabled\" and got Dependabot anyway, because\n.github/dependabot.yml ships unconditionally. In auto mode the flag was\nhardcoded False, so every non-interactive run printed Disabled while\nshipping it.\n\nRemove the prompt, the auto-mode assignment and the dead branch, and state\nthe actual behaviour in the summary. Dependabot is not an optional extra\nhere: two workflows, a docs page and two test files support it, and\nrepo_settings.py enables Dependabot security updates via the GitHub API\nduring setup. Making the prompt real would mean conditionally deleting\nworkflows and their tests.\n\nAdd tests/template/test_configure_paths.py, which AST-parses configure.py\nand cleanup.py for Path(\"literal\") calls and asserts each exists. A gate on\na missing path is invisible by construction, so it needs a structural check.\nVerified: reintroducing the .example literal fails the test by name.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T19:24:32+01:00",
+          "tree_id": "181900951c42130ab2627c4edd64e2a154073d22",
+          "url": "https://github.com/endavis/pyproject-template/commit/9b0ab6c67d920feb8d57e44998165a2b6c79c528"
+        },
+        "date": 1787509496078,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9150500.996958578,
+            "unit": "iter/sec",
+            "range": "stddev: 1.092612172532792e-8",
+            "extra": "mean: 109.28363379583017 nsec\nrounds: 89961"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9054301.723111948,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4349425233160835e-8",
+            "extra": "mean: 110.44474003416597 nsec\nrounds: 89550"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6529103.778326837,
+            "unit": "iter/sec",
+            "range": "stddev: 1.731509150020728e-8",
+            "extra": "mean: 153.16037758803432 nsec\nrounds: 64965"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1810297.737997748,
+            "unit": "iter/sec",
+            "range": "stddev: 3.654982325260269e-7",
+            "extra": "mean: 552.39532095203 nsec\nrounds: 56253"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 503363.1227745985,
+            "unit": "iter/sec",
+            "range": "stddev: 5.105260227208736e-7",
+            "extra": "mean: 1.9866373891036733 usec\nrounds: 51951"
           }
         ]
       }
