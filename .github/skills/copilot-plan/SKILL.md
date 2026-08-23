@@ -9,7 +9,7 @@ Plan the implementation for a GitHub issue in this repository.
 
 ## When to use
 
-Use this skill when the user wants Copilot to plan a GitHub issue. This is Copilot's self-action equivalent of `/claude:plan` / `/gemini:plan` / `$codex-plan`.
+Use this skill when the user wants Copilot to plan a GitHub issue. This is Copilot's self-action equivalent of `/claude:plan` / `$codex-plan`.
 
 Expected prompt shape:
 

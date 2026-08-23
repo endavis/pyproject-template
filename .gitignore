@@ -77,5 +77,4 @@ site/
 .doit.db.db
 coverage.xml
 .nfs*
-.gemini/settings.json.orig
 tools/hooks/ai/hook-debug.jsonl

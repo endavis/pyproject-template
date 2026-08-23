@@ -204,7 +204,7 @@ The script copies these template files/directories:
 - `.github/` (workflows, templates)
 - `.vscode/`
 - `.devcontainer/`
-- `.claude/`, `.codex/`, `.gemini/`
+- `.claude/`, `.codex/`, `.copilot/`, `.agents/`
 - `tools/pyproject_template/`
 - `src/package_name/` (template source)
 - `tests/` (template tests)

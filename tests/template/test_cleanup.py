@@ -400,7 +400,7 @@ lint.per-file-ignores."tools/pyproject_template/*.py" = [
 [tool.mypy]
 strict = true
 # tools/pyproject_template/ uses sys.path manipulation for standalone execution
-exclude = [ "tools/pyproject_template/", ".claude/", ".gemini/", ".codex/" ]
+exclude = [ "tools/pyproject_template/", ".claude/", ".codex/" ]
 overrides = [
   { module = "doit.*", ignore_missing_imports = true },
   # Standalone scripts using sys.path manipulation; excluded from discovery
@@ -754,7 +754,7 @@ git push origin v0.0.0
         # Unrelated overrides and excludes survive.
         assert 'module = "doit.*"' in new
         assert '".claude/"' in new
-        assert '".gemini/"' in new
+        assert '".codex/"' in new
         assert '".codex/"' in new
         # The unrelated ruff per-file-ignores block survives.
         assert 'lint.per-file-ignores."tests/benchmarks/*.py"' in new
@@ -792,7 +792,7 @@ git push origin v0.0.0
             "[tool.mypy]\n"
             "strict = true\n"
             "# tools/pyproject_template/ uses sys.path manipulation for standalone execution\n"
-            'exclude = [ "tools/pyproject_template/", ".claude/", ".gemini/", ".codex/" ]\n',
+            'exclude = [ "tools/pyproject_template/", ".claude/", ".codex/" ]\n',
             encoding="utf-8",
         )
 
@@ -804,7 +804,7 @@ git push origin v0.0.0
         assert "uses sys.path manipulation" not in new
         # The remaining AI-config excludes survive intact.
         assert '".claude/"' in new
-        assert '".gemini/"' in new
+        assert '".codex/"' in new
         assert '".codex/"' in new
         assert pyproject in changed
 

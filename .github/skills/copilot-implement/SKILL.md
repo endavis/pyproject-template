@@ -9,7 +9,7 @@ Implement the plan for a GitHub issue in this repository.
 
 ## When to use
 
-Use this skill when the user wants Copilot to implement an approved plan. This is Copilot's self-action equivalent of `/claude:implement` / `/gemini:implement` / `$codex-implement`.
+Use this skill when the user wants Copilot to implement an approved plan. This is Copilot's self-action equivalent of `/claude:implement` / `$codex-implement`.
 
 Expected prompt shape:
 

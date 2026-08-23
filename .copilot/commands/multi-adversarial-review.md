@@ -9,7 +9,7 @@ Run multiple AI agents in parallel to independently challenge the current change
 Arguments: `<ais...>` from `$ARGUMENTS`
 
 All arguments are agent names. Reviews target current uncommitted changes and the current branch vs main.
-Allowed agent names: `claude`, `gemini`, `copilot`, `codex`, `antigravity`.
+Allowed agent names: `claude`, `copilot`, `codex`, `antigravity`.
 
 - If no agents are given, tell the user the required syntax and stop.
 - If any agent name is not in the allowed list, report the unknown name, list allowed names, and stop.
@@ -51,14 +51,6 @@ claude -p 'Run an adversarial review of the current uncommitted changes and the 
 ```
 
 Capture stdout as Claude's adversarial review.
-
-#### If `gemini` is in the agent list:
-
-```bash
-gemini -y -p 'Run an adversarial review of the current uncommitted changes and the current branch vs main. Read-only. Be skeptical: pressure-test design choices, hidden assumptions, tradeoffs, alternatives, failure modes. 1) Run `git status`, `git diff`, `git log main..HEAD`. 2) Read AGENTS.md and related ADRs. 3) Ask: right approach? Safer alternative? Edge cases? Hidden coupling? 4) Output ONLY the review: ## Adversarial Review / ### Direction Critique / ### Hidden Assumptions / ### Failure Modes / ### Alternatives Worth Considering. End with --- and *Adversarial Review by: Gemini* | *Date: <today>*. Do NOT modify any files.' 2>/dev/null
-```
-
-Capture stdout as Gemini's adversarial review.
 
 #### If `codex` is in the agent list:
 

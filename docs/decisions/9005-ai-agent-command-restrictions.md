@@ -6,7 +6,7 @@ Accepted
 
 ## Decision
 
-Implement tool-level enforcement that blocks dangerous commands (like `--force`, `--admin`, `--no-verify`) before execution via Claude Code PreToolUse hooks, Gemini CLI BeforeTool hooks, and Codex CLI approval policies.
+Implement tool-level enforcement that blocks dangerous commands (like `--force`, `--admin`, `--no-verify`) before execution via Claude Code PreToolUse hooks, Copilot/Antigravity PreToolUse hooks, and Codex CLI approval policies.
 
 ## Rationale
 
