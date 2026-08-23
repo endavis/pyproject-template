@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787482440771,
+  "lastUpdate": 1787483624558,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10148,6 +10148,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010039155073260317",
             "extra": "mean: 2.089430673097598 usec\nrounds: 49757"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8823ef4c9da7c9f7e82d5179d88dc6fb8f456623",
+          "message": "fix: remove redundant tool_input annotation in _parse_input (merges PR #703, addresses #701)\n\nThe Antigravity branch of _parse_input binds tool_input unannotated, then\nthe Copilot branch annotates it. mypy treats an annotated assignment as a\ndefinition, so the second reads as a redefinition:\n\n  block-dangerous-commands.py:833: error: Name \"tool_input\" already\n  defined on line 820  [no-redef]\n\nHoisting the annotation to function scope clears that but breaks something\nworse: declaring the name as dict narrows the Claude/Gemini branch so mypy\nproves its isinstance guard unreachable. That guard is load-bearing at\nruntime -- {\"tool_name\": \"Bash\", \"tool_input\": \"oops\"} binds a str and the\nfollowing .get() would raise AttributeError.\n\nRemove the inline annotation instead, with a comment recording why neither\nthe annotation nor a function-scope declaration belongs there.\n\nAlso adds CI-collected coverage for the Copilot and Antigravity input\nschemas, which had none. Both deny via stdout JSON with exit 0 rather than\nexit code 2, so an exit-code assertion would pass even if their parsing\nbroke entirely; the new tests assert on parsed stdout.\n\nNo behavior change.\n\nAddresses #701\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T12:13:20+01:00",
+          "tree_id": "cf9db122557fdd55a3a935b6313dbaebf678c5c9",
+          "url": "https://github.com/endavis/pyproject-template/commit/8823ef4c9da7c9f7e82d5179d88dc6fb8f456623"
+        },
+        "date": 1787483623906,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9188913.505214864,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0718586502701195e-8",
+            "extra": "mean: 108.82679431387433 nsec\nrounds: 90196"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8984733.263494622,
+            "unit": "iter/sec",
+            "range": "stddev: 1.080139366761536e-8",
+            "extra": "mean: 111.29990959921372 nsec\nrounds: 88052"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6758305.906392823,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3577818036113252e-8",
+            "extra": "mean: 147.96607520445014 nsec\nrounds: 65820"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1843992.7708738376,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4441936593566996e-7",
+            "extra": "mean: 542.3014752525936 nsec\nrounds: 63040"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501058.73751957173,
+            "unit": "iter/sec",
+            "range": "stddev: 4.548738704940676e-7",
+            "extra": "mean: 1.99577399837467 usec\nrounds: 53712"
           }
         ]
       }
