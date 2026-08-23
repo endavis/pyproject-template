@@ -199,7 +199,7 @@ For each workflow file flagged as **Modified** or **Missing**:
 
 ## Phase 8: AI Hooks
 
-AI coding assistants (Claude Code, Gemini CLI, Codex) use hooks to block dangerous commands. See [AI Command Blocking](../development/ai/command-blocking.md) for details.
+AI coding assistants (Claude Code, Copilot, Codex, Antigravity) use hooks to block dangerous commands. See [AI Command Blocking](../development/ai/command-blocking.md) for details.
 
 ### 8.1 Hook Scripts
 
@@ -210,7 +210,6 @@ AI coding assistants (Claude Code, Gemini CLI, Codex) use hooks to block dangero
 ### 8.2 AI Agent Configuration
 
 - [ ] Compare `.claude/settings.json` for Claude Code hook configuration
-- [ ] Compare `.gemini/settings.json` for Gemini CLI hook configuration
 - [ ] Compare `.codex/config.toml` for Codex CLI approval policies
 
 **Note:** If these configuration files don't exist in the downstream project, copy them from the template to enable AI safety hooks.

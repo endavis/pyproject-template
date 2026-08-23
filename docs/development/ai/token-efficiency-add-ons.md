@@ -16,7 +16,7 @@ tags:
 ## Purpose
 
 This page is an **opt-in menu** for operators of larger downstream projects who hit token-cost or
-session-length pain points. The baseline defaults (env-var settings for Claude, `chatCompression` settings for Gemini) are
+session-length pain points. The baseline defaults (env-var settings for Claude) are
 already on for everyone — see [AI Agent Setup Guide](../AI_SETUP.md).
 Add-ons here are additional investments: each has setup cost, operational burden, and in some cases
 a trust trade-off. Read the tipping-point guidance before adopting any of them.
@@ -54,7 +54,6 @@ frequently in a session, RTK compresses that cost significantly.
 | CLI | Works? |
 | :--- | :--- |
 | Claude Code | Yes |
-| Gemini CLI | Yes (shell interception is CLI-agnostic) |
 | GitHub Copilot CLI | Yes |
 | Codex CLI | Yes |
 
@@ -100,7 +99,6 @@ option and gives you the broadest reduction.
 | CLI | Works? |
 | :--- | :--- |
 | Claude Code | Yes |
-| Gemini CLI | No (Gemini API endpoint differs; not tested) |
 | GitHub Copilot CLI | No (uses GitHub's Copilot endpoint, not Anthropic) |
 | Codex CLI | No (uses OpenAI endpoint) |
 
@@ -166,7 +164,6 @@ after confirming your workload does not produce artefacts that need to meet a le
 | CLI | Works? |
 | :--- | :--- |
 | Claude Code | Yes (native plugin system) |
-| Gemini CLI | No |
 | GitHub Copilot CLI | No |
 | Codex CLI | No |
 
@@ -556,38 +553,32 @@ verbosity here works against the goal.
 ### Per-stack rule files (third mechanism)
 
 A third application of the same pattern is **small per-stack rule files** imported into
-`.claude/CLAUDE.md` via the `@import` directive (for Claude) or into `GEMINI.md` via the `@`
-directive (for Gemini). Where per-turn injection is best for style rules that must survive every
+`.claude/CLAUDE.md` via the `@import` directive. Where per-turn injection is best for style rules that must survive every
 autocompact event, per-stack rule files are best for **narrow, domain-specific self-checks** that
 only apply when the agent is doing a specific class of work (code generation, database migrations,
 API contract changes, etc.).
 
 Each rule file is skill-gated, capped at 30 lines, and built from documented observed failures —
-not from generic advice. The template ships a commented-out `@import` placeholder in
-`.claude/CLAUDE.md` (which Claude Code honors as a no-op until uncommented). For Gemini, the
-template ships **no** `@`-import in `GEMINI.md` — Gemini's Memory Import Processor doesn't honor
-HTML comments and only supports literal file paths (not globs), so consumers add a literal
-`@./.gemini/rules/<name>.md` line per rule file when they author one.
+not from generic advice. The template ships one such rule file
+(`typing-branch-narrowing`) and loads it: `.claude/CLAUDE.md` carries a live
+`@./rules/*.md` glob import.
 
-See [`.claude/rules/README.md`](../../../.claude/rules/README.md) and
-[`.gemini/rules/README.md`](../../../.gemini/rules/README.md) for the pattern, file structure, and
-a worked example.
+See [`.claude/rules/README.md`](../../../.claude/rules/README.md) for the pattern, file structure,
+and a worked example.
 
 GitHub Copilot has a native equivalent: **`.github/instructions/NAME.instructions.md`** files with
 `applyTo:` YAML frontmatter for path-based gating. No import directive is needed — Copilot
 auto-discovers all `*.instructions.md` files in `.github/instructions/`. The body format (skill
-gate, numbered self-checks, observed-failures footer, ≤30 lines) is identical to the Claude and
-Gemini variants. The key contrast with those variants is the load mechanism:
+gate, numbered self-checks, observed-failures footer, ≤30 lines) is identical to the Claude
+variant. The key contrast is the load mechanism:
 
 | CLI | Directory | Load mechanism |
 | :--- | :--- | :--- |
 | Claude Code | `.claude/rules/` | `@./rules/*.md` in `.claude/CLAUDE.md` |
-| Gemini CLI | `.gemini/rules/` | One `@./.gemini/rules/<name>.md` line per rule file in `GEMINI.md` (literal paths only) |
 | GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
 | Codex CLI | `.agents/skills/<name>/` | `description:` frontmatter is the skill-gate trigger |
 
-Claude Code and Gemini CLI cannot read `.github/instructions/` files; this format is
-Copilot-native only. See [`.github/instructions/README.md`](../../../.github/instructions/README.md)
+Claude Code cannot read `.github/instructions/` files; this format is Copilot-native only. See [`.github/instructions/README.md`](../../../.github/instructions/README.md)
 for the full pattern and a worked example.
 
 Codex CLI uses a different mechanism: the `description:` field in a skill's YAML frontmatter acts

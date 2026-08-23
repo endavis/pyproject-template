@@ -66,7 +66,7 @@ print(message)  # Output: Hello, Python!
 - **[Code of Conduct](https://github.com/endavis/pyproject-template/blob/main/.github/CODE_OF_CONDUCT.md)** - Community guidelines
 - **[Add a Feature Walkthrough](examples/add-a-feature.md)** - End-to-end example of adding a module, CLI subcommand, tests, and docs
 - **[AI First 5 Minutes](development/ai/first-5-minutes.md)** - Narrative walkthrough of the AI agent workflow (primary agent: Claude Code)
-- **[AI Agent Setup](development/AI_SETUP.md)** - Setup guide for AI coding assistants (Claude Code is the primary agent; Gemini and Codex have narrower roles)
+- **[AI Agent Setup](development/AI_SETUP.md)** - Setup guide for AI coding assistants (Claude Code is the primary agent; Copilot, Codex and Antigravity have narrower roles)
 
 ### Tooling roles
 

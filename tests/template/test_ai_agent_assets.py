@@ -29,10 +29,6 @@ def test_multi_orchestrator_files_exist() -> None:
         REPO_ROOT / ".claude" / "commands" / "multi-plan.md",
         REPO_ROOT / ".claude" / "commands" / "multi-review.md",
         REPO_ROOT / ".claude" / "commands" / "multi-adversarial-review.md",
-        # Gemini
-        REPO_ROOT / ".gemini" / "commands" / "multi-plan.toml",
-        REPO_ROOT / ".gemini" / "commands" / "multi-review.toml",
-        REPO_ROOT / ".gemini" / "commands" / "multi-adversarial-review.toml",
         # Copilot
         REPO_ROOT / ".copilot" / "commands" / "multi-plan.md",
         REPO_ROOT / ".copilot" / "commands" / "multi-review.md",
@@ -55,11 +51,6 @@ def test_self_action_grid_exists() -> None:
         REPO_ROOT / ".claude" / "commands" / "claude" / "implement.md",
         REPO_ROOT / ".claude" / "commands" / "claude" / "review.md",
         REPO_ROOT / ".claude" / "commands" / "claude" / "adversarial-review.md",
-        # Gemini self-action
-        REPO_ROOT / ".gemini" / "commands" / "gemini" / "plan.toml",
-        REPO_ROOT / ".gemini" / "commands" / "gemini" / "implement.toml",
-        REPO_ROOT / ".gemini" / "commands" / "gemini" / "review.toml",
-        REPO_ROOT / ".gemini" / "commands" / "gemini" / "adversarial-review.toml",
         # Copilot self-action (skills under .github/skills/ — see docstring in
         # tests/test_delegation_matrix.py::_expected_path for why .github/ vs .claude/)
         REPO_ROOT / ".github" / "skills" / "copilot-plan" / "SKILL.md",
@@ -83,8 +74,6 @@ def test_retired_self_action_aliases_are_removed() -> None:
         REPO_ROOT / ".claude" / "commands" / "ghissue-plan.md",
         REPO_ROOT / ".claude" / "commands" / "ghissue-implement.md",
         REPO_ROOT / ".claude" / "commands" / "ghissue-close.md",
-        REPO_ROOT / ".gemini" / "commands" / "ghissue-plan.toml",
-        REPO_ROOT / ".gemini" / "commands" / "ghissue-implement.toml",
         REPO_ROOT / ".agents" / "skills" / "ghissue-plan" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "ghissue-implement" / "SKILL.md",
     ]
@@ -98,9 +87,6 @@ def test_retired_dual_agent_files_are_removed() -> None:
     removed = [
         REPO_ROOT / ".claude" / "commands" / "ghissue-plan-both.md",
         REPO_ROOT / ".claude" / "commands" / "ghissue-review-both.md",
-        REPO_ROOT / ".claude" / "commands" / "ghissue-gemini-review.md",
-        REPO_ROOT / ".gemini" / "commands" / "ghissue-plan-stdout.toml",
-        REPO_ROOT / ".gemini" / "commands" / "ghissue-review-pr.toml",
     ]
 
     for path in removed:
@@ -112,7 +98,6 @@ def test_retired_workflow_step_aliases_are_removed() -> None:
     removed = [
         REPO_ROOT / ".claude" / "commands" / "ghissue-finalize.md",
         REPO_ROOT / ".claude" / "commands" / "ghissue-status.md",
-        REPO_ROOT / ".gemini" / "commands" / "ghissue-finalize.toml",
         REPO_ROOT / ".agents" / "skills" / "ghissue-finalize" / "SKILL.md",
     ]
 
@@ -257,25 +242,6 @@ def test_stdout_contract_wirings_route_through_the_launcher() -> None:
     assert launcher.exists(), f"Missing launcher: {launcher}"
 
 
-def test_gemini_disabled_list_contains_antigravity_skills() -> None:
-    """Gemini reads .agents/skills/; antigravity-* skills must be disabled to avoid bleed."""
-    settings_path = REPO_ROOT / ".gemini" / "settings.json"
-    settings = json.loads(settings_path.read_text(encoding="utf-8"))
-    disabled = set(settings["skills"]["disabled"])
-
-    expected = {
-        "antigravity-plan",
-        "antigravity-implement",
-        "antigravity-review",
-        "antigravity-adversarial-review",
-    }
-    missing = expected - disabled
-    assert not missing, (
-        f"the following antigravity skills must be added to "
-        f".gemini/settings.json skills.disabled: {sorted(missing)}"
-    )
-
-
 def test_docs_document_antigravity_agent() -> None:
     """AI setup and command-blocking docs should register Antigravity as a supported agent."""
     ai_setup = (REPO_ROOT / "docs" / "development" / "AI_SETUP.md").read_text(encoding="utf-8")
@@ -290,15 +256,14 @@ def test_docs_document_antigravity_agent() -> None:
 
 
 def test_multi_orchestrators_recognize_antigravity() -> None:
-    """All 12 multi-* orchestrator files list antigravity and include an agy invocation block."""
+    """All 9 multi-* orchestrator files list antigravity and include an agy invocation block."""
     actions = ("plan", "review", "adversarial-review")
     multi_files = (
         [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
         + [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
-        + [REPO_ROOT / ".gemini" / "commands" / f"multi-{a}.toml" for a in actions]
         + [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
     )
-    assert len(multi_files) == 12
+    assert len(multi_files) == 9
     for f in multi_files:
         content = f.read_text(encoding="utf-8")
         assert "`antigravity`" in content, f"{f} does not list antigravity as an allowed agent"

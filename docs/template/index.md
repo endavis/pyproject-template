@@ -83,4 +83,4 @@ When you use this template, you get:
 - **CI/CD** with GitHub Actions (test, release to PyPI)
 - **Documentation** with MkDocs and Material theme
 - **Pre-commit hooks** enforcing code quality and conventional commits
-- **AI agent support** with pre-configured settings for Claude, Codex, and Gemini
+- **AI agent support** with pre-configured settings for Claude, Copilot, Codex, and Antigravity

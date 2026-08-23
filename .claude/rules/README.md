@@ -70,18 +70,17 @@ tolerates a glob matching nothing, but leaving it invites a future file to load 
 ## Mirroring across agent surfaces
 
 Every agent in the delegation matrix edits this codebase, so a rule that only Claude loads is a
-half-installed control. `typing-branch-narrowing` is mirrored to all four surfaces, each with its
+half-installed control. `typing-branch-narrowing` is mirrored to all three surfaces, each with its
 own format and loading mechanism:
 
 | Surface | Path | Loading |
 | :--- | :--- | :--- |
 | Claude | `.claude/rules/*.md` | glob import in `.claude/CLAUDE.md` |
-| Gemini | `.gemini/rules/*.md` | **explicit per-file** `@`-import in `GEMINI.md` — globs are not supported |
 | Copilot | `.github/instructions/*.instructions.md` | auto-discovered; requires `applyTo:` frontmatter |
 | Codex / Antigravity | `.agents/skills/<name>/SKILL.md` | `description:` frontmatter is the skill gate |
 
-The checklist body is identical in all four; only the frontmatter and loading differ. **When you
-change one, change all four** — a rule that disagrees with itself across agents is worse than no
+The checklist body is identical in all three; only the frontmatter and loading differ. **When you
+change one, change all three** — a rule that disagrees with itself across agents is worse than no
 rule, because whichever agent is driving determines which version applies.
 `tests/template/test_rule_files.py` enforces that the four bodies stay byte-identical.
 

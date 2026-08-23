@@ -31,7 +31,7 @@ Use this checklist for a manual migration. The flow assumes hatch-vcs for versio
 - **Copy Files:** Copy template files into your repo:
     - **Config:** `pyproject.toml`, `dodo.py`, `.envrc`, `.pre-commit-config.yaml`, `.python-version`, `mkdocs.yml`.
     - **Docs & Guides:** `AGENTS.md`, `AI_SETUP.md`, `docs/*`, `examples/*`, `CHANGELOG.md`.
-    - **Hidden Configs:** `.github/workflows/*`, `.vscode/`, `.devcontainer/`, `.claude/`, `.codex/`, `.gemini/`, `tmp/.gitkeep`.
+    - **Hidden Configs:** `.github/workflows/*`, `.vscode/`, `.devcontainer/`, `.claude/`, `.codex/`, `.copilot/`, `.agents/`, `tmp/.gitkeep`.
 - **Keep your code:** You’ll move it in step 4.
 
 ### 3) Run the Template Manager

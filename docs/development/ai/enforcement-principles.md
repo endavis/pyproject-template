@@ -117,22 +117,25 @@ Settings-based enforcement in agent config files:
 - Works across AI tools that support the setting format
 - Requires no custom code
 
-**Example**: Gemini CLI allowed tools list (`.gemini/settings.json`):
+**Example**: Codex CLI approval policy (`.codex/config.toml`):
 
-```json
-{
-  "tools": {
-    "allowed": [
-      "run_shell_command(git)",
-      "run_shell_command(gh)",
-      "run_shell_command(uv)",
-      "run_shell_command(doit)"
-    ]
-  }
-}
+```toml
+approval_policy = "untrusted"
+
+[shell_environment_policy]
+inherit = "core"
+include_only = [
+    "PATH",
+    "HOME",
+    "USER",
+    "UV_CACHE_DIR",
+    "VIRTUAL_ENV",
+    "PYTHONPATH",
+]
 ```
 
-This implicitly blocks any command not in the allowlist.
+`approval_policy` gates untrusted commands, and `include_only` implicitly withholds any
+environment variable not on the list — including secrets the agent has no reason to read.
 
 ### 5. Agent-Specific Configuration (Last Resort)
 
@@ -164,24 +167,24 @@ reason = "BLOCKED: Use 'doit pr' instead of 'gh pr create'. See AGENTS.md."
 
 > **Note**: GitHub settings require repository admin access to configure. See Settings → Rules → Rulesets.
 
-### By AI Agent Enforcement (Claude, Gemini, Copilot, Codex, Antigravity)
+### By AI Agent Enforcement (Claude, Copilot, Codex, Antigravity)
 
-These patterns are blocked across all AI agents. Claude, Gemini, and Copilot all use the shared hook at `tools/hooks/ai/block-dangerous-commands.py` (wired via `.claude/settings.json`, `.gemini/settings.json`, and `.github/hooks/copilot-hooks.json` respectively). Codex uses the shared hook through `.codex/config.toml`, and the approval policies in that same file remain a secondary defense layer. Antigravity uses the shared hook through `.agents/hooks.json`, blocking via a stdout `{"decision":"deny"}` contract that holds even under `--dangerously-skip-permissions`.
+These patterns are blocked across all AI agents. Claude and Copilot both use the shared hook at `tools/hooks/ai/block-dangerous-commands.py` (wired via `.claude/settings.json` and `.github/hooks/copilot-hooks.json` respectively). Codex uses the shared hook through `.codex/config.toml`, and the approval policies in that same file remain a secondary defense layer. Antigravity uses the shared hook through `.agents/hooks.json`, blocking via a stdout `{"decision":"deny"}` contract that holds even under `--dangerously-skip-permissions`.
 
-| Pattern | Command | Claude | Gemini | Copilot | Codex | Antigravity |
-|---------|---------|--------|--------|---------|-------|-------------|
-| `--admin` flag | `gh pr merge --admin` | Hook | Hook | Hook | Hook + Config | Hook |
-| `--no-verify` flag | `git commit --no-verify`, `git push --no-verify` | Hook | Hook | Hook | Hook + Config | Hook |
-| `--hard` flag | `git reset --hard` | Hook | Hook | Hook | Hook + Config | Hook |
-| `rm -rf /` or `rm -rf ~` | Any shell | Hook | Hook | Hook | Hook + Config | Hook |
-| `sudo rm` | Any shell | Hook | Hook | Hook | Hook + Config | Hook |
-| Force push to protected branch | `git push --force origin main` | Hook | Hook | Hook | Hook + Config | Hook |
-| Delete protected branch | `git push origin --delete main`, `git branch -D main` | Hook | Hook | Hook | Hook | Hook |
-| Merge commit on protected branch | `git merge` (without `--ff-only`) on `main` | Hook | Hook | Hook | Hook | Hook |
-| `gh pr create` | Use `doit pr` instead | Hook | Hook | Hook | Hook + Config | Hook |
-| `gh issue create` | Use `doit issue` instead | Hook | Hook | Hook | Hook + Config | Hook |
-| `uv add` | User runs manually | Hook | Hook | Hook | Hook + Config | Hook |
-| `doit release*` | User runs manually | Hook | Hook | Hook | Hook + Config | Hook |
+| Pattern | Command | Claude | Copilot | Codex | Antigravity |
+|---------|---------|--------|---------|-------|-------------|
+| `--admin` flag | `gh pr merge --admin` | Hook | Hook | Hook + Config | Hook |
+| `--no-verify` flag | `git commit --no-verify`, `git push --no-verify` | Hook | Hook | Hook + Config | Hook |
+| `--hard` flag | `git reset --hard` | Hook | Hook | Hook + Config | Hook |
+| `rm -rf /` or `rm -rf ~` | Any shell | Hook | Hook | Hook + Config | Hook |
+| `sudo rm` | Any shell | Hook | Hook | Hook + Config | Hook |
+| Force push to protected branch | `git push --force origin main` | Hook | Hook | Hook + Config | Hook |
+| Delete protected branch | `git push origin --delete main`, `git branch -D main` | Hook | Hook | Hook | Hook |
+| Merge commit on protected branch | `git merge` (without `--ff-only`) on `main` | Hook | Hook | Hook | Hook |
+| `gh pr create` | Use `doit pr` instead | Hook | Hook | Hook + Config | Hook |
+| `gh issue create` | Use `doit issue` instead | Hook | Hook | Hook + Config | Hook |
+| `uv add` | User runs manually | Hook | Hook | Hook + Config | Hook |
+| `doit release*` | User runs manually | Hook | Hook | Hook + Config | Hook |
 
 > **Note**: "Hook" = `block-dangerous-commands.py` through each agent's hook wiring. For Codex, "Config" refers to the additional approval-policy rules in `.codex/config.toml`.
 
@@ -216,7 +219,6 @@ These patterns are blocked across all AI agents. Claude, Gemini, and Copilot all
 
 | Rule | Setting | Agent |
 |------|---------|-------|
-| Allowed shell commands only | `.gemini/settings.json` tools.allowed | Gemini |
 | Deny dangerous patterns | `.codex/config.toml` approval_policy | Codex |
 | Block dangerous env vars | `.codex/config.toml` shell_env_policy | Codex |
 

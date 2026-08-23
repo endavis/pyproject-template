@@ -9,12 +9,12 @@ Run multiple AI agents in parallel to create independent implementation plans fo
 Arguments: `<ais...> [issue#]` from `$ARGUMENTS`
 
 The last argument is the issue number if it is an integer. Everything before it is the agent list.
-Allowed agent names: `claude`, `gemini`, `copilot`, `codex`, `antigravity`.
+Allowed agent names: `claude`, `copilot`, `codex`, `antigravity`.
 
 - If the issue number is missing, tell the user the required syntax and stop.
 - If any agent name is not in the allowed list, report the unknown name, list allowed names, and stop.
 
-Example: `/multi-plan claude gemini 42` → agents: [claude, gemini], issue: 42
+Example: `/multi-plan claude codex 42` → agents: [claude, codex], issue: 42
 
 ### Step 1: Validate the issue
 
@@ -63,14 +63,6 @@ claude -p 'Read AGENTS.md and .claude/CLAUDE.md for project standards. Fetch iss
 ```
 
 Capture stdout as Claude's plan.
-
-#### If `gemini` is in the agent list:
-
-```bash
-gemini -y -p 'Plan the implementation for GitHub issue #<issue> in the current repository. If the /gemini:plan command is available, run it for this issue. Otherwise: 1) Run `gh issue view <issue> --json title,body,labels` to read the issue. 2) Read AGENTS.md. 3) Explore relevant files. 4) Draft a plan: ## Implementation Plan for #<number>: <title> / ### Overview / ### Files to Create/Modify / ### Test Plan / ### Documentation / ### Validation / ### Risks and Considerations. End with --- and *Plan by: Gemini* | *Date: <today>*. 5) Print ONLY the plan markdown to stdout. Do NOT post to GitHub.' 2>/dev/null
-```
-
-Capture stdout as Gemini's plan.
 
 #### If `codex` is in the agent list:
 

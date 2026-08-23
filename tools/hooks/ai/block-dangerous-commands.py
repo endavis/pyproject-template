@@ -878,7 +878,13 @@ def _log(entry: dict) -> None:
         pass  # Never fail due to logging
 
 
-# Claude: Bash · Gemini: run_shell_command · Codex/Copilot: bash · Antigravity: run_command
+# Claude: Bash · Codex/Copilot: bash · Antigravity: run_command
+#
+# ``run_shell_command`` (and ``write_file``/``replace`` below) are Gemini CLI's
+# tool names. This template no longer ships a Gemini integration, but the names
+# are kept on purpose: a downstream project with enterprise Gemini access can
+# still point that CLI at this hook, and matching an extra name costs nothing
+# while failing to match one would silently remove protection.
 _BASH_TOOL_NAMES = frozenset({"Bash", "run_shell_command", "bash", "run_command"})
 
 # File-edit tool names across all supported AI CLIs

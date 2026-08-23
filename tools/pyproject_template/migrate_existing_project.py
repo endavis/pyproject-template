@@ -64,7 +64,6 @@ TEMPLATE_REL_PATHS: tuple[str, ...] = (
     ".vscode",
     ".claude",
     ".codex",
-    ".gemini",
     ".copilot",
     ".agents",
     "tools",

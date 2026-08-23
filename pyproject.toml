@@ -135,7 +135,7 @@ no_implicit_optional = true
 strict_equality = true
 warn_redundant_casts = true
 warn_unreachable = true
-exclude = [".claude/", ".gemini/", ".codex/"]
+exclude = [".claude/", ".codex/"]
 
 [[tool.mypy.overrides]]
 module = "doit.*"
@@ -222,7 +222,6 @@ exclude_dirs = [
     ".ruff_cache",
     "site",
     ".claude",
-    ".gemini",
     ".codex",
     ".devcontainer",
     ".vscode",

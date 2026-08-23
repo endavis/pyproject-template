@@ -1,6 +1,6 @@
 """Contract tests for per-stack rule files.
 
-Rule files are mirrored across all four agent rule surfaces because every agent
+Rule files are mirrored across all three agent rule surfaces because every agent
 in the delegation matrix edits this codebase. The checklist body must stay
 identical everywhere: a rule that disagrees with itself across agents is worse
 than no rule, because whichever agent is driving decides which version applies.
@@ -25,7 +25,6 @@ RULE_NAME = "typing-branch-narrowing"
 # Every surface that must carry the rule, and how each one is loaded.
 RULE_PATHS = {
     "claude": REPO_ROOT / ".claude" / "rules" / f"{RULE_NAME}.md",
-    "gemini": REPO_ROOT / ".gemini" / "rules" / f"{RULE_NAME}.md",
     "copilot": REPO_ROOT / ".github" / "instructions" / f"{RULE_NAME}.instructions.md",
     "agents": REPO_ROOT / ".agents" / "skills" / RULE_NAME / "SKILL.md",
 }
@@ -49,7 +48,7 @@ def _body(path: Path) -> str:
 
 @pytest.mark.parametrize("surface", sorted(RULE_PATHS))
 def test_rule_exists_on_every_surface(surface: str) -> None:
-    """The rule is present for all four agent families."""
+    """The rule is present for all three agent families."""
     assert RULE_PATHS[surface].exists(), f"missing {surface} copy: {RULE_PATHS[surface]}"
 
 
@@ -58,7 +57,7 @@ def test_rule_bodies_are_identical_across_surfaces() -> None:
     bodies = {name: _body(path) for name, path in RULE_PATHS.items()}
     reference = bodies["claude"]
     mismatched = [name for name, body in bodies.items() if body != reference]
-    assert not mismatched, f"rule body differs on {mismatched}; update all four surfaces together"
+    assert not mismatched, f"rule body differs on {mismatched}; update all three surfaces together"
 
 
 @pytest.mark.parametrize("surface", sorted(RULE_PATHS))
@@ -108,13 +107,3 @@ def test_claude_loads_rule_files() -> None:
     assert re.search(r"^@\./rules/\*\.md\s*$", text, re.MULTILINE), (
         "CLAUDE.md must import ./rules/*.md (uncommented)"
     )
-
-
-def test_gemini_imports_each_rule_file_explicitly() -> None:
-    """Gemini CLI does not support glob imports — each file needs its own line.
-
-    A glob here makes Gemini log an ImportProcessor ENOENT error on every run.
-    """
-    text = (REPO_ROOT / "GEMINI.md").read_text(encoding="utf-8")
-    assert f"@./.gemini/rules/{RULE_NAME}.md" in text
-    assert "@./.gemini/rules/*.md" not in text, "Gemini cannot glob-import rule files"

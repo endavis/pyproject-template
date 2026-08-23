@@ -9,7 +9,7 @@ Run a steerable adversarial review using GitHub Copilot — pressure-tests desig
 
 ## When to use
 
-Use this skill when the user wants Copilot to challenge the current changes. This is Copilot's self-action equivalent of `/claude:adversarial-review` / `/gemini:adversarial-review` / `$codex-adversarial-review`.
+Use this skill when the user wants Copilot to challenge the current changes. This is Copilot's self-action equivalent of `/claude:adversarial-review` / `$codex-adversarial-review`.
 
 Optional focus area can be given as a freeform argument.
 

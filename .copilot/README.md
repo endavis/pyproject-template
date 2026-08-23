@@ -1,6 +1,6 @@
 # Copilot CLI Configuration
 
-This directory is the GitHub Copilot CLI configuration directory for this repository, parallel to `.claude/`, `.gemini/`, and `.codex/`.
+This directory is the GitHub Copilot CLI configuration directory for this repository, parallel to `.claude/`, `.codex/`, and `.agents/`.
 
 **Important:** Copilot CLI does **not** read any `commands/` directory. Per the installed `@github/copilot` SDK (`sdk/index.d.ts`), Copilot only discovers project skills from `skills/` paths: `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (plus the corresponding personal paths under `~/`). Repo-local `.copilot/commands/<name>.md` files are never loaded.
 
@@ -11,7 +11,6 @@ All Copilot-host workflow skills (self-action and cross-agent bridges, 20 total)
 - **Self-action:** `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
 - **To Claude:** `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
 - **To Codex:** `/codex-plan`, `/codex-implement`, `/codex-review`, `/codex-adversarial-review`
-- **To Gemini:** `/gemini-plan`, `/gemini-implement`, `/gemini-review`, `/gemini-adversarial-review`
 - **To Antigravity:** `/antigravity-plan`, `/antigravity-implement`, `/antigravity-review`, `/antigravity-adversarial-review`
 
 The `multi-*` orchestrators (`/multi-plan`, `/multi-review`, `/multi-adversarial-review`) and `/ghi-finalize` / `/ghi-status` come from `.agents/skills/` (interoperable Codex skill path) and are auto-discovered by Copilot.
@@ -46,8 +45,8 @@ it to a specific path scope, followed by a skill-gated, numbered self-check body
 an `Observed failures:` footer.
 
 This is the Copilot equivalent of `.claude/rules/` (loaded via `@import` in `.claude/CLAUDE.md`)
-and `.gemini/rules/` (loaded via `@` directive in `GEMINI.md`). The discipline — build from
-observed failures, not generic advice — is shared across all three CLIs.
+and `.agents/skills/` rule-shaped skills (gated by `description:` frontmatter). The discipline —
+build from observed failures, not generic advice — is shared across all the CLIs.
 
 See [`.github/instructions/README.md`](../.github/instructions/README.md) for the full pattern,
 file structure, and a worked example.

@@ -12,7 +12,7 @@ tags:
 
 # AI CLI Hooks
 
-The `tools/hooks/ai/` directory contains hooks for AI coding assistants (Claude Code, Gemini CLI, Copilot CLI, Codex CLI, Antigravity CLI).
+The `tools/hooks/ai/` directory contains hooks for AI coding assistants (Claude Code, Copilot CLI, Codex CLI, Antigravity CLI).
 
 ## Block Dangerous Commands
 
@@ -41,7 +41,7 @@ The hook uses Python's `shlex` module to properly parse shell quoting:
 5. **Check** for deletion of protected branches — also handles git global options
 6. **Check** for merge commits on protected branches (linear history)
 7. **Recurse** into shell-wrapper payloads (`bash -c "..."`, `sh -c "..."`, `eval "..."`) — up to depth 3, so all checks above apply inside wrappers
-8. **Block** or **Allow** — Claude/Gemini/Codex block via exit code 2; Copilot and Antigravity block via a stdout decision JSON (exit code 0)
+8. **Block** or **Allow** — Claude/Codex block via exit code 2; Copilot and Antigravity block via a stdout decision JSON (exit code 0)
 
 #### Key Feature: Chained Command Detection
 
@@ -124,7 +124,7 @@ EOF
 
 | File | Description |
 |------|-------------|
-| [`block-dangerous-commands.py`](../../../tools/hooks/ai/block-dangerous-commands.py) | The hook script (shared by Claude, Gemini, Copilot, Codex, and Antigravity) |
+| [`block-dangerous-commands.py`](../../../tools/hooks/ai/block-dangerous-commands.py) | The hook script (shared by Claude, Copilot, Codex, and Antigravity) |
 | [`block-dangerous-commands.sh`](../../../tools/hooks/ai/block-dangerous-commands.sh) | Fail-closed launcher used by the stdout-contract CLIs (Copilot, Antigravity) |
 | [`tests/test_hook_dangerous_command_matrix.py`](../../../tests/test_hook_dangerous_command_matrix.py) | The block/allow matrix — 134 cases plus subprocess smoke tests |
 | [`tests/test_hook_block_dangerous_commands.py`](../../../tests/test_hook_block_dangerous_commands.py) | Pytest test suite — collected by CI via `testpaths = ["tests"]` |
@@ -160,38 +160,6 @@ EOF
   }
 }
 ```
-
-#### Gemini CLI
-
-`.gemini/settings.json`:
-```json
-{
-  "hooks": {
-    "BeforeTool": [
-      {
-        "matcher": "run_shell_command",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 $GEMINI_PROJECT_DIR/tools/hooks/ai/block-dangerous-commands.py"
-          }
-        ]
-      },
-      {
-        "matcher": "write_file|replace",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 $GEMINI_PROJECT_DIR/tools/hooks/ai/block-dangerous-commands.py"
-          }
-        ]
-      }
-    ]
-  }
-}
-```
-
-Gemini's file-write tools are `write_file` (full-file overwrite, `content` param) and `replace` (string replacement, `old_string`/`new_string` params). Both use `file_path`.
 
 #### Copilot CLI
 
@@ -270,7 +238,7 @@ Antigravity sends a distinct hook payload — a nested `toolCall` with PascalCas
 `write_to_file` (`TargetFile` / `CodeContent`). The hook normalizes these to the canonical
 `command` / `file_path` / `content` keys.
 
-Unlike Claude/Gemini/Codex (which block via exit code 2), `agy` blocks only when the hook prints
+Unlike Claude/Codex (which block via exit code 2), `agy` blocks only when the hook prints
 `{"decision": "deny", "reason": "..."}` on **stdout** (exit code 0); a safe command prints nothing
 and defers to `agy`'s normal permission flow. A `deny` decision hard-blocks even under
 `--dangerously-skip-permissions`.
@@ -310,7 +278,7 @@ The hook uses two deny contracts, and they diverge on *failure*:
 
 | Agents | Deny contract | If the hook produces nothing |
 | :--- | :--- | :--- |
-| Claude, Gemini, Codex | exit code 2 + stderr | Blocked — a failed `python3` also exits non-zero |
+| Claude, Codex | exit code 2 + stderr | Blocked — a failed `python3` also exits non-zero |
 | Copilot, Antigravity | stdout JSON, exit 0 | **Allowed** — "no payload" means "no objection" |
 
 So for the stdout-contract CLIs, anything that stops the hook from printing its payload silently
@@ -332,8 +300,8 @@ file". Branching on exit status would append a second deny payload after the hoo
 two JSON objects on stdout.
 
 Verified against the real CLIs — `agy`, `copilot`, and Claude Code all block on the combined
-payload, and both stdout-contract CLIs tolerate the extra key and the non-zero exit. Gemini and
-Codex share Claude's exit-2 contract.
+payload, and both stdout-contract CLIs tolerate the extra key and the non-zero exit. Codex
+shares Claude's exit-2 contract.
 
 **Known gap:** a syntax error in the hook script, or a hook timeout, still yields no payload and no
 launcher precondition failure. Covering that would require the hook to emit something on every
@@ -424,7 +392,7 @@ A human can grant an AI agent a one-session pass to apply the `ready-to-merge` l
 
 ```bash
 export ALLOW_AI_READY_TO_MERGE=1
-claude  # or gemini, copilot, codex
+claude  # or copilot, codex, agy
 ```
 
 The hook reads `os.environ` at hook-startup time (the AI CLI's process environment), so the variable must be set in the shell that launches the AI process — not by any command the AI itself runs. The AI has no path to set or persist this variable; attempts to do so are blocked (see [Env-Var Persistence Blocks](#env-var-persistence-blocks) below).
@@ -442,7 +410,7 @@ The hook reads `os.environ` at hook-startup time (the AI CLI's process environme
 
 #### Env-Var Persistence Blocks
 
-The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write_file**/**replace** (Gemini), and **write_to_file** (Antigravity) in addition to Bash commands. Any operation whose payload contains the literal string `ALLOW_AI_READY_TO_MERGE` **and** whose target is a known persistence file is blocked.
+The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write_file**/**replace** (retained for Gemini compatibility), and **write_to_file** (Antigravity) in addition to Bash commands. Any operation whose payload contains the literal string `ALLOW_AI_READY_TO_MERGE` **and** whose target is a known persistence file is blocked.
 
 **Protected file basenames** (Bash redirect target or `file_path` argument):
 
@@ -451,7 +419,7 @@ The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write
 | `.bashrc`, `.zshrc`, `.profile`, `.bash_profile`, `.bash_login`, `.zshenv` | Shell init files |
 | `config.fish` | Only when parent path contains `.config/fish` |
 | `.envrc`, `.env`, `.env.local`, `.env.development`, `.env.production` | Project env files |
-| `settings.json`, `settings.local.json` | Only when parent dir is `.claude`, `.gemini`, or `.copilot` |
+| `settings.json`, `settings.local.json` | Only when parent dir is `.claude` or `.copilot` |
 | `config.toml` | Only when parent dir is `.codex` |
 | `copilot-hooks.json` | Any path (Copilot's env-injection vector) |
 
