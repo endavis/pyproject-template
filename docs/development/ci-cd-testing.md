@@ -231,10 +231,53 @@ docs:
 
 ### Coverage Requirements
 
-- **Recommended threshold**: ≥70%
-- **Configuration**: Set in `pyproject.toml` and pytest command
+- **Enforced threshold**: `fail_under = 54` in `pyproject.toml`
+- **Measured scope**: `package_name` **and** `tools/`
 - **Artifacts**: Upload HTML coverage reports for review
 - **Integration**: Use Codecov or similar service for tracking
+
+#### What the gate measures, and why
+
+The gate covers `tools/` as well as the package. `src/package_name/` is the skeleton every
+downstream project deletes and replaces; `tools/` is the code that runs releases, creates PRs and
+blocks dangerous commands. Gating only the package produced a healthy-looking number over ~66
+statements while several thousand statements of tooling went unmeasured.
+
+The threshold is deliberately set to what the codebase actually achieves rather than to an
+aspirational number pointed at the wrong target. **Ratchet it upward** as tooling coverage
+improves; treat lowering it as a change that needs justification in the PR.
+
+The manual harness `tools/hooks/ai/test_hook.py` is omitted — it is run directly rather than
+collected by pytest.
+
+#### Template vs downstream
+
+`cleanup --setup` / `--all` deletes `tools/pyproject_template/`, so a downstream project measures
+a smaller set than this repository does:
+
+| Shape | Statements | Coverage | Gate at 54 |
+| :--- | ---: | ---: | :--- |
+| Template (this repo) | 5,102 | 55.05% | passes |
+| Downstream, after `cleanup` | 2,748 | 56.92% | passes |
+
+<!-- The downstream row is measured by excluding `tools/pyproject_template/` from the report,
+     which yields the same denominator `cleanup` produces by deleting it. -->
+
+#### Keep coverage hermetic
+
+These figures are reproducible on any machine. They were not always: tests reached
+`setup_repo._check_token_permissions()` through the *real* `gh auth status`, so the branch that
+runs depended on the developer's GitHub auth state — a machine holding a fine-grained PAT
+measured 34 more covered statements than CI did, a 0.54pp swing.
+
+When a test reaches an interactive or shell-dependent function only incidentally, the gate stops
+being reproducible and a tight threshold becomes unreliable. Mock the subprocess or the input and
+cover the branches deliberately.
+
+Shedding `tools/pyproject_template/` *raises* the measured percentage, so a consumer inherits a
+gate that already passes — one threshold holds in both shapes and `cleanup` needs no
+coverage-specific rewrite. A downstream project that wants a stricter gate over its own code can
+narrow `source` back to its package and raise `fail_under`.
 
 **Example pytest configuration in `pyproject.toml`:**
 ```toml

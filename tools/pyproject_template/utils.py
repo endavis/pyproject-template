@@ -61,6 +61,7 @@ FILES_TO_UPDATE: tuple[str, ...] = (
     ".claude/lsp-setup.md",
     ".envrc",
     ".pre-commit-config.yaml",
+    ".vscode/launch.json",
 )
 
 

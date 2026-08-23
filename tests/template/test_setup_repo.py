@@ -635,3 +635,83 @@ class TestConfigurePlaceholdersTemplateTestsRemoval:
 
         assert (tmp_path / "tests").exists()
         assert not (tmp_path / "tests" / "template").exists()
+
+
+class TestCheckTokenPermissions:
+    """Hermetic tests for ``_check_token_permissions``.
+
+    These exist because the branch was previously reached only incidentally,
+    through a test that shells out to the *real* ``gh auth status``. That made
+    coverage depend on the developer's GitHub auth state: on a machine holding
+    a PAT the warning branch ran, on CI it did not, and the reported percentage
+    differed by 34 statements between the two. Mocking the subprocess pins the
+    behaviour so both branches are exercised everywhere.
+    """
+
+    def test_warns_when_token_is_a_fine_grained_pat(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """A ``github_pat_`` token prints the required-permissions guidance."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with (
+            patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run,
+            patch("tools.pyproject_template.setup_repo.prompt_confirm", return_value=True),
+        ):
+            mock_run.return_value = MagicMock(stderr="Token: github_pat_xxx", stdout="")
+            setup._check_token_permissions()
+
+        out = capsys.readouterr().out
+        assert "Personal Access Token" in out
+        assert "Administration: Read and write" in out
+
+    def test_warns_when_token_is_an_oauth_token(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """A ``gho_`` token takes the same branch — the check ORs both markers."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with (
+            patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run,
+            patch("tools.pyproject_template.setup_repo.prompt_confirm", return_value=True),
+        ):
+            mock_run.return_value = MagicMock(stderr="", stdout="Token: gho_xxx")
+            setup._check_token_permissions()
+
+        assert "Personal Access Token" in capsys.readouterr().out
+
+    def test_exits_when_permissions_are_not_confirmed(self) -> None:
+        """Declining the confirmation aborts setup rather than continuing."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with (
+            patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run,
+            patch("tools.pyproject_template.setup_repo.prompt_confirm", return_value=False),
+            pytest.raises(SystemExit) as exc_info,
+        ):
+            mock_run.return_value = MagicMock(stderr="github_pat_xxx", stdout="")
+            setup._check_token_permissions()
+
+        assert exc_info.value.code == 1
+
+    def test_accepts_an_unrecognised_token_without_prompting(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Output carrying neither marker is reported as OAuth and never prompts."""
+        from tools.pyproject_template.setup_repo import RepositorySetup
+
+        setup = RepositorySetup()
+
+        with (
+            patch("tools.pyproject_template.setup_repo.subprocess.run") as mock_run,
+            patch("tools.pyproject_template.setup_repo.prompt_confirm") as mock_confirm,
+        ):
+            mock_run.return_value = MagicMock(stderr="Logged in to github.com", stdout="")
+            setup._check_token_permissions()
+
+        mock_confirm.assert_not_called()
+        assert "OAuth" in capsys.readouterr().out

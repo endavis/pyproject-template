@@ -19,7 +19,7 @@ def task_coverage() -> dict[str, Any]:
     return {
         "actions": [
             "uv run pytest "
-            "--cov=package_name --cov-report=term-missing "
+            "--cov --cov-report=term-missing "
             "--cov-report=html:tmp/htmlcov --cov-report=xml:tmp/coverage.xml -v"
         ],
         "title": title_with_actions,
