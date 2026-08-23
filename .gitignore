@@ -55,6 +55,13 @@ dmypy.json
 .direnv/
 .envrc.local
 
+# Per-user local state. `.claude/settings.local.json` was previously covered
+# only by the maintainer's global ignore file, so a fresh clone by anyone else
+# showed it as untracked. `.local/` is where `gh` writes its state dir when
+# HOME is unset (see tests/test_statusline_agy.py).
+.claude/settings.local.json
+.local/
+
 # Environment variables
 .env
 .env.*
