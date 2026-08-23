@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787505388678,
+  "lastUpdate": 1787507789427,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10738,6 +10738,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.170748033607143e-7",
             "extra": "mean: 1.5474360126988311 usec\nrounds: 66521"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "70677d57a7d301f5056a2125b8f72d9f6f8e5274",
+          "message": "docs: add the missing pages to the mkdocs nav and guard against recurrence (merges PR #717, addresses #688)\n\nSeven pages existed under docs/ but were absent from nav:, so they were\nbuilt into the site and unreachable from it. Five document live, non-obvious\nfeatures -- cross-agent delegation, the checkpoint and ruff-fix hooks, the\nstatusline scripts, dependabot auto-merge -- that a reader had no way to\ndiscover. AGENTS.md links several directly, so they were current, just\nunreachable.\n\nAdd them by topic rather than by appending: the hook pages sit with Command\nBlocking, which is also a hook, and delegation sits with Slash Commands.\nList ADR-9017 alongside the other ADRs.\n\nExclude decisions/adr-template.md deliberately via not_in_nav. It is a\nscaffold with placeholder text and intentionally unresolvable links, and\n`doit adr` is how an ADR is actually created -- so it is excluded on purpose\nrather than left to drift out of the nav unnoticed.\n\nSet validation.nav.omitted_files: warn. With --strict from #687 the next\nomission fails the docs job instead of scrolling past as INFO, which is how\nseven pages accumulated. Verified: adding a page outside the nav exits 1.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T18:56:01+01:00",
+          "tree_id": "629c31e429a7153ce316c0a133fe11bf95f3e43a",
+          "url": "https://github.com/endavis/pyproject-template/commit/70677d57a7d301f5056a2125b8f72d9f6f8e5274"
+        },
+        "date": 1787507787439,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8357510.855818454,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4070678478752527e-8",
+            "extra": "mean: 119.65285086094806 nsec\nrounds: 83459"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9189058.742394088,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0491966470452288e-8",
+            "extra": "mean: 108.82507425776485 nsec\nrounds: 93188"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5935520.6474971585,
+            "unit": "iter/sec",
+            "range": "stddev: 1.423125468305832e-8",
+            "extra": "mean: 168.4772169770266 nsec\nrounds: 60057"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1733185.8874882208,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8211296904569743e-7",
+            "extra": "mean: 576.9721570080557 nsec\nrounds: 65151"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 484942.90076750773,
+            "unit": "iter/sec",
+            "range": "stddev: 5.587700084868191e-7",
+            "extra": "mean: 2.0620984417285486 usec\nrounds: 64688"
           }
         ]
       }
