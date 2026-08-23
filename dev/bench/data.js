@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787413397366,
+  "lastUpdate": 1787482440771,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10089,6 +10089,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.2924376597681814e-7",
             "extra": "mean: 1.532922450428496 usec\nrounds: 59549"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5840413e90088364ff74b1d1f4ff94aa6c21ea24",
+          "message": "fix: repair dangerous-command hook for refspecs, global options, and shell wrappers (merges PR #699, addresses #678)\n\nThe shared dangerous-command hook is the enforcement gate for all five AI\nagents. It blocked `git push --force origin main` but allowed ten equivalent\nforms that an LLM emits naturally. This matters most on the delegated path,\nwhere `agy` invocations pass --dangerously-skip-permissions and the hook is\nthe only gate.\n\nFour root causes:\n\n- Branch extraction split only on \"/\", so `HEAD:main` and `+main` were\n  invisible. `_normalize_branch_ref` now strips a leading \"+\", takes the \":\"\n  destination side, then the \"/\" last segment.\n- The subcommand was assumed at `tokens[git_idx + 1]`, so any git global\n  option (-C, -c, --git-dir) skipped the check entirely.\n  `_git_subcommand_index` walks past them, applied at both\n  check_push_to_protected and check_delete_protected_branch.\n- `bash -c`, `sh -c` and `eval` payloads were never re-tokenized, bypassing\n  all seven checks. `check_command` now recurses into wrapped payloads with a\n  depth cap of 3.\n- Force-flag matching was exact-membership, missing `--force-with-lease=<ref>`.\n\nDeletion refspecs (\":main\") are skipped in the push check so\ncheck_delete_protected_branch keeps its correct reason message.\n\nAdds tests/test_hook_block_dangerous_commands.py (22 tests), the first\nCI-collected coverage for this hook, which was previously absent from the\ncoverage report entirely.\n\nAddresses #678\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T11:53:32+01:00",
+          "tree_id": "d10b49fc0cb90f58a4ddd467ba39352490666240",
+          "url": "https://github.com/endavis/pyproject-template/commit/5840413e90088364ff74b1d1f4ff94aa6c21ea24"
+        },
+        "date": 1787482439683,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8292624.27609212,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2016192832673272e-8",
+            "extra": "mean: 120.58908817116307 nsec\nrounds: 84084"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9252864.991543379,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2147550573640942e-8",
+            "extra": "mean: 108.07463427964703 nsec\nrounds: 91997"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6136812.912065565,
+            "unit": "iter/sec",
+            "range": "stddev: 1.538504584415637e-8",
+            "extra": "mean: 162.95103245430602 nsec\nrounds: 62579"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1746213.0834216182,
+            "unit": "iter/sec",
+            "range": "stddev: 3.010835120863945e-7",
+            "extra": "mean: 572.66779724302 nsec\nrounds: 62501"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 478599.2724599434,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010039155073260317",
+            "extra": "mean: 2.089430673097598 usec\nrounds: 49757"
           }
         ]
       }
