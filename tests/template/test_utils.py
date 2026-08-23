@@ -713,3 +713,73 @@ class TestFilesToUpdate:
     def test_no_duplicates(self) -> None:
         """Test that there are no duplicate entries."""
         assert len(FILES_TO_UPDATE) == len(set(FILES_TO_UPDATE))
+
+
+class TestPromptConfirm:
+    """Tests for ``prompt_confirm``.
+
+    The ``default=True`` branch was previously covered only as a side effect of
+    a test that reached it through a real ``gh auth status`` call, so its
+    coverage varied by machine. These pin both branches directly.
+    """
+
+    @pytest.mark.parametrize(
+        ("response", "expected"),
+        [("", True), ("y", True), ("yes", True), ("n", False), ("no", False)],
+    )
+    def test_default_true_branch(self, response: str, expected: bool) -> None:
+        """With ``default=True`` an empty answer confirms."""
+        from tools.pyproject_template.utils import prompt_confirm
+
+        with patch("builtins.input", return_value=response):
+            assert prompt_confirm("Proceed?", default=True) is expected
+
+    @pytest.mark.parametrize(
+        ("response", "expected"),
+        [("", False), ("n", False), ("y", True), ("yes", True)],
+    )
+    def test_default_false_branch(self, response: str, expected: bool) -> None:
+        """With the default of ``False`` an empty answer declines."""
+        from tools.pyproject_template.utils import prompt_confirm
+
+        with patch("builtins.input", return_value=response):
+            assert prompt_confirm("Proceed?") is expected
+
+    def test_answer_is_case_and_whitespace_insensitive(self) -> None:
+        """Answers are normalised before comparison."""
+        from tools.pyproject_template.utils import prompt_confirm
+
+        with patch("builtins.input", return_value="  YES  "):
+            assert prompt_confirm("Proceed?") is True
+
+
+class TestPrompt:
+    """Tests for ``prompt``.
+
+    Like ``prompt_confirm``, this was reached only incidentally by tests that
+    drive interactive flows, so which of its branches ran varied by
+    environment. Pinning both branches keeps the measured coverage stable.
+    """
+
+    def test_returns_default_when_answer_is_blank(self) -> None:
+        """With a default, an empty answer yields the default."""
+        from tools.pyproject_template.utils import prompt
+
+        with patch("builtins.input", return_value="   "):
+            assert prompt("Name?", default="fallback") == "fallback"
+
+    def test_returns_the_answer_over_the_default(self) -> None:
+        """A non-empty answer wins over the default."""
+        from tools.pyproject_template.utils import prompt
+
+        with patch("builtins.input", return_value="  typed  "):
+            assert prompt("Name?", default="fallback") == "typed"
+
+    def test_reprompts_until_a_required_value_is_given(self) -> None:
+        """With no default the prompt loops until the answer is non-empty."""
+        from tools.pyproject_template.utils import prompt
+
+        with patch("builtins.input", side_effect=["", "   ", "finally"]) as mock_input:
+            assert prompt("Name?") == "finally"
+
+        assert mock_input.call_count == 3

@@ -257,11 +257,22 @@ a smaller set than this repository does:
 
 | Shape | Statements | Coverage | Gate at 54 |
 | :--- | ---: | ---: | :--- |
-| Template (this repo) | 5,102 | 54.71% | passes |
+| Template (this repo) | 5,102 | 55.05% | passes |
 | Downstream, after `cleanup` | 2,748 | 56.92% | passes |
 
 <!-- The downstream row is measured by excluding `tools/pyproject_template/` from the report,
      which yields the same denominator `cleanup` produces by deleting it. -->
+
+#### Keep coverage hermetic
+
+These figures are reproducible on any machine. They were not always: tests reached
+`setup_repo._check_token_permissions()` through the *real* `gh auth status`, so the branch that
+runs depended on the developer's GitHub auth state — a machine holding a fine-grained PAT
+measured 34 more covered statements than CI did, a 0.54pp swing.
+
+When a test reaches an interactive or shell-dependent function only incidentally, the gate stops
+being reproducible and a tight threshold becomes unreliable. Mock the subprocess or the input and
+cover the branches deliberately.
 
 Shedding `tools/pyproject_template/` *raises* the measured percentage, so a consumer inherits a
 gate that already passes — one threshold holds in both shapes and `cleanup` needs no

@@ -193,7 +193,7 @@ omit = [
 skip_covered = false
 show_missing = true
 precision = 2
-# Measured over package_name + tools/. Currently 54.71% here, and 56.92% in a
+# Measured over package_name + tools/. Currently 55.05% here, and 56.92% in a
 # downstream project once `cleanup` sheds tools/pyproject_template/, so the same
 # gate holds in both shapes. Ratchet upward as tooling coverage improves; treat
 # lowering it as a change that needs justification.
