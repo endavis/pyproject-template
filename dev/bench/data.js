@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787504190651,
+  "lastUpdate": 1787505388678,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10679,6 +10679,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.554319287163092e-7",
             "extra": "mean: 1.160306736236813 usec\nrounds: 68391"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4c31193f2af608649e79ba3b11bb019a65caddf9",
+          "message": "docs: fix broken links in README and CONTRIBUTING, widen the link test (merges PR #716, addresses #686)\n\nPR #715 fixed the ADR links and added tests/test_docs_links.py, but that\ntest scanned docs/ only. README.md -- the first file a new contributor\nopens -- still had four dead links, and .github/CONTRIBUTING.md two, with a\ngreen build. That is the same failure mode the test was added to prevent,\none directory over.\n\nWiden the scan to the repo root and .github/, and rename the module to\ntest_markdown_links.py to match. Fix the six links it then reports.\n\nThe CONTRIBUTING fix is anchored to the whole line: that file also contains\ncorrect ../AGENTS.md links, so a blind substitution would have broken them.\n\nVerified the new surfaces bite: a broken link in README.md and one in\n.github/CONTRIBUTING.md each fail their own case.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T18:16:00+01:00",
+          "tree_id": "cd727fd26f9b0a3ea3ea41fb75af85d3474edf47",
+          "url": "https://github.com/endavis/pyproject-template/commit/4c31193f2af608649e79ba3b11bb019a65caddf9"
+        },
+        "date": 1787505386648,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11152513.609517476,
+            "unit": "iter/sec",
+            "range": "stddev: 8.411232092151616e-9",
+            "extra": "mean: 89.66588475145255 nsec\nrounds: 116253"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11952685.99658161,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0026217573859134e-8",
+            "extra": "mean: 83.6632034244013 nsec\nrounds: 118442"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8310230.227331575,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7283428438822644e-8",
+            "extra": "mean: 120.33360961662565 nsec\nrounds: 86059"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2404746.798664268,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4279775704303975e-7",
+            "extra": "mean: 415.8441963850233 nsec\nrounds: 65390"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 646230.274979793,
+            "unit": "iter/sec",
+            "range": "stddev: 3.170748033607143e-7",
+            "extra": "mean: 1.5474360126988311 usec\nrounds: 66521"
           }
         ]
       }
