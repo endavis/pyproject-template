@@ -126,7 +126,7 @@ EOF
 |------|-------------|
 | [`block-dangerous-commands.py`](../../../tools/hooks/ai/block-dangerous-commands.py) | The hook script (shared by Claude, Gemini, Copilot, Codex, and Antigravity) |
 | [`block-dangerous-commands.sh`](../../../tools/hooks/ai/block-dangerous-commands.sh) | Fail-closed launcher used by the stdout-contract CLIs (Copilot, Antigravity) |
-| [`test_hook.py`](../../../tools/hooks/ai/test_hook.py) | Manual test suite (run with `python3 tools/hooks/ai/test_hook.py`) |
+| [`tests/test_hook_dangerous_command_matrix.py`](../../../tests/test_hook_dangerous_command_matrix.py) | The block/allow matrix — 134 cases plus subprocess smoke tests |
 | [`tests/test_hook_block_dangerous_commands.py`](../../../tests/test_hook_block_dangerous_commands.py) | Pytest test suite — collected by CI via `testpaths = ["tests"]` |
 
 ### Configuration
@@ -345,7 +345,7 @@ tolerate.
 Run the test suite after making changes:
 
 ```bash
-python3 tools/hooks/ai/test_hook.py
+doit test
 ```
 
 Output shows green for passing tests, red for failures:

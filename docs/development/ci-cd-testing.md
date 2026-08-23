@@ -247,8 +247,7 @@ The threshold is deliberately set to what the codebase actually achieves rather 
 aspirational number pointed at the wrong target. **Ratchet it upward** as tooling coverage
 improves; treat lowering it as a change that needs justification in the PR.
 
-The manual harness `tools/hooks/ai/test_hook.py` is omitted — it is run directly rather than
-collected by pytest.
+Nothing is omitted from the measured scope.
 
 #### Template vs downstream
 
@@ -257,8 +256,8 @@ a smaller set than this repository does:
 
 | Shape | Statements | Coverage | Gate at 54 |
 | :--- | ---: | ---: | :--- |
-| Template (this repo) | 5,102 | 55.05% | passes |
-| Downstream, after `cleanup` | 2,748 | 56.92% | passes |
+| Template (this repo) | 5,102 | 58.29% | passes |
+| Downstream, after `cleanup` | 2,748 | 62.98% | passes |
 
 <!-- The downstream row is measured by excluding `tools/pyproject_template/` from the report,
      which yields the same denominator `cleanup` produces by deleting it. -->
