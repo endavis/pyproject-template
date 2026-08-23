@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787489635396,
+  "lastUpdate": 1787494993883,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10384,6 +10384,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000011379433344748935",
             "extra": "mean: 2.3730214574760633 usec\nrounds: 61051"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "157b7e6a465c498334a2e4a18aef72e7d8442f3e",
+          "message": "chore: point the coverage gate at tools/ and make it config-driven (merges PR #709, addresses #689, #684)\n\n* chore: point the coverage gate at tools/ and make it config-driven\n\nThe enforced gate measured src/package_name/ -- 66 statements of greet(), a\nClick wrapper and a logging helper, the part every downstream project\ndeletes -- at fail_under = 80. Meanwhile ~4,600 statements in tools/ that run\nreleases, create PRs and block dangerous commands went unmeasured.\n\nMeasure package_name + tools/ via [tool.coverage.run] source and set\nfail_under to 54, which the codebase actually achieves (54.71%). A threshold\nthat reflects reality beats an aspirational number aimed at the wrong target;\nratchet it upward as tooling coverage improves.\n\nOne gate serves both shapes: cleanup sheds tools/pyproject_template/, which\nraises the measured percentage to 56.92%, so a downstream project inherits a\ngate that already passes and cleanup needs no coverage-specific rewrite.\n\nDrive the scope from config rather than the command line. doit coverage and\nCI now pass a bare --cov, which also fixes #684: --cov=package_name overrode\nthe config, and tools/doit/testing.py is not in FILES_TO_UPDATE, so a renamed\nproject measured a module that no longer existed. Add .vscode/launch.json to\nFILES_TO_UPDATE for the remaining instance of that gap.\n\nAdd contract tests pinning both properties: tools/ is in scope, and neither\ninvocation hardcodes a scope that would override the config.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n* test: make coverage of the interactive setup paths hermetic\n\nCI reported 54.17% where this machine reported 54.71%. The 34-statement gap\ncame from tests/template/test_bootstrap.py reaching\nsetup_repo._check_token_permissions() without mocking subprocess.run, so the\nsuite shelled out to the real `gh auth status`. That function branches on\nwhether the output contains github_pat_ or gho_, so a machine holding a\nfine-grained PAT covered the warning branch and CI did not -- and with it\nutils.prompt_confirm's default=True path.\n\nA gate is only as trustworthy as the reproducibility of the number it\nenforces, so cover those branches deliberately instead: hermetic tests for\n_check_token_permissions (both token branches, the decline-and-exit path, and\nthe unrecognised-token path) and for the two interactive helpers that were\nonly ever reached incidentally, prompt and prompt_confirm.\n\nCoverage is now identical with and without local gh authentication --\nverified with a shim answering `gh auth status` the way CI does -- and rises\nto 55.05%, so fail_under = 54 carries the ~1pp margin it was chosen for\nrather than 0.17pp.\n\nThe real `gh` call in the bootstrap tests remains; it no longer affects\ncoverage and is tracked in #710.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T15:22:47+01:00",
+          "tree_id": "3a9a4efb36c42e7695c2380c388287c7e609cb64",
+          "url": "https://github.com/endavis/pyproject-template/commit/157b7e6a465c498334a2e4a18aef72e7d8442f3e"
+        },
+        "date": 1787494992550,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8626541.658586178,
+            "unit": "iter/sec",
+            "range": "stddev: 1.499567296351378e-8",
+            "extra": "mean: 115.92130886015939 nsec\nrounds: 84310"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8680987.645797087,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4004392816332275e-8",
+            "extra": "mean: 115.19426599854127 nsec\nrounds: 87820"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6114068.2524002995,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4314637760109756e-8",
+            "extra": "mean: 163.557218977301 nsec\nrounds: 60093"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1814387.3955155811,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6037009442799373e-7",
+            "extra": "mean: 551.1502132739615 nsec\nrounds: 61193"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 534834.1197073807,
+            "unit": "iter/sec",
+            "range": "stddev: 3.451224193760818e-7",
+            "extra": "mean: 1.869738603339521 usec\nrounds: 52296"
           }
         ]
       }
