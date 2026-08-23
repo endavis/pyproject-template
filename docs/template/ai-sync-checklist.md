@@ -211,6 +211,13 @@ AI coding assistants (Claude Code, Copilot, Codex, Antigravity) use hooks to blo
 
 - [ ] Compare `.claude/settings.json` for Claude Code hook configuration
 - [ ] Compare `.codex/config.toml` for Codex CLI approval policies
+- [ ] **Review pinned model IDs.** `.claude/settings.json` pins
+      `CLAUDE_CODE_SUBAGENT_MODEL`, and `tools/hooks/ai/precompact-checkpoint.py`
+      passes a model to `claude -p`. Nothing in the update-check machinery looks at
+      model IDs, so a pin from two generations ago survives indefinitely and silently
+      (#696). `tests/template/test_model_pins.py` fails when a pinned ID leaves the
+      current family — run `doit test` after syncing and update
+      `CURRENT_MODEL_IDS` there if the family has moved on.
 
 **Note:** If these configuration files don't exist in the downstream project, copy them from the template to enable AI safety hooks.
 

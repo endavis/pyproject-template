@@ -122,7 +122,7 @@ For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` 
 | :--- | :--- | :--- | :--- |
 | `ENABLE_PROMPT_CACHING_1H` | `1` | Extends prompt cache TTL from 5 minutes to 1 hour. Cuts cost on repeated reads of the same context within a session. | None — pure efficiency flag. |
 | `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | `50` | Auto-compaction triggers at 50% of the context window instead of the default (~92%). Sessions compact earlier, leaving more headroom for the post-compact continuation. | More frequent compaction churn; mitigated by the [PreCompact handoff hook](ai/auto-checkpoint-hook.md) which preserves context across compaction events. |
-| `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-4-6` | Subagents (e.g. those spawned by `/claude:implement`) default to Sonnet 4.6 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
+| `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-5` | Subagents (e.g. those spawned by `/claude:implement`) default to Sonnet 5 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
 
 **Per-agent model overrides:**
 
@@ -131,11 +131,11 @@ For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` 
 ```yaml
 ---
 name: high-stakes-reviewer
-model: claude-opus-4-7   # overrides the env-var default for this agent only
+model: claude-opus-5   # overrides the env-var default for this agent only
 ---
 ```
 
-Agents without a `model:` line inherit the env-var default. This template's `.claude/agents/implement-worker.md` deliberately does not override — implement-worker runs on Sonnet 4.6 as an explicit cost/quality trade-off. Future high-stakes subagents (e.g. design review, security review) can opt into Opus on a per-file basis.
+Agents without a `model:` line inherit the env-var default. This template's `.claude/agents/implement-worker.md` deliberately does not override — implement-worker runs on Sonnet 5 as an explicit cost/quality trade-off. Future high-stakes subagents (e.g. design review, security review) can opt into Opus on a per-file basis.
 
 **Per-developer overrides:**
 
