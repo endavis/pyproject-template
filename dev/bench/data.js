@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787497617402,
+  "lastUpdate": 1787502604386,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10561,6 +10561,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.307868909004067e-7",
             "extra": "mean: 2.005903882915964 usec\nrounds: 52332"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6068828f7d73b85c67eeaa9171221681083c746e",
+          "message": "refactor: remove Gemini CLI support (merges PR #714, addresses #712, #683)\n\nGemini CLI is enterprise-only; on a consumer account every invocation fails\nwith IneligibleTierError before doing any work, and Google's own remediation\nis Antigravity, which this template already supports. The template was\ndocumenting /gemini:* as a supported workflow most users cannot run.\n\nDelete .gemini/ and GEMINI.md, the inbound bridges in the other agents'\ndirectories, and the gemini branch of the /multi-* orchestrators. Update the\ndelegation matrix from 5x5 to 4x4 (80 cross-agent cells -> 48, 68 distinct\nfiles -> 40) across AGENTS.md, 15 docs and the tests.\n\nKeep the Gemini tool names in the dangerous-command hook on purpose:\nrun_shell_command, write_file and replace cost nothing to match, and a\ndownstream project with enterprise Gemini access can still point that CLI at\nthe hook. Failing to match one would silently remove protection.\n\nAntigravity is untouched. Its user config lives under ~/.gemini/ and shares\nthe [[rule]] policy schema, so the two are easy to conflate -- but a\nmaximum-priority deny-all policy placed in the repo's .gemini/policies/ had\nno effect, confirming agy does not read the repo-level directory. Verified\nafter removal: agy still loads .agents/skills/ and the hook still fires.\ntests/test_statusline_agy.py is deliberately unchanged; agy's model name is\n\"Gemini 3 Pro\" and its quota keys are gemini-5h/gemini-weekly.\n\nBREAKING CHANGE: /gemini:plan, /gemini:implement, /gemini:review and\n/gemini:adversarial-review are removed, as is `gemini` as a /multi-* target.\nDownstream projects using them should migrate to Antigravity (agy), which\nGoogle positions as the consumer replacement, or to Claude, Copilot or Codex.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T17:29:35+01:00",
+          "tree_id": "90d302eccf3ac73d42e0fdb89276a6937939468d",
+          "url": "https://github.com/endavis/pyproject-template/commit/6068828f7d73b85c67eeaa9171221681083c746e"
+        },
+        "date": 1787502603142,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8198076.894885213,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2525708730135896e-8",
+            "extra": "mean: 121.97982683279061 nsec\nrounds: 88874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9146018.738154735,
+            "unit": "iter/sec",
+            "range": "stddev: 1.092194043587002e-8",
+            "extra": "mean: 109.3371912554988 nsec\nrounds: 91233"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6148103.637233946,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8341181013428348e-8",
+            "extra": "mean: 162.65177996412302 nsec\nrounds: 62035"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1724671.643792424,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4269732878988487e-7",
+            "extra": "mean: 579.8205145885479 nsec\nrounds: 50667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490748.2711083515,
+            "unit": "iter/sec",
+            "range": "stddev: 4.947852150927749e-7",
+            "extra": "mean: 2.037704580683508 usec\nrounds: 38508"
           }
         ]
       }
