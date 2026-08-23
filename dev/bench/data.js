@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787502604386,
+  "lastUpdate": 1787504190651,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10620,6 +10620,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.947852150927749e-7",
             "extra": "mean: 2.037704580683508 usec\nrounds: 38508"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "61d4feb0668a134cc99e6fc4c2b00e7490ecd652",
+          "message": "chore: fix broken documentation links and make the docs build strict (merges PR #715, addresses #687, #686)\n\n`doit docs_build` ran `mkdocs build` without --strict, so the docs job stayed\ngreen while the site carried 62 warnings. The gate verified nothing it\nclaimed to verify.\n\nRepair 27 broken links across 15 ADRs -- all one `../` too many, plus\ntools-reference.md having moved to docs/template/ -- by resolving each target\nagainst the real tree rather than by hand. Also fix an anchor orphaned by the\nAI_SETUP.md renumbering in #712, which is precisely the drift this gate is\nfor.\n\nEnable --strict on docs_build, leaving docs_serve non-strict so local\nauthoring is not blocked mid-edit.\n\nRecord the out-of-docs link policy. docs/ deliberately links to real repo\nfiles outside docs_dir (AGENTS.md, hook scripts, tests), kept relative so\nthey resolve when browsing the repo and in downstream forks. mkdocs 1.6\ncannot distinguish those from genuinely broken links -- both are\nlinks.not_found -- so ignoring them there would also ignore real breakage.\nLink validation therefore lives in tests/test_docs_links.py, which resolves\nagainst the whole repository and so covers the 36 out-of-docs links mkdocs\ncan never check. mkdocs keeps anchor validation, where it has the rendered\nheadings.\n\nVerified both gates bite: a broken file link fails the test, a broken anchor\nexits docs_build non-zero.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T17:56:02+01:00",
+          "tree_id": "3a1ae27f923550e7dc712be5182910d3fe6ffea5",
+          "url": "https://github.com/endavis/pyproject-template/commit/61d4feb0668a134cc99e6fc4c2b00e7490ecd652"
+        },
+        "date": 1787504188547,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16817177.2968218,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8697504905316875e-8",
+            "extra": "mean: 59.46301108385088 nsec\nrounds: 173944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 17413212.910175465,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5974895892788938e-8",
+            "extra": "mean: 57.427655950594094 nsec\nrounds: 173371"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11716562.294565868,
+            "unit": "iter/sec",
+            "range": "stddev: 6.546332704883839e-9",
+            "extra": "mean: 85.34926669265431 nsec\nrounds: 117468"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3180474.892158631,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2101894255354837e-7",
+            "extra": "mean: 314.4184544469982 nsec\nrounds: 70617"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 861841.0707872551,
+            "unit": "iter/sec",
+            "range": "stddev: 2.554319287163092e-7",
+            "extra": "mean: 1.160306736236813 usec\nrounds: 68391"
           }
         ]
       }
