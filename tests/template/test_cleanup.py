@@ -412,74 +412,6 @@ overrides = [
 minversion = "8.0"
 """
 
-    _README_WITH_TEMPLATE_SECTIONS = """\
-# My Project
-
-Intro text.
-
-## Features
-
-- feature one
-
-## Quick Setup (Automated)
-
-Stuff about bootstrap.py.
-
-## Using This Template (Manual)
-
-Manual instructions about tools/pyproject_template/configure.py.
-
-## Development Setup
-
-Dev instructions.
-"""
-
-    _README_WITHOUT_TEMPLATE_SECTIONS = """\
-# My Project
-
-Intro text.
-
-## Features
-
-- feature one
-
-## Development Setup
-
-Dev instructions.
-"""
-
-    _README_WITH_TEMPLATE_SUBSECTIONS = """\
-# My Project
-
-Intro text.
-
-## Versioning & Releases
-
-Commitizen + hatch-vcs.
-
-### Migrating an Existing Project
-
-Bring your existing Python project into this template:
-
-```bash
-python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
-```
-
-### Keeping Up to Date
-
-Already using this template? Stay in sync with improvements:
-
-```bash
-python tools/pyproject_template/check_template_updates.py
-```
-
-### Creating a Release
-
-```bash
-doit release
-```
-"""
-
     _DOIT_REF_WITH_TEMPLATE_CLEAN = """\
 # Doit Tasks Reference
 
@@ -671,35 +603,6 @@ git push origin v0.0.0
         assert pyproject not in changed
         assert pyproject.read_text(encoding="utf-8") == self._PYPROJECT_WITHOUT_STANZA
 
-    def test_scrubs_readme_when_sections_present(self, tmp_path: Path) -> None:
-        """Both template sections are removed; surrounding headings survive."""
-        from tools.pyproject_template.cleanup import scrub_template_references
-
-        readme = tmp_path / "README.md"
-        readme.write_text(self._README_WITH_TEMPLATE_SECTIONS, encoding="utf-8")
-
-        changed = scrub_template_references(tmp_path)
-
-        new = readme.read_text(encoding="utf-8")
-        assert "## Quick Setup (Automated)" not in new
-        assert "## Using This Template (Manual)" not in new
-        # Surrounding headings intact.
-        assert "## Features" in new
-        assert "## Development Setup" in new
-        assert readme in changed
-
-    def test_readme_noop_when_sections_absent(self, tmp_path: Path) -> None:
-        """Already-scrubbed README.md is left unchanged."""
-        from tools.pyproject_template.cleanup import scrub_template_references
-
-        readme = tmp_path / "README.md"
-        readme.write_text(self._README_WITHOUT_TEMPLATE_SECTIONS, encoding="utf-8")
-
-        changed = scrub_template_references(tmp_path)
-
-        assert readme not in changed
-        assert readme.read_text(encoding="utf-8") == self._README_WITHOUT_TEMPLATE_SECTIONS
-
     def test_scrubs_doit_reference_section_and_toc(self, tmp_path: Path) -> None:
         """doit-tasks-reference.md section removed and TOC row rewritten."""
         from tools.pyproject_template.cleanup import scrub_template_references
@@ -808,30 +711,6 @@ git push origin v0.0.0
         assert '".codex/"' in new
         assert pyproject in changed
 
-    def test_scrubs_readme_template_subsections(self, tmp_path: Path) -> None:
-        """README's ``### Migrating``/``### Keeping Up to Date`` are removed (#469 follow-up).
-
-        Both subsections point at deleted template-management scripts; the
-        preceding ``## Versioning & Releases`` heading and the following
-        ``### Creating a Release`` subsection must survive.
-        """
-        from tools.pyproject_template.cleanup import scrub_template_references
-
-        readme = tmp_path / "README.md"
-        readme.write_text(self._README_WITH_TEMPLATE_SUBSECTIONS, encoding="utf-8")
-
-        changed = scrub_template_references(tmp_path)
-
-        new = readme.read_text(encoding="utf-8")
-        assert "### Migrating an Existing Project" not in new
-        assert "### Keeping Up to Date" not in new
-        assert "migrate_existing_project.py" not in new
-        assert "check_template_updates.py" not in new
-        # Surrounding headings survive.
-        assert "## Versioning & Releases" in new
-        assert "### Creating a Release" in new
-        assert readme in changed
-
     def test_scrub_is_idempotent(self, tmp_path: Path) -> None:
         """Running the scrubber twice must change nothing on the second pass."""
         from tools.pyproject_template.cleanup import scrub_template_references
@@ -840,12 +719,6 @@ git push origin v0.0.0
         # check exercises every new pattern introduced in the #469 follow-up.
         (tmp_path / "pyproject.toml").write_text(
             self._PYPROJECT_POST_FMT_WITH_TEMPLATE_REFS, encoding="utf-8"
-        )
-        # README gets both the top-level template sections AND the subsections
-        # so the two README patterns are both exercised.
-        (tmp_path / "README.md").write_text(
-            self._README_WITH_TEMPLATE_SECTIONS + "\n" + self._README_WITH_TEMPLATE_SUBSECTIONS,
-            encoding="utf-8",
         )
         doit_ref = tmp_path / "docs" / "development" / "doit-tasks-reference.md"
         doit_ref.parent.mkdir(parents=True)

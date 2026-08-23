@@ -385,6 +385,19 @@ def run_configure(
         # variables (e.g. in extensions.md)
     }
 
+    # Install the consumer README before placeholder replacement.
+    #
+    # README.md in the template is the repository's landing page: it describes
+    # the template itself and carries working badges, so browsing the repo does
+    # not show a placeholder title and four broken badge images (#697).
+    # README.template.md is the README the spawned project actually wants.
+    # Moving it into place here means it is then picked up by the
+    # FILES_TO_UPDATE pass below like any other file.
+    consumer_readme = Path("README.template.md")
+    if consumer_readme.exists():
+        print("  ✓ Installing README.template.md as README.md")
+        consumer_readme.replace(Path("README.md"))
+
     # Update files (using shared constant from utils.py)
     for file_path in FILES_TO_UPDATE:
         path = Path(file_path)
