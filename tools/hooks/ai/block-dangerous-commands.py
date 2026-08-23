@@ -16,6 +16,7 @@ Exit codes:
 For full documentation, see: docs/development/ai/command-blocking.md
 """
 
+import fnmatch
 import json
 import os
 import re
@@ -69,6 +70,70 @@ GOVERNANCE_LABELS = {
         "or set ALLOW_AI_READY_TO_MERGE=1 in the shell before launching the AI CLI."
     ),
 }
+
+# Secret-shaped environment variable names. THIS IS THE SINGLE SOURCE OF TRUTH:
+# `.codex/config.toml`'s `[shell_environment_policy] exclude` list must match it,
+# and tests/template/test_secret_env_policy.py asserts the two agree so the
+# patterns cannot drift between the hook and the one CLI that can enforce them
+# natively (#682).
+SECRET_ENV_PATTERNS: tuple[str, ...] = (
+    "*_API_KEY",
+    "*_SECRET",
+    "*_TOKEN",
+    "PASSWORD",
+    "PYPI_TOKEN",
+    "CODECOV_TOKEN",
+)
+
+# Credential stores. Reading one dumps live secrets into the transcript, which
+# is the accidental-exposure case this guards; a determined agent has other
+# routes, so this is a guardrail rather than a boundary.
+CREDENTIAL_FILE_BASENAMES: dict[str, str] = {
+    ".pypirc": "",
+    ".netrc": "",
+    "credentials": ".aws",
+    "hosts.yml": "gh",
+    "config.json": ".docker",
+}
+
+# Commands that read a file's contents. The credential check is anchored on
+# these rather than scanning every token, so a file that merely *mentions* a
+# credential path is not mistaken for one that reads it.
+_CREDENTIAL_READER_COMMANDS = frozenset(
+    {
+        "cat",
+        "bat",
+        "less",
+        "more",
+        "head",
+        "tail",
+        "strings",
+        "xxd",
+        "od",
+        "base64",
+        "cp",
+        "mv",
+        "scp",
+        "rsync",
+        "install",
+        "openssl",
+        "shasum",
+    }
+)
+
+# Tokens that end one command's argument list. Output redirection is included
+# because it flips the reader into a writer: `cat >> file <<EOF` streams a
+# heredoc *into* a file, and the body must not be scanned as if it were
+# arguments. Input redirection is deliberately absent so `cat < ~/.netrc`
+# is still caught.
+_SHELL_OPERATORS = frozenset({"&&", "||", ";", "|", "&", ">", ">>", "1>", "2>", "&>"})
+
+# Commands that print the whole environment when given no command to run.
+_ENV_DUMP_COMMANDS = frozenset({"env", "printenv"})
+
+# `env` options that consume a following token, so the scan can tell an
+# invocation (`env -u FOO cmd`) from a dump (`env`).
+_ENV_OPTS_WITH_VALUE = frozenset({"-u", "--unset"})
 
 # Env var name the human can set to allow AI to apply ready-to-merge
 ALLOW_AI_READY_TO_MERGE_VAR = "ALLOW_AI_READY_TO_MERGE"
@@ -780,6 +845,112 @@ def check_merge_to_protected(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
+def _command_start_indices(tokens: list[str]) -> list[int]:
+    """Return the indices at which a command begins.
+
+    A command starts at position 0 and after any shell separator. Anchoring on
+    these is what separates *running* a command from merely *mentioning* it:
+    a heredoc body tokenizes exactly like an argument list, so a scan over all
+    positions treats documentation and test fixtures as invocations. Both
+    checks below hit that while this repository's own tests were being written.
+    """
+    starts = [0]
+    for index, token in enumerate(tokens):
+        if token in _SHELL_OPERATORS and index + 1 < len(tokens):
+            starts.append(index + 1)
+    return starts
+
+
+def _is_secret_name(name: str) -> bool:
+    """Return True when *name* matches one of SECRET_ENV_PATTERNS."""
+    return any(fnmatch.fnmatchcase(name.upper(), pattern) for pattern in SECRET_ENV_PATTERNS)
+
+
+def check_env_dump(tokens: list[str]) -> tuple[bool, str]:
+    """Block commands that print the environment, or a secret-named variable.
+
+    Distinguishes a *dump* from an *invocation*: ``env`` with no trailing
+    command prints everything, while ``env -u FOO cmd`` and ``env VAR=1 cmd``
+    merely run ``cmd`` with a modified environment and are left alone.
+    """
+    for index in _command_start_indices(tokens):
+        if index >= len(tokens) or tokens[index] not in _ENV_DUMP_COMMANDS:
+            continue
+        token = tokens[index]
+        # Stop at the next separator: later tokens belong to another command.
+        rest = []
+        for candidate in tokens[index + 1 :]:
+            if candidate in _SHELL_OPERATORS:
+                break
+            rest.append(candidate)
+
+        # nosec B105 - bandit's hardcoded-password heuristic fires on this
+        # string comparison; the literal is a shell command name.
+        if token == "printenv":  # nosec B105
+            # `printenv` alone dumps everything; `printenv NAME` prints one.
+            if not rest:
+                return True, "Prints the entire environment, which may contain secrets"
+            if any(_is_secret_name(arg) for arg in rest if not arg.startswith("-")):
+                return True, "Prints a secret-named environment variable"
+            continue
+
+        # `env`: walk past its own options and assignments looking for a command.
+        position = 0
+        while position < len(rest):
+            argument = rest[position]
+            if argument in _ENV_OPTS_WITH_VALUE:
+                position += 2
+                continue
+            if argument.startswith("-") or "=" in argument:
+                position += 1
+                continue
+            break  # a command follows, so this is an invocation
+        else:
+            return True, "Prints the entire environment, which may contain secrets"
+
+        if position >= len(rest):
+            return True, "Prints the entire environment, which may contain secrets"
+
+    return False, ""
+
+
+def _is_credential_store(token: str) -> bool:
+    """Return True when *token* names a known credential store."""
+    if not token or token.startswith("-"):
+        return False
+    try:
+        path = Path(token).expanduser()
+    except (ValueError, RuntimeError):
+        return False
+    required_parent = CREDENTIAL_FILE_BASENAMES.get(path.name)
+    if required_parent is None:
+        return False
+    return not required_parent or required_parent in path.parent.as_posix()
+
+
+def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
+    """Block a reader command pointed at a known credential store.
+
+    Anchored on the reading command rather than scanning every token. A bare
+    scan flagged any command whose text merely *contained* a credential path --
+    writing this project's own test data tripped it immediately -- because
+    heredoc bodies and file contents tokenize like arguments. Requiring a
+    reader in command position keeps `cat ~/.netrc` blocked while leaving
+    prose, test fixtures and documentation alone.
+    """
+    for index in _command_start_indices(tokens):
+        if index >= len(tokens) or tokens[index] not in _CREDENTIAL_READER_COMMANDS:
+            continue
+        for argument in tokens[index + 1 :]:
+            # Stop at a shell operator: later tokens belong to another command,
+            # which gets its own turn through this loop.
+            if argument in _SHELL_OPERATORS:
+                break
+            if _is_credential_store(argument):
+                return True, (f"Reads the credential store '{argument}', which holds live secrets")
+    return False, ""
+
+
 def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     """
     Check if command contains dangerous patterns.
@@ -807,6 +978,15 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
 
     # Check for dangerous sequences
     is_dangerous, reason = check_dangerous_sequences(tokens)
+    if is_dangerous:
+        return True, reason
+
+    # Check for environment dumps and credential-store reads
+    is_dangerous, reason = check_env_dump(tokens)
+    if is_dangerous:
+        return True, reason
+
+    is_dangerous, reason = check_credential_file_read(tokens)
     if is_dangerous:
         return True, reason
 
