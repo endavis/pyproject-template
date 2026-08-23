@@ -1089,3 +1089,61 @@ def test_codex_shell_tool_uses_the_default_schema() -> None:
     `^Bash$` matcher in `.codex/config.toml` rests on.
     """
     assert "Bash" in _load_hook()._BASH_TOOL_NAMES
+
+
+# --- Secret exposure cases (issue #682) ------------------------------------
+#
+# Only Codex can strip secrets from the child environment; Claude, Copilot and
+# Antigravity have no such setting, so the shared hook carries the part that
+# reaches all four: environment dumps and credential-store reads.
+#
+# Two distinctions are load-bearing, and both were found by the control firing
+# on this repository's own workflow within minutes of being written:
+#
+#   * invocation vs dump -- `env -u VAR cmd` is used constantly here
+#   * running vs mentioning -- a heredoc body tokenizes exactly like an
+#     argument list, so a scan over every token treats test fixtures and
+#     documentation as invocations
+#
+# The last two cases pin the second distinction directly.
+
+SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
+    ("env", "BLOCK", "bare env dumps the environment"),
+    ("printenv", "BLOCK", "bare printenv dumps the environment"),
+    ("printenv PYPI_TOKEN", "BLOCK", "printenv of a secret-named var"),
+    ("printenv MY_API_KEY", "BLOCK", "printenv matching the *_API_KEY pattern"),
+    ("printenv PATH", "ALLOW", "printenv of a non-secret var"),
+    ("env -u FORCE_COLOR doit check", "ALLOW", "env -u is an invocation not a dump"),
+    ("env VAR=1 make", "ALLOW", "env with assignment is an invocation"),
+    ("env -i PATH=/usr/bin sh -c true", "ALLOW", "env -i is an invocation"),
+    ("git status && env", "BLOCK", "env dump after a shell separator"),
+    ("cat ~/.pypirc", "BLOCK", "reads the PyPI credential store"),
+    ("cat ~/.aws/credentials", "BLOCK", "reads AWS credentials"),
+    ("cp ~/.docker/config.json /tmp/x", "BLOCK", "copies the docker credential store"),
+    ("cat credentials", "ALLOW", "a bare 'credentials' file outside .aws"),
+    ("grep -rn pypirc docs/", "ALLOW", "searching for the name is not reading the file"),
+    ("cat README.md", "ALLOW", "an ordinary file read"),
+    ("python3 - <<EOF\nprintenv PYPI_TOKEN\nEOF", "ALLOW", "heredoc mentioning a dump"),
+    ("cat >> notes.md <<EOF\ncat ~/.netrc\nEOF", "ALLOW", "heredoc mentioning a credential path"),
+    # Deliberately NOT blocked -- see docs/development/ai/command-blocking.md.
+    # Blocking $VAR interpolation gives false assurance while being trivially
+    # avoided, and legitimate uses are common.
+    ("echo $PYPI_TOKEN", "ALLOW", "var interpolation is deliberately not blocked"),
+]
+
+
+@pytest.mark.parametrize(
+    ("command", "expected", "description"),
+    SECRET_EXPOSURE_CASES,
+    ids=_ids(SECRET_EXPOSURE_CASES, 2),
+)
+def test_secret_exposure(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+    expected: str,
+    description: str,
+) -> None:
+    """Environment dumps and credential reads are blocked for every agent."""
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description

@@ -315,6 +315,55 @@ HOOK_BLOCKCOMMAND_DEBUG=1 agy -p 'run: git status' --add-dir "$(git rev-parse --
 cat tools/hooks/ai/hook-debug.jsonl   # a new line means the hook ran
 ```
 
+### Secret exposure
+
+Two different controls, because only one CLI can do the stronger one.
+
+#### Environment allowlists — Codex only
+
+`.codex/config.toml` strips secret-shaped variables from the child environment before a command
+runs:
+
+```toml
+[shell_environment_policy]
+inherit = "core"
+include_only = ["PATH", "HOME", "USER", "UV_CACHE_DIR", "VIRTUAL_ENV", "PYTHONPATH"]
+exclude = ["*_API_KEY", "*_SECRET", "*_TOKEN", "PASSWORD", "PYPI_TOKEN", "CODECOV_TOKEN"]
+```
+
+**The other three agents have no native environment allowlist.** This was checked against each CLI
+rather than assumed:
+
+| Agent | Mechanism | Coverage |
+| :--- | :--- | :--- |
+| Codex | `[shell_environment_policy]` — `include_only` + `exclude` | Secrets removed from the child environment |
+| Claude | `permissions` supports `allow` / `ask` / `deny` / `additionalDirectories` / `defaultMode` only | **No native environment allowlist** — hook only |
+| Copilot | `--deny-tool` is tool-level; `--bash-env` *enables* `BASH_ENV` rather than restricting it | **No native environment allowlist** — hook only |
+| Antigravity | no environment options | **No native environment allowlist** — hook only |
+
+`SECRET_ENV_PATTERNS` in `block-dangerous-commands.py` is the single source of truth for the
+pattern list; `.codex/config.toml`'s `exclude` must match it, and
+`tests/template/test_secret_env_policy.py` fails if the two drift.
+
+#### Environment dumps and credential stores — all four agents
+
+Since three of four cannot restrict the environment, the shared hook carries the part that reaches
+everyone:
+
+| Command | Outcome |
+| :--- | :--- |
+| `env`, `printenv` (no command following) | **Blocked** — prints the whole environment |
+| `printenv PYPI_TOKEN` | **Blocked** — secret-named variable |
+| `printenv PATH` | Allowed — not secret-shaped |
+| `env -u FORCE_COLOR doit check`, `env VAR=1 make` | Allowed — an *invocation*, not a dump |
+| `cat ~/.pypirc`, `~/.netrc`, `~/.aws/credentials`, `~/.docker/config.json`, `gh/hosts.yml` | **Blocked** — credential stores |
+
+**What this is and is not.** It reduces *accidental* exposure — a secret dumped into a transcript
+that is then pasted into an issue, or read by a later summarisation step. It is not a boundary
+against a determined agent, which has many other routes to the same value. `$VAR` interpolation is
+deliberately **not** blocked: legitimate uses are common, and blocking it would give false
+assurance while being trivially avoided.
+
 ### Failure Behaviour
 
 The hook uses two deny contracts, and they diverge on *failure*:
