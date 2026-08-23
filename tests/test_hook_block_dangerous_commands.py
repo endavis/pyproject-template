@@ -12,6 +12,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import subprocess
 import sys
 import types
 from pathlib import Path
@@ -407,3 +408,113 @@ def test_non_dict_tool_input_is_tolerated(
     payload = json.dumps({"tool_name": "Bash", "tool_input": "oops"})
     code, _ = _run_raw(hook, monkeypatch, capsys, payload)
     assert code == 0
+
+
+# --- Fail-closed behaviour (issue #679) ------------------------------------
+#
+# The hook uses two deny contracts: exit code 2 (Claude/Gemini/Codex) and
+# stdout JSON (Antigravity/Copilot). They diverge on *failure*: a script that
+# produces no output is "allow" for the stdout-contract CLIs. When the hook
+# cannot evaluate a command it must deny for every CLI, which means emitting
+# all three contracts at once because the caller is unknown at that point.
+
+
+def _assert_denies_every_contract(code: int, out: str, err: str) -> None:
+    """Assert the payload denies for all five supported CLIs."""
+    assert code == 2, "Claude/Gemini/Codex block on exit code 2"
+    payload = json.loads(out)
+    assert payload["decision"] == "deny", "Antigravity reads `decision`"
+    assert payload["permissionDecision"] == "deny", "Copilot reads `permissionDecision`"
+    assert payload["reason"]
+    assert payload["permissionDecisionReason"]
+    assert "BLOCKED" in err, "Claude/Gemini/Codex surface the stderr message"
+
+
+def test_malformed_stdin_denies_instead_of_allowing(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Unparsable stdin denies for every CLI rather than returning 1.
+
+    Regression for #679: ``return 1`` is not a block for any of the five CLIs,
+    so malformed input previously let the operation through everywhere.
+    """
+    _set_stdin(monkeypatch, "not json")
+    code = int(hook.run())
+    captured = capsys.readouterr()
+    _assert_denies_every_contract(code, captured.out, captured.err)
+
+
+def test_internal_error_denies_instead_of_allowing(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """An unexpected exception inside ``main`` denies for every CLI."""
+
+    def _boom() -> tuple[str, str, dict[str, object]]:
+        raise RuntimeError("simulated internal failure")
+
+    monkeypatch.setattr(hook, "_parse_input", lambda *_: _boom())
+    _set_stdin(monkeypatch, _bash_payload("git status"))
+    code = int(hook.run())
+    captured = capsys.readouterr()
+    _assert_denies_every_contract(code, captured.out, captured.err)
+    assert "RuntimeError" in captured.out
+
+
+def test_non_dict_toplevel_payload_denies(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Valid JSON that isn't an object denies rather than raising a traceback."""
+    _set_stdin(monkeypatch, '"a bare string"')
+    code = int(hook.run())
+    captured = capsys.readouterr()
+    _assert_denies_every_contract(code, captured.out, captured.err)
+
+
+def test_run_passes_through_normal_outcomes(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """``run`` is transparent when ``main`` completes normally."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    _set_stdin(monkeypatch, _bash_payload("git status"))
+    assert int(hook.run()) == 0
+    assert capsys.readouterr().out.strip() == ""
+
+
+def test_fail_closed_payload_is_a_single_json_object(
+    hook: types.ModuleType,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Both stdout keys ride in one object; two objects would break parsers."""
+    assert hook._fail_closed("probe") == 2
+    out = capsys.readouterr().out
+    assert len(out.strip().splitlines()) == 1
+    assert set(json.loads(out)) == {
+        "decision",
+        "reason",
+        "permissionDecision",
+        "permissionDecisionReason",
+    }
+
+
+def test_script_denies_malformed_input_as_a_subprocess() -> None:
+    """End-to-end through the real ``__main__`` path, not just ``main()``.
+
+    The in-process tests bypass the script's entry point; this one exercises
+    the exit code a CLI actually observes.
+    """
+    proc = subprocess.run(
+        [sys.executable, str(HOOK_PATH)],
+        input="not json",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    _assert_denies_every_contract(proc.returncode, proc.stdout, proc.stderr)

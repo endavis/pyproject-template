@@ -868,7 +868,7 @@ LOG_FILE = Path(__file__).parent / "hook-debug.jsonl"
 
 
 def _log(entry: dict) -> None:
-    """Append a JSON log entry. Only active when HOOK_DEBUG=1 is set."""
+    """Append a JSON log entry. Only active when HOOK_BLOCKCOMMAND_DEBUG=1 is set."""
     if not os.environ.get("HOOK_BLOCKCOMMAND_DEBUG"):
         return
     try:
@@ -924,13 +924,45 @@ def _block_response(fmt: str, reason: str, command: str) -> int:
     return 2  # Exit 2 = Block and show stderr to Claude/Gemini/Codex
 
 
+def _fail_closed(reason: str) -> int:
+    """Deny using every supported CLI's contract at once.
+
+    Used when the hook cannot tell which CLI called it (unparsable stdin) or
+    when it hits an unexpected internal error. A hook that cannot evaluate a
+    command must not let it through, and at that point the calling CLI is
+    unknown -- so emit all three contracts together:
+
+    - stdout JSON carrying both ``decision`` (Antigravity) and
+      ``permissionDecision`` (Copilot) keys
+    - exit code 2 + stderr (Claude/Gemini/Codex)
+
+    Verified against the real CLIs: ``agy`` and ``copilot`` both honour the
+    combined payload and both tolerate the extra key and the non-zero exit.
+    """
+    manual = f"Blocked: {reason}. If intentional, ask the user to run it manually."
+
+    print(
+        json.dumps(
+            {
+                "decision": "deny",
+                "reason": manual,
+                "permissionDecision": "deny",
+                "permissionDecisionReason": manual,
+            }
+        )
+    )
+    print(f"BLOCKED: {manual}", file=sys.stderr)
+    return 2
+
+
 def main() -> int:
     """Main entry point."""
     try:
         input_data = json.load(sys.stdin)
     except json.JSONDecodeError as e:
-        print(f"Invalid JSON input: {e}", file=sys.stderr)
-        return 1
+        # Deny rather than return 1: no agent treats 1 as a block, so returning
+        # it here would let the operation through on unparsable input.
+        return _fail_closed(f"hook could not parse its input ({e})")
 
     tool_name, command, tool_input = _parse_input(input_data)
     fmt = _hook_format(input_data)
@@ -964,5 +996,18 @@ def main() -> int:
     return 0
 
 
+def run() -> int:
+    """Invoke :func:`main`, denying rather than propagating any internal error.
+
+    Without this guard an unexpected exception produces no deny payload at all,
+    which the stdout-contract CLIs (Antigravity, Copilot) read as "allow".
+    """
+    try:
+        return main()
+    # Broad by design: a hook that cannot evaluate a command must deny.
+    except Exception as exc:
+        return _fail_closed(f"hook raised {type(exc).__name__}: {exc}")
+
+
 if __name__ == "__main__":
-    sys.exit(main())
+    sys.exit(run())
