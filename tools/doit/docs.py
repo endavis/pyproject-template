@@ -16,9 +16,13 @@ def task_docs_serve() -> dict[str, Any]:
 
 
 def task_docs_build() -> dict[str, Any]:
-    """Build documentation site."""
+    """Build documentation site (strict: warnings fail the build)."""
     return {
-        "actions": ["uv run mkdocs build"],
+        # --strict turns mkdocs warnings into a non-zero exit. Without it the
+        # docs job stayed green while the published site carried broken links.
+        # docs_serve is deliberately left non-strict so local authoring is not
+        # blocked mid-edit.
+        "actions": ["uv run mkdocs build --strict"],
         "title": title_with_actions,
     }
 

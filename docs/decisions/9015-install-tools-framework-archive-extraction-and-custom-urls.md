@@ -47,4 +47,4 @@ The three capabilities are intentionally orthogonal so simple cases stay simple 
 
 ## Related Documentation
 
-- [install_tools Framework](../../development/install-tools-framework.md)
+- [install_tools Framework](../development/install-tools-framework.md)

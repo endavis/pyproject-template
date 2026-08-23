@@ -64,6 +64,27 @@ markdown_extensions:
   - toc:
       permalink: true
 
+# `docs/` deliberately links to real repository files that live outside
+# `docs_dir` — AGENTS.md, README.md, .github/CONTRIBUTING.md, hook scripts
+# under tools/, and their tests. Those links are kept relative so they resolve
+# when the repository is browsed on GitHub, which is how a template is mostly
+# read, and so downstream forks resolve to their own files rather than to this
+# upstream repo.
+#
+# mkdocs 1.6 reports those identically to genuinely broken links
+# (`links.not_found`), so silencing one silences the other. `not_found` is
+# therefore ignored here and link validation lives in
+# `tests/test_docs_links.py`, which resolves every relative link against the
+# whole repository — including the out-of-docs links mkdocs can never check.
+# Anchors are still validated here, where mkdocs has the rendered headings.
+#
+# Trade-off: the out-of-docs links do not resolve on the published site.
+validation:
+  links:
+    not_found: ignore
+    unrecognized_links: ignore
+    anchors: warn
+
 nav:
   - Home: index.md
   - Getting Started:
