@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787509496779,
+  "lastUpdate": 1787510115028,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10915,6 +10915,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.105260227208736e-7",
             "extra": "mean: 1.9866373891036733 usec\nrounds: 51951"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b175cc91cffbbdbba217802456fd3f835601546f",
+          "message": "chore: update stale Claude model pins and make staleness surface (merges PR #720, addresses #696)\n\n.claude/settings.json pinned CLAUDE_CODE_SUBAGENT_MODEL to claude-sonnet-4-6,\ntwo model generations old. In a template that matters more than in an ordinary\nrepo: every spawned project inherits it, and nothing in the update-check\nmachinery looks at model IDs.\n\nThe pin itself is deliberate -- AI_SETUP.md records it as a cost/quality\ntrade-off with implement-worker intentionally not overriding it -- so update\nthe ID rather than removing the pin, which would have put every downstream\nproject's implementation subagent on Opus.\n\nThe stale ID had spread beyond the settings file. tools/hooks/ai/\nprecompact-checkpoint.py passes it to a live `claude -p` invocation, and three\nplaces in the docs quoted it, including an example using claude-opus-4-7. All\nfive updated to the current family.\n\nAdd tests/template/test_model_pins.py, checking two properties: no file names\na model outside CURRENT_MODEL_IDS, and settings.json agrees with the ID the\nAI_SETUP.md table documents. The first is how a family change surfaces at all;\nthe second needs no maintenance and catches the two drifting apart. Verified:\nreintroducing claude-sonnet-4-6 fails both.\n\nAlso note the review step in the AI sync checklist, and record the audit\nresult: no other agent config pins a model ID.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T19:34:52+01:00",
+          "tree_id": "301975eba233897d6fe2a80cf679f19a3d39afce",
+          "url": "https://github.com/endavis/pyproject-template/commit/b175cc91cffbbdbba217802456fd3f835601546f"
+        },
+        "date": 1787510114375,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9254352.782830924,
+            "unit": "iter/sec",
+            "range": "stddev: 8.884024109826502e-9",
+            "extra": "mean: 108.05725948282881 nsec\nrounds: 46400"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9014326.95008228,
+            "unit": "iter/sec",
+            "range": "stddev: 1.163486163635683e-8",
+            "extra": "mean: 110.93451630250358 nsec\nrounds: 85632"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6696826.237023063,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2783166214942079e-8",
+            "extra": "mean: 149.3244657404355 nsec\nrounds: 63602"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1798217.8359437755,
+            "unit": "iter/sec",
+            "range": "stddev: 2.880375434004549e-7",
+            "extra": "mean: 556.1061513301922 nsec\nrounds: 52802"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 504025.69157494005,
+            "unit": "iter/sec",
+            "range": "stddev: 5.236728003709127e-7",
+            "extra": "mean: 1.9840258477207346 usec\nrounds: 50101"
           }
         ]
       }
