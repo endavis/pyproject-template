@@ -27,7 +27,7 @@ DOCS_DIR = REPO_ROOT / "docs"
 # Root-level files matter as much as `docs/`: README.md and
 # .github/CONTRIBUTING.md are the first thing a new contributor opens, and
 # their links were broken for as long as nothing checked them (#686).
-_ROOT_MARKDOWN = ("README.md", "AGENTS.md", "CHANGELOG.md")
+_ROOT_MARKDOWN = ("README.md", "README.template.md", "AGENTS.md", "CHANGELOG.md")
 _GITHUB_MARKDOWN_DIR = REPO_ROOT / ".github"
 
 # Markdown inline links: [text](target). Reference-style and bare autolinks are

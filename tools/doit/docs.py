@@ -40,7 +40,10 @@ def task_spell_check() -> dict[str, Any]:
     return {
         "actions": [
             "uv run codespell src/ tests/ tools/ docs/"
-            + optional_root_files("bootstrap.py")
+            # README.template.md is the consumer README; `configure` moves it
+            # over README.md, so it is absent in spawned projects -- hence the
+            # optional helper rather than a literal path.
+            + optional_root_files("bootstrap.py", "README.template.md")
             + " README.md"
         ],
         "title": title_with_actions,
