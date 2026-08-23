@@ -518,3 +518,85 @@ def test_script_denies_malformed_input_as_a_subprocess() -> None:
         check=False,
     )
     _assert_denies_every_contract(proc.returncode, proc.stdout, proc.stderr)
+
+
+# --- Launcher fail-closed behaviour (issue #680) ---------------------------
+#
+# `block-dangerous-commands.sh` exists because the in-script guards from #679
+# cannot cover a script that never starts. It checks preconditions rather than
+# the hook's exit status: the hook exits 2 on its own fail-closed path, which
+# is indistinguishable from "python3 could not find the file", so branching on
+# exit status would append a second deny payload to the hook's own.
+
+LAUNCHER_PATH = HOOK_PATH.with_suffix(".sh")
+
+requires_posix_sh = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="launcher is POSIX sh; the hook wirings that use it are POSIX-only",
+)
+
+
+def _run_launcher(
+    payload: str, *, cwd: Path | None = None, script: Path | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run the launcher with *payload* on stdin."""
+    return subprocess.run(
+        ["sh", str(script or LAUNCHER_PATH)],
+        input=payload,
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=cwd,
+    )
+
+
+@requires_posix_sh
+def test_launcher_passes_through_a_normal_deny() -> None:
+    """A dangerous command still denies with the CLI's native contract."""
+    proc = _run_launcher(_agy_payload(DANGEROUS))
+    assert proc.returncode == 0
+    assert json.loads(proc.stdout)["decision"] == "deny"
+
+
+@requires_posix_sh
+def test_launcher_passes_through_an_allow() -> None:
+    """A safe command still produces no deny payload."""
+    proc = _run_launcher(_agy_payload("git status"))
+    assert proc.returncode == 0
+    assert proc.stdout.strip() == ""
+
+
+@requires_posix_sh
+def test_launcher_emits_exactly_one_payload_on_fail_closed() -> None:
+    """Regression: the launcher must not append a payload to the hook's own.
+
+    Both "hook fail-closed" and "hook missing" exit 2. A launcher that keyed
+    off the exit status would emit two JSON objects on stdout here.
+    """
+    proc = _run_launcher("not json")
+    assert proc.returncode == 2
+    lines = [ln for ln in proc.stdout.strip().splitlines() if ln.strip()]
+    assert len(lines) == 1, f"expected one JSON object, got {len(lines)}"
+    json.loads(lines[0])
+
+
+@requires_posix_sh
+def test_launcher_denies_when_the_hook_script_is_missing(tmp_path: Path) -> None:
+    """The case the launcher exists for: the .py is absent, so nothing can run."""
+    stray = tmp_path / LAUNCHER_PATH.name
+    stray.write_text(LAUNCHER_PATH.read_text(encoding="utf-8"), encoding="utf-8")
+    proc = _run_launcher(_agy_payload("git status"), script=stray)
+
+    payload = json.loads(proc.stdout)
+    assert proc.returncode == 2
+    assert payload["decision"] == "deny"
+    assert payload["permissionDecision"] == "deny"
+    assert "BLOCKED" in proc.stderr
+
+
+@requires_posix_sh
+def test_launcher_resolves_the_hook_independently_of_cwd(tmp_path: Path) -> None:
+    """The launcher locates the hook via its own path, not the caller's CWD."""
+    proc = _run_launcher(_agy_payload(DANGEROUS), cwd=tmp_path)
+    assert proc.returncode == 0
+    assert json.loads(proc.stdout)["decision"] == "deny"

@@ -188,8 +188,15 @@ def test_antigravity_hooks_json_wires_shared_hook() -> None:
         for entry in group.get("PreToolUse", [])
         for handler in entry.get("hooks", [])
     ]
-    assert any("block-dangerous-commands.py" in c for c in commands), (
-        "Antigravity .agents/hooks.json must wire block-dangerous-commands.py on PreToolUse"
+    assert any("block-dangerous-commands" in c for c in commands), (
+        "Antigravity .agents/hooks.json must wire the shared dangerous-command hook on PreToolUse"
+    )
+    # The hook is agy's only gate (delegated invocations pass
+    # --dangerously-skip-permissions), so its path must not depend on the CWD
+    # agy happens to run handlers from. A bare "../tools/..." satisfied the
+    # assertion above while resolving outside the repo from any other CWD.
+    assert any("$(git rev-parse --show-toplevel)" in c for c in commands), (
+        "Antigravity hook path must resolve independently of the handler CWD"
     )
 
     matchers = [
@@ -200,6 +207,54 @@ def test_antigravity_hooks_json_wires_shared_hook() -> None:
     assert any("run_command" in m for m in matchers), (
         "Antigravity hook matcher must target the run_command tool"
     )
+
+
+def test_copilot_hooks_json_pins_its_hook_path() -> None:
+    """Copilot's wiring must keep an explicit cwd so its relative path resolves."""
+    hooks_path = REPO_ROOT / ".github" / "hooks" / "copilot-hooks.json"
+    assert hooks_path.exists(), f"Missing Copilot hooks config: {hooks_path}"
+
+    config = json.loads(hooks_path.read_text(encoding="utf-8"))
+    entries = config.get("hooks", {}).get("preToolUse", [])
+    assert entries, "Copilot config must define a preToolUse hook"
+
+    for entry in entries:
+        assert "block-dangerous-commands" in entry.get("bash", ""), (
+            "Copilot preToolUse hook must wire the shared dangerous-command hook"
+        )
+        # The path is relative, so the cwd pin is what makes it resolve.
+        assert entry.get("cwd"), (
+            "Copilot hook uses a relative path and must pin cwd, or it resolves "
+            "against an unstated working directory"
+        )
+
+
+def test_stdout_contract_wirings_route_through_the_launcher() -> None:
+    """Antigravity and Copilot must invoke the launcher, not the .py directly.
+
+    Both block only on a stdout deny payload, so a hook that cannot start reads
+    as "allow". The launcher denies in that case; calling the .py directly does
+    not, because a script that never runs cannot emit its own deny.
+    """
+    agy = json.loads((REPO_ROOT / ".agents" / "hooks.json").read_text(encoding="utf-8"))
+    agy_commands = [
+        handler.get("command", "")
+        for group in agy.values()
+        for entry in group.get("PreToolUse", [])
+        for handler in entry.get("hooks", [])
+    ]
+    copilot = json.loads(
+        (REPO_ROOT / ".github" / "hooks" / "copilot-hooks.json").read_text(encoding="utf-8")
+    )
+    copilot_commands = [e.get("bash", "") for e in copilot.get("hooks", {}).get("preToolUse", [])]
+
+    for label, commands in (("Antigravity", agy_commands), ("Copilot", copilot_commands)):
+        assert any("block-dangerous-commands.sh" in c for c in commands), (
+            f"{label} must route through the fail-closed launcher"
+        )
+
+    launcher = REPO_ROOT / "tools" / "hooks" / "ai" / "block-dangerous-commands.sh"
+    assert launcher.exists(), f"Missing launcher: {launcher}"
 
 
 def test_gemini_disabled_list_contains_antigravity_skills() -> None:
