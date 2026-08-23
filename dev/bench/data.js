@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787494993883,
+  "lastUpdate": 1787496311913,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -10443,6 +10443,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.451224193760818e-7",
             "extra": "mean: 1.869738603339521 usec\nrounds: 52296"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9a40965b21268aed878f0f205861f846e1a917c8",
+          "message": "chore: author the first per-stack rule file and load it (merges PR #711, addresses #704)\n\nThe branch-narrowing typing trap produced a defect in two consecutive PRs\n(#701, #700), which meets the bar .claude/rules/README.md sets for authoring\na rule file. All four per-stack rule directories were README-only until now,\nso this is the first exercise of a mechanism the template built and never\nloaded.\n\nMirror the rule to all four agent surfaces, since every agent in the\ndelegation matrix edits this codebase and a rule only Claude loads is a\nhalf-installed control. Wire each loader the way that CLI actually works:\nClaude glob-imports, Gemini needs an explicit per-file import because globs\nmake it log ImportProcessor ENOENT on every run.\n\nEnable @./rules/*.md and revise the README guidance that kept it commented.\nThat guidance assumed the template ships no rule files; it now ships one, for\na trap in its own code.\n\nThe drafted checklist in #704 advised annotating with the widest type, which\nis right for cleanup.py but wrong for _parse_input, where the fix was to\nremove the annotation. The discriminator is whether the branches return early\nor fall through, so the rule leads with that.\n\nAdd tests pinning the four copies byte-identical, the observed-failures\nfooter, the line budget, and both loader wirings.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-23T15:44:44+01:00",
+          "tree_id": "a1db5296d942dbd7b1707f796411e8c7e209ef21",
+          "url": "https://github.com/endavis/pyproject-template/commit/9a40965b21268aed878f0f205861f846e1a917c8"
+        },
+        "date": 1787496310844,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8464910.88947284,
+            "unit": "iter/sec",
+            "range": "stddev: 1.101890096907153e-8",
+            "extra": "mean: 118.13473444163756 nsec\nrounds: 83522"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9153094.5539417,
+            "unit": "iter/sec",
+            "range": "stddev: 1.220698089795896e-8",
+            "extra": "mean: 109.25266794817044 nsec\nrounds: 92082"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6265726.883851498,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3843876073143624e-8",
+            "extra": "mean: 159.59840231422712 nsec\nrounds: 62384"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1718261.260942003,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5197507234827515e-7",
+            "extra": "mean: 581.9836731067135 nsec\nrounds: 57268"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 486124.4209848162,
+            "unit": "iter/sec",
+            "range": "stddev: 5.341325338941394e-7",
+            "extra": "mean: 2.0570865334725372 usec\nrounds: 37708"
           }
         ]
       }
