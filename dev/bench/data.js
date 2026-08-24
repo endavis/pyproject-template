@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787515508324,
+  "lastUpdate": 1787569506656,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11151,6 +11151,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.83461580489845e-7",
             "extra": "mean: 2.0291913731095197 usec\nrounds: 55729"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fcf65c4a119b955fb80d24635f15be759ffc8dfe",
+          "message": "fix: keep the tests a spawned project's coverage gate depends on (merges PR #732, addresses #731)\n\nThree code paths turn the template into a real project, and all three\nremoved tests/template/ wholesale — including the suites covering\ntools/doit/ and tools/hooks/, code that ships to and runs in the spawned\nproject. The shipped coverage gate measures that code, so a generated\nproject failed its own first CI run at 33.98% against a fail_under of 54.\n\n- configure.py and setup_repo.py now shed through one helper,\n  remove_template_owned_tests(), driven by TEMPLATE_OWNED_TEST_FILES.\n- test_configure_paths.py and test_readme_split.py join that list; their\n  targets do not survive configuration.\n- tools/pyproject_template/ leaves the gate's scope — the one part of\n  tools/ the spawned project does not keep.\n- The manual setup route now runs template_clean --all, matching what the\n  bootstrap wizard already did automatically.\n\nTemplate and spawned shapes now measure the same code with the same tests\nand both report 64.34%, so one threshold is honest in both.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T12:04:44+01:00",
+          "tree_id": "0f930d8409e281c7bc1036cf10d1606c0120844b",
+          "url": "https://github.com/endavis/pyproject-template/commit/fcf65c4a119b955fb80d24635f15be759ffc8dfe"
+        },
+        "date": 1787569505944,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11872022.17863565,
+            "unit": "iter/sec",
+            "range": "stddev: 8.510606789889846e-9",
+            "extra": "mean: 84.23164857285681 nsec\nrounds: 114772"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11378480.43851062,
+            "unit": "iter/sec",
+            "range": "stddev: 7.991068898452111e-9",
+            "extra": "mean: 87.885197448289 nsec\nrounds: 78071"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8087091.106133032,
+            "unit": "iter/sec",
+            "range": "stddev: 3.076356278630895e-7",
+            "extra": "mean: 123.65385611170214 nsec\nrounds: 78561"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2346221.935360199,
+            "unit": "iter/sec",
+            "range": "stddev: 2.592590221378442e-7",
+            "extra": "mean: 426.2171386810759 nsec\nrounds: 47168"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 658482.3716109594,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9991007410894606e-7",
+            "extra": "mean: 1.5186435402264862 usec\nrounds: 58562"
           }
         ]
       }
