@@ -8,15 +8,32 @@ from unittest.mock import MagicMock, patch
 import pytest
 from hypothesis import HealthCheck, settings
 
-# CI profile: fewer examples, relaxed deadline for slow CI runners
+# CI profile: fewer examples, no deadline.
+#
+# `deadline=None` rather than a larger number (#736). These are property tests
+# over string validation — they assert what a value *is*, never how long it took,
+# and `benchmark.yml` covers timing separately. A wall-clock budget on a shared
+# runner only adds a way for them to fail for reasons unrelated to the property.
+#
+# Windows runners were seen taking 1506ms on an example's first call and 0.01ms
+# on the retry: interpreter and import warmup, not the code under test. The
+# earlier 200ms -> 500ms relaxation did not survive that, and any finite
+# replacement is a threshold a bad runner can still cross.
+#
+# Note that `suppress_health_check=[HealthCheck.too_slow]` does *not* cover this.
+# The health check and the per-example deadline are separate mechanisms, which is
+# why the profile looked protected against slow runners while still failing on
+# them.
 settings.register_profile(
     "ci",
     max_examples=50,
-    deadline=500,
+    deadline=None,
     suppress_health_check=[HealthCheck.too_slow, HealthCheck.differing_executors],
 )
 
-# Default profile: more thorough exploration for local development
+# Default profile: more thorough exploration for local development.
+# Keeps Hypothesis's default deadline — a developer machine is not a shared
+# runner, so a genuinely pathological slowdown is worth surfacing locally.
 settings.register_profile(
     "default",
     max_examples=200,
