@@ -15,6 +15,8 @@ Optional focus area can be given as a freeform argument.
 
 ## Instructions
 
+**Read-only.** Review and report — do not edit files, commit, or push. Findings go to the user and the PR; any fix is a separate change the user asks for.
+
 This skill runs inline in the active Copilot session. Copilot performs the adversarial review directly.
 
 ### Step 1: Gather review context
