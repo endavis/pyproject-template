@@ -229,6 +229,33 @@ docs:
       run: uv run doit docs_build
 ```
 
+### Tests of shipped assets must fit the project, not the template
+
+The template wires four AI agents; most projects spawned from it keep one. Tests
+that assert on agent wiring therefore derive the roster from what is on disk
+rather than hardcoding all four:
+
+```python
+from agent_roster import present_agents, agent_is_present, skip_if_absent
+
+AGENTS = present_agents()          # size a matrix to this project
+skip_if_absent("codex")            # or skip a whole agent-specific test
+```
+
+`tests/agent_roster.py` keys presence on each agent's self-action skill directory,
+not its config root — `.agents/` is read by both Codex and Antigravity, so its
+existence cannot distinguish them.
+
+Before this, `test_delegation_matrix.py` and four other files asserted that all
+68 delegation files existed, so a project that dropped an unused agent got 56
+failures on its first run (#690). Dropping an agent should narrow what the suite
+checks, never red it.
+
+The same principle does **not** license shedding these tests. They cover
+`tools/doit/`, `tools/hooks/`, workflows and agent assets — code that ships to and
+runs in the project, and that the gate below measures. Shedding them was measured
+at 40.73% total and 8.27% on `tools/hooks/`, well under `fail_under` (#731).
+
 ### Coverage Requirements
 
 - **Enforced threshold**: `fail_under = 54` in `pyproject.toml`

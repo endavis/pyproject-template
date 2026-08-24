@@ -19,6 +19,7 @@ import re
 from pathlib import Path
 
 import pytest
+from agent_roster import ALL_AGENTS, agent_is_present, present_agents
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 DOCS_DIR = REPO_ROOT / "docs"
@@ -71,6 +72,31 @@ def _resolve(source: Path, target: str) -> Path:
     return (source.parent / target.split("#")[0]).resolve()
 
 
+# Which agents each config root belongs to. `.agents/` is read by both Codex and
+# Antigravity, so it is only absent when neither is wired.
+_AGENT_CONFIG_ROOTS: dict[Path, tuple[str, ...]] = {
+    REPO_ROOT / ".claude": ("claude",),
+    REPO_ROOT / ".codex": ("codex",),
+    REPO_ROOT / ".copilot": ("copilot",),
+    REPO_ROOT / ".github" / "skills": ("copilot",),
+    REPO_ROOT / ".agents": ("codex", "antigravity"),
+}
+
+
+def _points_into_an_unwired_agent(resolved: Path) -> bool:
+    """Return whether *resolved* lives under a config root this project dropped.
+
+    The template's AI docs describe every agent it can wire. A project that keeps
+    only some still ships that prose, so links into the dropped agents' config
+    dirs dangle — expected, not broken (#690). In the template every agent is
+    wired, so this never fires and the check is exactly as strict as before.
+    """
+    for root, owners in _AGENT_CONFIG_ROOTS.items():
+        if resolved == root or root in resolved.parents:
+            return not any(agent_is_present(agent) for agent in owners)
+    return False
+
+
 @pytest.mark.parametrize("doc", _iter_markdown(), ids=lambda p: str(p.relative_to(REPO_ROOT)))
 def test_relative_links_resolve(doc: Path) -> None:
     """Every relative link in a docs page points at a file that exists.
@@ -81,7 +107,7 @@ def test_relative_links_resolve(doc: Path) -> None:
     broken = []
     for target in _link_targets(doc):
         resolved = _resolve(doc, target)
-        if not resolved.exists():
+        if not resolved.exists() and not _points_into_an_unwired_agent(resolved):
             broken.append(f"{target} -> {resolved}")
     assert not broken, f"{doc.relative_to(REPO_ROOT)} has broken links:\n  " + "\n  ".join(broken)
 
@@ -108,3 +134,28 @@ def test_the_scanner_actually_finds_links() -> None:
     """
     total = sum(len(_link_targets(doc)) for doc in _iter_markdown())
     assert total > 100, f"expected many repo links across docs/, found {total}"
+
+
+def test_unwired_agent_filter_is_inert_in_the_template() -> None:
+    """The absent-agent exemption must not be masking real breakage here.
+
+    When every agent is wired nothing may qualify for the exemption. If this
+    fails, `_points_into_an_unwired_agent` is swallowing links it should be
+    reporting.
+
+    Skipped in a project that dropped an agent — there the exemption firing is
+    the point, not a defect.
+    """
+    if set(present_agents()) != set(ALL_AGENTS):
+        pytest.skip("project does not wire every agent; the exemption is expected to fire")
+
+    exempted = [
+        f"{doc.relative_to(REPO_ROOT)}: {target}"
+        for doc in _iter_markdown()
+        for target in _link_targets(doc)
+        if _points_into_an_unwired_agent(_resolve(doc, target))
+    ]
+    assert not exempted, (
+        "links were exempted as belonging to an unwired agent, but this project "
+        f"wires all of them: {exempted}"
+    )

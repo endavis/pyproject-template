@@ -300,6 +300,9 @@ include = [
     "tools",          # Tools directory (migrate_existing_project.py)
     ".github",        # Any Python in GitHub workflows/scripts
 ]
+# tests/ is not a package, so pytest puts it on sys.path; mirror that here so
+# shared test helpers (tests/agent_roster.py) resolve for the LSP too.
+extraPaths = ["tests"]
 exclude = [
     "**/__pycache__",
     "**/.venv",

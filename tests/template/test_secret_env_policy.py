@@ -23,6 +23,8 @@ import tomllib
 import types
 from pathlib import Path
 
+from agent_roster import skip_if_absent
+
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HOOK_PATH = REPO_ROOT / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
 CODEX_CONFIG = REPO_ROOT / ".codex" / "config.toml"
@@ -44,6 +46,8 @@ def test_codex_exclude_list_matches_the_hook_patterns() -> None:
     Two copies of a secret-pattern list drift silently: the config would keep
     excluding yesterday's variable names while the hook checked today's.
     """
+    skip_if_absent("codex")
+
     with CODEX_CONFIG.open("rb") as fh:
         policy = tomllib.load(fh)["shell_environment_policy"]
 
@@ -55,6 +59,8 @@ def test_codex_exclude_list_matches_the_hook_patterns() -> None:
 
 def test_codex_still_restricts_the_inherited_environment() -> None:
     """The allowlist is the stronger half of Codex's control; keep it."""
+    skip_if_absent("codex")
+
     with CODEX_CONFIG.open("rb") as fh:
         policy = tomllib.load(fh)["shell_environment_policy"]
 
