@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787597932955,
+  "lastUpdate": 1787598998725,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11918,6 +11918,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.855228363608372e-7",
             "extra": "mean: 2.032581476982517 usec\nrounds: 54991"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ef5b9c76810b65dfec6ca0b3e36ac84ac3c6f2a",
+          "message": "chore: cover the mandated workflow and release paths (merges PR #748, addresses #708)\n\n#689 pointed the gate at tools/ and set fail_under to what the code then\nachieved, making the debt visible without paying any of it down. This pays\ndown the two modules #708 ranks first: the entry points AGENTS.md requires\nfor every change, and the release paths that mutate remote state.\n\n- github.py 50.94% -> 81.50%: `doit issue`, `doit pr` and `doit pr_merge`,\n  including the guards that must refuse before calling gh — a PR from main,\n  a non-open PR, a non-conventional title, an incomplete issue body.\n- release.py 40.26% -> 60.53%: validate_issue_links, plus the guards that\n  stop `doit release` and `doit release_tag` before they touch the remote.\n- fail_under 54 -> 70. Both coverage shapes were measured first and read\n  73.27% identically; setting the floor from the template number alone is\n  what shipped a broken gate in #731. The ~3pp margin is deliberate.\n\nOverall 64.67% -> 73.27%.\n\nAddresses #708\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T20:15:54+01:00",
+          "tree_id": "45360583213bbd8ced00477613cb80f573e7e1ad",
+          "url": "https://github.com/endavis/pyproject-template/commit/4ef5b9c76810b65dfec6ca0b3e36ac84ac3c6f2a"
+        },
+        "date": 1787598997804,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8331658.948574951,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1314343244954791e-8",
+            "extra": "mean: 120.02411598605346 nsec\nrounds: 81820"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9330637.45722281,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1012862917140728e-8",
+            "extra": "mean: 107.1738136418433 nsec\nrounds: 91233"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6164817.898910531,
+            "unit": "iter/sec",
+            "range": "stddev: 3.741001860225576e-8",
+            "extra": "mean: 162.2107929865574 nsec\nrounds: 61426"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1747719.792456833,
+            "unit": "iter/sec",
+            "range": "stddev: 3.267562697878453e-7",
+            "extra": "mean: 572.1741003998495 nsec\nrounds: 68696"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492810.90493244707,
+            "unit": "iter/sec",
+            "range": "stddev: 5.663910511342772e-7",
+            "extra": "mean: 2.029175876570907 usec\nrounds: 67536"
           }
         ]
       }
