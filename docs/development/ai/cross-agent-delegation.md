@@ -37,6 +37,52 @@ Self-action and cross-agent delegation share the same naming convention within e
 | `review` | optional focus area | Reviews current PR or branch-vs-main changes. |
 | `adversarial-review` | optional focus | Steerable challenge review — pressure-tests design, hidden assumptions, alternatives, failure modes. |
 
+## Workflow contract
+
+The naming convention above says where the files live. This says what they must **say**.
+
+Because a user can switch agents mid-workflow — plan with Codex, implement with Claude,
+review with Copilot — the workflow files carry a handful of literal strings that let the
+next agent pick up the state the previous one left. These are a contract, not prose
+choices: if one host stops emitting the plan-comment header, the next agent cannot find
+the plan.
+
+| Element | Literal | Required in | Why it is load-bearing |
+| :--- | :--- | :--- | :--- |
+| Plan-comment header | `Implementation Plan for` | every `plan` file | How `implement` locates the plan comment on the issue |
+| Branch-name pattern | `<type>/` | every `implement` file | `doit pr` derives the issue number from the branch name |
+| Validation command | `doit check` | every `implement` file | The pre-commit gate the workflow promises |
+| Finalize handoff | `ghi-finalize` | every `implement` file | Tells the user the next step; implement never opens a PR |
+| Issue reference | `Addresses #` | every `ghi-finalize` file | Links the PR to its issue; `doit pr_merge --auto-close` depends on it |
+| Read-only constraint | the sentence below | every `review` and `adversarial-review` file | A review that edits code is not a review |
+
+The read-only constraint must appear **verbatim** on every surface, because a
+constraint paraphrased per host drifts into a weaker version on one of them, and
+whichever agent is driving decides which version applies:
+
+> **Read-only.** Review and report — do not edit files, commit, or push. Findings go to
+> the user and the PR; any fix is a separate change the user asks for.
+
+### Declared exemptions
+
+Uniform prose is not the goal — agreement on the contract is. Where a host genuinely
+differs, the difference is declared rather than papered over:
+
+| Element | Host | Why |
+| :--- | :--- | :--- |
+| `doit check` in `implement` | Claude | Claude delegates implementation to `.claude/agents/implement-worker.md`, which runs it. The command file itself never names it. |
+
+### Enforcement
+
+`tests/test_cross_agent_contract.py` asserts every element above, and its `EXEMPTIONS`
+table mirrors the one here. **This document is the specification**; when the two
+disagree, the test is the bug. Adding an exemption to the test without adding a row here
+is how a contract quietly becomes a suggestion.
+
+The checks are scoped to the agents a project actually wires (see
+`tests/agent_roster.py`), so a project that keeps one agent is held to the contract for
+that agent only.
+
 ## Matrix
 
 The 4 sources × 4 targets × 4 actions = 64 cells (including self-action). Cross-agent delegation is 4 × 3 × 4 = 48 cells, across **40 distinct files** — Codex and Antigravity share the host-agnostic `.agents/skills/delegate-*` files, so the 8 `antigravity → {claude, copilot}` cells reuse Codex's files.
