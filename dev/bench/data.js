@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787581770378,
+  "lastUpdate": 1787583344830,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11446,6 +11446,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.564961262220184e-7",
             "extra": "mean: 2.066536974921573 usec\nrounds: 55470"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1a17f374fce57e994619f8ee3d8d15eac8c50e24",
+          "message": "fix: repair three dangling pointers in CLAUDE.md's MANDATORY blocks (merges PR #739, addresses #738)\n\n.claude/CLAUDE.md auto-loads into every Claude session. Two blocks marked\nMANDATORY and ending \"NO EXCEPTIONS\" told agents to locate two AGENTS.md\nsections that do not exist there, and to run /commit-commands:commit, which\nis not installed. AGENTS.md's own Sources of Truth table already pointed at\n.github/CONTRIBUTING.md; CLAUDE.md was the file that was wrong.\n\nAn instruction with authoritative framing and no destination is the\ndocumentation form of a control that reports success while doing nothing.\n\n- The two section references now name .github/CONTRIBUTING.md.\n- The commit step names `doit commit`, with `git commit` in conventional\n  format for non-interactive runs where commitizen's prompts cannot be\n  answered.\n- tests/test_instruction_pointers.py checks three pointer shapes: quoted\n  section references, markdown link anchors, and /commands named in\n  CLAUDE.md.\n\nThe anchor half closes a gap in test_markdown_links.py, which splits the\nfragment off before resolving and so validates the file but never the\nsection. All 32 anchors resolve today; the check is preventive.\n\nVerified by restoring the pre-fix CLAUDE.md: the guard names all three\ndefects.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T15:55:16+01:00",
+          "tree_id": "ec30f2b9c9eba3297e7488ea59fc69c8da80bf17",
+          "url": "https://github.com/endavis/pyproject-template/commit/1a17f374fce57e994619f8ee3d8d15eac8c50e24"
+        },
+        "date": 1787583343924,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8994655.472096065,
+            "unit": "iter/sec",
+            "range": "stddev: 1.312884799837736e-8",
+            "extra": "mean: 111.17713214277963 nsec\nrounds: 89199"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8586774.82360112,
+            "unit": "iter/sec",
+            "range": "stddev: 5.084040870445283e-8",
+            "extra": "mean: 116.45816043195369 nsec\nrounds: 92413"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5971312.519229057,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1157931462769755e-8",
+            "extra": "mean: 167.46736949033576 nsec\nrounds: 60053"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1740509.1504957126,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3935206572758606e-7",
+            "extra": "mean: 574.5445232018407 nsec\nrounds: 44999"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 478830.1524403374,
+            "unit": "iter/sec",
+            "range": "stddev: 6.888089172023506e-7",
+            "extra": "mean: 2.088423201637455 usec\nrounds: 55203"
           }
         ]
       }
