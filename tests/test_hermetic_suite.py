@@ -10,25 +10,45 @@ caused by a branch that ran in one environment and not the other.
 every test. These tests keep that fixture honest — that it is installed, that it
 answers what the code under test calls, and that it is loud rather than silent
 when something unmocked slips through.
+
+Known limitation, stated rather than papered over: on Windows a PATH stub cannot
+intercept ``subprocess.run(["gh", ...])`` from Python at all, because
+``CreateProcess`` searches only ``gh`` and ``gh.exe`` and never consults
+``PATHEXT`` for ``.CMD``. Shell scripts under test *are* covered there, because
+Git Bash resolves the extensionless launcher. Python code that shells out should
+mock ``subprocess.run`` — ``test_setup_repo.py`` already does for both token
+branches — and this fixture is the backstop for everything else.
 """
 
 from __future__ import annotations
 
 import os
 import shutil
-import subprocess  # nosec B404 - the point of this module is to inspect subprocess behaviour
+import subprocess
+import sys  # nosec B404 - the point of this module is to inspect subprocess behaviour
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
+def _stub_dir() -> Path:
+    return Path(os.environ["PATH"].split(os.pathsep)[0])
+
+
 def _run_gh(*args: str) -> subprocess.CompletedProcess[str]:
-    """Invoke whatever `gh` the current PATH resolves to."""
-    return subprocess.run(  # nosec B603 B607 - resolving PATH is the behaviour under test
-        ["gh", *args],
+    """Exercise the stub's dispatch directly.
+
+    Invoking bare ``gh`` would not work on Windows: ``CreateProcess`` searches
+    only for ``gh`` and ``gh.exe``, never ``gh.CMD``, so a Python-level
+    ``subprocess.run(["gh", ...])`` cannot be intercepted by a PATH stub there
+    at all. Running the dispatch module keeps these assertions meaningful on
+    every platform; the launchers are asserted separately.
+    """
+    return subprocess.run(  # nosec B603 - fixed argv, no shell
+        [sys.executable, str(_stub_dir() / "_gh_stub.py"), *args],
         capture_output=True,
         text=True,
-        timeout=10,
+        timeout=30,
         check=False,
     )
 
