@@ -182,13 +182,54 @@ the download path on every OS.
 - **Zip archives** additionally do a `Path.resolve()` zip-slip check as
   defense in depth.
 - Extracted binaries are chmod'd to `0o755`.
+
+### Integrity: what is and is not verified
+
+Pass `sha256=` to `install_tool()` / `create_install_task()` to state the digest you
+expect. It is verified **before** the archive is opened and **before** the executable
+bit goes on, and a mismatch deletes the file and aborts — a failed verification can
+never be mistaken for a completed install.
+
+```python
+create_install_task(
+    name="terraform",
+    repo="hashicorp/terraform",
+    asset_patterns={},
+    url_template="https://releases.hashicorp.com/terraform/{version}/terraform_{os}_{arch}.zip",
+    sha256={"linux": "9d2b...", "darwin": "1f4c..."},   # per-platform, or a single str
+)
+```
+
+**A digest is mandatory for hosts outside `IMPLICITLY_TRUSTED_HOSTS`** — that is, for
+the `url_template` escape hatch, which exists to reach third parties such as
+`releases.hashicorp.com`. Calling it without a digest aborts. GitHub-release installs
+are unchanged and stay optional, because fetching them already rests on the same trust
+as cloning this template.
+
+**What this does not do, stated plainly:** it does not fetch upstream `*.sha256`
+sibling files and verify against those. Over HTTPS from the same origin that serves the
+asset, that defends against almost nothing — TLS already covers the transport, and an
+attacker who can replace the asset can replace the checksum beside it. The protection
+comes from a digest *you* pinned, which is why the parameter takes one from the caller
+rather than fetching one.
+
+Neither this nor anything else here defends against a compromised upstream release when
+the digest floats with the version. `install_tool` resolves "latest" at run time; pinning
+a version alongside a digest is what buys reproducibility, and is a deliberate
+non-goal for now — see below.
 - Status output uses ASCII `[OK]` rather than a checkmark glyph so it
   encodes cleanly on Windows cp1252 consoles (see issue #328).
 
 ## Future work
 
-- **Checksum verification** (SHA256 from a `*.sha256` sibling URL).
-- **GPG signature verification** for projects that publish detached signatures.
+- **Pinned versions alongside pinned digests.** Today `install_tool` resolves the latest
+  release at run time, so a caller-supplied `sha256` only holds for a known version. Pinning
+  both would make installs reproducible and would detect a retagged or replaced upstream
+  asset — at the cost of a digest matrix per tool per platform that ages and needs a refresh
+  task. Deliberately deferred (#694).
+- **GPG signature verification** for projects that publish detached signatures. Unlike a
+  sibling checksum file, a signature is meaningful against a compromised release host,
+  because the signing key is not served alongside the asset.
 - **Archive caching** between runs to avoid redownloading on a fresh
   clone or CI runner.
 - **Windows binary support** (PowerShell-friendly install path).

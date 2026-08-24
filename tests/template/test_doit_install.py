@@ -78,6 +78,7 @@ class TestTaskInstallGh:
             extract_binaries=["gh"],
             url_template="https://github.com/cli/cli/releases/download/v{version}/gh_{version}_{os}_{arch}.tar.gz",
             prefer_brew=False,
+            sha256=None,
         )
 
     @patch("tools.doit.install_tools.install_tool")

@@ -1,5 +1,6 @@
 """Tests for install_tools.py reusable tool installation framework."""
 
+import hashlib
 import json
 import shutil
 import subprocess  # nosec B404 - needed for CompletedProcess in tests
@@ -13,6 +14,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from tools.doit.install_tools import (
+    IntegrityError,
     _get_arch,
     create_install_task,
     download_and_extract_archive,
@@ -20,7 +22,15 @@ from tools.doit.install_tools import (
     get_install_dir,
     get_latest_github_release,
     install_tool,
+    requires_digest,
+    sha256_of,
+    verify_download,
 )
+
+# SHA-256 of an empty file. The urlretrieve mocks below `touch()` their
+# destination, so this is the digest a caller must supply for a download from a
+# host outside IMPLICITLY_TRUSTED_HOSTS (ADR-9015 custom URLs).
+_EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 
 
 class TestGetLatestGithubRelease:
@@ -323,6 +333,7 @@ class TestInstallTool:
             version="2.0.0",
             asset_pattern="mytool.linux-amd64",
             dest_name="mytool",
+            sha256=None,
         )
         captured = capsys.readouterr()
         assert "mytool installed" in captured.out
@@ -500,6 +511,7 @@ class TestInstallTool:
             repo="hashicorp/terraform",
             asset_patterns={},
             url_template="https://releases.example.com/{version}/terraform_{os}_{arch}",
+            sha256=_EMPTY_SHA256,
         )
 
         called_url = mock_urlretrieve.call_args.args[0]
@@ -656,6 +668,7 @@ class TestInstallTool:
             version="1.0.0",
             asset_pattern="mytool.darwin-amd64",
             dest_name="mytool",
+            sha256=None,
         )
 
     @patch("tools.doit.install_tools.urllib.request.urlretrieve")
@@ -685,6 +698,7 @@ class TestInstallTool:
             repo="hashicorp/terraform",
             asset_patterns={},
             url_template="https://releases.example.com/{version}/{os}_{arch}",
+            sha256=_EMPTY_SHA256,
         )
 
         mock_run.assert_not_called()
@@ -731,6 +745,7 @@ class TestCreateInstallTask:
             extract_binaries=None,
             url_template=None,
             prefer_brew=True,
+            sha256=None,
         )
 
     @patch("tools.doit.install_tools.install_tool")
@@ -753,6 +768,7 @@ class TestCreateInstallTask:
             extract_binaries=None,
             url_template=None,
             prefer_brew=True,
+            sha256=None,
         )
 
     @patch("tools.doit.install_tools.install_tool")
@@ -793,7 +809,7 @@ class TestCreateInstallTask:
     @patch("tools.doit.install_tools.install_tool")
     def test_forwards_url_template(self, mock_install: MagicMock) -> None:
         """Test that url_template kwarg is forwarded to install_tool."""
-        template = "https://example.com/{version}/{os}/{arch}/tool.zip"
+        template = "https://github.com/o/r/releases/download/v1/{version}/{os}/{arch}/tool.zip"
         result = create_install_task(
             name="terraform",
             repo="hashicorp/terraform",
@@ -875,7 +891,9 @@ class TestDownloadAndExtractArchive:
             side_effect=lambda url, d: shutil.copy(fixture, d),
         ):
             result = download_and_extract_archive(
-                "https://example.com/age.tar.gz", ["age", "age-keygen"], dest
+                "https://github.com/o/r/releases/download/v1/age.tar.gz",
+                ["age", "age-keygen"],
+                dest,
             )
 
         assert (dest / "age").read_bytes() == b"age-binary"
@@ -892,7 +910,7 @@ class TestDownloadAndExtractArchive:
             side_effect=lambda url, d: shutil.copy(fixture, d),
         ):
             result = download_and_extract_archive(
-                "https://example.com/terraform.zip", ["terraform"], dest
+                "https://github.com/o/r/releases/download/v1/terraform.zip", ["terraform"], dest
             )
 
         assert (dest / "terraform").read_bytes() == b"tf-binary"
@@ -914,7 +932,9 @@ class TestDownloadAndExtractArchive:
             "tools.doit.install_tools.urllib.request.urlretrieve",
             side_effect=lambda url, d: shutil.copy(fixture, d),
         ):
-            download_and_extract_archive("https://example.com/age.tar.gz", ["age"], dest)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/age.tar.gz", ["age"], dest
+            )
 
         assert (dest / "age").exists()
         assert not (dest / "LICENSE").exists()
@@ -943,7 +963,9 @@ class TestDownloadAndExtractArchive:
             "tools.doit.install_tools.urllib.request.urlretrieve",
             side_effect=lambda url, d: shutil.copy(fixture, d),
         ):
-            download_and_extract_archive("https://example.com/x.tar.gz", ["mytool"], dest)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/x.tar.gz", ["mytool"], dest
+            )
 
         # Confirm no file landed outside dest_dir
         assert (dest / "mytool").exists()
@@ -954,7 +976,9 @@ class TestDownloadAndExtractArchive:
 
     def test_unsupported_extension_raises_value_error(self, tmp_path: Path) -> None:
         with pytest.raises(ValueError, match="Unsupported archive extension"):
-            download_and_extract_archive("https://example.com/foo.7z", ["foo"], tmp_path)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/foo.7z", ["foo"], tmp_path
+            )
 
     def test_temp_file_cleanup_on_success(self, tmp_path: Path) -> None:
         fixture = tmp_path / "fixture.tar.gz"
@@ -966,7 +990,9 @@ class TestDownloadAndExtractArchive:
             "tools.doit.install_tools.urllib.request.urlretrieve",
             side_effect=lambda url, d: shutil.copy(fixture, d),
         ):
-            download_and_extract_archive("https://example.com/x.tar.gz", ["mytool"], dest)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/x.tar.gz", ["mytool"], dest
+            )
         after = set(Path(tempfile.gettempdir()).iterdir())
 
         new_files = after - before
@@ -985,7 +1011,9 @@ class TestDownloadAndExtractArchive:
             ),
             pytest.raises(RuntimeError, match="not found in archive"),
         ):
-            download_and_extract_archive("https://example.com/x.tar.gz", ["missing"], dest)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/x.tar.gz", ["missing"], dest
+            )
         after = set(Path(tempfile.gettempdir()).iterdir())
 
         new_files = after - before
@@ -1003,7 +1031,9 @@ class TestDownloadAndExtractArchive:
             ),
             pytest.raises(RuntimeError, match="absent"),
         ):
-            download_and_extract_archive("https://example.com/x.tar.gz", ["absent"], dest)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/x.tar.gz", ["absent"], dest
+            )
 
     @pytest.mark.skipif(
         sys.platform == "win32", reason="Windows does not support Unix file permissions"
@@ -1017,6 +1047,154 @@ class TestDownloadAndExtractArchive:
             "tools.doit.install_tools.urllib.request.urlretrieve",
             side_effect=lambda url, d: shutil.copy(fixture, d),
         ):
-            download_and_extract_archive("https://example.com/x.zip", ["mytool"], dest)
+            download_and_extract_archive(
+                "https://github.com/o/r/releases/download/v1/x.zip", ["mytool"], dest
+            )
 
         assert (dest / "mytool").stat().st_mode & 0o755 == 0o755
+
+
+class TestDownloadIntegrity:
+    """Integrity verification for downloaded binaries and archives (#694).
+
+    The framework runs what it downloads: binaries get `chmod 0o755`, archives
+    get parsed and extracted. Nothing verified what arrived. These tests cover
+    the two halves of the rule — a digest is checked when given, and is
+    mandatory for hosts outside `IMPLICITLY_TRUSTED_HOSTS`.
+
+    What this deliberately does *not* claim: fetching a checksum file from the
+    same origin as the asset would defend against almost nothing, since TLS
+    already covers the transport and an attacker who can replace the asset can
+    replace the checksum. The value here is that a caller reaching an arbitrary
+    third party must state what it expects.
+    """
+
+    def test_sha256_of_matches_hashlib(self, tmp_path: Path) -> None:
+        """The digest helper must agree with hashlib on real bytes."""
+        target = tmp_path / "blob"
+        target.write_bytes(b"integrity" * 5000)
+
+        assert sha256_of(target) == hashlib.sha256(b"integrity" * 5000).hexdigest()
+
+    def test_digest_spans_the_whole_file(self, tmp_path: Path) -> None:
+        """Chunked reading must not stop at the first chunk.
+
+        A helper that hashed only the first block would pass every test above
+        while accepting a file whose tail had been replaced.
+        """
+        big = b"A" * (1024 * 1024 * 2 + 17)
+        tampered = big[:-1] + b"B"
+        a, b = tmp_path / "a", tmp_path / "b"
+        a.write_bytes(big)
+        b.write_bytes(tampered)
+
+        assert sha256_of(a) != sha256_of(b)
+
+    @pytest.mark.parametrize(
+        ("url", "required"),
+        [
+            ("https://github.com/o/r/releases/download/v1/tool", False),
+            ("https://objects.githubusercontent.com/x", False),
+            ("https://releases.hashicorp.com/terraform/1.5.0/x.zip", True),
+            ("https://evil.example/tool", True),
+            ("https://github.com.evil.example/tool", True),
+            ("https://notgithub.com/tool", True),
+        ],
+    )
+    def test_requires_digest_by_host(self, url: str, required: bool) -> None:
+        """Host policy is decided on the parsed hostname, not a substring."""
+        assert requires_digest(url) is required
+
+    def test_matching_digest_passes_and_keeps_the_file(self, tmp_path: Path) -> None:
+        target = tmp_path / "tool"
+        target.write_bytes(b"payload")
+
+        verify_download(target, "https://evil.example/tool", sha256_of(target))
+
+        assert target.exists()
+
+    def test_mismatch_raises_and_deletes_the_file(self, tmp_path: Path) -> None:
+        """Fail closed: nothing is left on disk for a caller to run."""
+        target = tmp_path / "tool"
+        target.write_bytes(b"malicious")
+
+        with pytest.raises(IntegrityError, match="Integrity check failed"):
+            verify_download(target, "https://github.com/o/r/x", "0" * 64)
+
+        assert not target.exists(), "a file that failed verification must not survive"
+
+    def test_missing_digest_on_untrusted_host_raises_and_deletes(self, tmp_path: Path) -> None:
+        target = tmp_path / "tool"
+        target.write_bytes(b"whatever")
+
+        with pytest.raises(IntegrityError, match="no sha256 was given"):
+            verify_download(target, "https://releases.hashicorp.com/x", None)
+
+        assert not target.exists()
+
+    def test_missing_digest_on_github_is_allowed(self, tmp_path: Path) -> None:
+        """GitHub assets keep working without a digest — no behaviour change."""
+        target = tmp_path / "tool"
+        target.write_bytes(b"gh-asset")
+
+        verify_download(target, "https://github.com/cli/cli/releases/download/v1/gh", None)
+
+        assert target.exists()
+
+    def test_digest_comparison_ignores_case_and_whitespace(self, tmp_path: Path) -> None:
+        """Digests copied from checksum files carry stray case and spacing."""
+        target = tmp_path / "tool"
+        target.write_bytes(b"payload")
+        expected = sha256_of(target)
+
+        verify_download(target, "https://evil.example/tool", f"  {expected.upper()}\n")
+
+        assert target.exists()
+
+    def test_archive_is_not_parsed_when_the_digest_is_wrong(self, tmp_path: Path) -> None:
+        """Verification must happen before the archive is opened.
+
+        Extraction is hardened, but not parsing a known-bad archive at all is
+        strictly better than relying on that hardening.
+        """
+        fixture = tmp_path / "fixture.tar.gz"
+        _make_targz(fixture, {"tool": b"binary"})
+        dest = tmp_path / "out"
+
+        with (
+            patch(
+                "tools.doit.install_tools.urllib.request.urlretrieve",
+                side_effect=lambda url, d: shutil.copy(fixture, d),
+            ),
+            patch("tools.doit.install_tools.tarfile.open") as mock_tar,
+            pytest.raises(IntegrityError, match="Integrity check failed"),
+        ):
+            download_and_extract_archive(
+                "https://github.com/o/r/x.tar.gz", ["tool"], dest, sha256="0" * 64
+            )
+
+        mock_tar.assert_not_called()
+        assert not dest.exists() or not any(dest.iterdir())
+
+    def test_binary_is_not_made_executable_when_the_digest_is_wrong(self, tmp_path: Path) -> None:
+        """A file that fails verification must never get the executable bit."""
+        install_dir = tmp_path / "bin"
+        install_dir.mkdir()
+
+        with (
+            patch("tools.doit.install_tools.get_install_dir", return_value=install_dir),
+            patch(
+                "tools.doit.install_tools.urllib.request.urlretrieve",
+                side_effect=lambda url, dest: Path(dest).write_bytes(b"tampered"),
+            ),
+            pytest.raises(IntegrityError, match="Integrity check failed"),
+        ):
+            download_github_release_binary(
+                repo="o/r",
+                version="1.0.0",
+                asset_pattern="tool",
+                dest_name="tool",
+                sha256="0" * 64,
+            )
+
+        assert not (install_dir / "tool").exists()
