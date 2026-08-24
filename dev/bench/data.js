@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787590320992,
+  "lastUpdate": 1787592369484,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11741,6 +11741,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.41694579395369e-7",
             "extra": "mean: 2.065845555864848 usec\nrounds: 38331"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b2c55e1055adcb7eb3bc12d0371e40bfa8990edb",
+          "message": "refactor: make the unit suite hermetic against the real gh binary (merges PR #745, addresses #710)\n\n* refactor: make the unit suite hermetic against the real gh binary\n\nA full run invoked the real `gh` 18 times: 14 `gh api user --jq .login`\n(network calls to api.github.com), plus `auth status` and `--version`.\nResults therefore depended on whether the developer happened to be\nauthenticated — the trap #689 spent time diagnosing as a 0.54pp coverage\ndifference between a maintainer's machine and CI.\n\nThe issue named one of those 18. A recording shim on PATH found the rest,\nacross four files; the statusline tests were the dominant source.\n\n- conftest.py gains an autouse fixture placing a stub `gh` ahead of the real\n  one. It answers the three commands the suite invokes with fixed CI-like\n  output and exits 127 with a loud marker otherwise, so a future unmocked\n  call fails visibly rather than silently varying by machine.\n- tests/test_hermetic_suite.py asserts the stub is installed, answers what is\n  called, and is loud rather than silent on anything else.\n\nGeneralises the approach already used by test_statusline_gh_user.py, which\nwas the one statusline module making zero real calls.\n\nVerified: 18 real invocations -> 0. Coverage is now identical with and\nwithout local gh authentication (64.67% both ways), using the shim\nreproduction recorded in #710.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n* fix: make the gh stub resolvable on Windows\n\nThe first version wrote an extensionless `#!/bin/sh` file named `gh`.\nWindows resolves executables through PATHEXT, so it stayed invisible there:\n`shutil.which(\"gh\")` still returned C:\\Program Files\\GitHub CLI\\gh.EXE and\nboth Windows CI cells kept calling the real binary.\n\nThe dispatch moves into a Python module written once, with per-platform\nlaunchers around it — `gh.CMD` for PATHEXT resolution and an extensionless\n`gh` for the Git Bash that runs the shell scripts under test, which does not\nconsult PATHEXT.\n\nCaught by test_the_stub_is_ahead_of_any_real_gh, which is what that assertion\nis for.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n* fix: assert the stub's dispatch directly so the guard holds on Windows\n\nCreateProcess searches only `gh` and `gh.exe`, never consulting PATHEXT for\n`.CMD`, so a PATH stub cannot intercept subprocess.run([\"gh\", ...]) from\nPython on Windows at all. The guard's assertions now exercise the dispatch\nmodule directly and the launchers are asserted separately, which keeps them\nmeaningful on every platform.\n\nThe limitation is documented rather than papered over. Shell scripts under\ntest are covered on Windows too, because Git Bash resolves the extensionless\nlauncher; Python code that shells out should mock subprocess.run, as\ntest_setup_repo.py already does for both token branches.\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\n\n---------\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T18:25:24+01:00",
+          "tree_id": "899abcc99e6ec296a0c71d1c7ea411463f5bd3d4",
+          "url": "https://github.com/endavis/pyproject-template/commit/b2c55e1055adcb7eb3bc12d0371e40bfa8990edb"
+        },
+        "date": 1787592367135,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8822871.501697777,
+            "unit": "iter/sec",
+            "range": "stddev: 8.727544589587254e-9",
+            "extra": "mean: 113.34178445277946 nsec\nrounds: 87192"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8906869.818819495,
+            "unit": "iter/sec",
+            "range": "stddev: 8.124104271873782e-9",
+            "extra": "mean: 112.27288826957827 nsec\nrounds: 80730"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5651885.776440419,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2405788300607563e-8",
+            "extra": "mean: 176.93209657004144 nsec\nrounds: 195389"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1755400.515498485,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6163773628315184e-7",
+            "extra": "mean: 569.670563025913 nsec\nrounds: 75541"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 514918.9827913329,
+            "unit": "iter/sec",
+            "range": "stddev: 3.5612340148490184e-7",
+            "extra": "mean: 1.9420530868352985 usec\nrounds: 56304"
           }
         ]
       }
