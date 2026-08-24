@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787592369484,
+  "lastUpdate": 1787596718308,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11800,6 +11800,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.5612340148490184e-7",
             "extra": "mean: 1.9420530868352985 usec\nrounds: 56304"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "430b1b2fe225460fc068b43c12bd168b5d0d91c4",
+          "message": "refactor: reject unmocked gh subprocess calls outright (merges PR #746, addresses #710)\n\nThe PATH stub from the previous commit covers shell scripts on every\nplatform and Python calls on POSIX, but it cannot help on Windows:\nCreateProcess searches only `gh` and `gh.exe` and never consults PATHEXT\nfor `.CMD`, so subprocess.run([\"gh\", ...]) still found the real binary\nthere.\n\nGuarding at the Python level is platform-independent, so hermeticity now\nholds everywhere rather than on POSIX only.\n\n- conftest.py raises on subprocess.run([\"gh\", ...]), naming the module that\n  should be patched. Scoped to gh; git is invoked against tmp_path repos\n  where the real binary is the point of the test.\n- The two check_requirements tests that reached gh/git/uv unpatched now\n  mock subprocess.run. The passing case additionally asserts the call order\n  rather than only that it did not raise.\n\nVerified by poisoning subprocess.run for gh across the whole suite: 1446\npass, so no Python code shells out to gh at all.\n\nAddresses #710\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T19:37:55+01:00",
+          "tree_id": "4129814d59733705be6f7089776ed3a786d44f70",
+          "url": "https://github.com/endavis/pyproject-template/commit/430b1b2fe225460fc068b43c12bd168b5d0d91c4"
+        },
+        "date": 1787596717601,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8809931.198118303,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5045373900113554e-8",
+            "extra": "mean: 113.50826442476512 nsec\nrounds: 193051"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9049958.013393855,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1258189054872786e-8",
+            "extra": "mean: 110.49775021276443 nsec\nrounds: 25878"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6098982.946612864,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3079282877202368e-8",
+            "extra": "mean: 163.96176358475648 nsec\nrounds: 60343"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1700841.841356398,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8541027177584527e-7",
+            "extra": "mean: 587.9441437085729 nsec\nrounds: 56520"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493874.9748243629,
+            "unit": "iter/sec",
+            "range": "stddev: 5.182106287093717e-7",
+            "extra": "mean: 2.0248039503431627 usec\nrounds: 54425"
           }
         ]
       }
