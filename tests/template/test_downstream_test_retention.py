@@ -15,6 +15,11 @@ a ``fail_under`` of 54 (#731).
 
 These tests pin the shed set to one list and assert that the shipped tooling keeps
 test coverage on the far side of it.
+
+They also guard the opposite direction (#691). A test kept downstream must not
+depend on something configuration deletes, or the spawned project inherits a test
+that cannot pass. ADR-9017 states the membership rule both directions share: a
+test is template-owned when its target does not survive configuration.
 """
 
 from __future__ import annotations
@@ -22,7 +27,13 @@ from __future__ import annotations
 import ast
 from pathlib import Path
 
-from tools.pyproject_template.cleanup import CleanupMode, get_files_to_delete
+from tools.pyproject_template.cleanup import (
+    ALL_TEMPLATE_DIRS,
+    ALL_TEMPLATE_FILES,
+    SETUP_FILES,
+    CleanupMode,
+    get_files_to_delete,
+)
 from tools.pyproject_template.utils import (
     TEMPLATE_OWNED_TEST_FILES,
     remove_template_owned_tests,
@@ -198,3 +209,108 @@ def test_shed_is_a_noop_when_already_clean(tmp_path: Path) -> None:
 
     assert remove_template_owned_tests(tmp_path) == []
     assert (tmp_path / "tests").is_dir()
+
+
+# ---------------------------------------------------------------------------
+# The other direction (#691): a kept test must not depend on something that
+# configuration deletes.
+# ---------------------------------------------------------------------------
+
+# Paths that do not survive configuration, derived from cleanup's own lists so
+# the two definitions cannot drift apart.
+SHED_FILES = frozenset(SETUP_FILES) | frozenset(ALL_TEMPLATE_FILES)
+SHED_DIRS = tuple(ALL_TEMPLATE_DIRS)
+
+# Kept tests that legitimately reference a shed path because they *guard* the
+# read at runtime. Add here — with a reason — rather than deleting the check.
+GUARDED_READS: dict[str, str] = {
+    "test_ai_agent_assets.py": (
+        "reads migrate_existing_project.py but skips when it is absent (#731)"
+    ),
+}
+
+
+def _repo_root_reads(source: str) -> set[str]:
+    """Return relative paths built from ``REPO_ROOT / "a" / "b"`` chains.
+
+    Anchored to the repo root deliberately. References inside ``tmp_path``
+    fixtures are how several tests assert the *absent* case (``task_lint``
+    includes ``bootstrap.py`` iff it exists), and docstrings cite shed files by
+    name; neither is a real dependency, and a plain substring scan flags six
+    such false positives.
+    """
+    reads: set[str] = set()
+    for node in ast.walk(ast.parse(source)):
+        if not isinstance(node, ast.BinOp) or not isinstance(node.op, ast.Div):
+            continue
+        parts: list[str] = []
+        cursor: ast.expr = node
+        while isinstance(cursor, ast.BinOp) and isinstance(cursor.op, ast.Div):
+            if isinstance(cursor.right, ast.Constant) and isinstance(cursor.right.value, str):
+                parts.insert(0, cursor.right.value)
+            cursor = cursor.left
+        if isinstance(cursor, ast.Name) and cursor.id in {"REPO_ROOT", "PROJECT_ROOT"} and parts:
+            reads.add("/".join(parts))
+    return reads
+
+
+def _shed_paths_read_by(test_file: Path) -> list[str]:
+    """Return the shed paths *test_file* reads from the repo root."""
+    reads = _repo_root_reads(test_file.read_text(encoding="utf-8"))
+    return sorted(rel for rel in reads if rel in SHED_FILES or rel.startswith(SHED_DIRS))
+
+
+def _kept_test_files() -> list[str]:
+    """Filenames of the tests a spawned project keeps."""
+    owned = {rel.split("/")[-1] for rel in TEMPLATE_OWNED_TEST_FILES}
+    return [name for name in _template_test_filenames() if name not in owned]
+
+
+def test_kept_tests_do_not_depend_on_shed_paths() -> None:
+    """A test kept downstream must not read something configuration deletes.
+
+    This is how ``test_readme_split.py`` and ``test_configure_paths.py`` came to
+    be misfiled: both read artefacts that configuration consumes, and nothing
+    noticed. The existing classification guard cannot catch them — it keys on
+    ``tools.pyproject_template`` imports, which neither file has.
+    """
+    offenders = {}
+    for name in _kept_test_files():
+        if name in GUARDED_READS:
+            continue
+        shed_reads = _shed_paths_read_by(TEMPLATE_TESTS / name)
+        if shed_reads:
+            offenders[name] = shed_reads
+
+    assert not offenders, (
+        f"These tests ship downstream but read paths configuration deletes: {offenders}. "
+        "Either add the file to TEMPLATE_OWNED_TEST_FILES, or guard the read and record "
+        "it in GUARDED_READS with a reason (ADR-9017)."
+    )
+
+
+def test_shed_path_scanner_detects_template_only_tests() -> None:
+    """The scanner must flag the two files that proved it was needed.
+
+    Without this, the check above could pass because the scanner finds nothing
+    anywhere rather than because the kept set is clean.
+    """
+    for name in ("test_configure_paths.py", "test_readme_split.py"):
+        assert _shed_paths_read_by(TEMPLATE_TESTS / name), (
+            f"{name} reads a path configuration consumes; the scanner must see it"
+        )
+
+
+def test_guarded_reads_allowlist_stays_honest() -> None:
+    """Every allowlist entry must name a kept file that really reads a shed path.
+
+    Stops the allowlist from accumulating entries that silence nothing, and from
+    outliving the files it excuses.
+    """
+    kept = set(_kept_test_files())
+    for name, reason in GUARDED_READS.items():
+        assert name in kept, f"GUARDED_READS names {name}, which is not a kept test"
+        assert _shed_paths_read_by(TEMPLATE_TESTS / name), (
+            f"GUARDED_READS excuses {name}, but it no longer reads any shed path — drop the entry"
+        )
+        assert reason.strip(), f"GUARDED_READS[{name}] needs a reason"
