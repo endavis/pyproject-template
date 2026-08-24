@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787575239968,
+  "lastUpdate": 1787575429607,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11269,6 +11269,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.900253709339652e-7",
             "extra": "mean: 2.0233823534067845 usec\nrounds: 56045"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b656b0804899fa2b5a6fa03448e0ccf513b62b4",
+          "message": "refactor: size agent-wiring tests to the project, not the template (merges PR #734, addresses #690)\n\nThe template wires four AI agents; most projects spawned from it keep one.\nFive test files asserted that all 68 delegation files existed, so dropping\nan unused agent produced 56 failures on the project's first run (#690).\n\n- tests/agent_roster.py resolves which agents a project wires, keyed on each\n  agent's self-action skill dir (.agents/ is shared by Codex and Antigravity,\n  so its existence cannot distinguish them).\n- The delegation matrix is sized from that roster; its cell and distinct-file\n  counts are derived rather than pinned at the template's 48 and 40.\n- Rule surfaces, Codex config assertions and agent-specific asset checks skip\n  when their agent is absent.\n- Broken-link checking exempts links into an unwired agent's config root, with\n  a guard asserting the exemption stays inert while all four are wired.\n\ntest_self_action_grid_exists claimed 16 files but checked 12; building the grid\nfrom the roster picks up Antigravity's four, so it now checks what it claimed.\n\nMeasured: Claude-only goes 56 failures -> 0; the template is unchanged at 1384\npassing and 64.34% coverage.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T13:43:24+01:00",
+          "tree_id": "60f62dea4c00f358a36cdc9338e02c781e5aa005",
+          "url": "https://github.com/endavis/pyproject-template/commit/3b656b0804899fa2b5a6fa03448e0ccf513b62b4"
+        },
+        "date": 1787575427779,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8769433.98354216,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0920396685063724e-8",
+            "extra": "mean: 114.03244518137976 nsec\nrounds: 87789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8677574.39622349,
+            "unit": "iter/sec",
+            "range": "stddev: 1.085532029610836e-8",
+            "extra": "mean: 115.23957667654265 nsec\nrounds: 88254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6201032.198722856,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5525907337235428e-8",
+            "extra": "mean: 161.26347484632586 nsec\nrounds: 61997"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1750781.3898807664,
+            "unit": "iter/sec",
+            "range": "stddev: 3.017936123609453e-7",
+            "extra": "mean: 571.1735375871816 nsec\nrounds: 47713"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 498358.9435072632,
+            "unit": "iter/sec",
+            "range": "stddev: 4.80343276116779e-7",
+            "extra": "mean: 2.0065858414466797 usec\nrounds: 44920"
           }
         ]
       }
