@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787583344830,
+  "lastUpdate": 1787588477959,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11505,6 +11505,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.888089172023506e-7",
             "extra": "mean: 2.088423201637455 usec\nrounds: 55203"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4d2ff56f2d222362c75e69b414ebc5b8d7fb97ab",
+          "message": "feat: verify integrity of downloads before they are extracted or run (merges PR #740, addresses #694)\n\nNothing verified what the template downloaded and then executed.\ninstall_tools chmod'd 0o755 whatever arrived; bootstrap fetched a dozen\nfiles from a moving ref, so a push landing mid-run produced a mixed file\nset and the same command twice could install different code.\n\n- install_tool/create_install_task/download_* accept sha256 (single or\n  per-platform), verified before the archive is opened and before the\n  executable bit is set. A mismatch deletes the file and aborts.\n- A digest is mandatory for hosts outside IMPLICITLY_TRUSTED_HOSTS — the\n  url_template escape hatch from ADR-9015, which reaches arbitrary third\n  parties. GitHub-release installs are unchanged.\n- bootstrap resolves main to a commit SHA once and fetches everything from\n  it, falling back to the moving ref with a warning when the API is\n  unreachable.\n\nFetching upstream *.sha256 sibling files was considered and rejected: from\nthe same origin over TLS it defends against almost nothing, and would read\nas assurance it does not provide. Reasoning recorded in ADR-9015.\n\n15 existing tests changed. Twelve used example.com as an incidental host\nwhile testing extraction and now use github.com; two that exercise the\nnon-GitHub url_template path supply a real digest; three pinned the\ninstall_tool signature. None were weakened — cause A was the new rule\nfiring correctly.\n\nBREAKING CHANGE: callers passing url_template for a non-GitHub host must\nnow supply sha256, or the install aborts with IntegrityError.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T17:20:45+01:00",
+          "tree_id": "1e6e6a781b93c3e4ce6a3e39ff7676d43df56618",
+          "url": "https://github.com/endavis/pyproject-template/commit/4d2ff56f2d222362c75e69b414ebc5b8d7fb97ab"
+        },
+        "date": 1787588475810,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8510354.846591556,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1105020219194315e-8",
+            "extra": "mean: 117.50391352958748 nsec\nrounds: 80490"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9302921.076861842,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0229094089073242e-8",
+            "extra": "mean: 107.49311874602407 nsec\nrounds: 60566"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6296422.944994306,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3363877014941461e-8",
+            "extra": "mean: 158.82033477357265 nsec\nrounds: 63416"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1760192.5147240453,
+            "unit": "iter/sec",
+            "range": "stddev: 2.530761846345261e-7",
+            "extra": "mean: 568.1196753394756 nsec\nrounds: 46083"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 484512.2859682391,
+            "unit": "iter/sec",
+            "range": "stddev: 5.243630611037288e-7",
+            "extra": "mean: 2.0639311508925333 usec\nrounds: 57764"
           }
         ]
       }
