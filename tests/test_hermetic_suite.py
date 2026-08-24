@@ -19,8 +19,6 @@ import shutil
 import subprocess  # nosec B404 - the point of this module is to inspect subprocess behaviour
 from pathlib import Path
 
-import pytest
-
 REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
@@ -95,9 +93,17 @@ def test_no_test_module_forwards_the_unfiltered_path() -> None:
     )
 
 
-@pytest.mark.parametrize("binary", ["gh"])
-def test_path_prefix_is_a_real_directory(binary: str) -> None:
-    """Guard against the fixture silently no-opping if tmp handling changes."""
-    first = os.environ["PATH"].split(os.pathsep)[0]
-    assert Path(first).is_dir()
-    assert (Path(first) / binary).exists()
+def test_path_prefix_is_a_real_directory() -> None:
+    """Guard against the fixture silently no-opping if tmp handling changes.
+
+    Windows also needs `gh.CMD`: it resolves executables through PATHEXT, so an
+    extensionless shell script is invisible to it. The first version of this
+    fixture no-opped there and the suite kept calling the real binary — caught
+    by `test_the_stub_is_ahead_of_any_real_gh` on the Windows CI cells.
+    """
+    first = Path(os.environ["PATH"].split(os.pathsep)[0])
+    assert first.is_dir()
+    assert (first / "_gh_stub.py").exists(), "the shared dispatch must be present"
+    assert (first / "gh").exists(), "the POSIX/Git-Bash launcher must be present"
+    if os.name == "nt":
+        assert (first / "gh.CMD").exists(), "Windows needs a PATHEXT-resolvable launcher"

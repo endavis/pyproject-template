@@ -1,6 +1,7 @@
 """Shared pytest configuration and Hypothesis profiles."""
 
 import os
+import sys
 from collections.abc import Callable, Iterator
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -100,25 +101,31 @@ def mock_subprocess() -> Iterator[MagicMock]:
 # Python code that shells out should mock `subprocess.run` instead; this fixture
 # is the backstop for what slips through, and for shell scripts under test, which
 # cannot be mocked at the Python level.
-_GH_STUB = """#!/bin/sh
-case "$1 $2" in
-  "auth status")
+_GH_STUB_PY = """import sys
+
+args = sys.argv[1:]
+head = " ".join(args[:2])
+
+if head == "auth status":
     # No token markers, so `_check_token_permissions` takes its else branch.
     # Both branches are pinned explicitly in test_setup_repo.py.
-    echo "Logged in to github.com as test-user" >&2
-    exit 0
-    ;;
-  "api user")
+    print("Logged in to github.com as test-user", file=sys.stderr)
+    sys.exit(0)
+
+if head == "api user":
     # Unauthenticated: the statusline must render no user segment.
-    echo "gh: authentication required" >&2
-    exit 1
-    ;;
-esac
-case "$1" in
-  --version) echo "gh version 0.0.0-stub (hermetic test stub)" ; exit 0 ;;
-esac
-echo "HERMETIC-STUB: unmocked 'gh $*' reached the real PATH (#710)" >&2
-exit 127
+    print("gh: authentication required", file=sys.stderr)
+    sys.exit(1)
+
+if args[:1] == ["--version"]:
+    print("gh version 0.0.0-stub (hermetic test stub)")
+    sys.exit(0)
+
+print(
+    "HERMETIC-STUB: unmocked 'gh " + " ".join(args) + "' reached the real PATH (#710)",
+    file=sys.stderr,
+)
+sys.exit(127)
 """
 
 
@@ -126,9 +133,32 @@ exit 127
 def _hermetic_path(
     tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Put a stub `gh` ahead of the real one for every test."""
+    """Put a stub `gh` ahead of the real one for every test.
+
+    The dispatch lives in Python so there is one implementation; only the
+    launcher differs per platform. Windows resolves executables through
+    ``PATHEXT``, so an extensionless shell script named ``gh`` is not executable
+    there — the first version of this fixture silently no-opped on Windows and
+    the suite kept calling the real binary.
+
+    Both launchers are written on Windows: ``gh.CMD`` for ``PATHEXT`` resolution,
+    and an extensionless ``gh`` for the Git Bash used to run the shell scripts
+    under test, which does not consult ``PATHEXT``.
+    """
     bin_dir = tmp_path_factory.mktemp("hermetic-bin")
-    stub = bin_dir / "gh"
-    stub.write_text(_GH_STUB, encoding="utf-8")
-    stub.chmod(0o755)
+    (bin_dir / "_gh_stub.py").write_text(_GH_STUB_PY, encoding="utf-8")
+
+    shim = bin_dir / "gh"
+    shim.write_text(
+        f'#!/bin/sh\nexec "{sys.executable}" "$(dirname "$0")/_gh_stub.py" "$@"\n',
+        encoding="utf-8",
+    )
+    shim.chmod(0o755)
+
+    if os.name == "nt":
+        (bin_dir / "gh.CMD").write_text(
+            f'@echo off\r\n"{sys.executable}" "%~dp0_gh_stub.py" %*\r\n',
+            encoding="utf-8",
+        )
+
     monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
