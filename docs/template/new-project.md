@@ -194,7 +194,27 @@ source ~/.bashrc   # For Bash
 source ~/.zshrc    # For Zsh
 ```
 
-### Step 4: Verify Setup
+### Step 4: Remove the Template Management Suite
+
+The automated setup does this for you; the manual route has to be told:
+
+```bash
+uv run doit template_clean --all
+```
+
+This deletes `tools/pyproject_template/`, `docs/template/` and `bootstrap.py` —
+the template's own management code, which your project does not use. Keeping it
+also leaves your coverage gate measuring several thousand statements of tooling
+whose tests are template-owned and were shed during configuration, which puts a
+fresh project under `fail_under` on its first CI run.
+
+To reinstall the template-sync suite later:
+
+```bash
+curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync
+```
+
+### Step 5: Verify Setup
 
 ```bash
 # Run all checks
@@ -208,7 +228,7 @@ doit check
 # ✓ All checks passed!
 ```
 
-### Step 5: Configure GitHub Repository
+### Step 6: Configure GitHub Repository
 
 Manually configure what the automated setup does automatically:
 

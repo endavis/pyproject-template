@@ -32,10 +32,49 @@ def _coverage_config() -> dict[str, Any]:
 def test_gate_measures_both_the_package_and_tools() -> None:
     """`tools/` is in scope, not just the replaceable package skeleton."""
     source = _coverage_config()["run"]["source"]
-    assert "package_name" in source
     assert "tools" in source, (
         "tools/ runs releases, PRs and the dangerous-command hook; it must be measured"
     )
+
+    # The package entry is `package_name` here and the real package name in a
+    # spawned project, because configure.py rewrites it. Assert that it resolves
+    # to a package rather than pinning the placeholder, so this test keeps
+    # working downstream (#731).
+    packages = [entry for entry in source if entry != "tools"]
+    assert packages, "the project's own package must be measured alongside tools/"
+    for pkg in packages:
+        assert (REPO_ROOT / "src" / pkg).is_dir(), (
+            f"coverage source {pkg!r} is not a package under src/"
+        )
+
+
+def test_template_management_suite_is_out_of_scope() -> None:
+    """`tools/pyproject_template/` must stay omitted from the gate.
+
+    It is the one part of `tools/` that does not ship to the spawned project:
+    ADR-9017 makes its tests template-owned and both spawn routes delete the
+    suite itself. Measuring it means measuring code that is never tested
+    downstream, which put a spawned project 19 points under the gate (#731).
+
+    Dropping the omit re-breaks that shape silently — the template's own number
+    would still pass, because here the suite *is* tested.
+    """
+    omit = _coverage_config()["run"].get("omit", [])
+    assert "tools/pyproject_template/*" in omit, (
+        "tools/pyproject_template/* must stay in [tool.coverage.run] omit so the "
+        "gate measures the same code in the template and in a spawned project"
+    )
+
+
+def test_shipped_tooling_is_not_omitted() -> None:
+    """The omit must not be widened to the tooling the spawned project runs."""
+    omit = _coverage_config()["run"].get("omit", [])
+    for shipped in ("tools/doit", "tools/hooks"):
+        offenders = [pattern for pattern in omit if pattern.startswith(shipped)]
+        assert not offenders, (
+            f"{offenders} would drop {shipped}/ from the gate. That code ships to "
+            "and runs in the spawned project; it must stay measured."
+        )
 
 
 def test_threshold_is_enforced_and_not_aspirational() -> None:

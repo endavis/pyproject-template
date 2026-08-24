@@ -59,6 +59,7 @@ from utils import (  # noqa: E402
     get_git_config,
     prompt,
     prompt_confirm,
+    remove_template_owned_tests,
     update_file,
     update_test_files,
 )
@@ -374,11 +375,12 @@ class RepositorySetup:
             if tests_dir.exists():
                 update_test_files(tests_dir, self.config["package_name"])
 
-            # Remove template-only tests (they're only for the template itself)
-            template_tests_dir = Path("tests/template")
-            if template_tests_dir.exists():
-                shutil.rmtree(template_tests_dir)
-                Logger.info("Removed template-only tests (tests/template/)")
+            # Shed template-only tests. Shares one implementation with
+            # configure.py so the two wizard paths cannot disagree about what
+            # "template-owned" means; see remove_template_owned_tests (#731).
+            shed = remove_template_owned_tests(Path.cwd())
+            if shed:
+                Logger.info(f"Removed {len(shed)} template-only test files")
 
             # Update source files
             src_dir = Path("src")

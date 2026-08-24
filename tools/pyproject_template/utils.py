@@ -23,10 +23,16 @@ except ModuleNotFoundError:  # pragma: no cover
 TEMPLATE_REPO = "endavis/pyproject-template"
 TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 
-# Tooling tests that are template-owned: they live in the template's own CI,
-# are excluded from the drift checker, and are shed from downstreams by cleanup.
-# Both check_template_updates.py and cleanup.py import this list — never
-# hardcode it in either consumer.
+# Tests that are template-owned: they live in the template's own CI, are
+# excluded from the drift checker, and are shed from downstreams by cleanup
+# and by configure.py. All three consumers — check_template_updates.py,
+# cleanup.py and configure.py — import this list; never hardcode it in any of
+# them (ADR-9017).
+#
+# The membership test is whether the test's *target* survives configuration.
+# Tests covering tools/doit/ and tools/hooks/ are deliberately absent: that
+# code ships to the spawned project, runs there, and is measured by the
+# coverage gate in pyproject.toml (#731).
 TEMPLATE_OWNED_TEST_FILES: list[str] = [
     "tests/template/test_pyproject_template_main.py",
     "tests/template/test_check_template_updates.py",
@@ -36,7 +42,50 @@ TEMPLATE_OWNED_TEST_FILES: list[str] = [
     "tests/template/test_bootstrap.py",
     "tests/template/test_utils.py",
     "tests/template/test_utils_properties.py",
+    # Targets consumed by configure.py itself: configure.py self-destructs at
+    # the end of its run, and README.template.md is renamed onto README.md.
+    "tests/template/test_configure_paths.py",
+    "tests/template/test_readme_split.py",
+    "tests/template/test_downstream_test_retention.py",
 ]
+
+
+def remove_template_owned_tests(root: Path) -> list[Path]:
+    """Delete the template-owned test files under *root*, returning what was removed.
+
+    The single shedding implementation for every path that turns the template
+    into a real project: ``configure.py`` and ``setup_repo.py`` both call this,
+    and ``cleanup --setup`` sheds the same list through ``SETUP_FILES``. That
+    keeps ADR-9017's "single authoritative list" claim true in practice rather
+    than only in the constant.
+
+    Tests covering ``tools/doit/`` and ``tools/hooks/`` are deliberately kept:
+    that code ships to the spawned project, runs there, and is measured by the
+    coverage gate in ``pyproject.toml``. All three paths used to remove
+    ``tests/template/`` wholesale, which left the spawned project failing its
+    own coverage gate at 33.98% against a ``fail_under`` of 54 (#731).
+    """
+    removed: list[Path] = []
+    for rel in TEMPLATE_OWNED_TEST_FILES:
+        path = root / rel
+        if path.is_file():
+            path.unlink()
+            removed.append(path)
+
+    # Drop the package directory only if shedding emptied it. A project that
+    # keeps tooling tests keeps the package they live in.
+    template_tests_dir = root / "tests" / "template"
+    if template_tests_dir.is_dir():
+        survivors = [
+            entry
+            for entry in template_tests_dir.iterdir()
+            if entry.name not in {"__init__.py", "__pycache__"}
+        ]
+        if not survivors:
+            shutil.rmtree(template_tests_dir)
+
+    return removed
+
 
 # Files to update during placeholder replacement (single source of truth)
 # Used by both configure.py and setup_repo.py

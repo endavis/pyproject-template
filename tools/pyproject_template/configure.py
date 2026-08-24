@@ -28,6 +28,7 @@ from utils import (  # noqa: E402
     parse_github_url,
     prompt,
     prompt_confirm,
+    remove_template_owned_tests,
     update_file,
     update_test_files,
     validate_email,
@@ -452,11 +453,18 @@ def run_configure(
         print("  ✓ Updating test files")
         update_test_files(test_dir, package_name)
 
-    # Remove template-only tests (they're only for the template itself)
-    template_tests_dir = Path("tests/template")
-    if template_tests_dir.exists():
-        print("  ✓ Removing template-only tests (tests/template/)")
-        shutil.rmtree(template_tests_dir)
+    # Shed template-only tests. This must shed exactly what `cleanup --setup`
+    # sheds — ADR-9017 makes TEMPLATE_OWNED_TEST_FILES the single authoritative
+    # list, and cleanup.py already consumes it.
+    #
+    # Removing the whole directory instead (as this did until #731) also deleted
+    # the tests covering tools/doit/ and tools/hooks/ — code that ships to and
+    # runs in the spawned project, and that the coverage gate in pyproject.toml
+    # measures. A spawned project failed its first CI run at 33.98% against a
+    # fail_under of 54.
+    shed = remove_template_owned_tests(Path.cwd())
+    if shed:
+        print(f"  ✓ Removing {len(shed)} template-only test files")
 
     # Seed v0.0.0 baseline tag so `doit release --prerelease=alpha` works on the
     # first release (see issue #447). Idempotent and skipped gracefully when
@@ -469,9 +477,13 @@ def run_configure(
     print("2. Initialize git repository: git init")
     print("3. Install dependencies: uv sync --all-extras --dev")
     print("4. Install pre-commit hooks: uv run doit pre_commit_install")
-    print("5. Run tests: uv run pytest")
-    print("6. Cut a prerelease (if desired): uv run doit release --prerelease=alpha")
-    print("7. Start coding!")
+    # The bootstrap wizard (setup_repo.py) runs this automatically. The manual
+    # route has to be told, or the project keeps a template management suite it
+    # does not use (#731).
+    print("5. Remove the template suite: uv run doit template_clean --all")
+    print("6. Run tests: uv run pytest")
+    print("7. Cut a prerelease (if desired): uv run doit release --prerelease=alpha")
+    print("8. Start coding!")
     print("━" * 60)
 
     # Self-destruct
