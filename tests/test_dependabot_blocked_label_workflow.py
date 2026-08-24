@@ -194,7 +194,7 @@ class TestHandleBlockedLabelSteps:
         """Step 3 posts the sticky blocked comment via ``actions/github-script``."""
         steps = _handle_blocked_label_steps()
         assert steps[2]["name"] == "Post sticky blocked comment"
-        assert steps[2]["uses"] == "actions/github-script@v9"
+        assert steps[2]["uses"].startswith("actions/github-script@")
 
     def test_sticky_comment_retains_dedupe_marker(self) -> None:
         """The sticky-comment dedupe marker must match the parent workflow's marker

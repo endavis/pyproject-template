@@ -256,6 +256,42 @@ The same principle does **not** license shedding these tests. They cover
 runs in the project, and that the gate below measures. Shedding them was measured
 at 40.73% total and 8.27% on `tools/hooks/`, well under `fail_under` (#731).
 
+### Action pinning and workflow permissions
+
+**Every external action is pinned to a commit SHA**, with a `# vX.Y.Z` comment so the
+file stays readable:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+```
+
+A major tag such as `@v7` is a moving pointer the publisher can re-aim at any commit, so
+`uses: some/action@v7` is a standing instruction to run whatever they decide to put
+there. A 40-character SHA is not re-pointable. Dependabot is configured for the
+`github-actions` ecosystem, so pins are bumped through a reviewable PR rather than
+changing silently — that trade is the point, and it is why pinning does not mean falling
+behind.
+
+First-party `actions/*` are pinned too. "GitHub publishes it" is not a security boundary,
+and exempting them would leave most of the surface unpinned for no gain.
+
+**One deliberate exemption:** `pypa/gh-action-pypi-publish@release/v1`. PyPA documents
+that branch as the supported reference for trusted publishing and ships security fixes to
+it, and the workflows using it hold `id-token: write`. The exemption and its reason live
+in `PINNING_EXEMPT` in `tests/test_workflow_action_pinning.py`, which fails if it is ever
+added to without a reason or left in place after the action stops being used.
+
+**Permissions are least-privilege, and write is never reachable from a pull request.** A
+same-repo PR branch runs its own code; if a write-capable `GITHUB_TOKEN` is in scope,
+that code can use it — and workflow-scope `permissions:` apply to every trigger,
+including `pull_request`. So a job needing write declares it at *job* scope and gates
+itself on `github.event_name == 'push'`. `benchmark.yml` is the worked example: a
+read-only `benchmark` job that runs everywhere, and a `store` job holding the only write
+grant, gated on pushes to main.
+
+`tests/test_benchmark_workflow.py` and `tests/test_workflow_action_pinning.py` enforce
+both properties.
+
 ### Coverage Requirements
 
 - **Enforced threshold**: `fail_under = 54` in `pyproject.toml`

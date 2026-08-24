@@ -1,12 +1,32 @@
-"""Tests for the benchmark GitHub Actions workflow configuration."""
+"""Tests for the benchmark GitHub Actions workflow configuration.
+
+Rewritten for #695. The previous version asserted the design this issue set out
+to remove: `contents: write` and `pull-requests: write` at *workflow* scope, so
+they applied to the `pull_request` trigger, plus a store step that ran on PRs and
+handed a write-capable `GITHUB_TOKEN` to a third-party action.
+
+The workflow is now split. `benchmark` runs everywhere read-only; `store` holds
+the only write grant and runs for pushes to main alone. benchmark-action's own
+README makes the same point: "Do not run this workflow on pull request since this
+workflow has permission to modify contents."
+
+These tests assert the *property* — no write permission is reachable from a pull
+request — rather than the shape of any particular step, so a future restructure
+that preserves the property does not have to rewrite them again.
+"""
 
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
+import pytest
 import yaml
 
 WORKFLOW_PATH = Path(__file__).parent.parent / ".github" / "workflows" / "benchmark.yml"
+
+# Permissions that let a job change the repository or its pull requests.
+WRITE_SCOPES = {"write", "write-all"}
 
 
 def _load_workflow() -> dict:
@@ -19,6 +39,24 @@ def _load_workflow() -> dict:
     return data
 
 
+def _jobs() -> dict[str, Any]:
+    jobs: dict[str, Any] = _load_workflow()["jobs"]
+    return jobs
+
+
+def _write_permissions(perms: str | dict[str, str] | None) -> set[str]:
+    """Return the permission names granted at write level in *perms*.
+
+    Accepts the three shapes GitHub allows: absent, a blanket string such as
+    ``write-all``, or a per-scope mapping.
+    """
+    if perms is None:
+        return set()
+    if isinstance(perms, str):
+        return {"<all>"} if perms in WRITE_SCOPES else set()
+    return {name for name, level in perms.items() if level in WRITE_SCOPES}
+
+
 class TestBenchmarkWorkflowExists:
     """Test that the benchmark workflow file exists."""
 
@@ -28,193 +66,169 @@ class TestBenchmarkWorkflowExists:
 
 
 class TestBenchmarkWorkflowTriggers:
-    """Test that the benchmark workflow has correct triggers."""
+    """Triggers are unchanged by #695 — only what each one may do changed."""
 
     def test_has_push_trigger(self) -> None:
-        """Workflow should trigger on push to main."""
-        workflow = _load_workflow()
-        triggers = workflow[True]  # YAML 'on' is parsed as boolean True
+        triggers = _load_workflow()[True]  # YAML 'on' parses as boolean True
         assert "push" in triggers
         assert "main" in triggers["push"]["branches"]
 
     def test_has_pull_request_trigger(self) -> None:
-        """Workflow should trigger on pull requests to main."""
-        workflow = _load_workflow()
-        triggers = workflow[True]
+        triggers = _load_workflow()[True]
         assert "pull_request" in triggers
         assert "main" in triggers["pull_request"]["branches"]
 
     def test_has_workflow_dispatch_trigger(self) -> None:
-        """Workflow should support manual dispatch."""
-        workflow = _load_workflow()
-        triggers = workflow[True]
-        assert "workflow_dispatch" in triggers
+        assert "workflow_dispatch" in _load_workflow()[True]
 
 
-class TestBenchmarkWorkflowPermissions:
-    """Test that the benchmark workflow has correct permissions."""
+class TestLeastPrivilege:
+    """The security property #695 exists to establish."""
 
-    def test_has_contents_write_permission(self) -> None:
-        """Workflow needs contents:write to push to gh-benchmarks branch."""
-        workflow = _load_workflow()
-        assert workflow["permissions"]["contents"] == "write"
+    def test_workflow_scope_grants_no_write(self) -> None:
+        """Workflow-level permissions apply to every trigger, including PRs."""
+        granted = _write_permissions(_load_workflow().get("permissions"))
+        assert not granted, (
+            f"benchmark.yml grants {sorted(granted)} at workflow scope, so the "
+            "pull_request trigger gets it too. Move it to the job that needs it."
+        )
 
-    def test_has_pull_requests_write_permission(self) -> None:
-        """Workflow needs pull-requests:write to post PR comments."""
-        workflow = _load_workflow()
-        assert workflow["permissions"]["pull-requests"] == "write"
+    def test_no_write_permission_is_reachable_from_a_pull_request(self) -> None:
+        """Any job with write access must be gated off the pull_request path.
+
+        This is the assertion that matters. A same-repo PR branch runs its own
+        code; if a write-capable token is in scope, that code can use it.
+        """
+        offenders = []
+        for name, job in _jobs().items():
+            granted = _write_permissions(job.get("permissions"))
+            if not granted:
+                continue
+            condition = str(job.get("if", ""))
+            if "github.event_name == 'push'" not in condition:
+                offenders.append(f"{name} grants {sorted(granted)} but is not gated on push")
+
+        assert not offenders, "write permission reachable from a pull request:\n  " + "\n  ".join(
+            offenders
+        )
+
+    def test_benchmark_job_is_explicitly_read_only(self) -> None:
+        """The job that runs on PRs states its permissions rather than inheriting."""
+        benchmark = _jobs()["benchmark"]
+        assert benchmark.get("permissions") == {"contents": "read"}
+
+    def test_store_job_is_gated_on_push_to_main(self) -> None:
+        condition = str(_jobs()["store"].get("if", ""))
+        assert "github.event_name == 'push'" in condition
+        assert "github.ref == 'refs/heads/main'" in condition
+
+    def test_only_the_store_job_holds_the_write_grant(self) -> None:
+        writers = {
+            name for name, job in _jobs().items() if _write_permissions(job.get("permissions"))
+        }
+        assert writers == {"store"}, f"unexpected write-capable jobs: {sorted(writers - {'store'})}"
+
+    def test_pull_requests_write_is_not_granted_anywhere(self) -> None:
+        """It was never needed: benchmark-action posts *commit* comments."""
+        scopes = _write_permissions(_load_workflow().get("permissions"))
+        for job in _jobs().values():
+            scopes |= _write_permissions(job.get("permissions"))
+        assert "pull-requests" not in scopes
 
 
-class TestBenchmarkWorkflowSteps:
-    """Test that the benchmark workflow has the expected steps."""
+class TestBenchmarkJob:
+    """The read-only half: run the benchmarks, publish the numbers as an artifact."""
 
-    def _get_steps(self) -> list[dict]:
-        """Get the steps from the benchmark job."""
-        workflow = _load_workflow()
-        # Indexing an untyped mapping yields Any; bind to an annotated local so
-        # warn_return_any does not fire on the return.
-        steps: list[dict] = workflow["jobs"]["benchmark"]["steps"]
+    @staticmethod
+    def _steps() -> list[dict]:
+        steps: list[dict] = _jobs()["benchmark"]["steps"]
         return steps
 
-    def _find_step(self, name: str) -> dict | None:
-        """Find a step by name."""
-        for step in self._get_steps():
-            if step.get("name") == name:
-                return step
-        return None
+    def test_runs_benchmarks(self) -> None:
+        assert any("--benchmark-only" in str(s.get("run", "")) for s in self._steps())
 
-    def test_has_check_bench_branch_step(self) -> None:
-        """Workflow should check if the gh-benchmarks branch exists."""
-        step = self._find_step("Check for benchmark data branch")
-        assert step is not None, "Missing 'Check for benchmark data branch' step"
-        assert step.get("id") == "check-bench-branch"
-        assert "gh-benchmarks" in step["run"]
+    def test_uploads_results_artifact(self) -> None:
+        uploads = [s for s in self._steps() if "upload-artifact" in str(s.get("uses", ""))]
+        assert uploads, "benchmark results must still be published as an artifact"
+        assert uploads[0]["with"]["name"] == "benchmark-results"
 
-    def test_store_step_conditional_on_branch_existence(self) -> None:
-        """Store step should only run on push or when gh-benchmarks branch exists."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        condition = step.get("if", "")
-        assert "push" in condition
-        assert "check-bench-branch" in condition
+    def test_exposes_whether_benchmarks_exist(self) -> None:
+        """`store` skips when there is nothing to store, so it needs the output."""
+        assert "has-benchmarks" in _jobs()["benchmark"]["outputs"]
 
-    def test_check_bench_branch_before_store_step(self) -> None:
-        """Check branch step should come before store step."""
-        steps = self._get_steps()
-        step_names = [s.get("name") for s in steps]
-        check_idx = step_names.index("Check for benchmark data branch")
-        store_idx = step_names.index("Store benchmark results")
-        assert check_idx < store_idx, "Check branch step must come before Store step"
+    def test_does_not_run_the_third_party_benchmark_action(self) -> None:
+        """The action takes a token and writes; it belongs in the gated job.
 
-    def test_has_create_bench_branch_step(self) -> None:
-        """Workflow should create the gh-benchmarks branch if it doesn't exist."""
-        step = self._find_step("Create benchmark data branch")
-        assert step is not None, "Missing 'Create benchmark data branch' step"
-        condition = step.get("if", "")
-        assert "check-bench-branch" in condition
-        assert "push" in condition
-        assert "gh-benchmarks" in step["run"]
-        assert "git config user.name" in step["run"]
-        assert "git config user.email" in step["run"]
+        Trade-off recorded deliberately: PRs no longer get an automated
+        regression comment. The benchmark still runs and its JSON is uploaded,
+        and `fail-on-alert` was rejected as a replacement because a wall-clock
+        threshold on a shared runner is a flake source — the same lesson as the
+        Hypothesis deadline in #736.
+        """
+        assert not any("github-action-benchmark" in str(s.get("uses", "")) for s in self._steps())
 
-    def test_create_branch_before_store_step(self) -> None:
-        """Create branch step should come before store step."""
-        steps = self._get_steps()
-        step_names = [s.get("name") for s in steps]
-        create_idx = step_names.index("Create benchmark data branch")
-        store_idx = step_names.index("Store benchmark results")
-        assert create_idx < store_idx
 
-    def test_has_store_benchmark_results_step(self) -> None:
-        """Workflow should have a step to store benchmark results."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None, "Missing 'Store benchmark results' step"
+class TestStoreJob:
+    """The write half: rewrite the gh-benchmarks branch, on main only."""
 
-    def test_store_step_uses_benchmark_action(self) -> None:
-        """The store step should use benchmark-action/github-action-benchmark."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["uses"] == "benchmark-action/github-action-benchmark@v1"
+    @staticmethod
+    def _steps() -> list[dict]:
+        steps: list[dict] = _jobs()["store"]["steps"]
+        return steps
 
-    def test_store_step_uses_pytest_tool(self) -> None:
-        """The store step should be configured for pytest output."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["tool"] == "pytest"
+    def test_depends_on_the_benchmark_job(self) -> None:
+        assert _jobs()["store"]["needs"] == "benchmark"
 
-    def test_store_step_reads_correct_output_file(self) -> None:
-        """The store step should read from the benchmark results JSON."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["output-file-path"] == "tmp/benchmark-results.json"
+    def test_skips_when_there_are_no_benchmarks(self) -> None:
+        assert "needs.benchmark.outputs.has-benchmarks" in str(_jobs()["store"].get("if", ""))
 
-    def test_store_step_uses_gh_benchmarks_branch(self) -> None:
-        """Results should be stored on the gh-benchmarks branch."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["gh-pages-branch"] == "gh-benchmarks"
+    def test_downloads_the_results_artifact(self) -> None:
+        downloads = [s for s in self._steps() if "download-artifact" in str(s.get("uses", ""))]
+        assert downloads, "store must consume the artifact rather than re-running benchmarks"
+        assert downloads[0]["with"]["name"] == "benchmark-results"
 
-    def test_store_step_uses_dev_bench_data_dir(self) -> None:
-        """Results should be stored in the dev/bench directory."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["benchmark-data-dir-path"] == "dev/bench"
+    def test_creates_the_data_branch_when_missing(self) -> None:
+        creates = [s for s in self._steps() if s.get("name") == "Create benchmark data branch"]
+        assert creates
+        assert "gh-benchmarks" in creates[0]["run"]
 
-    def test_store_step_auto_push_conditional(self) -> None:
-        """Auto-push should only happen on push to main."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        auto_push = step["with"]["auto-push"]
-        assert "github.event_name == 'push'" in auto_push
-        assert "refs/heads/main" in auto_push
+    def test_branch_check_precedes_branch_creation(self) -> None:
+        names = [s.get("name") for s in self._steps()]
+        assert names.index("Check for benchmark data branch") < names.index(
+            "Create benchmark data branch"
+        )
 
-    def test_store_step_comment_on_alert_enabled(self) -> None:
-        """Comment-on-alert should be enabled."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["comment-on-alert"] is True
-
-    def test_store_step_comment_always_on_pr(self) -> None:
-        """Comment-always should be conditional on pull_request events."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        comment_always = step["with"]["comment-always"]
-        assert "pull_request" in comment_always
-
-    def test_store_step_alert_threshold(self) -> None:
-        """Alert threshold should be set to 110% (10% regression tolerance)."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["alert-threshold"] == "110%"
+    @pytest.mark.parametrize(
+        ("key", "expected"),
+        [
+            ("tool", "pytest"),
+            ("output-file-path", "tmp/benchmark-results.json"),
+            ("gh-pages-branch", "gh-benchmarks"),
+            ("benchmark-data-dir-path", "dev/bench"),
+            ("alert-threshold", "110%"),
+            ("auto-push", True),
+            ("comment-on-alert", True),
+        ],
+    )
+    def test_store_step_configuration(self, key: str, expected: object) -> None:
+        store = next(
+            s for s in self._steps() if "github-action-benchmark" in str(s.get("uses", ""))
+        )
+        assert store["with"][key] == expected
 
     def test_store_step_uses_github_token(self) -> None:
-        """The store step should use GITHUB_TOKEN for authentication."""
-        step = self._find_step("Store benchmark results")
-        assert step is not None
-        assert step["with"]["github-token"] == "${{ secrets.GITHUB_TOKEN }}"
+        store = next(
+            s for s in self._steps() if "github-action-benchmark" in str(s.get("uses", ""))
+        )
+        assert "secrets.GITHUB_TOKEN" in str(store["with"]["github-token"])
 
-    def test_upload_artifact_step_still_exists(self) -> None:
-        """The existing artifact upload step should still be present."""
-        step = self._find_step("Upload benchmark results")
-        assert step is not None, "Missing 'Upload benchmark results' artifact step"
+    def test_auto_push_is_unconditional_here(self) -> None:
+        """The job only runs on push to main, so the step needs no second guard.
 
-    def test_run_benchmarks_step_exists(self) -> None:
-        """The run benchmarks step should still be present."""
-        step = self._find_step("Run benchmarks")
-        assert step is not None, "Missing 'Run benchmarks' step"
-
-    def test_store_step_comes_after_run_step(self) -> None:
-        """Store step should come after the run benchmarks step."""
-        steps = self._get_steps()
-        step_names = [s.get("name") for s in steps]
-        run_idx = step_names.index("Run benchmarks")
-        store_idx = step_names.index("Store benchmark results")
-        assert store_idx > run_idx, "Store step must come after Run benchmarks step"
-
-    def test_upload_step_comes_after_store_step(self) -> None:
-        """Upload artifact step should come after the store step."""
-        steps = self._get_steps()
-        step_names = [s.get("name") for s in steps]
-        store_idx = step_names.index("Store benchmark results")
-        upload_idx = step_names.index("Upload benchmark results")
-        assert upload_idx > store_idx, "Upload step must come after Store step"
+        A leftover `${{ github.event_name == 'push' }}` expression would imply
+        this job can run otherwise, which is exactly the confusion #695 fixed.
+        """
+        store = next(
+            s for s in self._steps() if "github-action-benchmark" in str(s.get("uses", ""))
+        )
+        assert store["with"]["auto-push"] is True
