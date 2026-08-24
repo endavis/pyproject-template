@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+import bootstrap
 from bootstrap import (
     SETUP_FILES,
     SYNC_FILES,
@@ -14,6 +15,8 @@ from bootstrap import (
     detect_project_settings,
     download_file,
     parse_args,
+    pin_base_url,
+    resolve_ref,
 )
 
 
@@ -438,3 +441,73 @@ class TestMain:
         with patch("bootstrap.run_setup") as mock_setup:
             main([])
             mock_setup.assert_called_once()
+
+
+class TestRefPinning:
+    """`main` is resolved to one commit before any file is fetched (#694).
+
+    bootstrap downloads up to a dozen files from a moving ref. A push landing
+    mid-run produces a mixed file set, and the same command run twice can
+    install different code. Pinning makes a run internally consistent and its
+    result recordable.
+
+    This does not defend against the template repository being malicious —
+    `curl | python3` already extends that trust. It closes the window where the
+    ref moves underneath a run.
+    """
+
+    def test_full_sha_is_passed_through_unresolved(self) -> None:
+        """An explicit commit needs no API call — and must not make one."""
+        sha = "0123456789abcdef0123456789abcdef01234567"
+        with patch("bootstrap.urllib.request.urlopen") as mock_open:
+            assert resolve_ref(sha) == sha
+        mock_open.assert_not_called()
+
+    def test_branch_resolves_to_the_returned_sha(self) -> None:
+        sha = "a" * 40
+        response = MagicMock()
+        response.read.return_value = sha.encode()
+        response.__enter__ = lambda self: self
+        response.__exit__ = lambda *a: None
+
+        with patch("bootstrap.urllib.request.urlopen", return_value=response):
+            assert resolve_ref("main") == sha
+
+    def test_unreachable_api_falls_back_to_the_ref(self) -> None:
+        """Offline or rate-limited must not turn a small gain into an outage."""
+        with patch("bootstrap.urllib.request.urlopen", side_effect=OSError("offline")):
+            assert resolve_ref("main") == "main"
+
+    def test_garbage_response_falls_back_to_the_ref(self) -> None:
+        """A proxy or error page must not be pasted into the download URL."""
+        response = MagicMock()
+        response.read.return_value = b"<html>rate limited</html>"
+        response.__enter__ = lambda self: self
+        response.__exit__ = lambda *a: None
+
+        with patch("bootstrap.urllib.request.urlopen", return_value=response):
+            assert resolve_ref("main") == "main"
+
+    def test_pin_base_url_rewrites_the_download_base(self) -> None:
+        """Every subsequent download must come from the pinned commit."""
+        sha = "b" * 40
+        original = bootstrap.BASE_URL
+        try:
+            with patch("bootstrap.resolve_ref", return_value=sha):
+                assert pin_base_url() == sha
+            assert bootstrap.BASE_URL.endswith(f"/{sha}")
+            assert "/main" not in bootstrap.BASE_URL
+        finally:
+            bootstrap.BASE_URL = original
+
+    def test_pinning_happens_before_any_file_is_fetched(self) -> None:
+        """Ordering is the whole point: a pin applied after the first download
+        would leave that file from a different commit."""
+        source = (Path(__file__).resolve().parents[2] / "bootstrap.py").read_text("utf-8")
+        for marker in ("for file_path in SYNC_FILES:", "for file_path in SETUP_FILES:"):
+            loop = source.index(marker)
+            preceding = source.rindex("pin_base_url()", 0, loop)
+            between = source[preceding:loop]
+            assert "download_file(" not in between, (
+                f"a download happens between pin_base_url() and {marker}"
+            )
