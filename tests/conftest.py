@@ -1,6 +1,7 @@
 """Shared pytest configuration and Hypothesis profiles."""
 
 import os
+import subprocess  # nosec B404 - guarding subprocess use, not invoking it
 import sys
 from collections.abc import Callable, Iterator
 from typing import Any
@@ -127,6 +128,37 @@ print(
 )
 sys.exit(127)
 """
+
+
+# Commands no test may reach through Python's subprocess. The PATH stub above
+# covers shell scripts under test, but it cannot help on Windows: CreateProcess
+# searches only `gh` and `gh.exe` and never consults PATHEXT for `.CMD`, so a
+# Python-level `subprocess.run(["gh", ...])` would still find the real binary
+# there. Failing the call outright makes hermeticity hold on every platform
+# rather than on POSIX only (#710).
+#
+# Only `gh` is covered. `git` is invoked against tmp_path repositories where
+# running the real binary is the point of the test, not a leak.
+_UNMOCKED_COMMANDS = frozenset({"gh"})
+
+
+@pytest.fixture(autouse=True)
+def _no_unmocked_subprocess(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail loudly if a test shells out to `gh` without mocking it."""
+    real_run = subprocess.run
+
+    def guarded(cmd: object, *args: object, **kwargs: object) -> object:
+        if isinstance(cmd, (list, tuple)) and cmd and str(cmd[0]) in _UNMOCKED_COMMANDS:
+            raise AssertionError(
+                f"unmocked subprocess call to {list(cmd)!r}. Patch subprocess.run in "
+                "the module under test — a real call makes the result depend on the "
+                "developer's machine (#710)."
+            )
+        # Deliberately signature-agnostic: this forwards arbitrary calls, so it
+        # cannot match subprocess.run's overload set.
+        return real_run(cmd, *args, **kwargs)  # type: ignore[call-overload]
+
+    monkeypatch.setattr(subprocess, "run", guarded)
 
 
 @pytest.fixture(autouse=True)
