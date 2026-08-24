@@ -18,6 +18,7 @@ import os
 import subprocess
 import sys
 from typing import TYPE_CHECKING
+from unittest.mock import MagicMock, patch
 
 import pytest
 from rich.console import Console
@@ -29,6 +30,9 @@ from tools.doit.release import (
     _extract_version_from_release_pr,
     _get_pypi_name_from_pyproject,
     _repo_has_version_tags,
+    task_release,
+    task_release_tag,
+    validate_issue_links,
     validate_merge_commits,
 )
 
@@ -900,3 +904,199 @@ class TestGetPypiNameFromPyproject:
         )
         monkeypatch.chdir(tmp_path)
         assert _get_pypi_name_from_pyproject() is None
+
+
+# ---------------------------------------------------------------------------
+# Coverage paydown for the release paths (#708)
+#
+# The failure mode here is a bad or partial release: a tag pushed for the wrong
+# version, or a release PR opened off the wrong branch. Both are expensive to
+# undo once they reach the remote.
+# ---------------------------------------------------------------------------
+
+
+def _fake_git(commits: str, last_tag: str = "v1.0.0") -> object:
+    """Return a subprocess.run stand-in answering `git describe` and `git log`."""
+
+    def run(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+        if cmd[:2] == ["git", "describe"]:
+            return MagicMock(stdout=f"{last_tag}\n", returncode=0 if last_tag else 128)
+        if cmd[:2] == ["git", "log"]:
+            return MagicMock(stdout=commits, returncode=0)
+        return MagicMock(stdout="", returncode=0)
+
+    return run
+
+
+class TestValidateIssueLinks:
+    """`validate_issue_links` warns but never blocks — that is deliberate."""
+
+    def test_all_commits_referencing_issues_passes_quietly(self) -> None:
+        console = Console(file=io.StringIO())
+
+        with patch(
+            "tools.doit.release.subprocess.run", side_effect=_fake_git("abc1234 feat: x (#12)")
+        ):
+            assert validate_issue_links(console) is True
+
+        assert "All non-docs commits reference issues" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_unlinked_commit_warns_without_blocking(self) -> None:
+        """A release must not be stopped by a traceability nicety."""
+        console = Console(file=io.StringIO())
+
+        with patch(
+            "tools.doit.release.subprocess.run", side_effect=_fake_git("abc1234 feat: no link")
+        ):
+            assert validate_issue_links(console) is True
+
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "don't reference issues" in output
+        assert "warning only" in output.lower()
+
+    def test_docs_commits_are_exempt(self) -> None:
+        console = Console(file=io.StringIO())
+
+        with patch(
+            "tools.doit.release.subprocess.run", side_effect=_fake_git("abc1234 docs: tidy")
+        ):
+            assert validate_issue_links(console) is True
+
+        assert "All non-docs commits reference issues" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_merge_commits_are_skipped(self) -> None:
+        """They are validated separately by `validate_merge_commits`."""
+        console = Console(file=io.StringIO())
+
+        with patch(
+            "tools.doit.release.subprocess.run",
+            side_effect=_fake_git("abc1234 Merge branch 'x' into main"),
+        ):
+            assert validate_issue_links(console) is True
+
+        assert "All non-docs commits reference issues" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_no_commits_passes(self) -> None:
+        console = Console(file=io.StringIO())
+
+        with patch("tools.doit.release.subprocess.run", side_effect=_fake_git("")):
+            assert validate_issue_links(console) is True
+
+        assert "No commits to validate" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_only_the_first_five_offenders_are_listed(self) -> None:
+        """Long lists are truncated, with a count of the remainder."""
+        console = Console(file=io.StringIO())
+        commits = "\n".join(f"abc123{n} feat: unlinked {n}" for n in range(8))
+
+        with patch("tools.doit.release.subprocess.run", side_effect=_fake_git(commits)):
+            assert validate_issue_links(console) is True
+
+        assert "and 3 more" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_git_failure_does_not_block_the_release(self) -> None:
+        """A check that cannot run must not stop a release it only advises on."""
+        console = Console(file=io.StringIO())
+
+        with patch("tools.doit.release.subprocess.run", side_effect=OSError("no git")):
+            assert validate_issue_links(console) is True
+
+        assert "Could not check issue links" in console.file.getvalue()  # type: ignore[attr-defined]
+
+
+def _release_action() -> Callable[..., None]:
+    """Return the `create_release_pr` action that `doit release` runs."""
+    action: Callable[..., None] = task_release()["actions"][0]
+    return action
+
+
+def _tag_action() -> Callable[..., None]:
+    """Return the `create_release_tag` action that `doit release_tag` runs."""
+    action: Callable[..., None] = task_release_tag()["actions"][0]
+    return action
+
+
+class TestCreateReleasePrGuards:
+    """`doit release` refuses before it mutates anything (#708).
+
+    AGENTS.md says never to run this without an explicit instruction, so the
+    guards that stop it early are the part worth pinning.
+    """
+
+    def test_refuses_when_not_on_main(self, capsys: pytest.CaptureFixture[str]) -> None:
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="feat/1-x\n", returncode=0),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()()
+
+        assert exc.value.code == 1
+        assert "Must be on main branch" in capsys.readouterr().out
+
+    @pytest.mark.parametrize("value", ["gamma", "RC", "1.0", "pre"])
+    def test_rejects_an_unknown_prerelease_value(self, value: str) -> None:
+        """Only alpha/beta/rc are meaningful to commitizen."""
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="main\n", returncode=0),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()(prerelease=value)
+
+        assert exc.value.code == 1
+
+    @pytest.mark.parametrize("value", ["alpha", "beta", "rc"])
+    def test_accepts_the_documented_prerelease_values(self, value: str) -> None:
+        """These must get past validation — a guard that rejects everything is useless."""
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="main\n", returncode=0),
+            ),
+            patch("tools.doit.release.validate_merge_commits", return_value=False),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()(prerelease=value)
+
+        # Exits on the *later* validation gate, not the prerelease check.
+        assert exc.value.code == 1
+
+
+class TestCreateReleaseTag:
+    """`doit release_tag` pushes a tag — the most expensive thing to undo (#708)."""
+
+    def test_refuses_when_not_on_main(self, capsys: pytest.CaptureFixture[str]) -> None:
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="feat/1-x\n", returncode=0),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _tag_action()()
+
+        assert exc.value.code == 1
+        assert "Must be on main branch" in capsys.readouterr().out
+
+    def test_aborts_when_git_pull_fails(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """Tagging a stale checkout would tag the wrong commit."""
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="main\n", returncode=0),
+            ),
+            patch(
+                "tools.doit.release.run_streamed",
+                side_effect=subprocess.CalledProcessError(1, ["git", "pull"]),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _tag_action()()
+
+        assert exc.value.code == 1
+        assert "Error pulling latest changes" in capsys.readouterr().out
