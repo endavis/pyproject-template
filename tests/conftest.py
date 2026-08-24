@@ -1,6 +1,7 @@
 """Shared pytest configuration and Hypothesis profiles."""
 
 import os
+import sys
 from collections.abc import Callable, Iterator
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -79,3 +80,85 @@ def mock_subprocess() -> Iterator[MagicMock]:
         mock_run.side_effect = side_effect
         mock_run.register = dispatch.update
         yield mock_run
+
+
+# ---------------------------------------------------------------------------
+# Hermetic PATH (#710)
+# ---------------------------------------------------------------------------
+
+# Unit tests were reaching the real `gh` binary 18 times per run — 14 of them
+# `gh api user`, which is a *network* call. That makes results depend on whether
+# the developer happens to be authenticated: #689 spent time diagnosing a 0.54pp
+# coverage difference that turned out to be exactly this.
+#
+# Every test now runs with a stub `gh` ahead of the real one. It answers the
+# handful of commands the code under test invokes with fixed output matching an
+# unauthenticated CI runner, and exits 127 with a loud marker for anything else —
+# so a new unmocked call fails visibly rather than depending on the machine.
+#
+# Tests needing specific `gh` behaviour prepend their own stub ahead of this one
+# (see tests/test_statusline_gh_user.py::_stub_gh), which still works. Tests of
+# Python code that shells out should mock `subprocess.run` instead; this fixture
+# is the backstop for what slips through, and for shell scripts under test, which
+# cannot be mocked at the Python level.
+_GH_STUB_PY = """import sys
+
+args = sys.argv[1:]
+head = " ".join(args[:2])
+
+if head == "auth status":
+    # No token markers, so `_check_token_permissions` takes its else branch.
+    # Both branches are pinned explicitly in test_setup_repo.py.
+    print("Logged in to github.com as test-user", file=sys.stderr)
+    sys.exit(0)
+
+if head == "api user":
+    # Unauthenticated: the statusline must render no user segment.
+    print("gh: authentication required", file=sys.stderr)
+    sys.exit(1)
+
+if args[:1] == ["--version"]:
+    print("gh version 0.0.0-stub (hermetic test stub)")
+    sys.exit(0)
+
+print(
+    "HERMETIC-STUB: unmocked 'gh " + " ".join(args) + "' reached the real PATH (#710)",
+    file=sys.stderr,
+)
+sys.exit(127)
+"""
+
+
+@pytest.fixture(autouse=True)
+def _hermetic_path(
+    tmp_path_factory: pytest.TempPathFactory, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Put a stub `gh` ahead of the real one for every test.
+
+    The dispatch lives in Python so there is one implementation; only the
+    launcher differs per platform. Windows resolves executables through
+    ``PATHEXT``, so an extensionless shell script named ``gh`` is not executable
+    there — the first version of this fixture silently no-opped on Windows and
+    the suite kept calling the real binary.
+
+    Both launchers are written on Windows: ``gh.CMD`` for ``PATHEXT`` resolution,
+    and an extensionless ``gh`` for the Git Bash used to run the shell scripts
+    under test, which does not consult ``PATHEXT``.
+    """
+    bin_dir = tmp_path_factory.mktemp("hermetic-bin")
+    (bin_dir / "_gh_stub.py").write_text(_GH_STUB_PY, encoding="utf-8")
+
+    shim = bin_dir / "gh"
+    shim.write_text(
+        f'#!/bin/sh\nexec "{sys.executable}" "$(dirname "$0")/_gh_stub.py" "$@"\n',
+        encoding="utf-8",
+    )
+    shim.chmod(0o755)
+
+    if os.name == "nt":
+        (bin_dir / "gh.CMD").write_text(
+            f'@echo off\r\n"{sys.executable}" "%~dp0_gh_stub.py" %*\r\n',
+            encoding="utf-8",
+        )
+
+    monkeypatch.setenv("PATH", f"{bin_dir}{os.pathsep}{os.environ['PATH']}")
