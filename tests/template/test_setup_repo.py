@@ -75,6 +75,12 @@ class TestRepositorySetup:
 
         with (
             patch("tools.pyproject_template.setup_repo.command_exists", return_value=True),
+            # `gh --version` runs before the auth check, so it must be mocked or
+            # the test shells out to the real binary (#710).
+            patch(
+                "tools.pyproject_template.setup_repo.subprocess.run",
+                return_value=MagicMock(stdout="gh version 0.0.0\n"),
+            ),
             patch(
                 "tools.pyproject_template.setup_repo.GitHubCLI.is_authenticated",
                 return_value=False,
@@ -89,16 +95,32 @@ class TestRepositorySetup:
 
         setup = RepositorySetup()
 
+        versions = {
+            "gh": "gh version 2.0.0\n",
+            "git": "git version 2.40.0\n",
+            "uv": "uv 0.5.0\n",
+        }
+
+        def _fake_run(cmd: list[str], *_a: object, **_kw: object) -> MagicMock:
+            return MagicMock(stdout=versions[cmd[0]])
+
         with (
             patch("tools.pyproject_template.setup_repo.command_exists", return_value=True),
+            # gh, git and uv are each invoked for their version string. Without
+            # this the test shells out to all three real binaries (#710).
+            patch(
+                "tools.pyproject_template.setup_repo.subprocess.run", side_effect=_fake_run
+            ) as mock_run,
             patch(
                 "tools.pyproject_template.setup_repo.GitHubCLI.is_authenticated",
                 return_value=True,
             ),
             patch.object(setup, "_check_token_permissions"),
         ):
-            # Should not raise
             setup.check_requirements()
+
+        # Assert what it actually did, rather than only that it did not raise.
+        assert [call.args[0][0] for call in mock_run.call_args_list] == ["gh", "git", "uv"]
 
     def test_gather_inputs_with_git_config(self) -> None:
         """Test that gather_inputs uses git config values as defaults."""
