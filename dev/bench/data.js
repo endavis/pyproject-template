@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787596718308,
+  "lastUpdate": 1787597932955,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11859,6 +11859,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.182106287093717e-7",
             "extra": "mean: 2.0248039503431627 usec\nrounds: 54425"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7ec99fd922ff462b2f34a104ed6c2ea39eec026f",
+          "message": "feat: reject commits whose issue references disagree with the branch (merges PR #747, addresses #741)\n\nWork for #695 was committed onto feat/694-download-integrity-verification,\nthe branch left over from the previous issue. Every control passed: the\nbranch was not main, its name was well-formed, and the code was fine. Only\nits location was wrong.\n\nThe rule: if the message references any issue, the branch's issue must be\namong them. A message citing no issue passes — requiring one would be a\ndifferent and more intrusive policy.\n\nWiring this to the commit-msg stage surfaced that .git/hooks/commit-msg was\nnever installed, so conventional-pre-commit has been enforcing nothing since\nit was added. default_install_hook_types now declares every type the repo\nneeds, so `pre-commit install` wires them without each caller remembering\nthe right flags.\n\nMerge, revert, fixup and squash messages skip; git comment lines and\nanything below the scissors line are stripped so a verbose diff quoting an\nissue is not read as a citation. ALLOW_ISSUE_REF_MISMATCH=1 is the escape\nhatch, since AGENTS.md forbids --no-verify.\n\nVerified with real commits, not only unit tests: the incident is rejected,\na correct commit passes, and the override works. The rule was also checked\nagainst five genuine commits from that session, all of which pass.\n\nAddresses #741\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T19:58:07+01:00",
+          "tree_id": "cc26fdeab9cfda3ef761838d13b40df86a14662c",
+          "url": "https://github.com/endavis/pyproject-template/commit/7ec99fd922ff462b2f34a104ed6c2ea39eec026f"
+        },
+        "date": 1787597931210,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8351592.3295028405,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4593042359964783e-8",
+            "extra": "mean: 119.73764529518513 nsec\nrounds: 83382"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9186354.899142671,
+            "unit": "iter/sec",
+            "range": "stddev: 1.227316304084486e-8",
+            "extra": "mean: 108.85710501924177 nsec\nrounds: 93897"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5800991.222428466,
+            "unit": "iter/sec",
+            "range": "stddev: 4.34750557548398e-8",
+            "extra": "mean: 172.38433254883816 nsec\nrounds: 61615"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1673963.8592196337,
+            "unit": "iter/sec",
+            "range": "stddev: 5.09233252277163e-7",
+            "extra": "mean: 597.3844623301358 nsec\nrounds: 62815"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491985.1978010529,
+            "unit": "iter/sec",
+            "range": "stddev: 6.855228363608372e-7",
+            "extra": "mean: 2.032581476982517 usec\nrounds: 54991"
           }
         ]
       }
