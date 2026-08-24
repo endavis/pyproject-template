@@ -676,8 +676,14 @@ class TestConfigureModule:
         finally:
             os.chdir(old_cwd)
 
-    def test_run_configure_removes_template_tests_directory(self, tmp_path: Path) -> None:
-        """Test that tests/template/ is removed during configure."""
+    def test_run_configure_sheds_template_owned_tests_only(self, tmp_path: Path) -> None:
+        """Test that configure sheds the owned list but keeps tests for shipped tooling.
+
+        Before #731 this removed ``tests/template/`` wholesale, taking the suites
+        covering ``tools/doit/`` and ``tools/hooks/`` with it. That code ships to
+        the spawned project and is measured by its coverage gate, so the generated
+        project failed its own first CI run.
+        """
         from tools.pyproject_template.configure import run_configure
 
         # Create minimal project structure
@@ -685,19 +691,29 @@ class TestConfigureModule:
         (tmp_path / "src" / "test_pkg").mkdir(parents=True)
         (tmp_path / "src" / "test_pkg" / "__init__.py").write_text("", encoding="utf-8")
 
-        # Create template-only tests directory that should be removed
+        # One template-owned test (shed) and one covering shipped tooling (kept).
         template_tests_dir = tmp_path / "tests" / "template"
         template_tests_dir.mkdir(parents=True)
         (template_tests_dir / "__init__.py").write_text("", encoding="utf-8")
         (template_tests_dir / "test_utils.py").write_text("# test file", encoding="utf-8")
+        (template_tests_dir / "test_doit_adr.py").write_text("# tooling test", encoding="utf-8")
 
         import os
 
         old_cwd = os.getcwd()
         os.chdir(tmp_path)
+
+        # Suppress only configure.py's self-destruct; a blanket Path.unlink mock
+        # would also neuter the shedding this test is asserting.
+        real_unlink = Path.unlink
+
+        def _unlink_unless_self_destruct(self: Path, *args: object, **kwargs: object) -> None:
+            if self.name == "configure.py":
+                return
+            real_unlink(self, *args, **kwargs)  # type: ignore[arg-type]
+
         try:
-            # Mock Path.unlink to prevent configure.py self-destruct
-            with patch.object(Path, "unlink"):
+            with patch.object(Path, "unlink", _unlink_unless_self_destruct):
                 result = run_configure(
                     auto=True,
                     yes=True,
@@ -713,9 +729,11 @@ class TestConfigureModule:
                 )
             assert result == 0
 
-            # Verify template-only tests directory was removed
-            assert not template_tests_dir.exists()
-            # But tests directory itself should still exist
+            # The template-owned test is shed...
+            assert not (template_tests_dir / "test_utils.py").exists()
+            # ...but the test for tooling that ships downstream survives, and so
+            # does the package it lives in.
+            assert (template_tests_dir / "test_doit_adr.py").exists()
             assert (tmp_path / "tests").exists()
         finally:
             os.chdir(old_cwd)

@@ -184,16 +184,24 @@ branch = true
 # project deletes. See docs/development/ci-cd-testing.md for the downstream/template
 # split.
 source = ["package_name", "tools"]
+# tools/pyproject_template/ is the template's own management suite. It is the
+# one part of tools/ that does not belong to the spawned project: ADR-9017 makes
+# its tests template-owned, and both spawn routes delete the suite itself. Left
+# in scope it is measured downstream but never tested there, which put a spawned
+# project 19 points under the gate (#731). Its tests still run in template CI.
+omit = ["tools/pyproject_template/*"]
 
 [tool.coverage.report]
 skip_covered = false
 show_missing = true
 precision = 2
-# Measured over package_name + tools/. Currently 58.29% here, and 62.98% in a
-# downstream project once `cleanup` sheds tools/pyproject_template/, so the same
-# gate holds in both shapes. Ratchet upward as tooling coverage improves (there
-# is ~4pp of headroom now, tracked in #708); treat lowering it as a change that
-# needs justification.
+# Measured over package_name + tools/doit + tools/hooks — code that ships to and
+# runs in the spawned project. Scope is deliberately shape-independent: the same
+# code is measured by the same tests in the template and in a spawned project, so
+# both report 64.34% and one threshold is honest in both. Before #731 the two
+# shapes read 59.16% and 33.98%, and only the first was ever measured.
+# Ratchet upward as tooling coverage improves (~10pp of headroom now, tracked in
+# #708); treat lowering it as a change that needs justification.
 fail_under = 54
 exclude_lines = [
     "pragma: no cover",

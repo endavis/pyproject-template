@@ -567,10 +567,15 @@ class TestVerifyPostCleanup:
 class TestConfigurePlaceholdersTemplateTestsRemoval:
     """Tests for RepositorySetup.configure_placeholders() template-tests removal.
 
-    Issue #463: spawned consumer projects must not ship with
-    ``tests/template/`` (the template-only test suite). This verifies that
-    ``configure_placeholders()`` removes the directory and that the removal
-    is a no-op when the directory is absent.
+    Issue #463: spawned consumer projects must not ship with the template-only
+    test suite. Issue #731 narrowed *which* tests that means: the wizard sheds
+    ``TEMPLATE_OWNED_TEST_FILES`` and keeps the suites covering ``tools/doit/``
+    and ``tools/hooks/``, because that code ships to the spawned project and is
+    measured by its coverage gate. Removing the directory wholesale left the
+    generated project failing its own first CI run.
+
+    This verifies the narrowed contract and that shedding is a no-op when
+    ``tests/template/`` is absent.
     """
 
     @staticmethod
@@ -586,17 +591,19 @@ class TestConfigurePlaceholdersTemplateTestsRemoval:
             "author_email": "test@example.com",
         }
 
-    def test_configure_placeholders_removes_tests_template_directory(
+    def test_configure_placeholders_sheds_template_owned_tests_only(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ) -> None:
-        """configure_placeholders() removes tests/template/ when present."""
+        """configure_placeholders() sheds the owned list and keeps tooling tests."""
         from tools.pyproject_template.setup_repo import RepositorySetup
 
-        # Simulate a cloned consumer project with a tests/template/ directory.
+        # Simulate a cloned consumer project: one template-owned test and one
+        # test covering tools/doit/, which ships to the spawned project.
         template_tests_dir = tmp_path / "tests" / "template"
         template_tests_dir.mkdir(parents=True)
         (template_tests_dir / "__init__.py").write_text("", encoding="utf-8")
-        (template_tests_dir / "test_doit_adr.py").write_text("# template test", encoding="utf-8")
+        (template_tests_dir / "test_cleanup.py").write_text("# template test", encoding="utf-8")
+        (template_tests_dir / "test_doit_adr.py").write_text("# tooling test", encoding="utf-8")
 
         monkeypatch.chdir(tmp_path)
 
@@ -608,8 +615,11 @@ class TestConfigurePlaceholdersTemplateTestsRemoval:
             mock_run.return_value = MagicMock(returncode=0)
             setup.configure_placeholders()
 
-        assert not template_tests_dir.exists(), (
-            "tests/template/ should have been removed by configure_placeholders()"
+        assert not (template_tests_dir / "test_cleanup.py").exists(), (
+            "template-owned tests should have been shed by configure_placeholders()"
+        )
+        assert (template_tests_dir / "test_doit_adr.py").exists(), (
+            "tests covering tools/doit/ must survive — that code ships downstream (#731)"
         )
         # The parent tests/ directory should still exist.
         assert (tmp_path / "tests").exists()
