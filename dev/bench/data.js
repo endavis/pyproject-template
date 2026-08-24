@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787590040919,
+  "lastUpdate": 1787590320992,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11682,6 +11682,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.746090904848012e-7",
             "extra": "mean: 1.8731709707419009 usec\nrounds: 47552"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "52f90a2e56b46442ca636fb9f2bb5634fdecb2ed",
+          "message": "chore(deps): bump astral-sh/setup-uv from 7.6.0 to 10.0.1 (merges PR #744)\n\nBumps [astral-sh/setup-uv](https://github.com/astral-sh/setup-uv) from 7.6.0 to 10.0.1.\n- [Release notes](https://github.com/astral-sh/setup-uv/releases)\n- [Commits](https://github.com/astral-sh/setup-uv/compare/37802adc94f370d6bfd71619e3f0bf239e1f3b78...20cfd1bf945f4377ade1205e4dbc17946fc9a30d)\n\n---\nupdated-dependencies:\n- dependency-name: astral-sh/setup-uv\n  dependency-version: 10.0.1\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-08-24T17:51:11+01:00",
+          "tree_id": "3d26d1682586be535ba33ea24646eb7d405a92ad",
+          "url": "https://github.com/endavis/pyproject-template/commit/52f90a2e56b46442ca636fb9f2bb5634fdecb2ed"
+        },
+        "date": 1787590319700,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8479548.409269834,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1414717103321004e-8",
+            "extra": "mean: 117.93080854480421 nsec\nrounds: 83174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9323695.266506186,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1204146339971858e-8",
+            "extra": "mean: 107.25361258774004 nsec\nrounds: 94251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6147088.866301274,
+            "unit": "iter/sec",
+            "range": "stddev: 1.541892367403908e-8",
+            "extra": "mean: 162.67863077139856 nsec\nrounds: 62035"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1734870.4326501037,
+            "unit": "iter/sec",
+            "range": "stddev: 2.247907684830538e-7",
+            "extra": "mean: 576.4119217090171 nsec\nrounds: 44960"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 484063.2917407802,
+            "unit": "iter/sec",
+            "range": "stddev: 5.41694579395369e-7",
+            "extra": "mean: 2.065845555864848 usec\nrounds: 38331"
           }
         ]
       }
