@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787588477959,
+  "lastUpdate": 1787588649581,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11564,6 +11564,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.243630611037288e-7",
             "extra": "mean: 2.0639311508925333 usec\nrounds: 57764"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5cbec8d5c04bd8460f35e90c4b5177e3e2de0f2e",
+          "message": "chore: pin actions to commit SHAs and scope benchmark write permissions (merges PR #742, addresses #695)\n\nTwo workflow hardening gaps.\n\nbenchmark.yml declared `contents: write` and `pull-requests: write` at\nworkflow scope, so they applied to the pull_request trigger. On a same-repo\nbranch that means PR code runs with a write-capable GITHUB_TOKEN, which was\nthen handed to a third-party action. benchmark-action's own README says not\nto run it on pull requests for exactly this reason.\n\nThe workflow is now two jobs: `benchmark` runs everywhere with contents:\nread, and `store` holds the only write grant, gated on push to main.\n`pull-requests: write` is dropped entirely — the action posts commit\ncomments, not PR comments, so it was never needed.\n\nAll 60 external action references are pinned to commit SHAs with version\ncomments. A major tag is a moving pointer the publisher can re-aim;\ndependabot bumps pins through a reviewable PR instead.\npypa/gh-action-pypi-publish@release/v1 stays on its branch, documented as an\nexemption because PyPA ships trusted-publishing fixes there.\n\nPRs lose the automated benchmark regression comment, which needed the write\ngrant. fail-on-alert was rejected as a replacement: a wall-clock threshold on\na shared runner is a flake source, per #736.\n\ntest_benchmark_workflow.py is rewritten — its previous assertions pinned the\ndesign this removes. It now asserts the property (no write reachable from a\npull request) rather than step shapes. Six tests elsewhere asserted the old\nmajor-tag convention and now defer to the new pinning guard.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T17:23:22+01:00",
+          "tree_id": "6a8dc8d31cad43fd9578f7faecf819b39280f50e",
+          "url": "https://github.com/endavis/pyproject-template/commit/5cbec8d5c04bd8460f35e90c4b5177e3e2de0f2e"
+        },
+        "date": 1787588647679,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9228477.418551382,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0810792001031008e-8",
+            "extra": "mean: 108.36023697579492 nsec\nrounds: 85705"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9325050.415156411,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3430358256753901e-8",
+            "extra": "mean: 107.23802612098014 nsec\nrounds: 91191"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6493780.586512098,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7121632172049165e-8",
+            "extra": "mean: 153.99349988465107 nsec\nrounds: 64965"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1809399.957295832,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2523753361328774e-7",
+            "extra": "mean: 552.6694062127153 nsec\nrounds: 44898"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 502103.68043604493,
+            "unit": "iter/sec",
+            "range": "stddev: 6.414321011227667e-7",
+            "extra": "mean: 1.9916205336944832 usec\nrounds: 55723"
           }
         ]
       }
