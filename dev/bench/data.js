@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787569506656,
+  "lastUpdate": 1787575239968,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11210,6 +11210,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.9991007410894606e-7",
             "extra": "mean: 1.5186435402264862 usec\nrounds: 58562"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "450339139fac33c8f08845fdd742968adb822754",
+          "message": "refactor: make the template-owned test rule explicit and self-enforcing (merges PR #733, addresses #691)\n\nADR-9017 named tools/pyproject_template/ tests as template-owned but never\nsaid what to do with the rest of tests/template/, so three shed paths grew\nthree answers (#691). PR #732 made them agree; this records the rule they\nnow share and stops the classification drifting again.\n\n- ADR-9017 states the membership test — a test is template-owned when its\n  target does not survive configuration — and applies it per target, so\n  test_doit_*.py is recorded as downstream-owned rather than left implied.\n- Its \"downstreams carry no tests for the tooling they run\" clause is\n  narrowed to the management suite. Stated broadly, it read as a blessing\n  for shedding the tools/doit and tools/hooks tests.\n- A new guard flags any kept test that reads a path configuration deletes.\n  The existing classification guard cannot see these: it keys on\n  tools.pyproject_template imports, which test_readme_split.py and\n  test_configure_paths.py never had.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T13:40:16+01:00",
+          "tree_id": "4c9e13ce1752e7fa113667500ec3a36537eebd63",
+          "url": "https://github.com/endavis/pyproject-template/commit/450339139fac33c8f08845fdd742968adb822754"
+        },
+        "date": 1787575239301,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8387357.607844618,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1949033212201239e-8",
+            "extra": "mean: 119.22706134107234 nsec\nrounds: 84804"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9115979.010946289,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3411434092508332e-8",
+            "extra": "mean: 109.6974882016753 nsec\nrounds: 91325"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6126200.167959297,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4940272030452933e-8",
+            "extra": "mean: 163.23332124048287 nsec\nrounds: 60640"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1713561.6353726913,
+            "unit": "iter/sec",
+            "range": "stddev: 2.402062087957115e-7",
+            "extra": "mean: 583.5798254099595 nsec\nrounds: 43758"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494221.96369178186,
+            "unit": "iter/sec",
+            "range": "stddev: 6.900253709339652e-7",
+            "extra": "mean: 2.0233823534067845 usec\nrounds: 56045"
           }
         ]
       }
