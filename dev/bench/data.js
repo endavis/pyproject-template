@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787581608285,
+  "lastUpdate": 1787581770378,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11387,6 +11387,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.8149175915157293e-7",
             "extra": "mean: 1.5517318440468681 usec\nrounds: 70817"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "98831ac6ffc2385d4ef64543dd5f0af4bce4cc03",
+          "message": "fix: drop the Hypothesis deadline in CI so property tests stop flaking (merges PR #737, addresses #736)\n\nProperty tests failed intermittently on windows-latest with DeadlineExceeded,\nthen passed on re-run. A runner took 1506ms on an example's first call and\n0.01ms on the retry — interpreter and import warmup, not the code under test.\n\nThe ci profile looked protected against slow runners because it suppressed\nHealthCheck.too_slow, but that and the per-example deadline are separate\nmechanisms, so the 200ms -> 500ms relaxation only half-applied.\n\ndeadline=None rather than a larger number: these are property tests over string\nvalidation, they assert what a value is and never how long it took, and\nbenchmark.yml covers timing. Any finite budget is a threshold a slow shared\nrunner can still cross. The default profile keeps its deadline.\n\ntests/test_hypothesis_profiles.py guards the value, that ci.yml still loads the\nprofile, and that conftest still reads the env var — a profile tuned while CI\nruns a different one would be silent.\n\nReproduced with an injected 1.5s first call: fails with deadline=500, passes\nwith deadline=None.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T15:29:03+01:00",
+          "tree_id": "8569cf87edc7f2a2812a2cced269d54de887f9e4",
+          "url": "https://github.com/endavis/pyproject-template/commit/98831ac6ffc2385d4ef64543dd5f0af4bce4cc03"
+        },
+        "date": 1787581769667,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9265121.999983106,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2123544192178564e-8",
+            "extra": "mean: 107.93166026327806 nsec\nrounds: 91100"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9193402.117772778,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1620347705326907e-8",
+            "extra": "mean: 108.77366041313365 nsec\nrounds: 89550"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6034921.67383519,
+            "unit": "iter/sec",
+            "range": "stddev: 3.421871428586608e-8",
+            "extra": "mean: 165.7022334416646 nsec\nrounds: 193125"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1832265.8837680484,
+            "unit": "iter/sec",
+            "range": "stddev: 2.572892732845845e-7",
+            "extra": "mean: 545.7723187769581 nsec\nrounds: 40504"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 483901.33452025516,
+            "unit": "iter/sec",
+            "range": "stddev: 6.564961262220184e-7",
+            "extra": "mean: 2.066536974921573 usec\nrounds: 55470"
           }
         ]
       }
