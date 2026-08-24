@@ -1,7 +1,7 @@
 """Contract tests for per-stack rule files.
 
-Rule files are mirrored across all three agent rule surfaces because every agent
-in the delegation matrix edits this codebase. The checklist body must stay
+Rule files are mirrored across every agent rule surface this project wires,
+because every agent in the delegation matrix edits this codebase. The checklist body must stay
 identical everywhere: a rule that disagrees with itself across agents is worse
 than no rule, because whichever agent is driving decides which version applies.
 
@@ -17,16 +17,33 @@ import re
 from pathlib import Path
 
 import pytest
+from agent_roster import agent_is_present
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 RULE_NAME = "typing-branch-narrowing"
 
-# Every surface that must carry the rule, and how each one is loaded.
-RULE_PATHS = {
+# Every surface the template mirrors the rule to, and how each one is loaded.
+ALL_RULE_PATHS = {
     "claude": REPO_ROOT / ".claude" / "rules" / f"{RULE_NAME}.md",
     "copilot": REPO_ROOT / ".github" / "instructions" / f"{RULE_NAME}.instructions.md",
     "agents": REPO_ROOT / ".agents" / "skills" / RULE_NAME / "SKILL.md",
+}
+
+# Which agents each surface serves. `.agents/` is read by both Codex and
+# Antigravity, so that surface is live if either agent is.
+SURFACE_AGENTS = {
+    "claude": ("claude",),
+    "copilot": ("copilot",),
+    "agents": ("codex", "antigravity"),
+}
+
+# The surfaces this project actually loads. A project that drops an agent drops
+# its rule surface with it, and must not be told the mirror is broken (#690).
+RULE_PATHS = {
+    surface: path
+    for surface, path in ALL_RULE_PATHS.items()
+    if any(agent_is_present(agent) for agent in SURFACE_AGENTS[surface])
 }
 
 MAX_LINES = 30
@@ -48,16 +65,23 @@ def _body(path: Path) -> str:
 
 @pytest.mark.parametrize("surface", sorted(RULE_PATHS))
 def test_rule_exists_on_every_surface(surface: str) -> None:
-    """The rule is present for all three agent families."""
+    """The rule is present for every agent family this project wires."""
     assert RULE_PATHS[surface].exists(), f"missing {surface} copy: {RULE_PATHS[surface]}"
 
 
 def test_rule_bodies_are_identical_across_surfaces() -> None:
     """The checklist must not drift between agents."""
+    if len(RULE_PATHS) < 2:
+        pytest.skip("only one rule surface is live; there is nothing to drift against")
+
     bodies = {name: _body(path) for name, path in RULE_PATHS.items()}
-    reference = bodies["claude"]
+    reference_surface = next(iter(sorted(bodies)))
+    reference = bodies[reference_surface]
     mismatched = [name for name, body in bodies.items() if body != reference]
-    assert not mismatched, f"rule body differs on {mismatched}; update all three surfaces together"
+    assert not mismatched, (
+        f"rule body differs on {mismatched} (compared against {reference_surface}); "
+        "update every live surface together"
+    )
 
 
 @pytest.mark.parametrize("surface", sorted(RULE_PATHS))
@@ -86,6 +110,8 @@ def test_rule_stays_within_the_line_budget(surface: str) -> None:
 
 def test_copilot_copy_declares_a_path_scope() -> None:
     """Copilot's loader requires ``applyTo:`` frontmatter to gate the file."""
+    if "copilot" not in RULE_PATHS:
+        pytest.skip("copilot is not wired in this project")
     text = RULE_PATHS["copilot"].read_text(encoding="utf-8")
     assert text.startswith("---"), "Copilot instructions need YAML frontmatter"
     assert re.search(r"^applyTo:\s*\S+", text, re.MULTILINE)
@@ -93,6 +119,8 @@ def test_copilot_copy_declares_a_path_scope() -> None:
 
 def test_agents_copy_declares_a_skill_gate_description() -> None:
     """``description:`` is the skill-gate trigger for Codex and Antigravity."""
+    if "agents" not in RULE_PATHS:
+        pytest.skip("neither codex nor antigravity is wired in this project")
     text = RULE_PATHS["agents"].read_text(encoding="utf-8")
     assert re.search(r"^name:\s*\S+", text, re.MULTILINE)
     assert re.search(r"^description:\s*\S+", text, re.MULTILINE)
@@ -103,6 +131,8 @@ def test_claude_loads_rule_files() -> None:
 
     A rule file that ships but never loads is a mechanism built and not used.
     """
+    if "claude" not in RULE_PATHS:
+        pytest.skip("claude is not wired in this project")
     text = (REPO_ROOT / ".claude" / "CLAUDE.md").read_text(encoding="utf-8")
     assert re.search(r"^@\./rules/\*\.md\s*$", text, re.MULTILINE), (
         "CLAUDE.md must import ./rules/*.md (uncommented)"

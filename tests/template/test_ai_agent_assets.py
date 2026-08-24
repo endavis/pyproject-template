@@ -6,12 +6,15 @@ import json
 from pathlib import Path
 
 import pytest
+from agent_roster import agent_is_present, present_agents, skip_if_absent
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def test_codex_workflow_skills_exist() -> None:
     """Codex workflow skills should be present in the repo skills directory."""
+    skip_if_absent("codex")
+
     skill_paths = [
         REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
@@ -25,49 +28,47 @@ def test_codex_workflow_skills_exist() -> None:
 
 
 def test_multi_orchestrator_files_exist() -> None:
-    """multi-* orchestrators (plan, review, adversarial-review) should exist for all 4 hosts."""
-    paths = [
-        # Claude
-        REPO_ROOT / ".claude" / "commands" / "multi-plan.md",
-        REPO_ROOT / ".claude" / "commands" / "multi-review.md",
-        REPO_ROOT / ".claude" / "commands" / "multi-adversarial-review.md",
-        # Copilot
-        REPO_ROOT / ".copilot" / "commands" / "multi-plan.md",
-        REPO_ROOT / ".copilot" / "commands" / "multi-review.md",
-        REPO_ROOT / ".copilot" / "commands" / "multi-adversarial-review.md",
-        # Codex
-        REPO_ROOT / ".agents" / "skills" / "multi-plan" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "multi-review" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "multi-adversarial-review" / "SKILL.md",
-    ]
+    """multi-* orchestrators exist for every host this project wires.
+
+    The template wires all four hosts (9 files); a project that keeps fewer is
+    checked against the hosts it kept (#690).
+    """
+    actions = ("plan", "review", "adversarial-review")
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths += [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
+    if agent_is_present("copilot"):
+        paths += [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
+    # Codex and Antigravity share the .agents/skills/ orchestrators.
+    if agent_is_present("codex") or agent_is_present("antigravity"):
+        paths += [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
 
     for path in paths:
         assert path.exists(), f"Missing multi-orchestrator file: {path}"
 
 
 def test_self_action_grid_exists() -> None:
-    """All 16 self-action files (4 agents x 4 actions) should exist."""
-    paths = [
-        # Claude self-action
-        REPO_ROOT / ".claude" / "commands" / "claude" / "plan.md",
-        REPO_ROOT / ".claude" / "commands" / "claude" / "implement.md",
-        REPO_ROOT / ".claude" / "commands" / "claude" / "review.md",
-        REPO_ROOT / ".claude" / "commands" / "claude" / "adversarial-review.md",
-        # Copilot self-action (skills under .github/skills/ — see docstring in
-        # tests/test_delegation_matrix.py::_expected_path for why .github/ vs .claude/)
-        REPO_ROOT / ".github" / "skills" / "copilot-plan" / "SKILL.md",
-        REPO_ROOT / ".github" / "skills" / "copilot-implement" / "SKILL.md",
-        REPO_ROOT / ".github" / "skills" / "copilot-review" / "SKILL.md",
-        REPO_ROOT / ".github" / "skills" / "copilot-adversarial-review" / "SKILL.md",
-        # Codex self-action (skills)
-        REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "codex-review" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "codex-adversarial-review" / "SKILL.md",
-    ]
+    """Every wired agent has its four self-action files.
 
-    for path in paths:
-        assert path.exists(), f"Missing self-action file: {path}"
+    The template wires four agents x four actions = 16 files. The grid is built
+    from the agents this project keeps rather than pinned at the template's
+    roster (#690).
+    """
+    actions = ("plan", "implement", "review", "adversarial-review")
+    # Where each host keeps its self-action files. Copilot uses .github/skills/
+    # rather than .claude/skills/ — see tests/test_delegation_matrix.py
+    # ::_expected_path for why.
+    layouts = {
+        "claude": lambda a: REPO_ROOT / ".claude" / "commands" / "claude" / f"{a}.md",
+        "copilot": lambda a: REPO_ROOT / ".github" / "skills" / f"copilot-{a}" / "SKILL.md",
+        "codex": lambda a: REPO_ROOT / ".agents" / "skills" / f"codex-{a}" / "SKILL.md",
+        "antigravity": lambda a: REPO_ROOT / ".agents" / "skills" / f"antigravity-{a}" / "SKILL.md",
+    }
+
+    for agent in present_agents():
+        for action in actions:
+            path = layouts[agent](action)
+            assert path.exists(), f"Missing self-action file: {path}"
 
 
 def test_retired_self_action_aliases_are_removed() -> None:
@@ -109,6 +110,8 @@ def test_retired_workflow_step_aliases_are_removed() -> None:
 
 def test_codex_config_keeps_shared_dangerous_command_hook() -> None:
     """Codex config should keep the shared dangerous-command hook wired."""
+    skip_if_absent("codex")
+
     config = (REPO_ROOT / ".codex" / "config.toml").read_text(encoding="utf-8")
 
     # `codex_hooks` is the deprecated spelling; Codex warns on it and would
@@ -123,6 +126,8 @@ def test_codex_config_keeps_shared_dangerous_command_hook() -> None:
 
 def test_codex_config_uses_current_schema() -> None:
     """Codex config should avoid obsolete keys from older Codex releases."""
+    skip_if_absent("codex")
+
     config = (REPO_ROOT / ".codex" / "config.toml").read_text(encoding="utf-8")
 
     assert 'approval_policy = "on-request"' in config
@@ -163,6 +168,8 @@ def test_enforcement_principles_document_codex_hook_support() -> None:
 
 def test_antigravity_workflow_skills_exist() -> None:
     """Antigravity self-action skills should be present in the shared .agents/skills directory."""
+    skip_if_absent("antigravity")
+
     for action in ("plan", "implement", "review", "adversarial-review"):
         skill_path = REPO_ROOT / ".agents" / "skills" / f"antigravity-{action}" / "SKILL.md"
         assert skill_path.exists(), f"Missing Antigravity skill: {skill_path}"
@@ -170,6 +177,8 @@ def test_antigravity_workflow_skills_exist() -> None:
 
 def test_antigravity_hooks_json_wires_shared_hook() -> None:
     """.agents/hooks.json should wire the shared dangerous-command hook on PreToolUse."""
+    skip_if_absent("antigravity")
+
     hooks_path = REPO_ROOT / ".agents" / "hooks.json"
     assert hooks_path.exists(), f"Missing Antigravity hooks config: {hooks_path}"
 
@@ -227,20 +236,38 @@ def test_stdout_contract_wirings_route_through_the_launcher() -> None:
     Both block only on a stdout deny payload, so a hook that cannot start reads
     as "allow". The launcher denies in that case; calling the .py directly does
     not, because a script that never runs cannot emit its own deny.
-    """
-    agy = json.loads((REPO_ROOT / ".agents" / "hooks.json").read_text(encoding="utf-8"))
-    agy_commands = [
-        handler.get("command", "")
-        for group in agy.values()
-        for entry in group.get("PreToolUse", [])
-        for handler in entry.get("hooks", [])
-    ]
-    copilot = json.loads(
-        (REPO_ROOT / ".github" / "hooks" / "copilot-hooks.json").read_text(encoding="utf-8")
-    )
-    copilot_commands = [e.get("bash", "") for e in copilot.get("hooks", {}).get("preToolUse", [])]
 
-    for label, commands in (("Antigravity", agy_commands), ("Copilot", copilot_commands)):
+    Only the hosts this project wires are checked (#690); the launcher itself is
+    asserted either way, since it is what makes the contract fail closed.
+    """
+    wirings: list[tuple[str, list[str]]] = []
+
+    if agent_is_present("antigravity"):
+        agy = json.loads((REPO_ROOT / ".agents" / "hooks.json").read_text(encoding="utf-8"))
+        wirings.append(
+            (
+                "Antigravity",
+                [
+                    handler.get("command", "")
+                    for group in agy.values()
+                    for entry in group.get("PreToolUse", [])
+                    for handler in entry.get("hooks", [])
+                ],
+            )
+        )
+
+    if agent_is_present("copilot"):
+        copilot = json.loads(
+            (REPO_ROOT / ".github" / "hooks" / "copilot-hooks.json").read_text(encoding="utf-8")
+        )
+        wirings.append(
+            (
+                "Copilot",
+                [e.get("bash", "") for e in copilot.get("hooks", {}).get("preToolUse", [])],
+            )
+        )
+
+    for label, commands in wirings:
         assert any("block-dangerous-commands.sh" in c for c in commands), (
             f"{label} must route through the fail-closed launcher"
         )
@@ -263,14 +290,21 @@ def test_docs_document_antigravity_agent() -> None:
 
 
 def test_multi_orchestrators_recognize_antigravity() -> None:
-    """All 9 multi-* orchestrator files list antigravity and include an agy invocation block."""
+    """Every wired host's multi-* orchestrators offer antigravity as an agent.
+
+    Skipped when the project does not wire Antigravity — there is nothing for the
+    orchestrators to offer (#690).
+    """
+    skip_if_absent("antigravity")
+
     actions = ("plan", "review", "adversarial-review")
-    multi_files = (
-        [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
-        + [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
-        + [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
-    )
-    assert len(multi_files) == 9
+    multi_files: list[Path] = []
+    if agent_is_present("claude"):
+        multi_files += [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
+    if agent_is_present("copilot"):
+        multi_files += [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
+    multi_files += [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
+
     for f in multi_files:
         content = f.read_text(encoding="utf-8")
         assert "`antigravity`" in content, f"{f} does not list antigravity as an allowed agent"
