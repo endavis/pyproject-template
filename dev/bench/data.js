@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787575429607,
+  "lastUpdate": 1787581608285,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11328,6 +11328,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.80343276116779e-7",
             "extra": "mean: 2.0065858414466797 usec\nrounds: 44920"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4e0ff33bd2923b6358780423e999ddee659d9796",
+          "message": "refactor: assert the cross-agent workflow contract, don't just check existence (merges PR #735, addresses #692)\n\nThe command and skill files encode a shared contract — the plan-comment\nheader, the branch pattern, the finalize handoff — that lets a user switch\nagents mid-workflow. test_delegation_matrix.py checked all 74 files exist;\nnothing checked they still agree (#692).\n\n- docs/development/ai/cross-agent-delegation.md gains a Workflow contract\n  section: the six elements, why each is load-bearing, and the one declared\n  exemption. It is the specification; the test mirrors it.\n- The read-only constraint now appears verbatim in all eight review and\n  adversarial-review files. Previously only Copilot stated it, in frontmatter.\n- tests/test_cross_agent_contract.py asserts the contract, scoped to the\n  agents a project wires, with exemptions declared rather than assumed.\n\n`Addresses #` is asserted on the ghi-finalize files rather than implement:\nno implement file opens a PR, so the issue had that element in the wrong\nplace. Claude's absent `doit check` is recorded as an exemption — it\ndelegates to implement-worker.md, which runs it.\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-24T15:26:19+01:00",
+          "tree_id": "8eae1ad3e9369c40485bee5c2fb2480019e1ce40",
+          "url": "https://github.com/endavis/pyproject-template/commit/4e0ff33bd2923b6358780423e999ddee659d9796"
+        },
+        "date": 1787581606602,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11662381.200660544,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3519744813111032e-8",
+            "extra": "mean: 85.74578234017605 nsec\nrounds: 114509"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11325455.095522333,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1279687965995636e-8",
+            "extra": "mean: 88.29667254566778 nsec\nrounds: 108296"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8150008.085415358,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6316112380518776e-8",
+            "extra": "mean: 122.69926477613254 nsec\nrounds: 81567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2246066.3563162587,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8736977667352685e-7",
+            "extra": "mean: 445.22282130617276 nsec\nrounds: 50076"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 644441.2440438364,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8149175915157293e-7",
+            "extra": "mean: 1.5517318440468681 usec\nrounds: 70817"
           }
         ]
       }
