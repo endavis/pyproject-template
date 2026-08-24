@@ -198,11 +198,20 @@ precision = 2
 # Measured over package_name + tools/doit + tools/hooks — code that ships to and
 # runs in the spawned project. Scope is deliberately shape-independent: the same
 # code is measured by the same tests in the template and in a spawned project, so
-# both report 64.34% and one threshold is honest in both. Before #731 the two
+# both report 73.27% and one threshold is honest in both. Before #731 the two
 # shapes read 59.16% and 33.98%, and only the first was ever measured.
-# Ratchet upward as tooling coverage improves (~10pp of headroom now, tracked in
-# #708); treat lowering it as a change that needs justification.
-fail_under = 54
+#
+# Ratcheted 54 -> 70 in #708, which covered the three workflow entry points
+# AGENTS.md mandates (`doit issue`, `doit pr`, `doit pr_merge`) and the release
+# paths that mutate remote state: github.py 50.94% -> 81.50%, release.py
+# 40.26% -> 60.53%.
+#
+# The ~3pp margin is deliberate — a threshold set exactly at the measured value
+# fails on trivial variation, which trains people to lower it. Raise this again
+# as the modules #708 lists next are paid down (manage.py 24%, maintenance.py
+# 6.57%, generate_doc_toc.py 0%). Treat lowering it as a change that needs
+# justification.
+fail_under = 70
 exclude_lines = [
     "pragma: no cover",
     "if TYPE_CHECKING:",
