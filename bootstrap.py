@@ -22,6 +22,7 @@ Usage:
 """
 
 import argparse
+import os
 import sys
 import tempfile
 import urllib.request
@@ -32,7 +33,62 @@ from urllib.parse import urlparse
 REPO_OWNER = "endavis"
 REPO_NAME = "pyproject-template"
 BRANCH = "main"
-BASE_URL = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{BRANCH}"
+
+# `main` moves. Fetching a dozen files from a moving ref means a push that lands
+# mid-run produces a mixed file set, and the same command run twice can install
+# different code. `resolve_ref()` pins the branch to one commit up front so a run
+# is internally consistent and its result is recordable (#694).
+#
+# This is not protection against the template repository itself being malicious —
+# running `curl | python3` against it already extends that trust. It closes the
+# window where main changes underneath a run, and makes "which code did I get?"
+# an answerable question.
+REF = os.environ.get("PYPROJECT_TEMPLATE_REF", BRANCH)
+BASE_URL = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{REF}"
+
+
+def resolve_ref(ref: str = REF) -> str:
+    """Resolve *ref* to a commit SHA so every download comes from one commit.
+
+    Returns the SHA on success. On failure — offline, rate-limited, or an
+    unknown ref — returns *ref* unchanged and warns: pinning is a consistency
+    improvement, and refusing to bootstrap because api.github.com is
+    unreachable would trade a small gain for a hard outage.
+
+    A ref that already looks like a full SHA is returned as-is.
+    """
+    if len(ref) == 40 and all(c in "0123456789abcdef" for c in ref.lower()):
+        return ref
+
+    api = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/commits/{ref}"
+    request = urllib.request.Request(api, headers={"Accept": "application/vnd.github.sha"})
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        request.add_header("Authorization", f"token {token}")
+
+    try:
+        with urllib.request.urlopen(request, timeout=15) as response:  # nosec B310
+            sha: str = response.read().decode("utf-8").strip()
+    except Exception as e:
+        print(f"  Warning: could not resolve {ref} to a commit ({e}).")
+        print(f"  Continuing against the moving ref '{ref}'.")
+        return ref
+
+    if len(sha) != 40 or not all(c in "0123456789abcdef" for c in sha.lower()):
+        print(f"  Warning: unexpected response resolving {ref}; using the ref as-is.")
+        return ref
+    return sha
+
+
+def pin_base_url() -> str:
+    """Pin :data:`BASE_URL` to a resolved commit and return the SHA used."""
+    global BASE_URL
+    sha = resolve_ref()
+    BASE_URL = f"https://raw.githubusercontent.com/{REPO_OWNER}/{REPO_NAME}/{sha}"
+    if sha != REF:
+        print(f"  Pinned to commit {sha[:12]} (from '{REF}')")
+    return sha
+
 
 # Files needed for new project setup (downloaded to temp dir, runs wizard)
 SETUP_FILES = [
@@ -172,6 +228,8 @@ def run_sync(project_root: Path) -> None:
     # Create directory structure
     pkg_dir.mkdir(parents=True, exist_ok=True)
 
+    pin_base_url()
+
     # Download sync files
     for file_path in SYNC_FILES:
         filename = Path(file_path).name
@@ -237,6 +295,8 @@ def run_setup() -> None:
         # Recreate the package structure: tools/pyproject_template/
         pkg_dir = root_path / "tools" / "pyproject_template"
         pkg_dir.mkdir(parents=True, exist_ok=True)
+
+        pin_base_url()
 
         # Download files
         for file_path in SETUP_FILES:
