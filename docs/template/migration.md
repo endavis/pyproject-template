@@ -73,6 +73,10 @@ See [Template Management](manage.md) for full documentation on the management sc
 ### 10) Verify Locally
 - Install environment: `uv sync --all-extras --dev`
 - Install hooks: `doit pre_commit_install`
+  - Already ran this in an earlier migration? Run it again. The config now declares four hook
+    types and `commit-msg` is newly among them, so an older install has no `commit-msg` hook
+    and neither conventional-commit enforcement nor the branch/issue check fires. Verify with
+    `ls .git/hooks/` — see [Consumer Notes](consumer-notes.md#re-run-doit-pre_commit_install).
 - Run checks: `doit check`
 - Run tests: `doit test`
 

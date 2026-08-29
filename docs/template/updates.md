@@ -120,6 +120,13 @@ These files typically should be kept in sync:
 - `dodo.py` - New tasks or improvements
 - `tools/pyproject_template/*.py` - Template tooling
 
+### Breaking and behaviour changes
+
+Before adopting drift, read **[Consumer Notes](consumer-notes.md)** — changes that arrive through
+the sync path and need action. It currently carries a breaking change to `install_tools`
+(`sha256` is now mandatory for non-GitHub hosts), a hook re-install that must be run once, and the
+behaviour changes a project will notice without explanation.
+
 ### Files to Review Carefully
 
 These may have project-specific customizations:
@@ -128,6 +135,8 @@ These may have project-specific customizations:
 - `mkdocs.yml` - Your navigation differs
 - `README.md` - Your content differs
 - `.github/CONTRIBUTING.md` - May have project-specific rules
+- `tools/doit/install_tools.py` - Adopting this requires `sha256=` for any non-GitHub
+  download; see [Consumer Notes](consumer-notes.md#install_tools-requires-sha256-for-untrusted-hosts)
 
 ### Files to Usually Skip
 
