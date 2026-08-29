@@ -82,7 +82,7 @@ own format and loading mechanism:
 The checklist body is identical in all three; only the frontmatter and loading differ. **When you
 change one, change all three** — a rule that disagrees with itself across agents is worse than no
 rule, because whichever agent is driving determines which version applies.
-`tests/template/test_rule_files.py` enforces that the four bodies stay byte-identical.
+`tests/template/test_rule_files.py` enforces that the three bodies stay byte-identical.
 
 Note that Copilot reads `.agents/skills/` in addition to `.github/instructions/`, so it sees the
 rule on two surfaces at once. That is harmless while the bodies match — which is exactly what the

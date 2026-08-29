@@ -68,7 +68,7 @@ See [Template Management](manage.md) for full documentation on the management sc
 
 ### 9) Docs & Badges
 - Check `README.md`: Restore your project description, but keep the new badges (links were updated by `configure.py`).
-- Update docs (`docs/installation.md`, `docs/usage.md`, `docs/api.md`) with your specific details.
+- Update docs (`docs/getting-started/installation.md`, `docs/usage/`, `docs/reference/api.md`) with your specific details.
 
 ### 10) Verify Locally
 - Install environment: `uv sync --all-extras --dev`
