@@ -346,6 +346,82 @@ def _wrapped_payloads(tokens: list[str]) -> list[str]:
     return payloads
 
 
+# POSIX shells that run their stdin as a *shell* program. A heredoc feeding one
+# of these is shell code and must be scanned the way `bash -c <payload>` already
+# is.
+#
+# Deliberately shells only. `python3 - <<EOF`, `perl`, `ruby` and `node` also run
+# their stdin, but as Python/Perl/Ruby/JS -- `printenv PYPI_TOKEN` in a Python
+# heredoc is a SyntaxError, not a dump. Scanning those bodies for shell patterns
+# would block string literals while still missing the real risk
+# (`os.system("cat ~/.netrc")`), so it buys false positives and no coverage.
+# Their bodies stay in the outer token scan, which is unchanged.
+_STDIN_INTERPRETERS = frozenset({"bash", "sh", "zsh", "dash"})
+
+# `<<EOF`, `<<-EOF`, `<<'EOF'`, `<<"EOF"`.
+_HEREDOC_START = re.compile(r"<<-?\s*(['\"]?)([A-Za-z_][A-Za-z0-9_]*)\1")
+
+
+def _reads_stdin_as_code(words: list[str]) -> bool:
+    """Whether the command in *words* will execute a heredoc body as a program.
+
+    `bash <<EOF` and `sh -s <<EOF` run their body as shell; `bash script.sh
+    <<EOF` and `cat >> notes.md <<EOF` feed it to something as input. The
+    difference is whether a script argument appears before the heredoc operator.
+    """
+    if not words:
+        return False
+    if words[0].rsplit("/", 1)[-1].lower() not in _STDIN_INTERPRETERS:
+        return False
+    for word in words[1:]:
+        if word.startswith("<<"):
+            break
+        if word == "-":
+            return True  # explicit "read the program from stdin"
+        if word.startswith("-"):
+            continue  # some other flag; keep looking
+        return False  # a script path: the heredoc is that script's input
+    return True  # bare `bash <<EOF` reads the program from stdin
+
+
+def _heredoc_payloads(command: str) -> list[str]:
+    """Return the lines of every heredoc body that its receiver will execute.
+
+    `check_command` recurses into `bash -c <payload>` through
+    :func:`_wrapped_payloads`, but a heredoc on stdin is not `-c`, so the body
+    was never re-scanned. The checks that match a token in any position caught
+    it anyway; the ones needing a command position did not, so
+    `bash <<EOF cat ~/.netrc EOF` ran while `bash -c "cat ~/.netrc"` was blocked
+    (#762).
+
+    Each line is yielded separately because each is its own command to the
+    shell, and a command position is what the missing checks require.
+    """
+    payloads: list[str] = []
+    lines = command.splitlines()
+    index = 0
+    while index < len(lines):
+        match = _HEREDOC_START.search(lines[index])
+        if not match:
+            index += 1
+            continue
+
+        delimiter = match.group(2)
+        # The command owning this heredoc is the last segment before it.
+        words = re.split(r"[;&|]", lines[index][: match.start()])[-1].split()
+
+        body: list[str] = []
+        cursor = index + 1
+        while cursor < len(lines) and lines[cursor].strip() != delimiter:
+            body.append(lines[cursor])
+            cursor += 1
+
+        if _reads_stdin_as_code(words):
+            payloads += [line for line in body if line.strip()]
+        index = cursor + 1
+    return payloads
+
+
 def check_dangerous_flags(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if any dangerous flag appears as a standalone token.
@@ -963,8 +1039,11 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     5. Merge commits on protected branches
     6. Blocked workflow commands
     7. Governance labels
-    8. Shell-wrapper payloads (``bash -c``, ``sh -c``, ``eval``) — recursed up
-       to depth 3 so all seven checks above gain wrapper coverage.
+    8. Shell-wrapper payloads (``bash -c``, ``sh -c``, ``eval``) and heredoc
+       bodies fed to a shell's stdin (``bash <<EOF``) — recursed up to depth 3
+       so all seven checks above gain wrapper coverage. A heredoc consumed as
+       *data* (``cat >> file <<EOF``, ``git commit -F - <<EOF``) or run by a
+       non-shell interpreter (``python3 - <<EOF``) is not recursed.
 
     Returns:
         (is_dangerous, reason)
@@ -1023,7 +1102,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # Recurse into shell-wrapper payloads (bash/sh/zsh/dash -c <payload>, eval ...)
     # Depth cap of 3 prevents infinite loops on adversarial inputs.
     if _depth < 3:
-        for payload in _wrapped_payloads(tokens):
+        for payload in _wrapped_payloads(tokens) + _heredoc_payloads(command):
             is_dangerous, reason = check_command(payload, _depth + 1)
             if is_dangerous:
                 return True, reason
