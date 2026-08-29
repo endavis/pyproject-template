@@ -146,5 +146,5 @@ only the frontmatter and the loading mechanism differ.
 
 **When you change one, change all three.** A rule that disagrees with itself across agents is worse
 than no rule, because whichever agent is driving decides which version applies.
-`tests/template/test_rule_files.py` enforces that the four bodies stay identical. See
+`tests/template/test_rule_files.py` enforces that the three bodies stay identical. See
 [`.claude/rules/README.md`](../../.claude/rules/README.md) for the authoring discipline.

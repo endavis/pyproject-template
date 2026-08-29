@@ -68,7 +68,14 @@ codex
 
 > **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
-Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`.
+Claude Code uses a reference file (`.claude/CLAUDE.md`) that imports `AGENTS.md` and the per-stack rule files:
+
+```
+@../AGENTS.md
+@./rules/*.md
+```
+
+The paths are relative to `.claude/`, which is why they are not bare `@AGENTS.md`.
 
 **Whitelisted commands:**
 - `git:*` - All git commands
@@ -84,7 +91,7 @@ Claude Code uses a reference file (`.claude/claude.md`) that imports `AGENTS.md`
 ```
 
 **Files:**
-- `.claude/claude.md` - Imports AGENTS.md
+- `.claude/CLAUDE.md` - Imports `AGENTS.md` and `.claude/rules/*.md`
 - `.claude/settings.local.json` - Command permissions
 - `.claude/settings.json` - Status line and PreToolUse hooks
 
@@ -245,7 +252,7 @@ The `AGENTS.md` file provides comprehensive project context including:
 
 This file is:
 - **Read directly** by Codex CLI, GitHub Copilot CLI, and Antigravity CLI
-- **Imported** by Claude Code via `.claude/claude.md`
+- **Imported** by Claude Code via `.claude/CLAUDE.md`
 - **Referenceable** by other AI tools
 
 ## Context files and precedence
@@ -369,7 +376,7 @@ codex
 - Restart Claude Code
 
 **Context not loading:**
-- Verify `.claude/claude.md` contains `@AGENTS.md`
+- Verify `.claude/CLAUDE.md` contains `@../AGENTS.md` and `@./rules/*.md`
 - Check `AGENTS.md` exists in project root
 
 ### Copilot CLI
