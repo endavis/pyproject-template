@@ -22,6 +22,7 @@ always-on rule, which is the opposite, so it cannot fail for the right reason.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -177,3 +178,72 @@ def test_the_row_parser_finds_the_shipped_rows() -> None:
     assert len(rows) == len(present_agents()), (
         f"parsed {len(rows)} config rows for {len(present_agents())} wired agents"
     )
+
+
+# --- Relocated procedure must stay reachable (#751) ------------------------
+#
+# `### 5. Pre-Action Checks` is the index for content AGENTS.md delegates rather
+# than carries. `test_instruction_pointers.py` (#739) checks that a pointer
+# *resolves*; nothing checked that relocated content *has* one. A section moved
+# out of the always-on file and not indexed is unreachable in practice — the
+# agent has no moment at which it learns to go and read it.
+
+PRE_ACTION_HEADING = "### 5. Pre-Action Checks (Dynamic Context)"
+
+# Docs that AGENTS.md delegates procedure to instead of restating it. Adding a
+# row here is the second half of moving something out of AGENTS.md.
+RELOCATION_TARGETS = (
+    "docs/development/AI_SETUP.md",  # per-agent config (#750)
+    ".github/CONTRIBUTING.md",  # issue / PR / ADR commands (#751)
+    "docs/development/dependabot-automerge.md",  # rebase procedure (#751)
+)
+
+_BACKTICKED_PATH = re.compile(r"`([\w./-]+\.(?:md|yml|yaml))`")
+
+
+def _pre_action_rows() -> list[str]:
+    """Return the body rows of the Pre-Action Checks table."""
+    lines = _agents_md().splitlines()
+    try:
+        start = next(i for i, line in enumerate(lines) if line.startswith(PRE_ACTION_HEADING))
+    except StopIteration:  # pragma: no cover - guarded by its own test
+        return []
+
+    rows: list[str] = []
+    for line in lines[start + 1 :]:
+        if line.startswith("#"):
+            break
+        stripped = line.strip()
+        if not stripped.startswith("|") or set(stripped) <= set("|: -"):
+            continue
+        if stripped.startswith("| Intent"):
+            continue
+        rows.append(stripped)
+    return rows
+
+
+def _indexed_paths() -> set[str]:
+    return {path for row in _pre_action_rows() for path in _BACKTICKED_PATH.findall(row)}
+
+
+@pytest.mark.parametrize("target", RELOCATION_TARGETS)
+def test_relocation_targets_are_indexed(target: str) -> None:
+    """Content moved out of AGENTS.md must be reachable from Pre-Action Checks."""
+    assert target in _indexed_paths(), (
+        f"{target} carries procedure moved out of AGENTS.md but has no row in "
+        f"{PRE_ACTION_HEADING}. Without one, nothing tells an agent when to read it — "
+        "the content is out of the always-on file and out of reach (#751)."
+    )
+
+
+def test_indexed_files_exist() -> None:
+    """A row naming a file that is not there is the #738 failure in a new place."""
+    missing = sorted(p for p in _indexed_paths() if not (REPO_ROOT / p).is_file())
+    assert not missing, f"{PRE_ACTION_HEADING} names files that do not exist: {missing}"
+
+
+def test_the_pre_action_parser_finds_the_shipped_rows() -> None:
+    """Guard against the two assertions above passing on an empty parse."""
+    rows = _pre_action_rows()
+    assert len(rows) >= len(RELOCATION_TARGETS), f"parsed only {len(rows)} Pre-Action rows"
+    assert _indexed_paths(), "parsed no file paths out of the Pre-Action Checks table"
