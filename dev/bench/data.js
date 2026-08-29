@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788034471713,
+  "lastUpdate": 1788034824862,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12803,6 +12803,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.081344212495585e-7",
             "extra": "mean: 1.32355625284273 usec\nrounds: 66921"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b0441341951a0b2c75d4a74e87b76c217ca88c2f",
+          "message": "fix: widen the matrix-count guard past the shape it missed (merges PR #777, addresses #774)\n\n#754 added test_only_the_matrix_doc_states_counts so a matrix count could not\nbe written into prose where nothing checks it. Its pattern required a\nqualifying noun -- `\\d+ distinct files` matched, a bare `\\d+ files` did not --\nso this line in .copilot/README.md, inside a file the test explicitly scans,\npassed:\n\n    Copilot-host workflow skills (16 files).\n\nThe number was right. That is the point: it is the same state the five wrong\ncounts were in before #754 -- accurate, in prose, and unguarded while believed\nto be guarded. A guard trusted more than it deserves is worse than no guard,\nbecause it stops anyone looking.\n\nBoth halves are fixed. The line is now structural, which is what #754 did\neverywhere else: the count belongs to cross-agent-delegation.md's Matrix\nsection and nowhere else. And the pattern gains the bare nouns -- files,\nentries, skills, bridges, commands.\n\nWidening a pattern in a guard risks the opposite failure, so the noun set was\nchecked against all four scanned documents before landing: it hits the one known\nline and nothing else. Three benign strings are pinned as cases so a later\nwidening cannot quietly start matching ordinary prose, alongside the shape that\nwas missed.\n\nVerified by mutation in both directions: narrowing the pattern back fails the\nplanted-error test, and restoring the old wording in .copilot/README.md fails\nthe scan that should have caught it the first time.\n\nAddresses #774",
+          "timestamp": "2026-08-29T21:19:42+01:00",
+          "tree_id": "90840e2577d48d89c36ddc87ef8e3af5206465b2",
+          "url": "https://github.com/endavis/pyproject-template/commit/b0441341951a0b2c75d4a74e87b76c217ca88c2f"
+        },
+        "date": 1788034823327,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11756569.33306147,
+            "unit": "iter/sec",
+            "range": "stddev: 9.425035163177861e-9",
+            "extra": "mean: 85.05882725395327 nsec\nrounds: 107713"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11728538.794286057,
+            "unit": "iter/sec",
+            "range": "stddev: 9.223406120025209e-9",
+            "extra": "mean: 85.2621129997185 nsec\nrounds: 108708"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8150618.572071086,
+            "unit": "iter/sec",
+            "range": "stddev: 1.590922314642655e-8",
+            "extra": "mean: 122.69007452104316 nsec\nrounds: 83064"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1934394.940151322,
+            "unit": "iter/sec",
+            "range": "stddev: 2.732300328437876e-7",
+            "extra": "mean: 516.9575143335378 nsec\nrounds: 58914"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 549624.145613439,
+            "unit": "iter/sec",
+            "range": "stddev: 5.024979254774308e-7",
+            "extra": "mean: 1.8194251616873447 usec\nrounds: 47930"
           }
         ]
       }
