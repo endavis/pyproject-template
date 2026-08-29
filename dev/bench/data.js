@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788039647707,
+  "lastUpdate": 1788040524055,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13039,6 +13039,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.047231845452906e-7",
             "extra": "mean: 2.0686168080235876 usec\nrounds: 63172"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4cdf41b2aacb20c41a3adb3588ab34fc020ed791",
+          "message": "docs: add the verified-claims rule, and cover every rule not just the first (merges PR #786, addresses #785)\n\nFour factual claims about this repository were written into issues, commit\nmessages and PR bodies in one session without being measured. Each was inference\nstated as observation: two guarded scripts said to exit 0 when all three exit 1,\ndisabledSkills said not to cover commands when it does, a Python heredoc said to\nexecute shell when the body is Python, and Copilot said to read no commands\ndirectory when it reads one.\n\nThe first is the sharpest. That mistake -- reading an exit code through a pipe,\nso it was the pipe's status -- had already happened earlier in the same session,\nbeen noticed and corrected, then recurred about forty tool calls later and\nreached a filed issue and a merged PR. Being told once did not hold, which is\nthe argument enforcement-principles.md makes for not relying on instructions.\n\nThe rule is written against the general shape rather than the pipe: inference\npresented as measurement. Its first check is the diagnostic that separates the\ntwo -- every claim that survived review in that session had a pasted command and\nits output, and every claim that did not, failed. \"Can I paste it?\" needs no\njudgement.\n\nA hook is deliberately not proposed. Under ADR-9019 this is a category-3\ntripwire: piping to head is legitimate constantly and was used correctly dozens\nof times in the same session, so a matcher would be noise. Rule 3 there says fix\nthat class by convention rather than by making a scanner smarter.\n\ntest_rule_files.py hardcoded RULE_NAME = \"typing-branch-narrowing\", so the second\nrule authored would have inherited none of its guarantees -- mirrored to three\nsurfaces with nothing holding the bodies together, which is the state that module\nexists to prevent. Rules are now discovered from .claude/rules/ and every check\nis parametrised over (rule, surface): 16 tests become 31. Verified by mutation\nagainst the new rule specifically -- drifting one copy fails the byte-identical\ncheck, dropping the footer fails the observed-failures check.\n\nThe three surface READMEs said \"the three bodies\", which read as though one rule\nexisted. Now per-rule, and .claude/rules/README.md names both.\n\nAddresses #785\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T22:54:47+01:00",
+          "tree_id": "0a5b01f07e295caca521ba27edf7d9029f10d725",
+          "url": "https://github.com/endavis/pyproject-template/commit/4cdf41b2aacb20c41a3adb3588ab34fc020ed791"
+        },
+        "date": 1788040522437,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8414414.596055944,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1887989863956518e-8",
+            "extra": "mean: 118.84368051803938 nsec\nrounds: 83529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9230666.672346212,
+            "unit": "iter/sec",
+            "range": "stddev: 1.485166560768445e-8",
+            "extra": "mean: 108.33453698375442 nsec\nrounds: 91325"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6281879.948231916,
+            "unit": "iter/sec",
+            "range": "stddev: 1.490088720897645e-8",
+            "extra": "mean: 159.18801509116037 nsec\nrounds: 63212"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1730826.4278988314,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7318453861443803e-7",
+            "extra": "mean: 577.7586844533963 nsec\nrounds: 58956"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 497184.69302525267,
+            "unit": "iter/sec",
+            "range": "stddev: 5.456994097326288e-7",
+            "extra": "mean: 2.011324994571401 usec\nrounds: 59841"
           }
         ]
       }
