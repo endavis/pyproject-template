@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788032006677,
+  "lastUpdate": 1788032282115,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12567,6 +12567,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.009293225837581e-7",
             "extra": "mean: 2.035327712428539 usec\nrounds: 67486"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "97e8e46e5454939de0985173fca0710a041503a2",
+          "message": "docs: document ref pinning and what the next sync will offer (merges PR #770, addresses #749)\n\n#749 B1-B4.\n\nB1: bootstrap.py resolves the ref to a commit SHA once and fetches every file\nfrom that commit, honours PYPROJECT_TEMPLATE_REF to pin an explicit ref or SHA,\nand falls back to the moving ref with a warning when api.github.com is\nunreachable. None of it was documented -- updates.md still showed the plain curl\ninvocation with no mention that a run is now internally consistent, or that the\nSHA it prints is the answer to \"which template version is this synced against\".\n\nAdds a \"Which template version you get\" section with the pinned-commit line\nbootstrap actually prints, the environment variable, the GITHUB_TOKEN escape for\nrate limits, and why the fallback warns rather than failing.\n\nB2/B4: the drift checker walks every file in the template, so recent additions\nsurface as \"please adopt\" suggestions with no guidance. The checklist now lists\nthe nine and says what each depends on. The last row is the one that matters:\ntests/test_agents_md_allocation.py is downstream-owned and adoptable, but its\nRELOCATION_TARGETS names template paths including\ndocs/development/dependabot-automerge.md, so a project without that doc adopts a\ntest it cannot pass. That is the general hazard -- downstream-owned is not the\nsame as portable -- and the entry says so.\n\nB3: the checklist described TEMPLATE_OWNED_TEST_FILES as tooling tests, naming\ntest_check_template_updates.py. Since #691/#733 the rule is that the test's\ntarget does not survive configuration (ADR-9017), and the list grew from 8 to 11\nwith test_configure_paths.py, test_readme_split.py and\ntest_downstream_test_retention.py -- none of which are tooling tests in the old\nsense. It also now says the converse plainly: the tools/doit/ and tools/hooks/\ntests are yours to adopt, because that code ships to and runs in your project\n(#731).\n\nEvery claim was checked against the source rather than the issue: the printed\npin line against bootstrap.py:89, the two environment variables against their\nos.environ reads, the eleven-entry list and its three non-tooling members against\nutils.py, and all nine drift files against the working tree.\n\nAddresses #749\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T20:37:04+01:00",
+          "tree_id": "8894c58c80891253911538e3c3852dd0251322b3",
+          "url": "https://github.com/endavis/pyproject-template/commit/97e8e46e5454939de0985173fca0710a041503a2"
+        },
+        "date": 1788032280866,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9117772.515643025,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0972153014225273e-8",
+            "extra": "mean: 109.67591023842029 nsec\nrounds: 88724"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9079598.931040373,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0335810465055503e-8",
+            "extra": "mean: 110.13702340764256 nsec\nrounds: 90654"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6140351.226383877,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3512621892935656e-8",
+            "extra": "mean: 162.8571335957457 nsec\nrounds: 23137"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1733533.89825666,
+            "unit": "iter/sec",
+            "range": "stddev: 2.523648391100749e-7",
+            "extra": "mean: 576.8563285700134 nsec\nrounds: 69123"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488898.0751302336,
+            "unit": "iter/sec",
+            "range": "stddev: 5.210983426474944e-7",
+            "extra": "mean: 2.045416112005796 usec\nrounds: 62500"
           }
         ]
       }
