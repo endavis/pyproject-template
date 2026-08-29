@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788037136712,
+  "lastUpdate": 1788038074085,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12921,6 +12921,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.656614863063136e-7",
             "extra": "mean: 1.8718460854594376 usec\nrounds: 52880"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "02931a6359c03e850245376bd1350f4740a63352",
+          "message": "refactor: make a template version a commit SHA (merges PR #782, addresses #781)\n\nThe template has cut no releases -- `gh release list` is empty and the only tag\nis v0.0.0 from the initial commit -- while half the update path assumed\notherwise. `get_latest_release()` called releases/latest, got a 404, returned\nNone, and every drift check fell through to the moving `main` branch. Reaching\nthe right place by failing a lookup first.\n\nThe two halves also disagreed about what a version is. ai-sync-checklist runs\n`bootstrap --sync` as Phase 1 and the drift check as Phase 2; the first pinned a\ncommit SHA and the second fetched moving `main`, so the tooling a project synced\nand the template it then diffed against could be different commits.\n\nADR-9020 settles it: a template version is a commit SHA. `--template-version`\naccepts a tag, a branch or a SHA, resolves it through commits/{ref}, and fetches\n`/archive/{sha}.zip` -- one identity and one URL shape. `main` is the stated\ndefault rather than a fallback. Resolution failure warns and continues against\nthe unresolved ref, the same call bootstrap.resolve_ref makes.\n\nThe deciding evidence turned up during implementation: TemplateState.commit\nalready exists and persists a template commit SHA. The repo had already chosen\ncommits as the thing it remembers about the template; only the drift checker's\nfetch disagreed. This finishes an identity that was half-adopted rather than\nintroducing one. Cutting releases was the alternative and stays open -- a tag is\na ref, so `--template-version v2.2.0` keeps working if this project starts\ntagging; the difference is that nothing depends on their existing.\n\nget_latest_release is removed along with its export from __init__.py. With\nreleases out of the model it is a dead path that invites reintroducing the\nassumption.\n\nOne bug shipped and caught by running the tool rather than by testing: the first\npatch left a stale `version` reference in run_check_updates, and every existing\ntest passed because they mock that function. TestRefResolution closes the gap --\nit covers resolution and the URL that comes out of it, and fails under both\nmutations tried: restoring the refs/tags shape, and dropping resolution\naltogether.\n\nAddresses #781\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T22:13:45+01:00",
+          "tree_id": "de3ab338e71e258f703144b81508186f88f6deb7",
+          "url": "https://github.com/endavis/pyproject-template/commit/02931a6359c03e850245376bd1350f4740a63352"
+        },
+        "date": 1788038071924,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8408976.710817022,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4828690282932457e-8",
+            "extra": "mean: 118.92053389964013 nsec\nrounds: 84660"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9135972.974621167,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4796030823637988e-8",
+            "extra": "mean: 109.45741660772218 nsec\nrounds: 90416"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6125265.569601069,
+            "unit": "iter/sec",
+            "range": "stddev: 1.597296395470887e-8",
+            "extra": "mean: 163.25822752288087 nsec\nrounds: 61163"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1717159.0581125803,
+            "unit": "iter/sec",
+            "range": "stddev: 3.602283070475942e-7",
+            "extra": "mean: 582.3572343374833 nsec\nrounds: 71043"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494231.09636080835,
+            "unit": "iter/sec",
+            "range": "stddev: 5.399482580773328e-7",
+            "extra": "mean: 2.0233449642552648 usec\nrounds: 56745"
           }
         ]
       }
