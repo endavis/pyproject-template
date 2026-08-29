@@ -120,6 +120,37 @@ EOF
 )"
 ```
 
+#### Heredocs
+
+Quoting is what makes the example above safe: the `$( )` sits inside double quotes, so `shlex`
+collapses the whole thing into one token and nothing inside it is ever a standalone `--force`. An
+**unquoted** heredoc body gets no such protection — it is split into tokens like any other
+argument. Four shapes, and they do not behave alike:
+
+| shape | outcome |
+| :--- | :--- |
+| `doit pr --body="$(cat <<'EOF' … )"` — quoted substitution | allowed; the body is one token |
+| `bash <<EOF` — a shell will execute the body | **blocked** if the body contains a blocked pattern; the body is re-scanned as commands, the way `bash -c` already is |
+| `git commit -F - <<EOF` — prose the receiver consumes as data | **blocked** if the prose names a blocked pattern, because the body is still tokenized |
+| `python3 - <<EOF`, `cat > f.md <<EOF` — a non-shell receiver | body is not re-scanned; the flat token scan still applies to it |
+
+The third row is why **commit messages go in a file**: a message describing `--admin` or
+`gh issue create` is refused as though it invoked one. That block names its alternative rather than
+giving the generic reason:
+
+```
+Reason: A commit message passed by heredoc is scanned as command arguments, so a
+message naming a blocked pattern is refused. Write the message to
+tmp/agents/<agent-type>/ and pass it with `git commit -F <file>`.
+```
+
+See [Commit Guidelines — Passing the Message](../../../.github/CONTRIBUTING.md#commit-guidelines)
+for the convention, and
+[ADR-9019](../../decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md)
+for why the scanner is not taught to recognise prose instead — the short version is that skipping
+bodies for a list of trusted receivers turns a mistake in that list into a bypass, and the flat
+scan is what covers interpreters nobody has listed.
+
 ### Files
 
 | File | Description |
