@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788011595605,
+  "lastUpdate": 1788024365883,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12095,6 +12095,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.9891586943441363e-7",
             "extra": "mean: 1.5115570365518152 usec\nrounds: 59120"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a87659980105c39cd27bf0a6ff4e1db495ffc4a3",
+          "message": "docs: cross-link the reasoning examples and the enforcement principles (merges PR #760, addresses #752)\n\n#693 proposed deduping AGENTS.md's Prohibited vs Correct examples against\nenforcement-principles.md. Measured, the overlap is one bullet -- \"Agents may\nrationalize exceptions ('this is just a quick fix')\" -- against nine concrete\nrationalizations. The two argue different things: that page says instructions\nare unreliable so processes belong in code; this section is the fallback for\nwhat code cannot catch. Complementary, so there is nothing to dedupe.\n\nClassifying the nine prohibited examples against the enforcement inventory:\n\n- blocked in code (3): committing to main (no-commit-to-main plus the branch\n  ruleset), and both `--admin` bypasses (hook, all four agents);\n- partially constrained (3): skip-the-workflow, skip-issue-creation, and\n  commit-before-issue, via branch naming, the `gh issue create` redirect, and\n  the #741 commit-issue-ref hook;\n- instruction-only (3): the `Addresses #XX` auto-close misconception, \"the user\n  probably wants me to proceed\", and \"just documentation, so tests aren't\n  needed\".\n\nThe three enforced examples were deliberately kept. A hook matches a command\npattern, not the reasoning that reached for it -- it stops the command, not the\nintent, which will look for an unblocked path. And enforcement-principles' own\nthesis, that instructions get ignored, argues for belt and braces rather than\nfor removing the belt.\n\nWhat was missing is that neither document knew about the other. Two pointers fix\nthat: AGENTS.md now says which of its examples are already impossible rather\nthan merely forbidden, and enforcement-principles names the instruction-side\ncomplement for what it cannot enforce.\n\nCommitted with `-F <file>` because the message names blocked patterns and the\nhook scans heredoc bodies as arguments (#759).\n\nAddresses #752\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T18:25:17+01:00",
+          "tree_id": "3152a177df352f96cc43a8a46b3f1f7264f6d1ee",
+          "url": "https://github.com/endavis/pyproject-template/commit/a87659980105c39cd27bf0a6ff4e1db495ffc4a3"
+        },
+        "date": 1788024364477,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8260149.182653908,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7921664676671803e-8",
+            "extra": "mean: 121.06318879808772 nsec\nrounds: 195695"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9231434.572036415,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1009413371064139e-8",
+            "extra": "mean: 108.32552537708169 nsec\nrounds: 93809"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6245394.609592732,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3922046083446417e-8",
+            "extra": "mean: 160.1179849330947 nsec\nrounds: 61993"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1735208.6831706243,
+            "unit": "iter/sec",
+            "range": "stddev: 2.673897463902263e-7",
+            "extra": "mean: 576.2995596430343 nsec\nrounds: 54964"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 483490.3030872221,
+            "unit": "iter/sec",
+            "range": "stddev: 5.824568639905821e-7",
+            "extra": "mean: 2.0682938077862527 usec\nrounds: 52068"
           }
         ]
       }
