@@ -15,7 +15,7 @@ All Copilot-host workflow skills live under `.github/skills/<target>-<action>/SK
 - **To Codex:** `/codex-plan`, `/codex-implement`, `/codex-review`, `/codex-adversarial-review`
 - **To Antigravity:** `/antigravity-plan`, `/antigravity-implement`, `/antigravity-review`, `/antigravity-adversarial-review`
 
-The `multi-*` orchestrators (`/multi-plan`, `/multi-review`, `/multi-adversarial-review`) and `/ghi-finalize` / `/ghi-status` come from `.agents/skills/` (interoperable Codex skill path) and are auto-discovered by Copilot.
+The `multi-*` orchestrators (`/multi-plan`, `/multi-review`, `/multi-adversarial-review`) and `/ghi-finalize` come from `.agents/skills/` (interoperable Codex skill path) and are auto-discovered by Copilot. `/ghi-status` has no skill under `.agents/skills/`: Copilot picks it up from `.claude/commands/ghi-status.md`, which it reads as a single-file command (#757). Verify with `copilot skill list`.
 
 ## Known limitation: delegate-* skill bleed
 

@@ -193,12 +193,38 @@ Because skill names are derived from their directory name and **cannot contain c
 }
 ```
 
-**Known limitation — `.claude/commands/` command bleed:** Copilot loads single-file commands from
-`.claude/commands/`, so Claude's own command surface — its self-action and cross-agent files, and
-the `multi-*` orchestrators — appears in a Copilot session too. This is the mirror image of the
-bleed above and of the reason `.github/skills/` was chosen for the bridges: it keeps Copilot's
-skills out of Claude, but nothing keeps Claude's commands out of Copilot. `disabledSkills` does not
-cover them. Whether to address it is open (#753); this note records the behavior.
+**`.claude/commands/` in Copilot — measured, and smaller than it looks.** Copilot loads single-file
+commands from `.claude/commands/`, which raised the question of whether Claude's command surface
+bleeds into a Copilot session the way `delegate-*` bleeds the other way. It does not, and the
+question is closed (#757). Run `copilot skill list` from the repo root to reproduce:
+
+| | |
+| :--- | ---: |
+| project entries Copilot lists | 40 |
+| from `.github/skills/` | 16 |
+| from `.agents/skills/` | 23 |
+| **from `.claude/commands/`** | **1** |
+
+Two reasons the number is one:
+
+- **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
+  none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
+- **Names collide and dedupe.** `checkpoint`, `ghi-finalize`, `multi-*` and `restore` exist in
+  `.agents/skills/` as well, and Copilot keeps one entry per name.
+
+The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
+`.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`
+available in Copilot at all.
+
+The same dedup shadows eight `.agents/skills/` entries — the `antigravity-*` and `codex-*`
+self-action skills — behind the same-named Copilot bridges in `.github/skills/`. That is the
+desired outcome for a Copilot session, but it depends on precedence rather than on anything the
+repo declares, so check `copilot skill list` after renaming a skill.
+
+**Correction:** an earlier version of this note said `disabledSkills` does not cover commands. It
+does — a command is loaded into the same collection `isSkillDisabled(name)` filters, which is why
+`ghi-status` appears in `copilot skill list` at all. The claim was inferred from the field name
+rather than checked.
 
 ## Adding a new slash command
 
