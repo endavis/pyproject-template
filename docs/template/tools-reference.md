@@ -254,18 +254,16 @@ Fetches the latest template release (or specified version), compares it against 
 ### Examples
 
 ```bash
-# Compare against latest release
-python tools/pyproject_template/check_template_updates.py
+# Compare against the latest release (or `main`, if none has been cut)
+python tools/pyproject_template/manage.py check
 
-# Compare against specific version
-python tools/pyproject_template/check_template_updates.py --template-version v2.2.0
-
-# Quick comparison without changelog review
-python tools/pyproject_template/check_template_updates.py --skip-changelog
-
-# Keep template for manual inspection
-python tools/pyproject_template/check_template_updates.py --keep-template
+# Compare against a specific release
+python tools/pyproject_template/manage.py check --template-version v2.2.0
 ```
+
+`check_template_updates.py` refuses to run directly — `manage.py` is the entry point. See
+[#778](https://github.com/endavis/pyproject-template/issues/778) for the other invocations in this
+document that still need the same treatment.
 
 ### Output Categories
 
