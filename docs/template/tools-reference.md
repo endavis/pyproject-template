@@ -37,6 +37,11 @@ This is a thin wrapper that downloads and runs `setup_repo.py`. It's designed to
 
 ---
 
+> **Run these through `manage.py`.** `setup_repo.py`, `configure.py` and
+> `check_template_updates.py` refuse to run directly — they print
+> *"This script should not be run directly"* and do nothing. `manage.py` is the entry
+> point for all three; the sections below give the command for each.
+
 ## setup_repo.py
 
 Full repository setup orchestration from the template.
@@ -44,7 +49,7 @@ Full repository setup orchestration from the template.
 ### Usage
 
 ```bash
-python tools/pyproject_template/setup_repo.py
+python tools/pyproject_template/manage.py repo
 ```
 
 ### Description
@@ -92,7 +97,7 @@ Replace placeholder values with your project information.
 ### Usage
 
 ```bash
-python tools/pyproject_template/configure.py
+python tools/pyproject_template/manage.py configure
 ```
 
 ### Description
@@ -142,93 +147,6 @@ Prose files in the template (`README.md`, `CHANGELOG.md`, `docs/**/*.md`, most f
 
 ---
 
-## migrate_existing_project.py
-
-Copy template scaffolding into an existing repository.
-
-### Usage
-
-```bash
-python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
-```
-
-### Description
-
-Copies template tooling, configuration, and documentation into an existing Python project. Creates backups of any files it overwrites.
-
-### CLI Options
-
-| Option | Required | Default | Description |
-|--------|----------|---------|-------------|
-| `--target` | Yes | - | Path to your existing repository |
-| `--template` | No | Script's repo | Path to template root |
-| `--download` | No | False | Download template instead of using local |
-| `--archive-url` | No | GitHub main.zip | URL to template archive |
-
-### Examples
-
-```bash
-# Use local template checkout
-python tools/pyproject_template/migrate_existing_project.py --target ~/projects/myapp
-
-# Download fresh template
-python tools/pyproject_template/migrate_existing_project.py --target ~/projects/myapp --download
-
-# Use specific template archive
-python tools/pyproject_template/migrate_existing_project.py \
-  --target ~/projects/myapp \
-  --archive-url https://github.com/endavis/pyproject-template/archive/refs/tags/v2.0.0.zip
-```
-
-### Files Copied
-
-The script copies these template files/directories:
-
-**Configuration & Tooling:**
-- `pyproject.toml`
-- `dodo.py`
-- `.envrc`, `.envrc.local.example`
-- `.pre-commit-config.yaml`
-- `.python-version`
-- `mkdocs.yml`
-- `.editorconfig`
-- `.gitignore`
-
-**Documentation & Guides:**
-- `AGENTS.md`
-- `CHANGELOG.md`
-- `docs/`
-- `examples/`
-
-**Project Scaffolding:**
-- `.github/` (workflows, templates)
-- `.vscode/`
-- `.devcontainer/`
-- `.claude/`, `.codex/`, `.copilot/`, `.agents/`
-- `tools/pyproject_template/`
-- `src/package_name/` (template source)
-- `tests/` (template tests)
-
-### Backup Behavior
-
-- Creates timestamped backup directory: `backup_YYYYMMDD_HHMMSS/`
-- Backs up any existing files before overwriting
-- Prints summary of backed up files
-
-### Post-Migration Steps
-
-After running the script:
-
-1. Run `python tools/pyproject_template/configure.py`
-2. Move your code into `src/your_package_name/`
-3. Merge your dependencies into `pyproject.toml`
-4. Run `uv lock` to regenerate lock file
-5. Run `doit check` to verify
-
-See [Migration Guide](migration.md) for detailed steps.
-
----
-
 ## check_template_updates.py
 
 Compare your project against a template commit — `main` by default (ADR-9020).
@@ -236,7 +154,7 @@ Compare your project against a template commit — `main` by default (ADR-9020).
 ### Usage
 
 ```bash
-python tools/pyproject_template/check_template_updates.py
+python tools/pyproject_template/manage.py check
 ```
 
 ### Description
@@ -324,7 +242,6 @@ Removes template-specific files that are no longer needed after project setup. T
 
 - `bootstrap.py` - Remote setup script
 - `tools/pyproject_template/setup_repo.py` - Repository creation
-- `tools/pyproject_template/migrate_existing_project.py` - Migration tool
 - `docs/template/new-project.md` - New project instructions
 - `docs/template/migration.md` - Migration guide
 

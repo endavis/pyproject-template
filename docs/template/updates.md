@@ -72,7 +72,7 @@ The `check_template_updates.py` script compares your project against the latest 
 ### Basic Usage
 
 ```bash
-python tools/pyproject_template/check_template_updates.py
+python tools/pyproject_template/manage.py check
 ```
 
 ### What It Does
@@ -190,8 +190,9 @@ These are project-specific:
 
 1. **Run the comparison**:
    ```bash
-   python tools/pyproject_template/check_template_updates.py --keep-template
+   python tools/pyproject_template/manage.py check
    ```
+   The downloaded template is kept under `tmp/` so you can diff against it.
 
 2. **Review the CHANGELOG** to understand what changed and why
 

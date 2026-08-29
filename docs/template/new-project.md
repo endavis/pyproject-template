@@ -136,7 +136,7 @@ gh repo create my-project --public --source=. --push
 Replace all placeholder values with your project information:
 
 ```bash
-python tools/pyproject_template/configure.py
+python tools/pyproject_template/manage.py configure
 ```
 
 The script will prompt for:
