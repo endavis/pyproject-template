@@ -1123,8 +1123,39 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
     ("cat credentials", "ALLOW", "a bare 'credentials' file outside .aws"),
     ("grep -rn pypirc docs/", "ALLOW", "searching for the name is not reading the file"),
     ("cat README.md", "ALLOW", "an ordinary file read"),
-    ("python3 - <<EOF\nprintenv PYPI_TOKEN\nEOF", "ALLOW", "heredoc mentioning a dump"),
-    ("cat >> notes.md <<EOF\ncat ~/.netrc\nEOF", "ALLOW", "heredoc mentioning a credential path"),
+    # Who receives the body, and in what language. `bash <<EOF` runs it as shell,
+    # so shell patterns in it are real commands. `cat >> notes.md` writes it to a
+    # file, and `python3 -` runs it as Python -- where `printenv PYPI_TOKEN` is a
+    # SyntaxError, not a dump. Only the shell case is scanned (#762).
+    (
+        "cat >> notes.md <<EOF\ncat ~/.netrc\nEOF",
+        "ALLOW",
+        "a data heredoc: the body is written, not run",
+    ),
+    (
+        "python3 - <<EOF\nprintenv PYPI_TOKEN\nEOF",
+        "ALLOW",
+        "python3 - runs Python: that body is a SyntaxError, not a dump",
+    ),
+    ("bash <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "bash executes the credential read in its body"),
+    ("sh <<EOF\ncat ~/.pypirc\nEOF", "BLOCK", "sh executes the credential read in its body"),
+    ("zsh <<EOF\nprintenv MY_API_KEY\nEOF", "BLOCK", "zsh executes the dump in its body"),
+    ("dash <<EOF\nenv\nEOF", "BLOCK", "dash executes the bare env dump in its body"),
+    (
+        "python - <<EOF\ncat ~/.aws/credentials\nEOF",
+        "ALLOW",
+        "same: a shell line in a Python heredoc does not run",
+    ),
+    (
+        "python3 script.py <<EOF\nprintenv PYPI_TOKEN\nEOF",
+        "ALLOW",
+        "a script reading stdin data, not code",
+    ),
+    (
+        'bash -c "cat ~/.netrc"',
+        "BLOCK",
+        "the -c form was already covered; the heredoc must match it",
+    ),
     # Deliberately NOT blocked -- see docs/development/ai/command-blocking.md.
     # Blocking $VAR interpolation gives false assurance while being trivially
     # avoided, and legitimate uses are common.
@@ -1145,5 +1176,74 @@ def test_secret_exposure(
     description: str,
 ) -> None:
     """Environment dumps and credential reads are blocked for every agent."""
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
+
+
+# --- Heredoc bodies: data or code (#762) -----------------------------------
+#
+# `check_command` recurses into `bash -c <payload>`, but a heredoc on stdin is
+# not `-c`, so its body was never re-scanned. Checks matching a token in any
+# position caught it anyway; checks needing a command position did not, so
+# `bash <<EOF cat ~/.netrc EOF` ran while `bash -c "cat ~/.netrc"` was blocked.
+#
+# The distinction the parser has to get right is who receives the body: an
+# interpreter reading stdin executes it, everything else consumes it as text.
+# These cases pin that boundary and the parsing around it.
+
+HEREDOC_BODY_CASES: list[tuple[str, str, str]] = [
+    # Interpreters: the body runs, so it is scanned.
+    ("bash <<-EOF\n\tcat ~/.netrc\n\tEOF", "BLOCK", "<<- with a tab-indented terminator"),
+    ("bash <<'END'\ncat ~/.pypirc\nEND", "BLOCK", "quoted delimiter"),
+    ("/bin/bash <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "interpreter named by absolute path"),
+    ("cd /tmp && bash <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "interpreter after a shell separator"),
+    (
+        "bash <<EOF\necho one\necho two\ncat ~/.aws/credentials\nEOF",
+        "BLOCK",
+        "danger on the third line of the body",
+    ),
+    (
+        "cat > a.md <<A\nhello\nA\nbash <<B\ncat ~/.netrc\nB",
+        "BLOCK",
+        "a data heredoc first, then an interpreter one",
+    ),
+    # Data consumers: the body is text, so it is not scanned.
+    (
+        "cat >> notes.md <<EOF\nprintenv PYPI_TOKEN\nEOF",
+        "ALLOW",
+        "written to a file, not run",
+    ),
+    # Known limitation, and #759's territory rather than this one's: a data
+    # heredoc naming a pattern that any check matches positionally -- `--admin`,
+    # `gh issue create`, or a `bash -c` payload the outer tokenization reaches --
+    # is still blocked. That predates this change and is untouched by it; the
+    # case is pinned here so the gap is recorded rather than rediscovered.
+    (
+        "cat >> notes.md <<EOF\nbash -c 'cat ~/.netrc'\nEOF",
+        "BLOCK",
+        "known limitation: outer tokenization reaches a -c payload in a data heredoc",
+    ),
+    ("python3 script.py <<EOF\nprintenv PYPI_TOKEN\nEOF", "ALLOW", "stdin for a named script"),
+    ("bash script.sh <<EOF\ncat ~/.netrc\nEOF", "ALLOW", "stdin for a named shell script"),
+    # Parsing edges.
+    ("bash <<EOF\necho hello", "ALLOW", "unterminated heredoc, benign body"),
+    ("cat > n.md <<EOF\nEOF is the delimiter\nEOF", "ALLOW", "delimiter word inside the body"),
+    ('python3 -c "print(1)"', "ALLOW", "the -c path is untouched by heredoc handling"),
+]
+
+
+@pytest.mark.parametrize(
+    ("command", "expected", "description"),
+    HEREDOC_BODY_CASES,
+    ids=_ids(HEREDOC_BODY_CASES, 2),
+)
+def test_heredoc_body(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+    expected: str,
+    description: str,
+) -> None:
+    """A heredoc an interpreter will execute is scanned; one consumed as text is not."""
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
