@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788034824862,
+  "lastUpdate": 1788037136712,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12862,6 +12862,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.024979254774308e-7",
             "extra": "mean: 1.8194251616873447 usec\nrounds: 47930"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5853ced1d491eb80c8b92d56a5796620507d80c1",
+          "message": "feat: expose --template-version through manage.py (merges PR #780, addresses #779)\n\nThe flag pins which template snapshot a drift check compares against. It\nexisted in check_template_updates.parse_args and run_check_updates took the\nparameter, but manage.py never passed one -- action_check_updates called it with\nskip_changelog and keep_template hardcoded and forwarded only --show-excluded.\nThe direct invocation is refused by a guard, so the argument was dead code\nreachable only from Python while three documents advertised it.\n\nWired through: the argument, action_check_updates, run_action, and both dispatch\nsites.\n\nThe flags are also accepted after the subcommand now. As global options argparse\ntook them only before it, so `manage.py check --show-excluded` -- the form\nmanage.md documented -- was rejected, and `check --template-version` would have\nbeen too. Declaring them on the check subparser as well makes both orders work;\ndefault=SUPPRESS is what stops the subparser's default overwriting a value the\nglobal parser already set.\n\nFound while testing: this repository has cut no releases, so\n`releases/latest` 404s and every drift check compares against `main`. The tool\nsays so at runtime -- it warns and prints \"Comparing against template main\nbranch\" -- but the docs promised \"the latest release\" without mentioning the\nfallback. They now describe both, and show the warning a reader will see.\n\nOne existing test broke and was updated rather than silenced.\ntest_yes_flag_passed_to_run_action asserts run_action's complete kwarg set, and\nthis adds one. Its purpose -- that `--yes sync` forwards yes=True -- is\nuntouched, and the exhaustive assertion is deliberate: verified by planting an\nextra kwarg, which still fails it.\n\nVerified end to end against a real tag: `manage.py check --template-version\nv0.0.0` fetches refs/tags/v0.0.0.zip rather than main.\n\nAddresses #779",
+          "timestamp": "2026-08-29T21:58:17+01:00",
+          "tree_id": "07cc421c3919b52c7a434ff4e440e13429bb3a64",
+          "url": "https://github.com/endavis/pyproject-template/commit/5853ced1d491eb80c8b92d56a5796620507d80c1"
+        },
+        "date": 1788037135854,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11569296.804950643,
+            "unit": "iter/sec",
+            "range": "stddev: 9.533449120622418e-9",
+            "extra": "mean: 86.4356768487509 nsec\nrounds: 58174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11530732.53669679,
+            "unit": "iter/sec",
+            "range": "stddev: 1.469230056233336e-8",
+            "extra": "mean: 86.72475897064474 nsec\nrounds: 116687"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7846738.634717873,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2639054316535927e-8",
+            "extra": "mean: 127.44148193945225 nsec\nrounds: 77628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1889672.6574288546,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2497619973666436e-7",
+            "extra": "mean: 529.1921836666833 nsec\nrounds: 59542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 534231.9583688173,
+            "unit": "iter/sec",
+            "range": "stddev: 7.656614863063136e-7",
+            "extra": "mean: 1.8718460854594376 usec\nrounds: 52880"
           }
         ]
       }
