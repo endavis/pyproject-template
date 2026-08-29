@@ -57,9 +57,31 @@ template version it was fetched with. If your local tooling is older than the te
 comparing against, the checker may miss or misreport differences. Always run `bootstrap --sync` before running
 the drift check.
 
-**Template-owned tests:** The files listed in `TEMPLATE_OWNED_TEST_FILES` (e.g. `tests/template/test_check_template_updates.py`)
-are tooling tests that run only in the template's own CI. They are silently excluded from the drift report and
-will be shed from your project by `cleanup --setup`. You do not need to adopt or maintain them.
+**Template-owned tests:** The files listed in `TEMPLATE_OWNED_TEST_FILES` are excluded from the drift
+report and shed by `cleanup --setup`; you do not need to adopt or maintain them. A test is
+template-owned when **its target does not survive configuration** (ADR-9017) — which is broader than
+"tooling tests". The list covers the management suite, and also `test_configure_paths.py`,
+`test_readme_split.py` and `test_downstream_test_retention.py`, whose targets `configure.py`
+consumes or destroys during setup. Everything else under `tests/` is yours to adopt, including the
+`tools/doit/` and `tools/hooks/` tests, which cover code that ships to and runs in your project
+(#731).
+
+**New files you will see in this sync.** These are recent additions, all downstream-owned, so the
+drift checker will offer them:
+
+| File | Adopt? |
+| :--- | :--- |
+| `tests/agent_roster.py` | Yes — a helper, not a test. Required by the roster-aware tests below. |
+| `tests/test_cross_agent_contract.py` | Yes if you wire more than one AI agent; it derives its scope from the roster and checks nothing for agents you dropped. |
+| `tests/test_instruction_pointers.py` | Yes — catches instruction files pointing at sections and commands that do not exist. |
+| `tests/test_workflow_action_pinning.py` | Yes if you keep `.github/workflows/`. |
+| `tests/test_hermetic_suite.py` | Yes — keeps the unit suite off real external binaries. |
+| `tests/test_hypothesis_profiles.py` | Yes if you kept the Hypothesis profiles in `conftest.py`. |
+| `tools/hooks/check_commit_issue_ref.py` + `tests/test_hook_commit_issue_ref.py` | Yes, together, and re-run `doit pre_commit_install` after — the hook needs the `commit-msg` type. |
+| `tests/test_agents_md_allocation.py` | Yes, **then trim `RELOCATION_TARGETS`**. It names template paths including `docs/development/dependabot-automerge.md`; a project without that doc adopts a test that cannot pass. |
+
+The last row is the general hazard: a test can be downstream-owned and still name structure your
+project does not have. Read the constants at the top of a test before adopting it.
 
 After running bootstrap:
 

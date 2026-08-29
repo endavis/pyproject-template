@@ -29,6 +29,33 @@ Stay in sync with improvements to the pyproject-template.
 > can use `manage.py`, `check_template_updates.py`, and the rest of the
 > sync tooling described below.
 
+## Which template version you get
+
+`bootstrap.py` resolves the ref once, up front, and fetches every file from that single commit.
+A run is therefore internally consistent: `main` moving mid-run cannot give you half of one commit
+and half of another.
+
+It prints the commit it pinned to:
+
+```
+  Pinned to commit 4ef5b9c1a2b3 (from 'main')
+```
+
+**Record that SHA.** It is the answer to "which template version is this project synced against",
+and it is what makes a sync reproducible.
+
+To pin deliberately — reviewing an update before taking it, or reproducing an earlier sync — set
+`PYPROJECT_TEMPLATE_REF` to a branch, tag or full SHA:
+
+```bash
+PYPROJECT_TEMPLATE_REF=4ef5b9c... curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync
+```
+
+If `api.github.com` is unreachable or rate-limited, the run **warns and continues** against the
+moving ref rather than failing. Pinning is a consistency improvement; refusing to bootstrap because
+an API call failed would trade a small gain for a hard outage. Set `GITHUB_TOKEN` if you are being
+rate-limited.
+
 ## When to Update
 
 Consider checking for template updates when:
