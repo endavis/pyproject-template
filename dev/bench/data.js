@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1787598998725,
+  "lastUpdate": 1788008461427,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -11977,6 +11977,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.663910511342772e-7",
             "extra": "mean: 2.029175876570907 usec\nrounds: 67536"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a4d33f613988ce6a4e7baa59f4ed568a28104d5e",
+          "message": "refactor: collapse AGENTS.md's AI config directories to a pointer table (merges PR #755, addresses #750, #753, #754)\n\n* refactor: collapse AGENTS.md's AI config directories to a pointer table\n\n`### AI Config Directories` was 5,847 bytes -- 21% of AGENTS.md -- describing\nfour agents' config layouts to all four agents. Claude parsed Codex's approval\nflags and Antigravity's stdout-deny hook contract every session and could act on\nneither.\n\nEvery distinctive fact in it was already carried by a doc the section itself\nlinked, so this collapses the section to a four-row pointer table naming each\nconfig root and its doc, rather than splitting the prose across four agent\nsurfaces. Two of the four agents have no agent-specific always-on file to split\ninto -- root AGENTS.md is Codex's and Antigravity's, and `.agents/skills/` is\ndescription-gated -- so a split would have bought the same resolution cost for\nhalf the audience, plus four files that must agree about facts already stated\ncorrectly in one place.\n\nADR-9018 records the allocation rule: content belongs in AGENTS.md only if it is\ntrue for every wired agent and must be true at all times; nothing is mirrored\nacross surfaces without a sync test.\n\ntests/test_agents_md_allocation.py is the regrowth ratchet. It asserts the\nproperty rather than the file size -- a byte budget is satisfied equally by\nremoving agent-specific content or by deleting a shared always-on rule, so it\ncannot fail for the right reason.\n\nAGENTS.md: 27,575 -> 23,313 bytes.\n\nAddresses #750\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n* fix: correct the stale Copilot CLI command-discovery claim\n\nThree docs stated that Copilot CLI reads no `commands/` directory, citing the\ninstalled `@github/copilot` SDK. It has read `.claude/commands/` since CLI\n0.0.399; the installed CLI is 1.0.41. AI_SETUP.md said the opposite in four\nother places, so the repo documented both answers and each doc cited the other.\n\nEvidence in the installed package:\n\n  app.js       async function kIi(t,e,r={}){return(r.enableConfigDiscovery??!0\n                   ? await j7e(\".claude\",\"commands\",t,e) : []).filter(...)}\n  app.js       isCommand:!0 on files loaded from that path\n  index.d.ts   \"Whether this is a command (from .claude/commands/) rather than\n               a skill.\" (line 37457)\n  changelog    0.0.399 -- \"Support `.claude/commands/` single-file commands as\n               simpler alternative to skills\" (copilot-agent-runtime#2357)\n\nSkills and commands are different mechanisms, which is what the claim missed.\nSkills come only from `skills/` paths; single-file commands additionally come\nfrom `.claude/commands/`. `.copilot/commands/` is read by neither, so the\n\"never loaded\" half was right -- the generalisation to any `commands/` directory\nwas not.\n\nRecords the consequence as a second known limitation: `.github/skills/` keeps\nCopilot's bridge skills out of Claude, but nothing keeps Claude's commands out\nof Copilot, and `disabledSkills` does not cover them. Also completes that\nsnippet, which omitted its four delegate-antigravity-* entries.\n\nThe claim went stale because it was written against sdk/index.d.ts when it was\ntrue and nothing re-checked it -- the citation made it look verified.\n\nAddresses #753, found while collapsing the config section for #750\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n* refactor: give the cross-agent matrix counts one owner and a test\n\nThe matrix size was written out in eight places across four files and checked in\nnone. Five were wrong, in three directions: `.copilot/README.md` said 20 skills\nwhere there are 16 and 20 delegate-* where there are 16; AI_SETUP.md said 16\nbridges where there are 12 and \"20 files: 4 + 16\" where it is 16: 4 + 12;\nslash-commands.md said 12 delegate-* where there are 16. The note at the top of\ncross-agent-delegation.md still described the five-agent era that ended with\n#712, quoting 80 cells over 68 distinct files.\n\nThe count is derived data, and test_delegation_matrix.py already derives it from\ntests/agent_roster.py rather than pinning it (#690) -- the test knew the right\nnumber while the docs stated a different one and nothing connected them.\n\nSo: one numeric statement, in cross-agent-delegation.md's Matrix section, which\nowns the matrix. Everywhere else describes the structure -- \"one bridge per\n(target, action) pair\" -- leaving nothing to drift.\n\nTwo tests close the loop. test_matrix_doc_states_the_derived_counts parses that\nsentence and asserts it against the derived values;\ntest_only_the_matrix_doc_states_counts scans the other four files for a written-\nout count. Both are proved by a planted-error test, and counts stay derived, so\na project that drops an agent narrows the matrix instead of failing it.\n\nThe first attempt at this was to correct the five wrong numbers in place. That\nrepairs duplicated derived data instead of removing the duplication, which is\nwhat ADR-9018 exists to prevent.\n\nAddresses #754, found while collapsing the config section for #750\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n* fix: correct the fourth copy of the Copilot command-discovery claim\n\nfirst-5-minutes.md told new contributors that Copilot \"auto-discovers the same\nslash commands from `.claude/commands/`\". Copilot does read that directory, but\nthis repo's Copilot workflow is its own hyphen-named skills under\n`.github/skills/` -- the sentence pointed a newcomer at the wrong surface.\n\nMissed in the first pass because it phrases the claim from the opposite side:\nthe other three said Copilot reads no `commands/` directory, this one said it\nreads Claude's.\n\nAddresses #753, on the branch for #750\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n---------\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T14:00:15+01:00",
+          "tree_id": "e86bc783a2e1ad5d3eb989ada70466c1173f32ad",
+          "url": "https://github.com/endavis/pyproject-template/commit/a4d33f613988ce6a4e7baa59f4ed568a28104d5e"
+        },
+        "date": 1788008460329,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8603188.59660507,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5560982232726167e-8",
+            "extra": "mean: 116.23597329885492 nsec\nrounds: 83592"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9296858.58176636,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1600995859865075e-8",
+            "extra": "mean: 107.56321516617118 nsec\nrounds: 92073"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6389329.958852584,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7051343499141245e-8",
+            "extra": "mean: 156.51093407916332 nsec\nrounds: 66322"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1740234.0211181797,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9966778738262405e-7",
+            "extra": "mean: 574.635358155712 nsec\nrounds: 69076"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 477219.33366910776,
+            "unit": "iter/sec",
+            "range": "stddev: 7.576192262033053e-7",
+            "extra": "mean: 2.0954725205944307 usec\nrounds: 55951"
           }
         ]
       }
