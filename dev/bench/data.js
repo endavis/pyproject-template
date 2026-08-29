@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788031730695,
+  "lastUpdate": 1788032006677,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12508,6 +12508,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.409238751174772e-7",
             "extra": "mean: 2.1427135025655293 usec\nrounds: 65669"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4aa3f62fe184c866da0cfedbbda45f2304cf6e9b",
+          "message": "docs: correct stale facts about the coverage gate and hook install (merges PR #769, addresses #749)\n\n#749 A1-A3, plus two more found by sweeping for the same class of error.\n\nA1: ci-cd-testing.md said `fail_under = 54`. It is 70.\n\nA2: the template-vs-downstream table carried 5,102 statements at 58.29% and\n2,748 at 62.98%, with a \"Gate at 54\" column. All four figures were stale, and the\ntwo rows stopped being meaningfully different when #731 omitted\ntools/pyproject_template/ from the gate so both shapes measure the same\nstatements with the same tests.\n\nThe table is replaced with that fact rather than with fresher numbers. Statement\ncounts move with every merge -- the audit's own re-measurement, taken five days\nbefore this change, had already drifted from 2,932/73.27% to 2,982/73.62% -- and\na number in prose that no test reads is a number that will be wrong (#754).\npyproject.toml holds the threshold and `doit coverage` reports the measurement;\nboth are checked, so the doc names them instead of copying them.\n\nA3: doit-tasks-reference.md described `pre_commit_install` as installing hooks to\n.git/hooks/ with `uv run pre-commit install` as the equivalent. Since #741 the\nconfig declares four hook types and `commit-msg` is newly among them -- the type\ncarrying conventional-commit validation and the branch/issue check. A project\nthat installed hooks earlier does not have it, and neither check runs, silently,\nbecause a hook that was never installed cannot fail.\n\nTwo further stale facts of the same kind, found by sweeping rather than reported\nin the audit:\n\n- ci-cd-testing.md asserted \"Nothing is omitted from the measured scope.\" #731\n  added `omit = [\"tools/pyproject_template/*\"]`, which is the whole mechanism by\n  which the two shapes converged -- so the sentence contradicted the change it\n  sits beside.\n- enforcement-principles.md's enforced-processes table claimed a minimum of 80%\n  with `fail_under = 80`. The gate is 70. That table is meant to be authoritative\n  about what is enforced, which makes a wrong number there worse than elsewhere;\n  it now names `fail_under` and points at pyproject.toml rather than quoting a\n  value that can drift.\n\nLeft alone deliberately: the 40.73% and 8.27% figures at ci-cd-testing.md:257 are\na measurement of a past experiment, not a live gate value, and quoting them is\ncorrect.\n\nAddresses #749\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T20:32:48+01:00",
+          "tree_id": "468e849703ebfcbc1ae7f73e11d650b3c1319890",
+          "url": "https://github.com/endavis/pyproject-template/commit/4aa3f62fe184c866da0cfedbbda45f2304cf6e9b"
+        },
+        "date": 1788032005767,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7681171.77644286,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2112740693717223e-8",
+            "extra": "mean: 130.18846982004334 nsec\nrounds: 83879"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9298866.195843982,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2019722704239726e-8",
+            "extra": "mean: 107.53999239680834 nsec\nrounds: 93380"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6238988.233996322,
+            "unit": "iter/sec",
+            "range": "stddev: 1.985033150965044e-8",
+            "extra": "mean: 160.28239876315007 nsec\nrounds: 63416"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1746530.7521955536,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9910853029956135e-7",
+            "extra": "mean: 572.5636372236252 nsec\nrounds: 62267"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491321.36996592407,
+            "unit": "iter/sec",
+            "range": "stddev: 5.009293225837581e-7",
+            "extra": "mean: 2.035327712428539 usec\nrounds: 67486"
           }
         ]
       }
