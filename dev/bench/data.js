@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788038074085,
+  "lastUpdate": 1788039647707,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12980,6 +12980,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.399482580773328e-7",
             "extra": "mean: 2.0233449642552648 usec\nrounds: 56745"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c48665fcbd09f3af14b2d3b209312c02966e04ed",
+          "message": "docs: route the migration docs through manage.py, and remove a dead helper (merges PR #784, addresses #778, #783)\n\n* docs: route the migration docs through manage.py\n\nThree scripts in the management suite refuse to run directly and tell the reader\nto use manage.py. The migration and upgrade docs taught direct invocation of all\nthree, while ai-sync-checklist stated the correct rule -- a contradiction with a\nclear winner, since the checklist is the half that matches the code.\n\nEvery direct invocation now uses its manage.py equivalent: `manage.py check`,\n`configure`, `repo`. tools-reference.md gains a note at the top of its script\nsections saying plainly that these three run through manage.py, rather than\nleaving a reader to discover the refusal by hitting it.\n\nTwo of the three guards exit 0 when refusing, so a script or agent following the\nold commands saw success and moved on having done nothing. That is worth fixing\nin the guards themselves, and is left to a follow-up rather than bundled here.\n\nAddresses #778\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n* refactor: remove migrate_existing_project.py\n\nThe script automated one step of a mostly manual process, did it destructively,\nand could not be run by anyone: it refused direct invocation, manage.py had no\nmigrate subcommand, and it was in neither SYNC_FILES nor SETUP_FILES, so no\ndownstream project ever received it. migration.md nonetheless opened by offering\nit as the automated option, above the manual checklist.\n\nHad it run, for each of ~15 paths -- pyproject.toml, .gitignore, CHANGELOG.md,\nmkdocs.yml, docs/, .github/, src/package_name -- it moved the project's existing\nfile into a timestamped backup directory and copied the template's version over\nthe top. That contradicts the checklist three steps later in the same document:\n\"Merge, don't overwrite: copy your dependencies and metadata into the new\npyproject.toml.\" Recovery meant hand-merging fifteen paths out of a backup\nfolder, which is worse than the checklist's advice to copy selectively.\n\nMigration is mostly judgement -- which files are your package, which\ndependencies carry over, how imports change moving to a src/ layout -- and the\none genuinely mechanical step is already automated and reachable:\n`manage.py configure` rewrites the placeholders and renames src/package_name.\nmigration.md now says exactly that in place of the callout, so the process is\nhonestly described as one automated step among manual ones.\n\nRemoved with it: the run_migrate export, its entry in cleanup.SETUP_FILES, the\nsetup_repo.py message naming it, five doc references, and the assertions in four\ntest files that encoded its existence. test_downstream_test_retention's\nGUARDED_READS entry went too -- it excused a read of a file that no longer\nexists, and that module asserts its own exemptions stay necessary.\n\nIf automation here is wanted later, the piece worth building is different: a\npyproject.toml merge using tomlkit, keeping the template's [tool.*] and the\nproject's dependencies and scripts. That is the step that is both mechanical and\ntedious, and it is a new feature rather than a rescue of this script.\n\nAddresses #783, found by the guard added for #778\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n---------\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T22:40:07+01:00",
+          "tree_id": "7e45f35af3cde827215c8ce95fa7fd2fbeb3088e",
+          "url": "https://github.com/endavis/pyproject-template/commit/c48665fcbd09f3af14b2d3b209312c02966e04ed"
+        },
+        "date": 1788039646449,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8761795.742593613,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1243239617301408e-8",
+            "extra": "mean: 114.1318548592399 nsec\nrounds: 53465"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9180178.354969986,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0981472054472203e-8",
+            "extra": "mean: 108.93034550452037 nsec\nrounds: 93197"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6019854.929937123,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2207395474059514e-8",
+            "extra": "mean: 166.1169598999697 nsec\nrounds: 58679"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1711371.705392086,
+            "unit": "iter/sec",
+            "range": "stddev: 3.657755118741423e-7",
+            "extra": "mean: 584.3265941871427 nsec\nrounds: 49759"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 483414.80941336206,
+            "unit": "iter/sec",
+            "range": "stddev: 6.047231845452906e-7",
+            "extra": "mean: 2.0686168080235876 usec\nrounds: 63172"
           }
         ]
       }
