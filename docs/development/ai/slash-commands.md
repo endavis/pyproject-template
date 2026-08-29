@@ -148,11 +148,13 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 
 ## Copilot
 
-GitHub Copilot CLI **does not** discover slash commands from `.claude/commands/` or `.copilot/commands/`. Per the installed `@github/copilot` SDK (`sdk/index.d.ts`), Copilot CLI discovers project skills only from `skills/` directories: `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (plus the corresponding personal paths under `~/`). It does not read any `commands/` directory.
+GitHub Copilot CLI discovers project **skills** only from `skills/` directories: `.github/skills/`, `.agents/skills/`, and `.claude/skills/` — plus the corresponding personal paths under `~/` and anything added via `/skills add`. It reads no `.copilot/commands/`, so this repo's `.copilot/commands/multi-*.md` files are never loaded.
+
+It does load **single-file commands** from `.claude/commands/`. That is a separate mechanism from skills — added in CLI 0.0.399, flagged `isCommand` in `sdk/index.d.ts`, and gated by an `enableConfigDiscovery` option that defaults on. Claude's command files surface in a Copilot session as a result (#753).
 
 Because skill names are derived from their directory name and **cannot contain colons**, Copilot's surface for the cross-agent matrix uses `<target>-<action>` (hyphen), not `<target>:<action>` (colon). The functional behavior is identical to the other CLIs — only the slash name differs.
 
-**Self-action and cross-agent skills:** All 16 cells of the cross-agent matrix for Copilot host live under `.github/skills/<target>-<action>/SKILL.md`:
+**Self-action and cross-agent skills:** Every cell of the cross-agent matrix for the Copilot host lives under `.github/skills/<target>-<action>/SKILL.md`:
 
 - Self-action: `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
 - To Claude: `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
@@ -166,7 +168,7 @@ Because skill names are derived from their directory name and **cannot contain c
 
 **Implement-worker subagent:** Shared with Claude — defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when `/claude-implement` spawns the subagent.
 
-**Known limitation — `delegate-*` skill bleed:** Because Copilot also reads `.agents/skills/`, it surfaces the Codex-only `delegate-<target>-<action>` skills (12 of them) alongside the canonical `<target>-<action>` ones. The Codex-only skills shell out to Codex's syntax and are wasted noise in a Copilot session. Copilot exposes a `disabledSkills` config field (see `~/.copilot/config.json`), but **only at user level — there is no repo-level setting for it.** If you want to silence the delegate-* skills in Copilot, add them to your user config manually:
+**Known limitation — `delegate-*` skill bleed:** Because Copilot also reads `.agents/skills/`, it surfaces a Codex-only `delegate-<target>-<action>` skill for every (target, action) pair alongside the canonical `<target>-<action>` ones. The Codex-only skills shell out to Codex's syntax and are wasted noise in a Copilot session. Copilot exposes a `disabledSkills` config field (see `~/.copilot/config.json`), but **only at user level — there is no repo-level setting for it.** If you want to silence the delegate-* skills in Copilot, add them to your user config manually:
 
 ```json
 {
@@ -182,14 +184,25 @@ Because skill names are derived from their directory name and **cannot contain c
     "delegate-copilot-plan",
     "delegate-copilot-implement",
     "delegate-copilot-review",
-    "delegate-copilot-adversarial-review"
+    "delegate-copilot-adversarial-review",
+    "delegate-antigravity-plan",
+    "delegate-antigravity-implement",
+    "delegate-antigravity-review",
+    "delegate-antigravity-adversarial-review"
   ]
 }
 ```
 
+**Known limitation — `.claude/commands/` command bleed:** Copilot loads single-file commands from
+`.claude/commands/`, so Claude's own command surface — its self-action and cross-agent files, and
+the `multi-*` orchestrators — appears in a Copilot session too. This is the mirror image of the
+bleed above and of the reason `.github/skills/` was chosen for the bridges: it keeps Copilot's
+skills out of Claude, but nothing keeps Claude's commands out of Copilot. `disabledSkills` does not
+cover them. Whether to address it is open (#753); this note records the behavior.
+
 ## Adding a new slash command
 
-1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Copilot CLI discovers **skills only** from `skills/` directories (`.github/skills/`, `.agents/skills/`, `.claude/skills/`) — never from `commands/`. To expose a Copilot-only command, author it as `.github/skills/<name>/SKILL.md` (with YAML frontmatter) — `.github/skills/` is the only Copilot project skill path that Claude does **not** also read. The slash name becomes `/<name>` because skill names cannot contain colons.
+1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Copilot CLI discovers **skills** only from `skills/` directories (`.github/skills/`, `.agents/skills/`, `.claude/skills/`) — never from `commands/`, though it does load single-file commands from `.claude/commands/` by a separate mechanism. To expose a Copilot-only command, author it as `.github/skills/<name>/SKILL.md` (with YAML frontmatter) — `.github/skills/` is the only Copilot project skill path that Claude does **not** also read. The slash name becomes `/<name>` because skill names cannot contain colons.
 2. **Use the CLI file format** — not the `docs/` frontmatter format. Start with a top-level `# Title` heading, follow with a one-line description (which may include the `$ARGUMENTS` placeholder if the command takes arguments), then a `## Instructions` section containing the step-by-step body. **Do not add YAML frontmatter.** The CLIs expect plain markdown; frontmatter would appear verbatim in the rendered prompt.
 3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For commands that take no arguments (like `/ghi-finalize` or `/ghi-status`), omit the placeholder.
 4. **Decide: subagent or main context?** Delegate to a general-purpose subagent via the Task tool when the command does heavy codebase exploration, writes files, or runs long commands whose output would bloat the main conversation — `.claude/commands/claude/implement.md` is the canonical example. Run in the main context when the user needs to interact step by step (plan mode, iteration, explicit approvals) — `.claude/commands/claude/plan.md` is the canonical example.

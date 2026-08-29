@@ -59,6 +59,7 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 | **Creating Code** | `.claude/CLAUDE.md` (TodoWrite) | Plan -> Test -> Code loop. |
 | **Generating new code** | `docs/development/ai/architectural-conventions.md` | Layering rules and anti-patterns to avoid before writing code. |
 | **Architectural Decision** | `docs/decisions/README.md` | Check for related ADRs to update. |
+| **Editing AI agent config** (commands, skills, hooks, instruction files) | `docs/development/AI_SETUP.md` | Per-agent config roots, discovery rules and hook wiring. |
 
 ### 6. Decision Framework
 
@@ -290,24 +291,24 @@ Native tools provide better visibility, review capabilities, and error handling 
 
 ### AI Config Directories
 
-Each supported AI CLI has a dedicated config directory at the repo root:
+Each supported AI CLI has a config root at the repo root. This table is a pointer, not a summary —
+read the linked section before editing an agent's configuration, command surface, or hooks.
 
-| CLI | Config Directory | Notes |
+| CLI | Config roots | Details |
 | :--- | :--- | :--- |
-| Claude Code | `.claude/` | Commands, agents, rules, settings. Primary source of slash commands. |
-| GitHub Copilot CLI | `.copilot/`, `.github/skills/` | Config directory. Copilot CLI does **not** read `commands/` — only `skills/` paths (`.github/skills/`, `.agents/skills/`, `.claude/skills/`). Self-action and cross-agent bridges live under `.github/skills/<target>-<action>/SKILL.md` with hyphen naming (skill names cannot contain colons). `.github/skills/` is used specifically because it's the only Copilot skill path that Claude does **not** also read — placing the bridges there avoids surfacing duplicate slash commands in Claude. Hook wired in `.github/hooks/copilot-hooks.json`. Per-stack instruction files live in `.github/instructions/` (Copilot-native; Claude cannot read them). See `.github/instructions/README.md`. |
-| Codex CLI | `.codex/`, `.agents/skills/` | `config.toml` for approvals/hooks plus repo-scoped skills for the Codex workflow. No custom slash commands. Rule-shaped skills live in `.agents/skills/<name>/SKILL.md`; the `description:` frontmatter is the skill-gate trigger. See `.agents/skills/README.md`. |
-| Antigravity CLI (`agy`) | `.agents/` | Google's Antigravity CLI, which shares the `.agents/` customization root with Codex. Reads root `AGENTS.md` as always-on rules and discovers repo-scoped skills from `.agents/skills/<name>/SKILL.md` (same `SKILL.md` format as Codex; `description:` frontmatter is the activation trigger). Self-action skills: `antigravity-{plan,implement,review,adversarial-review}`. Shared dangerous-command hook wired in `.agents/hooks.json` (`PreToolUse` → `tools/hooks/ai/block-dangerous-commands.py`; blocks via a stdout `{"decision":"deny"}` contract). No custom slash commands. Cross-agent delegation is wired (outbound bridges reuse Codex's host-agnostic `.agents/skills/delegate-*`; the other three agents gain inbound bridges to `agy`), and the `/multi-*` orchestrators accept `antigravity`. See `.agents/skills/README.md`. |
+| Claude Code | `.claude/` | [Claude Code setup](docs/development/AI_SETUP.md#2-claude-code-anthropic) |
+| GitHub Copilot CLI | `.copilot/`, `.github/skills/`, `.github/instructions/` | [Copilot CLI setup](docs/development/AI_SETUP.md#3-github-copilot-cli) |
+| Codex CLI | `.codex/`, `.agents/skills/` | [Codex CLI setup](docs/development/AI_SETUP.md#1-codex-cli-openai) |
+| Antigravity CLI (`agy`) | `.agents/` (shared with Codex) | [Antigravity CLI setup](docs/development/AI_SETUP.md#4-antigravity-cli-google) |
 
-Copilot CLI ships self-action and cross-agent skills under `.github/skills/<target>-<action>/SKILL.md` (16 entries: 4 self-action + 12 cross-agent bridges). The surface uses hyphen naming (`/copilot-plan`, `/claude-plan`, `/codex-plan`, `/antigravity-plan`, etc.) because skill names — derived from directory names — cannot contain colons. Self-action skills run inline in the Copilot session; cross-agent skills shell out to `claude -p`, `codex -a never --dangerously-bypass-hook-trust exec`, or `agy -p`.
+Detail that spans agents — per-host command discovery and naming, the cross-agent workflow
+contract, non-interactive invocation flags, hook wiring and each host's block contract — lives in
+[Slash Commands and Workflows](docs/development/ai/slash-commands.md),
+[Cross-Agent Delegation Matrix](docs/development/ai/cross-agent-delegation.md) and
+[AI Command Blocking](docs/development/ai/command-blocking.md).
 
-Codex CLI does **not** use repo-defined slash commands in this template. Its repo-native workflow is provided through checked-in skills under `.agents/skills/`, invoked with built-in Codex skill selection such as `/skills` or explicit mentions like `$codex-plan`. Rule-shaped skills (per-stack self-check checklists) follow the same discipline as `.claude/rules/` and `.github/instructions/` — ≤30 lines, numbered self-checks, observed-failures footer — with the key distinction that the `description:` frontmatter field acts as the skill-gate trigger instead of an import directive or glob. See `.agents/skills/README.md`.
-
-Antigravity CLI (`agy`) shares the `.agents/` customization root with Codex: it reads the root `AGENTS.md` as always-on rules and discovers repo-scoped skills from `.agents/skills/<name>/SKILL.md` (the same `SKILL.md` format Codex uses), activating them by `description:` match — there is no slash or `$` prefix. Its self-action workflow skills are `antigravity-plan`, `antigravity-implement`, `antigravity-review`, and `antigravity-adversarial-review`. The shared dangerous-command hook is wired through `.agents/hooks.json` (a `PreToolUse` matcher on `run_command`/`write_to_file`); unlike Claude/Codex (exit code 2) it blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>` for the hook to apply. Cross-agent delegation is wired: `agy`'s outbound bridges reuse Codex's host-agnostic `.agents/skills/delegate-*` skills (both CLIs read that directory), and the other three agents gain inbound bridges to `agy`. The `/multi-*` orchestrators also accept `antigravity` as an agent, completing `agy`'s onboarding. See [Cross-Agent Delegation Matrix](docs/development/ai/cross-agent-delegation.md) and [AI Command Blocking](docs/development/ai/command-blocking.md).
-
-**Self-action and cross-agent delegation matrix:** every agent can act on itself or delegate to another agent. Slash naming differs by host because of file-layout constraints: Claude supports `<target>:<action>` (colon, e.g. `/claude:plan 42`); Copilot and Codex use `<target>-<action>` (hyphen, e.g. `/copilot-plan 42`, `$codex-implement 42`) because skill names cannot contain colons. Self-action files live in `.claude/commands/claude/` (Claude), `.github/skills/<ai>-<action>/` (Copilot), or `.agents/skills/<ai>-<action>/` (Codex, Antigravity). Cross-agent bridges live under `.claude/commands/<target>/`, `.github/skills/<target>-<action>/`, and `.agents/skills/delegate-<target>-<action>/`. See [Cross-Agent Delegation Matrix](docs/development/ai/cross-agent-delegation.md).
-
-**Multi-agent orchestrators (`/multi-*`):** any host agent can also run `/multi-plan <ais...> <issue#>`, `/multi-review <ais...>`, and `/multi-adversarial-review <ais...>` to dispatch a task to **any combination** of agents in parallel and synthesize their outputs. Command files live in `.claude/commands/multi-*.md`, `.copilot/commands/multi-*.md`, and `.agents/skills/multi-*/SKILL.md`.
+Do not restate any of it here. `AGENTS.md` carries only what is true for every agent *and* must be
+true at all times; see [ADR-9018](docs/decisions/9018-agentsmd-carries-only-shared-always-on-instructions.md).
 
 ### Temporary Files
 
