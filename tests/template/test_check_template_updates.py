@@ -17,6 +17,8 @@ from tools.pyproject_template.check_template_updates import (
 )
 from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+
 
 def _make_template(
     template_root: Path, files: dict[str, str], *, base: str = "pyproject-template-main"
@@ -435,3 +437,68 @@ class TestRefResolution:
         ):
             ctu.download_template(tmp_path, None)
         assert seen["ref"] == "main"
+
+
+class TestGuardedScriptsAreNotDocumentedDirectly:
+    """Docs must not teach a command the script refuses to run (#778).
+
+    Three scripts in the management suite print "This script should not be run
+    directly" and exit. The migration and upgrade docs taught direct invocation
+    of all three -- 14 commands that could not work -- while
+    `ai-sync-checklist.md` stated the correct rule in the same breath.
+
+    The guarded set is *derived* from the refusal string rather than listed here,
+    so a script that gains a guard later is covered without anyone remembering to
+    add it.
+    """
+
+    REFUSAL = "This script should not be run directly"
+    SUITE = REPO_ROOT / "tools" / "pyproject_template"
+    DOC_DIRS = (REPO_ROOT / "docs", REPO_ROOT / ".github")
+
+    @classmethod
+    def _guarded_scripts(cls) -> list[str]:
+        return sorted(
+            path.name
+            for path in cls.SUITE.glob("*.py")
+            if cls.REFUSAL in path.read_text(encoding="utf-8")
+        )
+
+    def test_the_guarded_set_is_discoverable(self) -> None:
+        """If the refusal wording changes, this test must fail rather than pass blind."""
+        guarded = self._guarded_scripts()
+        assert guarded, (
+            f"no script in {self.SUITE.name} contains {self.REFUSAL!r}. Either the guards were "
+            "removed -- in which case delete this class -- or the wording changed and this "
+            "check is now looking at nothing."
+        )
+
+    def test_no_doc_invokes_a_guarded_script_directly(self) -> None:
+        """`manage.py` is the entry point; a documented command must work."""
+        guarded = self._guarded_scripts()
+        offenders: list[str] = []
+        for directory in self.DOC_DIRS:
+            if not directory.is_dir():
+                continue
+            for doc in sorted(directory.rglob("*.md")):
+                if doc.name == "TABLE_OF_CONTENTS.md":
+                    continue  # generated
+                for number, line in enumerate(
+                    doc.read_text(encoding="utf-8", errors="replace").splitlines(), 1
+                ):
+                    for script in guarded:
+                        # A path reference is fine; an invocation is not.
+                        invoked = "python" in line or line.lstrip().startswith("$")
+                        if (
+                            f"pyproject_template/{script}" in line
+                            and "manage.py" not in line
+                            and invoked
+                        ):
+                            offenders.append(
+                                f"{doc.relative_to(REPO_ROOT)}:{number} {line.strip()[:70]}"
+                            )
+        assert not offenders, (
+            "documentation invokes scripts that refuse to run directly:\n  "
+            + "\n  ".join(offenders)
+            + "\nUse the `manage.py` equivalent -- `manage.py check`, `configure`, `repo`."
+        )

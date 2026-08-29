@@ -32,7 +32,6 @@ class TestGetFilesToDelete:
         tools_dir = tmp_path / "tools" / "pyproject_template"
         tools_dir.mkdir(parents=True)
         (tools_dir / "setup_repo.py").touch()
-        (tools_dir / "migrate_existing_project.py").touch()
         # This one should NOT be deleted in SETUP_ONLY mode
         (tools_dir / "manage.py").touch()
 
@@ -41,7 +40,6 @@ class TestGetFilesToDelete:
         file_names = [f.name for f in files]
         assert "bootstrap.py" in file_names
         assert "setup_repo.py" in file_names
-        assert "migrate_existing_project.py" in file_names
         assert "manage.py" not in file_names
 
     def test_get_files_all(self, tmp_path: Path) -> None:

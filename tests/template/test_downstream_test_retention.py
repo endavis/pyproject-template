@@ -223,11 +223,7 @@ SHED_DIRS = tuple(ALL_TEMPLATE_DIRS)
 
 # Kept tests that legitimately reference a shed path because they *guard* the
 # read at runtime. Add here — with a reason — rather than deleting the check.
-GUARDED_READS: dict[str, str] = {
-    "test_ai_agent_assets.py": (
-        "reads migrate_existing_project.py but skips when it is absent (#731)"
-    ),
-}
+GUARDED_READS: dict[str, str] = {}
 
 
 def _repo_root_reads(source: str) -> set[str]:

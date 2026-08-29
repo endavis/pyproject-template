@@ -60,7 +60,6 @@ class CleanupResult(NamedTuple):
 SETUP_FILES = [
     "bootstrap.py",
     "tools/pyproject_template/setup_repo.py",
-    "tools/pyproject_template/migrate_existing_project.py",
     "docs/template/new-project.md",
     "docs/template/migration.md",
     *TEMPLATE_OWNED_TEST_FILES,
@@ -688,7 +687,7 @@ def prompt_cleanup(root: Path | None = None) -> CleanupMode | None:
     print("Would you like to remove template-specific files?")
     print()
     print("  [1] Remove setup files only (keep update checking)")
-    print("      Removes: bootstrap.py, setup_repo.py, migrate_existing_project.py")
+    print("      Removes: bootstrap.py, setup_repo.py")
     print("      Keeps: manage.py, check_template_updates.py (for future updates)")
     print()
     print("  [2] Remove all template files (no future update checking)")
