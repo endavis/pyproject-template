@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788008461427,
+  "lastUpdate": 1788011595605,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12036,6 +12036,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.576192262033053e-7",
             "extra": "mean: 2.0954725205944307 usec\nrounds: 55951"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1319fa37fe972a6e82b5cb613862aeb83f4ab900",
+          "message": "refactor: index AGENTS.md's just-in-time reference from Pre-Action Checks (merges PR #758, addresses #751)\n\nThree blocks were procedure an agent needs only at a nameable moment, carried in\nthe file every agent reads at all times: the dependabot merge workflow, the\n`doit issue`/`pr`/`pr_merge`/`adr` catalogue, and the PR checklist.\n\nThe issue expected a relocation, and judged it risky on that basis -- moving\ncontent behind a pointer costs a read at the moment of need. The audit found\nthat two of the three were duplicates of docs Pre-Action Checks already points\nat, so the trade barely applies: the agent was going to read CONTRIBUTING\nanyway.\n\nThree things were genuinely unique and were moved before anything was deleted:\n\n- the force-push polling procedure and the don't-double-rebase rule, now in\n  dependabot-automerge.md under \"Confirming the rebase landed\";\n- `doit pr --no-push` and `--no-update-check`, documented nowhere else --\n  `--no-update-check` was referenced from Critical Reminders with no definition\n  anywhere in the repo.\n\n`### Dependabot PRs` keeps its heading: dependabot-automerge.md links that\nanchor twice, and deleting it would create exactly the dangling pointer #738\nwas about. Its body is now the rule plus a pointer.\n\nThe PR checklist was trimmed rather than kept whole, per the maintainer's call.\nNo item survived the trim -- all nine are stated elsewhere, most of them more\nfully: branch naming carries allowed types and examples in CONTRIBUTING's\nBranch step, and the `Addresses #XX` start-of-line precision is in the doit task\nreference.\n\ntest_relocation_targets_are_indexed is the converse of\ntest_instruction_pointers.py (#739): that checks a pointer resolves, this checks\nrelocated content has one. A section moved out of the always-on file and left\nunindexed is unreachable in practice.\n\nAGENTS.md: 23,313 -> 20,188 bytes.\n\nAddresses #751\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T14:52:34+01:00",
+          "tree_id": "c731794d33eba8e092921bafc8522f48ee9ec1d5",
+          "url": "https://github.com/endavis/pyproject-template/commit/1319fa37fe972a6e82b5cb613862aeb83f4ab900"
+        },
+        "date": 1788011594265,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11270996.049022146,
+            "unit": "iter/sec",
+            "range": "stddev: 8.339338314335586e-9",
+            "extra": "mean: 88.72330321566908 nsec\nrounds: 112448"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11521314.604393354,
+            "unit": "iter/sec",
+            "range": "stddev: 9.063067779325496e-9",
+            "extra": "mean: 86.79565087292 nsec\nrounds: 110951"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7913602.117761239,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6185185024242833e-8",
+            "extra": "mean: 126.36470536667571 nsec\nrounds: 79879"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2387518.719817303,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3797034897796373e-7",
+            "extra": "mean: 418.84488347656674 nsec\nrounds: 66305"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 661569.4782389515,
+            "unit": "iter/sec",
+            "range": "stddev: 2.9891586943441363e-7",
+            "extra": "mean: 1.5115570365518152 usec\nrounds: 59120"
           }
         ]
       }
