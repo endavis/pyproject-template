@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788028502514,
+  "lastUpdate": 1788029607025,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12390,6 +12390,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.891567926202803e-7",
             "extra": "mean: 2.051049677829832 usec\nrounds: 68743"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "950a078b0751c0d6ea8abd13ece714d3caac014d",
+          "message": "docs: describe heredoc handling in the command-blocking reference (merges PR #767, addresses #766)\n\n#762 made the hook scan heredoc bodies a POSIX shell executes, and #759 added a\nblock-and-redirect for commit-message heredocs. Both updated ADR-9019, the hook's\ndocstrings and CONTRIBUTING, and left command-blocking.md -- the reference a user\nactually reads -- describing the world before either.\n\nIts quote-aware section showed one heredoc example, a quoted `$( )`\nsubstitution, labelled as allowed. That is still true, and as the only heredoc\ncase shown it reads as \"heredoc content is safe\", which is wrong in both\ndirections: a bare heredoc carrying prose is blocked, and a body a shell will\nexecute is re-scanned as commands.\n\nAdds a Heredocs subsection giving the rule -- quoting collapses content into one\ntoken, an unquoted body does not, and a body a shell executes is re-scanned --\nand the four shapes it produces. Points at CONTRIBUTING for the commit-message\nconvention and ADR-9019 for why the scanner is not taught to recognise prose,\nrather than restating either.\n\nEvery row was checked against the running hook rather than reasoned about:\nquoted substitution allows, `bash <<EOF` blocks, the commit heredoc blocks with\nthe redirect, and a non-shell receiver is not re-scanned while the flat token\nscan still reaches it.\n\nBoth merges this corrects were mine. #762 verified its facts were carried by the\nADR and the tests and did not check the reference doc -- the gap the #750 audit\nmethod exists to catch, missed on my own work.\n\nAddresses #766\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T19:52:49+01:00",
+          "tree_id": "6b98ad447b42df1029e3650e320d2fa08ddfc71a",
+          "url": "https://github.com/endavis/pyproject-template/commit/950a078b0751c0d6ea8abd13ece714d3caac014d"
+        },
+        "date": 1788029606283,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9261800.068606015,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3951033249541226e-8",
+            "extra": "mean: 107.97037212988653 nsec\nrounds: 91769"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8993932.012558334,
+            "unit": "iter/sec",
+            "range": "stddev: 1.589797027942461e-8",
+            "extra": "mean: 111.18607507858499 nsec\nrounds: 87375"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6411563.324938509,
+            "unit": "iter/sec",
+            "range": "stddev: 1.456712893679051e-8",
+            "extra": "mean: 155.96820140735187 nsec\nrounds: 61676"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1792113.2228627896,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6851090239058585e-7",
+            "extra": "mean: 558.0004584769271 nsec\nrounds: 61073"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 505471.1147048987,
+            "unit": "iter/sec",
+            "range": "stddev: 5.073711387711153e-7",
+            "extra": "mean: 1.9783524140322328 usec\nrounds: 50662"
           }
         ]
       }
