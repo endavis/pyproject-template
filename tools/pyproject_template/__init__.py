@@ -14,9 +14,6 @@ from .configure import (
     load_defaults,
     run_configure,
 )
-from .migrate_existing_project import (
-    run_migrate,
-)
 from .settings import (
     ProjectContext,
     ProjectSettings,
@@ -55,7 +52,6 @@ __all__ = [
     "resolve_template_ref",
     "run_check_updates",
     # Migrate
-    "run_migrate",
     # Utils
     "Colors",
     "GitHubCLI",

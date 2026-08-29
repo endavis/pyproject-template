@@ -12,11 +12,10 @@ tags:
 
 Bring your existing Python project into the pyproject-template.
 
-> **Automated Option:** Use `migrate_existing_project.py` to copy template files automatically:
-> ```bash
-> python tools/pyproject_template/migrate_existing_project.py --target /path/to/your/project
-> ```
-> See [Tools Reference](tools-reference.md#migrate_existing_projectpy) for details.
+> **How much of this is automated:** step 3. `manage.py configure` rewrites every placeholder
+> and renames `src/package_name` to your package — the fiddly part. The rest is judgement about
+> your own code: which files are your package, which dependencies to carry over, how imports
+> change when moving to a `src/` layout. Work through the checklist.
 
 ## Manual Migration Checklist
 

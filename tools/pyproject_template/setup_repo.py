@@ -651,8 +651,8 @@ Auto-removed by setup_repo.py to keep the consumer project free of
 template-only tooling:
 
 - tools/pyproject_template/ (manage.py, setup_repo.py, configure.py,
-  cleanup.py, check_template_updates.py, migrate_existing_project.py,
-  settings.py, repo_settings.py, utils.py, __init__.py)
+  cleanup.py, check_template_updates.py, settings.py, repo_settings.py,
+  utils.py, __init__.py)
 - docs/template/
 - bootstrap.py
 - Template nav section in mkdocs.yml

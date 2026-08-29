@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
 from agent_roster import agent_is_present, present_agents, skip_if_absent
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -309,18 +308,3 @@ def test_multi_orchestrators_recognize_antigravity() -> None:
         content = f.read_text(encoding="utf-8")
         assert "`antigravity`" in content, f"{f} does not list antigravity as an allowed agent"
         assert "agy -p" in content, f"{f} has no agy invocation block"
-
-
-def test_migration_tool_copies_agents_dir() -> None:
-    """The migration tool must copy the shared .agents/ dir (Codex + Antigravity config).
-
-    Skipped in a spawned project: ``migrate_existing_project.py`` is one of the
-    setup-only files ``cleanup --setup`` sheds, so there is nothing to assert
-    against once the template has been consumed (#731).
-    """
-    migration_tool = REPO_ROOT / "tools" / "pyproject_template" / "migrate_existing_project.py"
-    if not migration_tool.is_file():
-        pytest.skip("migrate_existing_project.py is shed by cleanup --setup")
-
-    src = migration_tool.read_text(encoding="utf-8")
-    assert '".agents"' in src, "migrate_existing_project.py must include .agents in the copy list"

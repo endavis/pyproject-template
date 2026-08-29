@@ -66,7 +66,6 @@ All template tools are located in `tools/pyproject_template/`:
 | `bootstrap.py` | Remote setup script (curl and run) |
 | `setup_repo.py` | Full repository setup orchestration |
 | `configure.py` | Replace placeholders with your project info |
-| `migrate_existing_project.py` | Copy template files to existing project |
 | `check_template_updates.py` | Compare project against latest template |
 | `cleanup.py` | Remove template files after setup |
 

@@ -306,7 +306,7 @@ include = [
     "src",
     "tests",
     "*.py",           # Root level Python files (dodo.py, setup-repo.py, configure.py)
-    "tools",          # Tools directory (migrate_existing_project.py)
+    "tools",          # Tools directory
     ".github",        # Any Python in GitHub workflows/scripts
 ]
 # tests/ is not a package, so pytest puts it on sys.path; mirror that here so

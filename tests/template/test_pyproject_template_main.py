@@ -1000,22 +1000,3 @@ class TestYesFlagBehavior:
             result = action_template_cleanup(mock_manager, dry_run=False, cleanup_mode="invalid")
 
             assert result == 1
-
-
-class TestMigrateModule:
-    """Tests for the migrate_existing_project module refactoring."""
-
-    def test_parse_args_accepts_argv(self) -> None:
-        """Test that parse_args accepts argv parameter."""
-        from tools.pyproject_template.migrate_existing_project import parse_args
-
-        args = parse_args(["--target", "/some/path", "--download"])
-        assert args.target == Path("/some/path")
-        assert args.download is True
-
-    def test_parse_args_dry_run(self) -> None:
-        """Test that parse_args accepts --dry-run."""
-        from tools.pyproject_template.migrate_existing_project import parse_args
-
-        args = parse_args(["--target", "/some/path", "--dry-run"])
-        assert args.dry_run is True

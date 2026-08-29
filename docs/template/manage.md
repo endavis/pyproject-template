@@ -133,7 +133,6 @@ Removes template-specific files that are no longer needed after project setup:
 
 - `bootstrap.py` - Remote setup script
 - `tools/pyproject_template/setup_repo.py` - Repository creation
-- `tools/pyproject_template/migrate_existing_project.py` - Migration tool
 - `docs/template/new-project.md` - New project instructions
 - `docs/template/migration.md` - Migration guide
 

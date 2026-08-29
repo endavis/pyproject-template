@@ -1096,7 +1096,6 @@ doit template_clean --dry-run
 **Setup mode (`--setup`)** removes:
 - `bootstrap.py`
 - `tools/pyproject_template/setup_repo.py`
-- `tools/pyproject_template/migrate_existing_project.py`
 - `docs/template/new-project.md`
 - `docs/template/migration.md`
 

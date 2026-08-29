@@ -47,7 +47,6 @@ class TestConstants:
         filenames = [Path(f).name for f in SYNC_FILES]
         assert "setup_repo.py" not in filenames
         assert "repo_settings.py" not in filenames
-        assert "migrate_existing_project.py" not in filenames
 
     def test_setup_files_does_not_contain_sync_only_modules(self) -> None:
         """Test that SETUP_FILES excludes sync-only modules."""
