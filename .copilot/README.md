@@ -2,7 +2,9 @@
 
 This directory is the GitHub Copilot CLI configuration directory for this repository, parallel to `.claude/`, `.codex/`, and `.agents/`.
 
-**Important:** Copilot CLI does **not** read any `commands/` directory. Per the installed `@github/copilot` SDK (`sdk/index.d.ts`), Copilot only discovers project skills from `skills/` paths: `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (plus the corresponding personal paths under `~/`). Repo-local `.copilot/commands/<name>.md` files are never loaded.
+**Important:** Copilot CLI discovers project **skills** only from `skills/` paths — `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (plus the corresponding personal paths under `~/`, and anything added via `/skills add`). There is no `.copilot/skills/` project path and no `commands/` path for skills, so the repo-local `.copilot/commands/multi-*.md` files are never loaded.
+
+Separately, Copilot loads **single-file commands** from `.claude/commands/` — a different mechanism from skills, added in CLI 0.0.399 and flagged `isCommand` in the SDK types. Claude's command files therefore do surface in a Copilot session; see [`docs/development/ai/slash-commands.md`](../docs/development/ai/slash-commands.md#copilot).
 
 ## Workflow Skills
 

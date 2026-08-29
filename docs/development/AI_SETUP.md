@@ -12,7 +12,7 @@ tags:
 
 # AI Agent Setup Guide
 
-This template is designed primarily for **Claude Code**, which is the only agent that ships the full slash-command workflow and acts as the orchestrator in single-agent and multi-agent flows. **GitHub Copilot CLI** is supported as a standalone alternative that auto-discovers the full slash-command workflow from `.claude/commands/`. **Codex CLI** is supported as a standalone alternative without slash commands. **Antigravity CLI** (`agy`) is supported as a standalone alternative that shares the `.agents/` customization root with Codex. See the comparison table below for the per-agent breakdown.
+This template is designed primarily for **Claude Code**, which is the only agent that ships the full slash-command workflow and acts as the orchestrator in single-agent and multi-agent flows. **GitHub Copilot CLI** is supported as a standalone alternative whose workflow is discovered as skills from `.github/skills/`. **Codex CLI** is supported as a standalone alternative without slash commands. **Antigravity CLI** (`agy`) is supported as a standalone alternative that shares the `.agents/` customization root with Codex. See the comparison table below for the per-agent breakdown.
 
 > **New here?** Start with the [First 5 Minutes walkthrough](ai/first-5-minutes.md) for a narrative tour of the AI agent workflow. This page is the configuration reference.
 
@@ -160,7 +160,7 @@ To opt out or tune values for your local environment, override them in `.claude/
 
 > **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
-GitHub Copilot CLI reads `AGENTS.md` directly and discovers project skills from `skills/` directories — `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (per `@github/copilot` SDK `sdk/index.d.ts`). It does **not** read any `commands/` directory. Self-action and cross-agent bridge skills (`/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`, and the 16 cross-agent bridges `/<target>-<action>`) live under `.github/skills/<target>-<action>/SKILL.md`. The `.github/skills/` location is chosen specifically because it's the only Copilot project skill path that Claude does **not** also read — placing bridges there avoids duplicating slash commands in Claude. Hyphen naming is structural — skill names are derived from directory names and cannot contain colons. Copilot also natively discovers per-stack instruction files from `.github/instructions/*.instructions.md`; see [`.github/instructions/README.md`](../../.github/instructions/README.md) for the scaffold and format.
+GitHub Copilot CLI reads `AGENTS.md` directly and discovers project skills from `skills/` directories — `.github/skills/`, `.agents/skills/`, and `.claude/skills/` (per `@github/copilot` SDK `sdk/index.d.ts`). For skills it reads no `commands/` directory, though it does load single-file commands from `.claude/commands/` — a separate mechanism, so Claude's command files also surface in Copilot (#753). Self-action and cross-agent bridge skills (`/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`, and the 16 cross-agent bridges `/<target>-<action>`) live under `.github/skills/<target>-<action>/SKILL.md`. The `.github/skills/` location is chosen specifically because it's the only Copilot project skill path that Claude does **not** also read — placing bridges there avoids duplicating slash commands in Claude. Hyphen naming is structural — skill names are derived from directory names and cannot contain colons. Copilot also natively discovers per-stack instruction files from `.github/instructions/*.instructions.md`; see [`.github/instructions/README.md`](../../.github/instructions/README.md) for the scaffold and format.
 
 **Hook wiring:**
 
@@ -256,7 +256,7 @@ This template ships several files that influence agent behavior. They fall into 
 
 - **`AGENTS.md`** (project root, ~20 KB) — universal source of truth for architecture, workflow, tooling hierarchy, and security rules. Read directly by Codex CLI, GitHub Copilot CLI, and Antigravity CLI; imported by Claude Code via `@../AGENTS.md` in `.claude/CLAUDE.md`.
 - **`.claude/CLAUDE.md`** (~2 KB) — Claude-specific complement. First line is `@../AGENTS.md`, which imports the universal rules; the rest adds Claude-specific layers (token-efficiency guidance, the mandatory TodoWrite plan-test-code loop, the development workflow reminder, and the commit workflow reminder).
-- **`.copilot/README.md`** — describes the Copilot CLI config directory. Copilot CLI reads `AGENTS.md` directly, auto-discovers slash commands from `.claude/commands/`, and uses `.github/instructions/*.instructions.md` for Copilot-native per-stack instruction files.
+- **`.copilot/README.md`** — describes the Copilot CLI config directory. Copilot CLI reads `AGENTS.md` directly, discovers its workflow skills from `.github/skills/` (and the interoperable `.agents/skills/`), and uses `.github/instructions/*.instructions.md` for Copilot-native per-stack instruction files.
 - **`.codex/config.toml`** — Codex approval policy file (TOML). Not a context file; configures permissions only. Codex reads `AGENTS.md` directly for instructions.
 - **`.claude/settings.json`** — Claude PreToolUse hooks and statusline configuration. Committed.
 - **`.claude/settings.local.json`** — local Claude permissions overlay. Not committed.
@@ -317,7 +317,7 @@ config schema.
 
 **GitHub Copilot CLI** (`.github/hooks/copilot-hooks.json`):
 
-Copilot CLI does not use a per-command allowlist — the dangerous-command hook blocks unsafe patterns; everything else is allowed. To adjust what is blocked, edit the shared hook at `tools/hooks/ai/block-dangerous-commands.py` (which applies to Claude, Copilot, Codex and Antigravity alike). New slash commands added under `.claude/commands/<name>.md` are automatically discovered by Copilot CLI — no additional configuration is needed.
+Copilot CLI does not use a per-command allowlist — the dangerous-command hook blocks unsafe patterns; everything else is allowed. To adjust what is blocked, edit the shared hook at `tools/hooks/ai/block-dangerous-commands.py` (which applies to Claude, Copilot, Codex and Antigravity alike). New workflow skills added under `.github/skills/<name>/SKILL.md` are automatically discovered by Copilot CLI — no additional configuration is needed.
 
 ## Security Considerations
 
@@ -381,8 +381,9 @@ codex
   (`tests/test_hook_dangerous_command_matrix.py` — 134 block/allow cases, collected by CI)
 
 **Slash commands not appearing:**
-- Copilot CLI auto-discovers skills from `.claude/commands/` — make sure that directory exists and contains `.md` files with the CLI file format (no YAML frontmatter; leading `# Title` and `## Instructions` sections)
-- Restart the Copilot CLI session after adding new command files
+- Copilot CLI discovers skills only from `skills/` paths (`.github/skills/`, `.agents/skills/`, `.claude/skills/`) — make sure the directory exists and each skill is a `<name>/SKILL.md` with `name:` and `description:` frontmatter
+- Single-file commands under `.claude/commands/` are loaded by a separate mechanism; `.copilot/commands/` is read by neither
+- Restart the Copilot CLI session after adding new skill or command files
 
 **`.copilot/` auto-detection:**
 - The `.copilot/` directory exists primarily to document Copilot-specific wiring; Copilot CLI does not require any config files there
