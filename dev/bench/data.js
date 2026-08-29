@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788024944165,
+  "lastUpdate": 1788027343954,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12213,6 +12213,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.4226613829708085e-7",
             "extra": "mean: 1.3084407987696063 usec\nrounds: 66899"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd4811e5078575fff936362caae83b58f3ced8d4",
+          "message": "fix: scan heredoc bodies that a shell will execute (merges PR #763, addresses #762)\n\n* fix: scan heredoc bodies that a shell will execute\n\n`check_command` recurses into `bash -c <payload>` through `_wrapped_payloads`,\nbut a heredoc on stdin is not `-c`, so its body was never re-scanned. The checks\nthat match a token in any position caught it anyway; the ones needing a command\nposition did not. `bash -c \"cat ~/.netrc\"` was blocked while\n`bash <<EOF cat ~/.netrc EOF` ran.\n\n`_heredoc_payloads` closes that by yielding heredoc bodies into the same\nrecursion, the same depth cap and the same checks. A body is yielded only when\nits receiver executes it as shell: `_reads_stdin_as_code` requires a POSIX shell\nwith no script argument before the operator, or an explicit `-`. Lines are\nyielded individually because each is its own command, and a command position is\nwhat the missing checks require.\n\nScoped to shells deliberately. An earlier draft included `python3 - <<EOF`, but\nthat body is Python -- `printenv PYPI_TOKEN` there is a SyntaxError, not a dump\n-- so the pre-existing case marking it ALLOW and calling it a heredoc\n*mentioning* a dump was right, and flipping it to BLOCK was wrong. Shell\npatterns inside Python, Perl, Ruby or JavaScript are string literals, and the\nreal risk in those (`os.system(...)`) is not shell-shaped, so scanning them\nwould buy false positives and no coverage. Their bodies keep today's behaviour.\n\nThe change is additive: it scans more, never less, so a mistake in it is a false\npositive rather than a bypass.\n\nTwelve cases pin the parser's contract -- `<<-` with a tab-indented terminator,\nquoted delimiters, an absolute interpreter path, a shell after `&&`, danger on\nthe third line of a body, and a second heredoc following a data one -- plus the\ndata-consumer cases that must stay allowed. One case is pinned as a known\nlimitation rather than fixed: a data heredoc quoting a `bash -c` payload is\nstill blocked, because the outer token scan reaches it. That predates this\nchange and belongs to #759.\n\nVerified by mutation: dropping `_heredoc_payloads` from the recursion turns\ntwelve cases red.\n\nAddresses #762\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n* docs: record what the dangerous-command hook is for (ADR-9019)\n\nADR-9005 decided to block commands at the tool level. Nothing recorded what the\nhook should block or how far to go to do it, so each new question -- should it\nsee inside a heredoc? -- was re-argued from scratch and answered inconsistently.\nTwo issues pointing in opposite directions (#759 over-blocking prose, #762\nunder-blocking executed bodies) turned out to be the same design question.\n\nThe decision: a guardrail against a non-adversarial agent, not a boundary\nagainst a determined one. Three categories -- workflow redirect, damage\nguardrail, accidental exposure -- deliberately different in value, and two\nscanning layers, precise and crude, each staying in its lane.\n\nFour rules follow, and they are the operative part: never trade crude-layer\ncoverage for precision; add to the precise layer only when the payload is shell;\nfix crude-layer false positives by convention rather than by making the scanner\nsmarter; spend no complexity on category 3.\n\nThe rationale is measured rather than asserted. Both plausible ways to remove\nthe false positive were tried and both cost real coverage -- stripping data\nheredoc bodies un-blocks `perl`, `ruby`, `node` and `ssh` heredocs; making\nwrapper detection position-aware un-blocks `xargs`, `find -exec` and `timeout`\nwrappers. Each is blocked today only because the crude layer over-matches, and a\nmore correct shell parser makes that worse, not better.\n\nThe principle already existed in command-blocking.md, stated for `$VAR`\ninterpolation alone: blocking it \"would give false assurance while being\ntrivially avoided\". This generalises that test to the whole hook, and the\nsection now points at the ADR.\n\nTwo things it says plainly. #762 would not be proposed under these rules --\neverything it newly blocks is category 3, and every category-2 pattern in a\nshell heredoc was already caught -- so it is kept as the last precision addition\nof its kind. And the rules will tell a future contributor with a demonstrated\ncategory-3 gap that the answer is no, which is deliberate.\n\nAddresses #762\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n---------\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T19:14:59+01:00",
+          "tree_id": "74ff0f2d84f41c31eb412a35b5de7bb06f735f14",
+          "url": "https://github.com/endavis/pyproject-template/commit/cd4811e5078575fff936362caae83b58f3ced8d4"
+        },
+        "date": 1788027342849,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8443115.780891916,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1657109066672228e-8",
+            "extra": "mean: 118.43968813777913 nsec\nrounds: 45084"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9079262.235502241,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4212333004157415e-8",
+            "extra": "mean: 110.14110773117046 nsec\nrounds: 93362"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5559122.517246348,
+            "unit": "iter/sec",
+            "range": "stddev: 9.124107133225481e-8",
+            "extra": "mean: 179.88450459540138 nsec\nrounds: 198020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1750187.8276175116,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6326891316639367e-7",
+            "extra": "mean: 571.3672465436329 nsec\nrounds: 67486"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488543.3676536563,
+            "unit": "iter/sec",
+            "range": "stddev: 6.637209924385586e-7",
+            "extra": "mean: 2.0469011887373147 usec\nrounds: 54933"
           }
         ]
       }
