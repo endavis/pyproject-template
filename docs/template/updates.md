@@ -93,17 +93,18 @@ python tools/pyproject_template/check_template_updates.py
 python tools/pyproject_template/manage.py check --template-version v2.2.0
 ```
 
-Without `--template-version`, the latest **release** is resolved from the GitHub API. If the
-template has cut no releases — or the API call fails — the comparison falls back to the `main`
-branch, and the run says so:
+`--template-version` accepts a **tag, a branch, or a commit SHA**; the default is `main`. Whatever
+you give it is resolved to a commit before anything is downloaded, so a check runs against one
+fixed snapshot rather than a branch that can move underneath it:
 
 ```
-⚠ Could not fetch latest release: HTTP Error 404: Not Found
-i Comparing against template main branch
+i Comparing against template ref: main
+i Downloading from https://github.com/endavis/pyproject-template/archive/5853ced….zip...
 ```
 
-Pin a tag when you want a staged upgrade (one release at a time rather than one large diff), or a
-comparison two people can reproduce.
+That is the same identity `bootstrap.py` pins, so the SHA it prints can be passed straight to
+`manage.py check --template-version <sha>` to diff against exactly what you synced. See
+[ADR-9020](../decisions/9020-a-template-version-is-a-commit-sha.md).
 
 `--skip-changelog` and `--keep-template` are not exposed: `manage.py` already sets both, keeping the
 downloaded template so you can run your own diffs and not opening an editor mid-run.

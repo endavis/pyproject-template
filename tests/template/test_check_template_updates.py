@@ -9,6 +9,7 @@ from unittest import mock
 
 import pytest
 
+from tools.pyproject_template import check_template_updates as ctu
 from tools.pyproject_template.check_template_updates import (
     _emit_coupling_warnings,
     compare_files,
@@ -360,3 +361,77 @@ class TestTemplateVersionFlag:
         ):
             manage.action_check_updates(mock.MagicMock(), dry_run=True, template_version="v2.2.0")
         assert seen.get("template_version") == "v2.2.0"
+
+
+class TestRefResolution:
+    """A template version is a commit, and every ref kind resolves to one (#781).
+
+    `bootstrap.py` pins a commit SHA; the drift checker used to fetch a release
+    tag and fall through to the moving `main` branch when no release existed --
+    which is always, since this template has cut none. Two halves of one sync
+    disagreeing about what a version is.
+
+    These cover the resolution and the URL it produces. The gap they close is
+    real: the first version of this change left a stale `version` reference in
+    `run_check_updates` and every existing test passed, because they mock that
+    function. It was caught by running the tool.
+    """
+
+    def test_a_sha_is_used_as_is(self) -> None:
+        """No API call for something already a commit."""
+        sha = "0a64c7e7c916a9bb0b4041f20acce8653e01acfa"
+        with mock.patch.object(ctu.urllib.request, "urlopen") as opener:
+            assert ctu.resolve_template_ref(sha) == sha
+        opener.assert_not_called()
+
+    @pytest.mark.parametrize("ref", ["main", "v0.0.0", "some-branch"])
+    def test_a_tag_or_branch_resolves_to_a_sha(self, ref: str) -> None:
+        sha = "1" * 40
+        response = mock.MagicMock()
+        response.read.return_value = f"{sha}\n".encode()
+        response.__enter__.return_value = response
+        with mock.patch.object(ctu.urllib.request, "urlopen", return_value=response):
+            assert ctu.resolve_template_ref(ref) == sha
+
+    def test_an_unresolvable_ref_warns_and_passes_through(self) -> None:
+        """Offline or rate-limited must not stop a drift check outright."""
+        with mock.patch.object(ctu.urllib.request, "urlopen", side_effect=OSError("offline")):
+            assert ctu.resolve_template_ref("main") == "main"
+
+    def test_a_non_sha_response_is_not_trusted(self) -> None:
+        """A proxy returning HTML must not become the archive path."""
+        response = mock.MagicMock()
+        response.read.return_value = b"<html>rate limited</html>"
+        response.__enter__.return_value = response
+        with mock.patch.object(ctu.urllib.request, "urlopen", return_value=response):
+            assert ctu.resolve_template_ref("main") == "main"
+
+    def test_the_archive_url_names_the_resolved_commit(self, tmp_path: Path) -> None:
+        """One URL shape for tag, branch and SHA -- the resolved commit."""
+        sha = "2" * 40
+        seen: dict[str, str] = {}
+
+        def _capture(url: str, target: Path) -> Path:
+            seen["url"] = url
+            return target
+
+        with (
+            mock.patch.object(ctu, "resolve_template_ref", return_value=sha),
+            mock.patch.object(ctu, "download_and_extract_archive", _capture),
+        ):
+            ctu.download_template(tmp_path, "v0.0.0")
+
+        assert seen["url"].endswith(f"/archive/{sha}.zip"), seen["url"]
+        assert "refs/tags" not in seen["url"], "the release-tag URL shape is gone"
+        assert "refs/heads" not in seen["url"], "the moving-branch URL shape is gone"
+
+    def test_the_default_ref_is_main(self, tmp_path: Path) -> None:
+        """Stated, rather than reached by failing a releases/latest lookup."""
+        assert ctu.DEFAULT_TEMPLATE_REF == "main"
+        seen: dict[str, str] = {}
+        with (
+            mock.patch.object(ctu, "resolve_template_ref", lambda ref: seen.setdefault("ref", ref)),
+            mock.patch.object(ctu, "download_and_extract_archive", lambda url, target: target),
+        ):
+            ctu.download_template(tmp_path, None)
+        assert seen["ref"] == "main"
