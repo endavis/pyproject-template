@@ -59,8 +59,10 @@ Target: **30 lines or fewer** per rule file. If a file grows past 30 lines, spli
 
 **This loader is enabled in the template.** It was previously commented out, on the reasoning that
 a template ships no rule files and downstream consumers would opt in after authoring their first.
-That reasoning expired when the template authored its own: `typing-branch-narrowing.md` documents
-a trap that produced defects in two consecutive PRs **in this repository's code**. A rule file that
+That reasoning expired when the template authored its own. `typing-branch-narrowing.md` documents
+a trap that produced defects in two consecutive PRs **in this repository's code**;
+`verified-claims.md` documents four claims written into issues and merged commits without being
+measured (#785). A rule file that
 ships but never loads is a mechanism built and not used, so the loader is on and downstream
 projects inherit it.
 
@@ -70,8 +72,8 @@ tolerates a glob matching nothing, but leaving it invites a future file to load 
 ## Mirroring across agent surfaces
 
 Every agent in the delegation matrix edits this codebase, so a rule that only Claude loads is a
-half-installed control. `typing-branch-narrowing` is mirrored to all three surfaces, each with its
-own format and loading mechanism:
+half-installed control. Every rule here is mirrored to all three surfaces — currently
+`typing-branch-narrowing` and `verified-claims` — each with its own format and loading mechanism:
 
 | Surface | Path | Loading |
 | :--- | :--- | :--- |
@@ -82,7 +84,7 @@ own format and loading mechanism:
 The checklist body is identical in all three; only the frontmatter and loading differ. **When you
 change one, change all three** — a rule that disagrees with itself across agents is worse than no
 rule, because whichever agent is driving determines which version applies.
-`tests/template/test_rule_files.py` enforces that the three bodies stay byte-identical.
+`tests/template/test_rule_files.py` enforces that each rule's three bodies stay byte-identical.
 
 Note that Copilot reads `.agents/skills/` in addition to `.github/instructions/`, so it sees the
 rule on two surfaces at once. That is harmless while the bodies match — which is exactly what the
