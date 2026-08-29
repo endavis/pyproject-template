@@ -145,8 +145,14 @@ _PROSE_ONLY_DOCS = (
     "AGENTS.md",
 )
 
+# Nouns a matrix count is written with. `distinct files` alone was too narrow:
+# `.copilot/README.md` carried "(16 files)" in a file this test already scanned,
+# and the guard was trusted to cover it (#774). Widened to the bare nouns, which
+# hits that line and nothing else in _PROSE_ONLY_DOCS -- verified before landing,
+# because a pattern that matches ordinary prose would make the guard noise.
 _COUNT_IN_PROSE = re.compile(
-    r"\b\d+ (?:cells|distinct files|cross-agent bridges|delegation commands|"
+    r"\b\d+ (?:cells|files|entries|skills|bridges|commands|"
+    r"distinct files|cross-agent bridges|delegation commands|"
     r"self-action skills|delegate-\S+ skills)\b"
 )
 
@@ -217,3 +223,17 @@ def test_the_count_checks_detect_a_planted_error() -> None:
     assert _COUNT_IN_PROSE.search("plus 12 cross-agent bridges under .github/skills/"), (
         "the prose scan did not notice a written-out count"
     )
+    # The shape the pattern used to miss: a bare noun after the number. This
+    # exact string sat in .copilot/README.md, inside a file the scan covers,
+    # while the guard was believed to be holding it (#774).
+    assert _COUNT_IN_PROSE.search("Copilot-host workflow skills (16 files)"), (
+        "the prose scan still misses a bare '<n> files'"
+    )
+    # ...and the pattern must not fire on ordinary prose that happens to count
+    # something else, or the guard becomes noise rather than a signal.
+    for benign in (
+        "takes 1 to 3 minutes",
+        "Python 3.14 support",
+        "the 4 sources are listed above",
+    ):
+        assert not _COUNT_IN_PROSE.search(benign), f"false positive on {benign!r}"
