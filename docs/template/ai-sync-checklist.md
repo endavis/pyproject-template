@@ -30,6 +30,8 @@ This checklist guides an AI agent through synchronizing a downstream project wit
     --body="## Description\nSynchronize project with latest pyproject-template improvements."
   ```
 - [ ] Create branch linked to the issue (e.g., `chore/<issue#>-sync-pyproject-template`)
+- [ ] Read [Consumer Notes](consumer-notes.md) — the breaking and behaviour changes that
+      arrive through this sync. Note which apply to this project before adopting any drift.
 
 ---
 
@@ -157,6 +159,15 @@ For each workflow file flagged as **Modified** or **Missing**:
 
 ## Phase 5: Doit Tasks (`tools/doit/`)
 
+### 5.0 Breaking change: `install_tools` digests
+
+- [ ] Does this project call `install_tool()` or `create_install_task()` with `url_template`
+      for a **non-GitHub** host? If so, adopting `tools/doit/install_tools.py` aborts that
+      install with `IntegrityError` until you pass `sha256=`.
+- [ ] Take the digest from the publisher's checksums file, not from a download you have not
+      verified. Per-platform digests use a dict keyed like `asset_patterns`.
+- [ ] See [Consumer Notes](consumer-notes.md#install_tools-requires-sha256-for-untrusted-hosts).
+
 ### 5.1 Core Task Infrastructure
 
 - [ ] Compare `tools/doit/__init__.py` for discovery mechanism updates
@@ -188,6 +199,11 @@ For each workflow file flagged as **Modified** or **Missing**:
 ---
 
 ## Phase 7: Pre-commit & Other Config
+
+- [ ] After adopting `.pre-commit-config.yaml`, run `doit pre_commit_install` **again** —
+      the config declares four hook types and `commit-msg` is newly among them. An earlier
+      install leaves it absent, and conventional-commit enforcement silently does not run.
+      Verify with `ls .git/hooks/`.
 
 - [ ] Compare `.pre-commit-config.yaml` - hook versions, new hooks
 - [ ] Compare `.github/CONTRIBUTING.md` for updated processes
