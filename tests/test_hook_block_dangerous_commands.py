@@ -600,3 +600,76 @@ def test_launcher_resolves_the_hook_independently_of_cwd(tmp_path: Path) -> None
     proc = _run_launcher(_agy_payload(DANGEROUS), cwd=tmp_path)
     assert proc.returncode == 0
     assert json.loads(proc.stdout)["decision"] == "deny"
+
+
+# ---------------------------------------------------------------------------
+# Block-and-redirect: a commit message passed by heredoc (#759)
+# ---------------------------------------------------------------------------
+
+_BLOCKED_FLAG = "--" + "admin"  # assembled so this file is not itself blocked
+
+
+def test_commit_heredoc_block_names_the_file_alternative(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The block must say what to do instead, not just that something is wrong.
+
+    A commit message naming a blocked pattern is refused because the heredoc is
+    scanned as arguments. The generic "contains dangerous pattern" wording sends
+    the author hunting for a dangerous command they never wrote; the redirect
+    sends them to ``-F <file>`` (ADR-9019, category 1).
+    """
+    command = f"git commit -F - <<EOF\ndocs: describe the {_BLOCKED_FLAG} bypass\nEOF"
+    _set_stdin(monkeypatch, _bash_payload(command))
+    with pytest.raises(SystemExit) as exc_info:
+        sys.exit(hook.main())
+
+    assert exc_info.value.code == 2
+    err = capsys.readouterr().err
+    assert "git commit -F <file>" in err
+    assert "tmp/agents/" in err
+
+
+def test_redirect_rewrites_the_reason_not_the_verdict(hook: types.ModuleType) -> None:
+    """Detection only: a command that was allowed stays allowed.
+
+    ``redirect_reason`` runs after ``check_command`` has decided, so it cannot
+    change what is blocked. That is what keeps this free of the bypass risk that
+    stopped the hook being taught to parse heredoc bodies (ADR-9019, rule 3).
+    """
+    safe = "git commit -F - <<EOF\ndocs: a message with nothing blocked in it\nEOF"
+    assert hook.check_command(safe) == (False, "")
+    assert hook.redirect_reason(safe, "") == ""
+
+    flagged = f"git commit -F - <<EOF\ndocs: the {_BLOCKED_FLAG} bypass\nEOF"
+    is_dangerous, original = hook.check_command(flagged)
+    assert is_dangerous
+    assert hook.redirect_reason(flagged, original) != original
+
+
+@pytest.mark.parametrize(
+    ("template", "redirected"),
+    [
+        ("git commit -F - <<EOF\nx {flag}\nEOF", True),
+        ("git commit --amend -F - <<EOF\nx {flag}\nEOF", True),
+        ("cd /repo && git commit -F - <<EOF\nx {flag}\nEOF", True),
+        ("/usr/bin/git commit -F - <<EOF\nx {flag}\nEOF", True),
+        # Owned by another command: a commit quoted inside someone else's body
+        # must not collect a redirect that does not apply to it.
+        ("cat >> tests/t.py <<PY\nx = 'git commit -F - <<EOF {flag}'\nPY", False),
+        ("git tag -F - <<EOF\nx {flag}\nEOF", False),
+        ("cat > notes.md <<EOF\nx {flag}\nEOF", False),
+        # No heredoc: never affected by the scan-as-arguments problem, so it
+        # keeps the reason that actually applies to it.
+        ("gh pr merge 1 {flag}", False),
+        ('git commit -m "x" && gh pr merge 1 {flag}', False),
+    ],
+)
+def test_redirect_fires_only_on_a_commit_heredoc(
+    hook: types.ModuleType, template: str, redirected: bool
+) -> None:
+    """Scoped to the shape that has a better path available."""
+    command = template.format(flag=_BLOCKED_FLAG)
+    assert hook._is_commit_message_heredoc(command) is redirected
