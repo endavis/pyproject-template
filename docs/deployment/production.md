@@ -643,8 +643,7 @@ jobs:
     permissions:
       id-token: write  # Required for trusted publishing
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v4
+      # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
       - run: uv build
       - uses: pypa/gh-action-pypi-publish@release/v1
 ```

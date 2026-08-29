@@ -104,69 +104,23 @@ When a Python version starts failing CI:
 
 ## Pipeline Details (GitHub Actions)
 
-### Recommended Workflow Structure
+### The pipeline that ships
 
-Create `.github/workflows/tests.yml`:
+`ci.yml` is the pipeline. It is not a starting point to copy — it is the workflow this template
+installs, and it already does what a hand-rolled `tests.yml` would:
 
-```yaml
-name: Tests
+| | |
+| :--- | :--- |
+| **Matrix** | derived from `.github/python-versions.json` via `.github/actions/python-versions`, not hardcoded — so a version policy change moves one file |
+| **Platforms** | `ubuntu-latest`, `windows-latest`, `macos-latest` |
+| **Checks** | `doit` tasks (`format_check`, `lint`, `type_check`, `test`), so CI and a local run cannot diverge |
+| **Coverage** | `package_name` **and** `tools/`, gated by `fail_under` in `pyproject.toml` |
+| **Actions** | pinned to commit SHAs with a `# vX.Y.Z` comment (see [Action pinning](#action-pinning-and-workflow-permissions)) |
 
-on:
-  push:
-    branches: [main, develop]
-  pull_request:
-    branches: [main]
-  workflow_dispatch:
-
-jobs:
-  test:
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        python-version: ["3.12", "3.14"]  # Bookend strategy: oldest + newest
-
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install uv
-        uses: astral-sh/setup-uv@v1
-
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
-
-      - name: Install dependencies
-        run: |
-          uv sync --dev
-
-      - name: Run format check
-        run: uv run doit format_check
-
-      - name: Run linter
-        run: uv run doit lint
-
-      - name: Run type checker
-        run: uv run doit type_check
-        continue-on-error: true  # Optional: make non-blocking
-
-      - name: Run tests with coverage
-        run: uv run pytest --cov=src --cov-report=xml --cov-report=html
-
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v4
-        if: matrix.python-version == '3.12'
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: true
-
-      - name: Upload coverage artifacts
-        uses: actions/upload-artifact@v4
-        if: matrix.python-version == '3.12'
-        with:
-          name: coverage-report
-          path: htmlcov/
-```
+Read `.github/workflows/ci.yml` for the current definition. This page previously carried a ~60-line
+`tests.yml` sample to copy; it drifted from the real file in every dimension above — hardcoded
+versions, raw `pytest` instead of `doit`, and mutable action tags this project's own tests forbid
+(#772). A second pipeline alongside `ci.yml` was never the intent.
 
 ### Pipeline Jobs
 
@@ -176,9 +130,7 @@ jobs:
 code-quality:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - name: Install uv
-      uses: astral-sh/setup-uv@v1
+    # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
     - name: Install dependencies
       run: uv sync --dev
     - name: Format check
@@ -196,9 +148,7 @@ code-quality:
 security:
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v4
-    - name: Install uv
-      uses: astral-sh/setup-uv@v1
+    # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
     - name: Install security tools
       run: uv sync --extra security
     - name: Run security audit
@@ -218,11 +168,8 @@ docs:
   needs: setup
   runs-on: ubuntu-latest
   steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
-      with:
-        python-version: ${{ needs.setup.outputs.newest }}
-    - uses: astral-sh/setup-uv@v7
+    # checkout, setup-python (at needs.setup.outputs.newest) and uv setup —
+    # all SHA-pinned; see .github/workflows/ci.yml for the current pins
     - name: Install dependencies
       run: uv sync --all-extras --dev
     - name: Build documentation
@@ -367,16 +314,18 @@ addopts = [
 
 ### PR Comments
 
-Add coverage comments to PRs using GitHub Actions:
+This template does **not** post coverage comments on PRs, and no workflow here uses a
+coverage-comment action. Coverage is reported by `doit coverage` locally and by the CI job's
+output; the gate is `fail_under` in `pyproject.toml`.
 
-```yaml
-- name: Coverage comment
-  uses: py-cov-action/python-coverage-comment-action@v3
-  with:
-    GITHUB_TOKEN: ${{ github.token }}
-    MINIMUM_GREEN: 80
-    MINIMUM_ORANGE: 70
-```
+If you add one to your own project, pin it to a commit SHA like every other external action — see
+[Action pinning](#action-pinning-and-workflow-permissions). A previous version of this page
+suggested `py-cov-action/python-coverage-comment-action@v3`, which was both unused here and
+unpinned (#772).
+
+Related: PRs no longer receive an automated benchmark regression comment either — that required
+`contents: write` on the pull-request path and was removed with it. The benchmark still runs and
+uploads its JSON.
 
 ## Local Development Workflow
 
