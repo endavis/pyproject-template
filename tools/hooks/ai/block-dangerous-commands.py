@@ -422,6 +422,50 @@ def _heredoc_payloads(command: str) -> list[str]:
     return payloads
 
 
+# A commit message is data, but a heredoc carrying one is scanned as arguments,
+# so a message that *names* a blocked pattern is refused as if it invoked it
+# (#759). The scanner is not taught to recognise prose -- that would mean
+# skipping bodies for an allowlist of receivers, where a mistake is a bypass
+# (ADR-9019, rule 3). The message is passed by file instead, and this turns the
+# block into the redirect that says so.
+_COMMIT_HEREDOC_REDIRECT = (
+    "A commit message passed by heredoc is scanned as command arguments, so a "
+    "message naming a blocked pattern is refused. Write the message to "
+    "tmp/agents/<agent-type>/ and pass it with `git commit -F <file>` "
+    "(.github/CONTRIBUTING.md, Commit Guidelines)."
+)
+
+
+def _is_commit_message_heredoc(command: str) -> bool:
+    """Whether *command* is a ``git commit`` whose message arrives by heredoc.
+
+    Detection only -- the body is never inspected, so this adds no parsing to
+    the scan and cannot change what is blocked. It changes what the block says.
+    """
+    for line in command.splitlines():
+        match = _HEREDOC_START.search(line)
+        if not match:
+            continue
+        # Only the command that *owns* the heredoc counts. Scanning every line
+        # would match a `git commit` example quoted inside another command's
+        # body and hand back a redirect that does not apply to it.
+        words = re.split(r"[;&|]", line[: match.start()])[-1].split()
+        if len(words) >= 2 and words[0].rsplit("/", 1)[-1] == "git" and "commit" in words[1:3]:
+            return True
+    return False
+
+
+def redirect_reason(command: str, reason: str) -> str:
+    """Replace *reason* with an actionable one where the repo has a better path.
+
+    Block-and-redirect (`docs/development/ai/enforcement-principles.md`): a block
+    that does not say what to do instead costs a turn and teaches nothing.
+    """
+    if reason and _is_commit_message_heredoc(command):
+        return _COMMIT_HEREDOC_REDIRECT
+    return reason
+
+
 def check_dangerous_flags(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if any dangerous flag appears as a standalone token.
@@ -1310,7 +1354,7 @@ def main() -> int:
             return 0
         is_dangerous, reason = check_command(command)
         if is_dangerous:
-            return _block_response(fmt, reason, command)
+            return _block_response(fmt, redirect_reason(command, reason), command)
         return 0
 
     # --- Codex apply_patch path ---
