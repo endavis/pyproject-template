@@ -231,7 +231,7 @@ See [Migration Guide](migration.md) for detailed steps.
 
 ## check_template_updates.py
 
-Compare your project against the latest template version.
+Compare your project against a template commit — `main` by default (ADR-9020).
 
 ### Usage
 
@@ -254,10 +254,10 @@ Fetches the latest template release (or specified version), compares it against 
 ### Examples
 
 ```bash
-# Compare against the latest release (or `main`, if none has been cut)
+# Compare against `main` (the default)
 python tools/pyproject_template/manage.py check
 
-# Compare against a specific release
+# Compare against a specific tag, branch or commit SHA
 python tools/pyproject_template/manage.py check --template-version v2.2.0
 ```
 

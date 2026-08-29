@@ -7,7 +7,7 @@ differ from the template. User can then manually review and merge changes.
 
 Usage:
     python tools/pyproject_template/check_template_updates.py
-    python tools/pyproject_template/check_template_updates.py --template-version v2.2.0
+    python tools/pyproject_template/manage.py check --template-version v2.2.0
     python tools/pyproject_template/check_template_updates.py --skip-changelog
 
 Requirements:
@@ -24,7 +24,6 @@ from __future__ import annotations
 import argparse
 import filecmp
 import fnmatch
-import json
 import os
 import re
 import shutil
@@ -57,7 +56,8 @@ from utils import (  # noqa: E402
 _TEMPLATE_OWNED_TEST_SET: frozenset[str] = frozenset(TEMPLATE_OWNED_TEST_FILES)
 
 # Default archive URL derived from template constants
-DEFAULT_ARCHIVE_URL = f"{TEMPLATE_URL}/archive/refs/heads/main.zip"
+# The template is a rolling `main`; a tag or SHA can be named explicitly.
+DEFAULT_TEMPLATE_REF = "main"
 
 # Project-managed exclude file: paths or globs of upstream files the downstream
 # project intentionally does not adopt. See docs/template/manage.md.
@@ -98,26 +98,51 @@ def load_sync_excludes(project_root: Path) -> list[str]:
     return [str(item) for item in excludes if isinstance(item, str)]
 
 
-def get_latest_release() -> str | None:
-    """Get the latest release tag from GitHub API."""
-    api_url = f"https://api.github.com/repos/{TEMPLATE_REPO}/releases/latest"
+SHA_RE = re.compile(r"^[0-9a-f]{40}$", re.IGNORECASE)
+
+
+def resolve_template_ref(ref: str) -> str:
+    """Resolve *ref* -- a tag, branch or commit SHA -- to a commit SHA.
+
+    One identity for a template version, matching what `bootstrap.py` pins
+    (ADR-9020). A tag, a branch and a SHA all resolve here, so a comparison can
+    be reproduced later and both halves of a sync can name the same commit.
+
+    On failure -- offline, rate-limited, an unknown ref -- returns *ref*
+    unchanged and warns. Refusing to run a drift check because api.github.com is
+    unreachable would trade a small gain for a hard outage, which is the same
+    call `bootstrap.resolve_ref` makes.
+    """
+    if SHA_RE.match(ref):
+        return ref
+
+    api_url = f"https://api.github.com/repos/{TEMPLATE_REPO}/commits/{ref}"
+    request = urllib.request.Request(api_url, headers={"Accept": "application/vnd.github.sha"})
+    token = os.environ.get("GITHUB_TOKEN")
+    if token:
+        request.add_header("Authorization", f"token {token}")
     try:
-        with urllib.request.urlopen(api_url) as response:  # nosec B310
-            data = json.loads(response.read())
-            tag_name: str | None = data.get("tag_name")
-            return tag_name
+        with urllib.request.urlopen(request, timeout=15) as response:  # nosec B310
+            sha: str = response.read().decode("utf-8").strip()
     except Exception as e:
-        Logger.warning(f"Could not fetch latest release: {e}")
-        return None
+        Logger.warning(f"Could not resolve '{ref}' to a commit ({e}).")
+        Logger.info(f"Continuing against the moving ref '{ref}'.")
+        return ref
+
+    if not SHA_RE.match(sha):
+        Logger.warning(f"Unexpected response resolving '{ref}'; using it as-is.")
+        return ref
+    return sha
 
 
-def download_template(target_dir: Path, version: str | None = None) -> Path:
-    """Download and extract template to target directory."""
-    # Determine download URL
-    if version:
-        archive_url = f"{TEMPLATE_URL}/archive/refs/tags/{version}.zip"
-    else:
-        archive_url = DEFAULT_ARCHIVE_URL
+def download_template(target_dir: Path, ref: str | None = None) -> Path:
+    """Download and extract the template at *ref* (a tag, branch or SHA).
+
+    `ref` is resolved to a commit first, so one URL shape serves all three and
+    the archive is a fixed commit rather than a moving branch.
+    """
+    commit = resolve_template_ref(ref or DEFAULT_TEMPLATE_REF)
+    archive_url = f"{TEMPLATE_URL}/archive/{commit}.zip"
 
     template_root = Path(download_and_extract_archive(archive_url, target_dir))
     Logger.success(f"Template extracted to {template_root}")
@@ -309,8 +334,8 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         type=str,
         default=None,
         help=(
-            "Compare against specific template version tag (e.g., v2.2.0). "
-            "Defaults to latest release."
+            "Compare against a specific template ref -- a tag, a branch, or a commit "
+            "SHA. Defaults to 'main'."
         ),
     )
     parser.add_argument(
@@ -346,7 +371,7 @@ def run_check_updates(
     """Check for template updates.
 
     Args:
-        template_version: Specific template version to compare against.
+        template_version: Template ref to compare against -- a tag, branch or SHA.
         skip_changelog: Skip opening CHANGELOG.md in editor.
         keep_template: Keep downloaded template after comparison.
         dry_run: Show what would be done without making changes.
@@ -359,24 +384,18 @@ def run_check_updates(
     tmp_dir = project_root / "tmp"
     tmp_dir.mkdir(exist_ok=True)
 
-    # Get template version
-    version: str | None = None
-    if template_version:
-        version = template_version
-        Logger.info(f"Comparing against template version: {version}")
-    else:
-        version = get_latest_release()
-        if version:
-            Logger.info(f"Latest template release: {version}")
-        else:
-            Logger.info("Comparing against template main branch")
+    # Which template snapshot to compare against. `main` by default -- this
+    # template publishes no releases, and the previous code only reached `main`
+    # by failing a releases/latest lookup first (#781).
+    ref = template_version or DEFAULT_TEMPLATE_REF
+    Logger.info(f"Comparing against template ref: {ref}")
 
     if dry_run:
         Logger.info("Dry run mode - would download and compare template files")
         return 0
 
     # Download template
-    template_dir = download_template(tmp_dir, version)
+    template_dir = download_template(tmp_dir, ref)
 
     # Open CHANGELOG.md for review
     if not skip_changelog:

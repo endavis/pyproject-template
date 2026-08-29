@@ -102,7 +102,7 @@ python tools/pyproject_template/manage.py --yes check
 
 This will (per [Tools Reference](tools-reference.md)):
 
-1. Fetch the latest template release — or a specific one via `manage.py check --template-version <tag>`, or `main` when no release has been cut
+1. Fetch the template at `main` — or at a specific tag, branch or commit SHA via `manage.py check --template-version <ref>` (ADR-9020)
 2. Compare all files - categorized as **Modified**, **Missing** (new in template), or **Extra** (project-specific)
 3. Keep the template at `tmp/extracted/pyproject-template-main/` for diff commands
 4. Show GitHub compare URL for commit history since last sync
