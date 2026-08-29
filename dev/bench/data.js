@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788029607025,
+  "lastUpdate": 1788031730695,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12449,6 +12449,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.073711387711153e-7",
             "extra": "mean: 1.9783524140322328 usec\nrounds: 50662"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "08e56e34a8503aaa0f225ef740f4d3366027c48c",
+          "message": "docs: give consumer-facing changes a home in the sync path (merges PR #768, addresses #749)\n\n#749 C1: making `sha256` mandatory for downloads from hosts outside\nIMPLICITLY_TRUSTED_HOSTS is a breaking change for any caller passing\n`url_template` for a non-GitHub host -- which is the case ADR-9015 introduced\n`url_template` for, naming releases.hashicorp.com, terraform and opentofu. So the\nprojects most likely to break are the ones the feature was built for.\n\nIt was documented in ADR-9015 and the install-tools reference. Neither is read\nduring a sync, and nothing in the sync path mentioned it, so a project adopting\n`tools/doit/install_tools.py` got a runtime abort with no prior warning. The\naudit found no doc anywhere carrying consumer-facing breaking changes, which is\nwhy this one had nowhere to go.\n\nAdds `docs/template/consumer-notes.md` as that home: what changes under a\ndownstream project, and what to do about it. Per-topic docs keep explaining how\nthings work and the page links them rather than restating the reasoning. It\ncarries C1 with the real IntegrityError text and the dict-keyed fix, C2's hook\nre-install, and the behaviour changes from E plus the two this session added --\nthe hook blocking more, and long commit messages going in a file.\n\nWired into the paths a syncing reader actually opens, which is the failure this\naddresses: a Breaking and behaviour changes section in updates.md ahead of Files\nto Review Carefully; `tools/doit/install_tools.py` added to that list with the\ndigest caveat; C2 inline at migration.md's Verify Locally step; and three steps\nin the AI sync checklist -- read the notes at pre-flight, a 5.0 breaking-change\nblock in the tools/doit phase, and the hook re-run in Phase 7.\n\nThe entries appear both on the page and inline at each point of use. The\nduplication is deliberate: a reader partway through a sync should not have to\nfollow a link to learn their install will abort. ADR-9018 asks that duplication\nbe justified rather than left implicit, so this is the justification.\n\nAll seven new cross-document anchors were checked to resolve rather than\nassumed.\n\nAddresses #749\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T20:28:05+01:00",
+          "tree_id": "6e1bd7e2b399ef6b058b7394245a4d898662372f",
+          "url": "https://github.com/endavis/pyproject-template/commit/08e56e34a8503aaa0f225ef740f4d3366027c48c"
+        },
+        "date": 1788031728892,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8404629.60353851,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1964300754927776e-8",
+            "extra": "mean: 118.98204289442819 nsec\nrounds: 83181"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8894926.111963097,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1824310935892435e-8",
+            "extra": "mean: 112.42364325602043 nsec\nrounds: 92593"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6261423.83187253,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5483184948224757e-8",
+            "extra": "mean: 159.70808347291543 nsec\nrounds: 62775"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1710114.5019829764,
+            "unit": "iter/sec",
+            "range": "stddev: 3.36609325545558e-7",
+            "extra": "mean: 584.7561662335722 nsec\nrounds: 66410"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 466697.9504271909,
+            "unit": "iter/sec",
+            "range": "stddev: 5.409238751174772e-7",
+            "extra": "mean: 2.1427135025655293 usec\nrounds: 65669"
           }
         ]
       }
