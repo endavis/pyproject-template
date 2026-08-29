@@ -649,6 +649,10 @@ doit pr --draft
 - `--body`: PR body content (non-interactive)
 - `--body-file`: File containing PR body (non-interactive)
 - `--draft`: Create as draft PR
+- `--no-push`: Skip the automatic push of a branch that has no upstream. The
+  task pushes by default; with this flag it aborts instead.
+- `--no-update-check`: Skip the check that aborts when the branch is behind
+  `origin/main`. Use only when you know the branch is deliberately behind.
 
 ### `pr_merge`
 

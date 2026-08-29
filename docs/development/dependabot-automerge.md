@@ -225,6 +225,22 @@ This also follows the signed-commit rule documented in the
 **never** call the GitHub `update-branch` API or rebase locally, because
 both strip dependabot's verified commit signatures.
 
+### Confirming the rebase landed
+
+The force-push takes one to three minutes. **Do not request a second
+`@dependabot rebase` until the first one lands** — the second request is
+processed against the pre-rebase branch and the two can race.
+
+Poll until the PR's first commit has current `main` as its parent:
+
+```bash
+main_sha=$(gh api repos/{owner}/{repo}/git/ref/heads/main --jq '.object.sha[0:7]')
+gh api repos/{owner}/{repo}/pulls/<number>/commits --jq '.[0].parents[0].sha[0:7]'
+```
+
+When those match, wait for CI (`gh pr checks <number> --watch`) and merge
+with `doit pr_merge --pr=<number>`.
+
 ## Related
 
 - `AGENTS.md` section [Dependabot PRs](../../AGENTS.md#dependabot-prs)
