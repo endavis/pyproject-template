@@ -97,6 +97,8 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 
 **Key principle:** If you find yourself thinking "but this case is different because..." or "this is simple enough to...", you are making a judgment call. STOP and follow the documented process or ASK the user.
 
+Some of these are blocked in code as well as forbidden here — committing to `main` and the `--admin` bypasses are stopped by hooks and branch rules, listed in [AI Enforcement Principles — Currently Enforced Processes](docs/development/ai/enforcement-principles.md#currently-enforced-processes). The rest are enforced only by you reading this. A hook matches a command pattern, not the reasoning that reached for it.
+
 ## Sources of Truth
 
 **DO NOT HALLUCINATE RULES.** Read these files to know what to do:
