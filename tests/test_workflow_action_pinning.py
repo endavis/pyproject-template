@@ -134,3 +134,67 @@ def test_the_pin_check_rejects_a_mutable_ref() -> None:
     assert not SHA.match("release/v1")
     assert not SHA.match("3d3c42e5aac5ba805825da76410c181273ba90b")  # 39 chars
     assert SHA.match("3d3c42e5aac5ba805825da76410c181273ba90b1")
+
+
+# --- Documentation samples are held to the same rule (#772) ----------------
+#
+# The workflows were pinned by #695 and this module has enforced it since. The
+# docs were not covered, and drifted freely: 18 `uses: …@v4`-style tags across
+# three pages, including a ~60-line `tests.yml` sample that told a reader to
+# build a second, unpinned pipeline alongside `ci.yml`. `ci-cd-testing.md`
+# stated the pinning rule correctly at one heading and violated it ninety lines
+# earlier in the same file.
+#
+# A sample is copied more often than it is read, so an unpinned one hands the
+# exposure this rule removes to every project that follows the docs.
+
+DOCS_DIR = REPO_ROOT / "docs"
+YAML_FENCE = re.compile(r"```yaml\n(.*?)```", re.DOTALL)
+
+
+def _documented_uses() -> list[tuple[Path, str, str]]:
+    """Return (file, action, ref) for every `uses:` inside a docs yaml fence."""
+    entries: list[tuple[Path, str, str]] = []
+    for path in sorted(DOCS_DIR.rglob("*.md")):
+        for fence in YAML_FENCE.findall(path.read_text(encoding="utf-8")):
+            for line in fence.splitlines():
+                match = USES.match(line)
+                if not match:
+                    continue
+                action = match.group("action").strip("'\"")
+                if action.startswith("./"):
+                    continue
+                entries.append((path, action, match.group("ref")))
+    return entries
+
+
+def test_documented_samples_are_sha_pinned() -> None:
+    """A sample teaching `@v4` teaches the pattern this repo forbids."""
+    unpinned = [
+        f"{path.relative_to(REPO_ROOT)} {action}@{ref}"
+        for path, action, ref in _documented_uses()
+        if not SHA.match(ref) and _base_repo(action) not in PINNING_EXEMPT
+    ]
+    assert not unpinned, (
+        "documentation samples name actions on mutable refs:\n  "
+        + "\n  ".join(unpinned)
+        + "\nPin them, or elide the step and point at .github/workflows/ci.yml — a sample "
+        "that cannot drift beats one guarded against drifting (#772)."
+    )
+
+
+def test_the_docs_scanner_reads_something() -> None:
+    """Guard against the assertion above passing on an empty scan."""
+    entries = _documented_uses()
+    assert entries, (
+        "no `uses:` lines found in any docs yaml fence. If the samples were removed "
+        "entirely that is fine — delete this test rather than leaving it green and blind."
+    )
+
+
+def test_exempt_actions_are_exempt_in_docs_too() -> None:
+    """The docs may show an exempt action on its documented ref, as the workflows do."""
+    documented = {action for _, action, _ in _documented_uses()}
+    for action in documented:
+        if _base_repo(action) in PINNING_EXEMPT:
+            assert PINNING_EXEMPT[_base_repo(action)], "an exemption must carry its reason"
