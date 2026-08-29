@@ -980,12 +980,34 @@ class TestDownloadAndExtractArchive:
                 "https://github.com/o/r/releases/download/v1/foo.7z", ["foo"], tmp_path
             )
 
-    def test_temp_file_cleanup_on_success(self, tmp_path: Path) -> None:
+    @pytest.fixture
+    def private_tempdir(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        """Point `tempfile` at a directory only the calling test writes to.
+
+        The cleanup tests below assert on what is left behind in the temp
+        directory. Reading the process-global one means reading a directory
+        every other xdist worker is also writing to: ten tests in this file call
+        `download_and_extract_archive`, and one of them mid-download drops a
+        `tmpXXXX.tar.gz` inside the measurement window, which the diff then
+        attributes to the test doing the measuring (#756).
+
+        `download_and_extract_archive` creates its scratch archive with
+        `tempfile.NamedTemporaryFile`, which resolves `tempfile.tempdir` at call
+        time, so redirecting it here covers the implementation and the
+        assertion together. The scope is this process, and xdist workers are
+        separate processes, so nothing leaks between them.
+        """
+        private = tmp_path / "systemp"
+        private.mkdir()
+        monkeypatch.setattr(tempfile, "tempdir", str(private))
+        return private
+
+    def test_temp_file_cleanup_on_success(self, tmp_path: Path, private_tempdir: Path) -> None:
         fixture = tmp_path / "fixture.tar.gz"
         _make_targz(fixture, {"mytool": b"binary"})
         dest = tmp_path / "out"
 
-        before = set(Path(tempfile.gettempdir()).iterdir())
+        before = set(private_tempdir.iterdir())
         with patch(
             "tools.doit.install_tools.urllib.request.urlretrieve",
             side_effect=lambda url, d: shutil.copy(fixture, d),
@@ -993,17 +1015,17 @@ class TestDownloadAndExtractArchive:
             download_and_extract_archive(
                 "https://github.com/o/r/releases/download/v1/x.tar.gz", ["mytool"], dest
             )
-        after = set(Path(tempfile.gettempdir()).iterdir())
+        after = set(private_tempdir.iterdir())
 
         new_files = after - before
-        assert not any(f.suffix in (".gz", ".zip") for f in new_files)
+        assert not new_files, f"download_and_extract_archive left {sorted(new_files)} behind"
 
-    def test_temp_file_cleanup_on_failure(self, tmp_path: Path) -> None:
+    def test_temp_file_cleanup_on_failure(self, tmp_path: Path, private_tempdir: Path) -> None:
         fixture = tmp_path / "fixture.tar.gz"
         _make_targz(fixture, {"other": b"binary"})
         dest = tmp_path / "out"
 
-        before = set(Path(tempfile.gettempdir()).iterdir())
+        before = set(private_tempdir.iterdir())
         with (
             patch(
                 "tools.doit.install_tools.urllib.request.urlretrieve",
@@ -1014,10 +1036,10 @@ class TestDownloadAndExtractArchive:
             download_and_extract_archive(
                 "https://github.com/o/r/releases/download/v1/x.tar.gz", ["missing"], dest
             )
-        after = set(Path(tempfile.gettempdir()).iterdir())
+        after = set(private_tempdir.iterdir())
 
         new_files = after - before
-        assert not any(f.suffix in (".gz", ".zip") for f in new_files)
+        assert not new_files, f"download_and_extract_archive left {sorted(new_files)} behind"
 
     def test_missing_binary_raises_runtime_error(self, tmp_path: Path) -> None:
         fixture = tmp_path / "fixture.tar.gz"
