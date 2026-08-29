@@ -218,7 +218,7 @@ These patterns are blocked across all AI agents. Claude and Copilot both use the
 | All CI checks must pass | `ci.yml` | Required status check for merge |
 | `ready-to-merge` label required | `merge-gate.yml` | Blocks merge without label |
 | Full test matrix on merge | `ci.yml` | Runs all Python versions when labeled |
-| Minimum 80% test coverage | `ci.yml` + `pyproject.toml` | `fail_under = 80` fails CI if coverage drops |
+| Minimum test coverage | `ci.yml` + `pyproject.toml` | `fail_under` fails CI when coverage drops below the gate; `pyproject.toml` holds the current value |
 
 ### By Settings (Agent-Specific)
 

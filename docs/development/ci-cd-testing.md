@@ -294,7 +294,7 @@ both properties.
 
 ### Coverage Requirements
 
-- **Enforced threshold**: `fail_under = 54` in `pyproject.toml`
+- **Enforced threshold**: `fail_under = 70` in `pyproject.toml`
 - **Measured scope**: `package_name` **and** `tools/`
 - **Artifacts**: Upload HTML coverage reports for review
 - **Integration**: Use Codecov or similar service for tracking
@@ -310,20 +310,28 @@ The threshold is deliberately set to what the codebase actually achieves rather 
 aspirational number pointed at the wrong target. **Ratchet it upward** as tooling coverage
 improves; treat lowering it as a change that needs justification in the PR.
 
-Nothing is omitted from the measured scope.
+One directory is omitted: `tools/pyproject_template/`. It is the template's own management
+suite, deleted by both spawn routes, so leaving it in scope measured code downstream that is
+never tested there — which put a spawned project 19 points under the gate (#731). Its tests
+still run in template CI. Nothing else is omitted.
 
 #### Template vs downstream
 
-`cleanup --setup` / `--all` deletes `tools/pyproject_template/`, so a downstream project measures
-a smaller set than this repository does:
+`cleanup --setup` / `--all` deletes `tools/pyproject_template/`, so the two shapes once measured
+different code and reported different numbers.
 
-| Shape | Statements | Coverage | Gate at 54 |
-| :--- | ---: | ---: | :--- |
-| Template (this repo) | 5,102 | 58.29% | passes |
-| Downstream, after `cleanup` | 2,748 | 62.98% | passes |
+**They no longer do.** #731 omitted that directory from the gate precisely so both shapes measure
+the same statements with the same tests: a spawned project now sees the number this repository
+sees, rather than one 19 points lower that it had no way to raise. There is one figure to track,
+not two.
 
-<!-- The downstream row is measured by excluding `tools/pyproject_template/` from the report,
-     which yields the same denominator `cleanup` produces by deleting it. -->
+Run `doit coverage` for the current value. The gate is `fail_under` in `pyproject.toml` — 70 at the
+time of writing — and CI fails below it.
+
+Statement counts and percentages are deliberately **not** quoted here. They move with every merge:
+the figures this section used to carry were stale within days, and a number in prose that no test
+reads is a number that will be wrong (#754). `pyproject.toml` holds the threshold, `doit coverage`
+reports the measurement, and both are checked.
 
 #### Keep coverage hermetic
 
