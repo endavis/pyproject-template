@@ -89,15 +89,24 @@ python tools/pyproject_template/check_template_updates.py
 ### CLI Options
 
 ```bash
-# Compare against specific version
-python tools/pyproject_template/check_template_updates.py --template-version v2.2.0
-
-# Skip opening CHANGELOG in editor
-python tools/pyproject_template/check_template_updates.py --skip-changelog
-
-# Keep downloaded template for manual inspection
-python tools/pyproject_template/check_template_updates.py --keep-template
+# Compare against a specific template release instead of the latest
+python tools/pyproject_template/manage.py check --template-version v2.2.0
 ```
+
+Without `--template-version`, the latest **release** is resolved from the GitHub API. If the
+template has cut no releases — or the API call fails — the comparison falls back to the `main`
+branch, and the run says so:
+
+```
+⚠ Could not fetch latest release: HTTP Error 404: Not Found
+i Comparing against template main branch
+```
+
+Pin a tag when you want a staged upgrade (one release at a time rather than one large diff), or a
+comparison two people can reproduce.
+
+`--skip-changelog` and `--keep-template` are not exposed: `manage.py` already sets both, keeping the
+downloaded template so you can run your own diffs and not opening an editor mid-run.
 
 ### Example Output
 

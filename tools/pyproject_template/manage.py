@@ -290,6 +290,7 @@ def run_action(
     yes: bool = False,
     cleanup_mode: str | None = None,
     show_excluded: bool = False,
+    template_version: str | None = None,
 ) -> int:
     """Run the selected action."""
     if action == 1:
@@ -297,7 +298,9 @@ def run_action(
     elif action == 2:
         return action_configure(manager, dry_run, yes=yes)
     elif action == 3:
-        return action_check_updates(manager, dry_run, show_excluded=show_excluded)
+        return action_check_updates(
+            manager, dry_run, show_excluded=show_excluded, template_version=template_version
+        )
     elif action == 4:
         return action_repo_settings(manager, dry_run)
     elif action == 5:
@@ -416,12 +419,23 @@ def action_create_project(manager: SettingsManager, dry_run: bool, *, yes: bool 
 
 
 def action_check_updates(
-    manager: SettingsManager, dry_run: bool, *, show_excluded: bool = False
+    manager: SettingsManager,
+    dry_run: bool,
+    *,
+    show_excluded: bool = False,
+    template_version: str | None = None,
 ) -> int:
-    """Check for template updates (comparison only, does not modify files)."""
+    """Check for template updates (comparison only, does not modify files).
+
+    `template_version` pins which template snapshot the project is compared
+    against. Without it the latest release is resolved from the GitHub API, and
+    if that call fails the comparison silently falls back to `main` -- so a run
+    that looks like "latest release" can be against unreleased code (#779).
+    """
     Logger.header("Checking for Template Updates")
 
     result = run_check_updates(
+        template_version=template_version,
         skip_changelog=True,
         keep_template=True,  # Keep template so user can run diff commands
         dry_run=dry_run,
@@ -821,7 +835,19 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
 
     subparsers.add_parser("create", help="Create new project from template")
     subparsers.add_parser("configure", help="Re-run configuration")
-    subparsers.add_parser("check", help="Check for template updates")
+    check_parser = subparsers.add_parser("check", help="Check for template updates")
+    check_parser.add_argument(
+        "--show-excluded",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help="List paths skipped via .config/pyproject_template/sync-exclude.toml",
+    )
+    check_parser.add_argument(
+        "--template-version",
+        metavar="TAG",
+        default=argparse.SUPPRESS,
+        help="Compare against a specific template release tag (e.g. v2.2.0) instead of the latest",
+    )
     subparsers.add_parser("repo", help="Update repository settings")
     subparsers.add_parser("sync", help="Mark as synced to latest template")
     cleanup_parser = subparsers.add_parser("cleanup", help="Clean up template-specific files")
@@ -853,8 +879,26 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
         action="store_true",
         help="With 'check': list paths skipped via .config/pyproject_template/sync-exclude.toml",
     )
+    parser.add_argument(
+        "--template-version",
+        metavar="TAG",
+        default=None,
+        help=(
+            "With 'check': compare against a specific template release tag (e.g. v2.2.0) "
+            "instead of the latest. Pins the comparison so a staged upgrade takes one "
+            "release at a time and two runs produce the same diff."
+        ),
+    )
 
-    return parser.parse_args(argv)
+    args = parser.parse_args(argv)
+    # Both parsers may declare these; SUPPRESS means an unset flag leaves no
+    # attribute at all, so fill the defaults once here rather than letting
+    # either parser's default overwrite the other's value.
+    if not hasattr(args, "show_excluded"):
+        args.show_excluded = False
+    if not hasattr(args, "template_version"):
+        args.template_version = None
+    return args
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -884,6 +928,7 @@ def main(argv: list[str] | None = None) -> int:
                 yes=args.yes,
                 cleanup_mode=cleanup_mode,
                 show_excluded=args.show_excluded,
+                template_version=args.template_version,
             )
         return 1
 
@@ -892,7 +937,12 @@ def main(argv: list[str] | None = None) -> int:
         if not manager.settings.is_configured():
             Logger.error("Cannot auto-detect settings. Run interactively first.")
             return 1
-        return action_check_updates(manager, args.dry_run, show_excluded=args.show_excluded)
+        return action_check_updates(
+            manager,
+            args.dry_run,
+            show_excluded=args.show_excluded,
+            template_version=args.template_version,
+        )
 
     # Handle --yes (non-interactive mode)
     if args.yes:

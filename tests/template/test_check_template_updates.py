@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+import importlib
+import types
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -296,3 +299,64 @@ class TestEmitCouplingWarnings:
         _emit_coupling_warnings(different_files, project)
         captured = capsys.readouterr()
         assert "bootstrap" not in captured.out
+
+
+class TestTemplateVersionFlag:
+    """`--template-version` must be reachable, and must reach the download (#779).
+
+    The flag existed in `check_template_updates.parse_args` and `manage.py` never
+    forwarded it: `action_check_updates` called `run_check_updates` with
+    `skip_changelog` and `keep_template` hardcoded and nothing else. The direct
+    invocation is refused by a guard, so the argument was dead code reachable
+    only from Python while three documents advertised it.
+
+    These tests pin both halves: the flag parses, and the value it carries
+    changes the archive URL rather than being accepted and dropped.
+    """
+
+    @staticmethod
+    def _manage() -> types.ModuleType:
+        return importlib.import_module("tools.pyproject_template.manage")
+
+    def test_flag_parses_before_the_subcommand(self) -> None:
+        args = self._manage().parse_args(["--template-version", "v2.2.0", "check"])
+        assert args.template_version == "v2.2.0"
+        assert args.command == "check"
+
+    def test_flag_parses_after_the_subcommand(self) -> None:
+        """The order people actually write, and the one manage.md documented."""
+        args = self._manage().parse_args(["check", "--template-version", "v2.2.0"])
+        assert args.template_version == "v2.2.0"
+
+    def test_show_excluded_parses_in_both_positions(self) -> None:
+        """The same fix; `check --show-excluded` was documented and rejected."""
+        assert self._manage().parse_args(["check", "--show-excluded"]).show_excluded is True
+        assert self._manage().parse_args(["--show-excluded", "check"]).show_excluded is True
+
+    def test_defaults_survive_the_two_parsers(self) -> None:
+        """Neither parser's default may overwrite the other's value.
+
+        Both the global parser and the `check` subparser declare these options.
+        Without `SUPPRESS` the subparser parses second and writes its own default
+        over a value the global parser set, so `--show-excluded check` would
+        silently lose the flag.
+        """
+        args = self._manage().parse_args(["check"])
+        assert args.template_version is None
+        assert args.show_excluded is False
+
+    def test_the_version_reaches_the_download(self) -> None:
+        """Accepting the flag and dropping it would pass every test above."""
+        manage = self._manage()
+        seen: dict[str, object] = {}
+
+        def _capture(**kwargs: object) -> int:
+            seen.update(kwargs)
+            return 0
+
+        with (
+            mock.patch.object(manage, "run_check_updates", _capture),
+            mock.patch.object(manage, "get_template_latest_commit", lambda: None),
+        ):
+            manage.action_check_updates(mock.MagicMock(), dry_run=True, template_version="v2.2.0")
+        assert seen.get("template_version") == "v2.2.0"
