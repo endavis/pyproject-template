@@ -21,7 +21,7 @@ This page is a narrative walkthrough of the AI agent workflow this template ship
 - Claude Code installed and authenticated. See [AI Agent Setup](../AI_SETUP.md) for installation and per-agent configuration.
 - The [GitHub CLI](https://cli.github.com/) (`gh`) installed and logged in. The slash commands shell out to `gh` for issue and PR operations.
 - Optionally, a second agent CLI (Copilot, Codex or Antigravity) if you want to run the multi-agent review commands. The single-agent flow described below does not require it.
-- Alternatively, the [GitHub Copilot CLI](https://github.com/github/copilot-cli) can be used in place of Claude Code for the single-agent flow — it auto-discovers the same slash commands from `.claude/commands/`. See [AI Agent Setup § 3. GitHub Copilot CLI](../AI_SETUP.md#3-github-copilot-cli) for the wiring.
+- Alternatively, the [GitHub Copilot CLI](https://github.com/github/copilot-cli) can be used in place of Claude Code for the single-agent flow — it runs the same workflow through its own hyphen-named skills (`/copilot-plan`, `/copilot-implement`, …), discovered from `.github/skills/`. See [AI Agent Setup § 3. GitHub Copilot CLI](../AI_SETUP.md#3-github-copilot-cli) for the wiring.
 
 The rest of this page assumes you have these working.
 
