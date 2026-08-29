@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788027905249,
+  "lastUpdate": 1788028502514,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12331,6 +12331,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.973483886225708e-7",
             "extra": "mean: 1.5006139325060468 usec\nrounds: 62085"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "705bbd18de07b3d00fc8e6ba3c03bb439f4d42a3",
+          "message": "docs: measure the .claude/commands/ bleed into Copilot, and close the question (merges PR #765, addresses #757)\n\n#757 asked whether Claude's command surface leaks into a Copilot session the way\n`delegate-*` leaks the other way, and whether `disabledSkills` could silence it.\n`copilot skill list` answers both from the repo root, read-only:\n\n  project entries Copilot lists   40\n    from .github/skills/          16\n    from .agents/skills/          23\n    from .claude/commands/         1\n\nDiscovery is not recursive -- only top-level `*.md` is read -- so none of the 16\nnested `<target>/<action>.md` bridge files surface in Copilot. Six of the seven\ntop-level commands are deduped by name against `.agents/skills/`. What remains is\n`ghi-status`, which has no counterpart there, so `.claude/commands/` discovery is\nnot a leak: it is the only thing that makes `/ghi-status` available in Copilot at\nall. `.copilot/README.md` said that command came from `.agents/skills/`; it does\nnot, and now says so.\n\nThe `.github/skills/` rationale is unaffected. It exists to keep Copilot's skills\nout of Claude, which is unchanged; the reverse direction is one command the repo\nwants. Outcome is accept and document, which the issue listed as a legitimate\nresult.\n\nCorrects a claim of mine merged with #753: `disabledSkills` *does* cover\ncommands. A command is loaded into the same collection `isSkillDisabled(name)`\nfilters, which is why `ghi-status` appears in the listing. I inferred otherwise\nfrom the field name instead of checking, and the note now records the correction\nrather than quietly dropping it.\n\nAlso recorded: the same dedup shadows eight `.agents/skills/` entries -- the\n`antigravity-*` and `codex-*` self-action skills -- behind the same-named Copilot\nbridges. That is the right outcome for a Copilot session but rests on precedence\nrather than on anything the repo declares.\n\nNo test: the claim needs the Copilot CLI installed and authenticated, so CI\ncannot assert it. The doc names the reproduction command instead.\n\nAddresses #757\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T19:34:14+01:00",
+          "tree_id": "69e1c7c97c0457e424aa3ef9dac27ecf2422f42d",
+          "url": "https://github.com/endavis/pyproject-template/commit/705bbd18de07b3d00fc8e6ba3c03bb439f4d42a3"
+        },
+        "date": 1788028500732,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8408279.108686661,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3250876613013423e-8",
+            "extra": "mean: 118.93040027261844 nsec\nrounds: 85092"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9328828.440246059,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2197886226620774e-8",
+            "extra": "mean: 107.19459644962919 nsec\nrounds: 94251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6556353.954434127,
+            "unit": "iter/sec",
+            "range": "stddev: 1.804219865550949e-8",
+            "extra": "mean: 152.52379706005502 nsec\nrounds: 66059"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1736990.735941066,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4741163659992964e-7",
+            "extra": "mean: 575.7083093815239 nsec\nrounds: 66142"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 487555.23125996476,
+            "unit": "iter/sec",
+            "range": "stddev: 5.891567926202803e-7",
+            "extra": "mean: 2.051049677829832 usec\nrounds: 68743"
           }
         ]
       }
