@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788024365883,
+  "lastUpdate": 1788024944165,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12154,6 +12154,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.824568639905821e-7",
             "extra": "mean: 2.0682938077862527 usec\nrounds: 52068"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b2f517e7c17bee55dd8c34ccc6ff57f2cf4af79",
+          "message": "fix: stop the temp-file cleanup tests reading a shared directory (merges PR #761, addresses #756)\n\n`test_temp_file_cleanup_on_success` and `..._on_failure` snapshotted the\nprocess-global temp directory before and after their call and asserted no\narchive appeared. `download_and_extract_archive` creates its scratch file there\nwith `NamedTemporaryFile(delete=False)`, and ten tests in this file call it, so\nunder `pytest -n auto` another worker mid-download drops a `tmpXXXX.tar.gz`\ninside the measurement window and the diff attributes it to whichever test is\ndoing the measuring.\n\nLocally that failed roughly half of ten parallel runs, hitting both tests. In CI\nit failed `test (macos-latest, 3.12)` on PR #755 while the other five matrix\njobs, including macOS on 3.14, passed -- the signature of a race rather than a\nplatform difference.\n\nThe assertion was right about what it wanted; it was reading a resource it does\nnot own. A `private_tempdir` fixture now points `tempfile.tempdir` at a\nper-test directory. `NamedTemporaryFile` resolves that at call time, so one\nredirect covers the implementation's scratch file and the test's snapshot\ntogether, and xdist workers are separate processes so nothing leaks between\nthem.\n\nWith the shared directory gone the assertion can be exact rather than\napproximate: it now requires that nothing at all survives the call, where the\n`.gz`/`.zip` suffix filter was tolerating other workers' files because it had no\nway to tell them apart.\n\nVerified both directions. The race is gone: ten parallel runs at `-n 4`, all\nclean. The guarantee is intact: removing the `finally: temp_path.unlink()` from\n`install_tools.py` still fails both tests -- a fix that stopped the flake\nwithout preserving that would be worse than the flake.\n\nNo other test in the suite reads a process-global directory; `gettempdir`,\n`tempfile.tempdir` and `TMPDIR` appear nowhere else under `tests/`.\n\nAddresses #756\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T18:35:09+01:00",
+          "tree_id": "09454bacda329128ef751534c592f03040563bac",
+          "url": "https://github.com/endavis/pyproject-template/commit/8b2f517e7c17bee55dd8c34ccc6ff57f2cf4af79"
+        },
+        "date": 1788024943392,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16314073.38601208,
+            "unit": "iter/sec",
+            "range": "stddev: 5.181308310299086e-9",
+            "extra": "mean: 61.29676974834589 nsec\nrounds: 79096"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 16391663.462802922,
+            "unit": "iter/sec",
+            "range": "stddev: 7.245199783582548e-9",
+            "extra": "mean: 61.00662097347642 nsec\nrounds: 167057"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11612489.299372409,
+            "unit": "iter/sec",
+            "range": "stddev: 9.470150741865308e-9",
+            "extra": "mean: 86.11418053612711 nsec\nrounds: 114404"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2753411.8896815674,
+            "unit": "iter/sec",
+            "range": "stddev: 1.688026594365016e-7",
+            "extra": "mean: 363.1857637237305 nsec\nrounds: 66380"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 764268.4338033107,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4226613829708085e-7",
+            "extra": "mean: 1.3084407987696063 usec\nrounds: 66899"
           }
         ]
       }
