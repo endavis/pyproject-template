@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788027343954,
+  "lastUpdate": 1788027905249,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12272,6 +12272,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.637209924385586e-7",
             "extra": "mean: 2.0469011887373147 usec\nrounds: 54933"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5dd08d653858e82cb5ed43ccaa84915fa61bca8f",
+          "message": "fix: pass commit messages by file, and redirect when one is not (merges PR #764, addresses #759)\n\nA heredoc carrying a commit message is scanned as command arguments, so a\nmessage that merely names a blocked pattern is refused as if it invoked one.\nTwo commits in this repo hit it in a single session, once on a bypass flag and\nonce on `gh issue create`, both appearing only as prose in a message describing\nthe enforcement system.\n\nThe scanner is not taught to tell prose from commands. That means skipping\nheredoc bodies for a list of trusted receivers, and a mistake in such a list is\na bypass rather than an inconvenience -- measured in ADR-9019: stripping data\nheredoc bodies un-blocks `perl`, `ruby`, `node` and `ssh` heredocs that are\ncaught today only because the flat token scan over-matches.\n\nSo the convention changes instead. CONTRIBUTING gains a \"Passing the Message\"\nsection: `-m` for one-liners, `-F <file>` from `tmp/agents/<agent-type>/` for\nanything longer. That is already how every other long-form body in this project\nis passed -- `doit issue --body-file=`, `doit pr --body-file=`, `doit adr\n--body-file=` -- so this closes the last gap in an existing convention rather\nthan adding a mechanism. It goes in CONTRIBUTING rather than AGENTS.md because\nit is needed at a nameable moment, not at all times, and Pre-Action Checks\nalready indexes CONTRIBUTING for committing (ADR-9018).\n\nA convention alone would not hold: enforcement-principles.md argues instructions\nget ignored, and the session that found this reached for a heredoc twice while\nholding all of that context. So `redirect_reason` replaces the generic \"contains\ndangerous pattern\" with a message naming `-F <file>`. It runs after\n`check_command` has decided, so it rewrites the reason and never the verdict,\nand detection only asks whether the line *owning* the heredoc is a git commit --\nno body is inspected, so no parsing and no new surface.\n\nTwo defects found while testing this. The first draft scanned every line for a\ngit commit, so writing a test file whose body quoted commit examples would have\nbeen handed a redirect that did not apply to it; detection is now scoped to the\nowning line. And `redirect_reason` rewrote unconditionally, which is invisible\nat its only call site but wrong as a contract; it is now a no-op when there is\nno reason to replace.\n\nVerified by mutation: dropping the redirect from the Bash path turns the\nmessage test red.\n\nAddresses #759\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T19:24:23+01:00",
+          "tree_id": "610b7754a2a003afde28ed3389eb733ab0493c99",
+          "url": "https://github.com/endavis/pyproject-template/commit/5dd08d653858e82cb5ed43ccaa84915fa61bca8f"
+        },
+        "date": 1788027903428,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13653382.013274955,
+            "unit": "iter/sec",
+            "range": "stddev: 6.4638348620213285e-9",
+            "extra": "mean: 73.24192636137455 nsec\nrounds: 123305"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13902102.866368532,
+            "unit": "iter/sec",
+            "range": "stddev: 9.786940312818667e-9",
+            "extra": "mean: 71.93156385133389 nsec\nrounds: 137609"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9357029.4281154,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4710858992389258e-8",
+            "extra": "mean: 106.87152452414699 nsec\nrounds: 93275"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2320857.1121652285,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4397178213135495e-7",
+            "extra": "mean: 430.87529807772466 nsec\nrounds: 68772"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 666393.9194073627,
+            "unit": "iter/sec",
+            "range": "stddev: 2.973483886225708e-7",
+            "extra": "mean: 1.5006139325060468 usec\nrounds: 62085"
           }
         ]
       }
