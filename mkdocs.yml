@@ -158,6 +158,7 @@ nav:
       - ADR-9015 install_tools: decisions/9015-install-tools-framework-archive-extraction-and-custom-urls.md
       - ADR-9016 Unify ADRs: decisions/9016-unify-adr-directories.md
       - ADR-9017 Template ownership: decisions/9017-template-tooling-and-its-tests-are-template-owned.md
+      - ADR-9018 Instruction allocation: decisions/9018-agentsmd-carries-only-shared-always-on-instructions.md
   - Reference:
       - API Reference: reference/api.md
   - Examples:

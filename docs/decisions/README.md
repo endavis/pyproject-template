@@ -97,6 +97,7 @@ The Issue contains the full discussion; the ADR summarizes the outcome.
 | [9015](9015-install-tools-framework-archive-extraction-and-custom-urls.md) | install_tools framework: archive extraction and custom URLs | Accepted |
 | [9016](9016-unify-adr-directories.md) | Unify ADR directories under docs/decisions | Accepted |
 | [9017](9017-template-tooling-and-its-tests-are-template-owned.md) | Template tooling and its tests are template-owned | Accepted |
+| [9018](9018-agentsmd-carries-only-shared-always-on-instructions.md) | AGENTS.md carries only shared, always-on instructions | Accepted |
 
 ### Project-level ADRs (0001+)
 
