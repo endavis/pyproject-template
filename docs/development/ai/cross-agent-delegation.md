@@ -2,7 +2,7 @@
 
 A consistent, explicit-invocation interface that lets any of the four supported AI CLIs (Claude Code, Codex CLI, Copilot CLI, Antigravity CLI) hand a task — `plan`, `implement`, `review`, or `adversarial-review` — to any of the others.
 
-> **Antigravity CLI (`agy`) is wired into the matrix as the fifth agent** (both source and target). Its self-action skills (`antigravity-*`) live in `.agents/skills/`, and its outbound bridges **reuse Codex's host-agnostic `delegate-*` skills** in that same directory (both CLIs read it). Inbound bridges to `agy` live in each host's own directory. This brings cross-agent delegation to 80 cells across 68 distinct files, and the `/multi-*` orchestrators also accept `antigravity` as an agent.
+> **Antigravity CLI (`agy`) is wired into the matrix as a full agent** (both source and target). Its self-action skills (`antigravity-*`) live in `.agents/skills/`, and its outbound bridges **reuse Codex's host-agnostic `delegate-*` skills** in that same directory (both CLIs read it). Inbound bridges to `agy` live in each host's own directory. The `/multi-*` orchestrators also accept `antigravity` as an agent. See [Matrix](#matrix) for the cell and file counts — it is the only place they are written down.
 
 ## Why this exists
 

@@ -154,7 +154,7 @@ It does load **single-file commands** from `.claude/commands/`. That is a separa
 
 Because skill names are derived from their directory name and **cannot contain colons**, Copilot's surface for the cross-agent matrix uses `<target>-<action>` (hyphen), not `<target>:<action>` (colon). The functional behavior is identical to the other CLIs — only the slash name differs.
 
-**Self-action and cross-agent skills:** All 16 cells of the cross-agent matrix for Copilot host live under `.github/skills/<target>-<action>/SKILL.md`:
+**Self-action and cross-agent skills:** Every cell of the cross-agent matrix for the Copilot host lives under `.github/skills/<target>-<action>/SKILL.md`:
 
 - Self-action: `/copilot-plan`, `/copilot-implement`, `/copilot-review`, `/copilot-adversarial-review`
 - To Claude: `/claude-plan`, `/claude-implement`, `/claude-review`, `/claude-adversarial-review`
@@ -168,7 +168,7 @@ Because skill names are derived from their directory name and **cannot contain c
 
 **Implement-worker subagent:** Shared with Claude — defined in `.claude/agents/implement-worker.md`. Copilot CLI's `task` tool reads this file when `/claude-implement` spawns the subagent.
 
-**Known limitation — `delegate-*` skill bleed:** Because Copilot also reads `.agents/skills/`, it surfaces the Codex-only `delegate-<target>-<action>` skills (12 of them) alongside the canonical `<target>-<action>` ones. The Codex-only skills shell out to Codex's syntax and are wasted noise in a Copilot session. Copilot exposes a `disabledSkills` config field (see `~/.copilot/config.json`), but **only at user level — there is no repo-level setting for it.** If you want to silence the delegate-* skills in Copilot, add them to your user config manually:
+**Known limitation — `delegate-*` skill bleed:** Because Copilot also reads `.agents/skills/`, it surfaces a Codex-only `delegate-<target>-<action>` skill for every (target, action) pair alongside the canonical `<target>-<action>` ones. The Codex-only skills shell out to Codex's syntax and are wasted noise in a Copilot session. Copilot exposes a `disabledSkills` config field (see `~/.copilot/config.json`), but **only at user level — there is no repo-level setting for it.** If you want to silence the delegate-* skills in Copilot, add them to your user config manually:
 
 ```json
 {

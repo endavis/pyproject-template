@@ -17,6 +17,7 @@ See `docs/development/ai/cross-agent-delegation.md` and issues #550, #640.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -113,3 +114,106 @@ def test_matrix_doc_exists() -> None:
     """The cross-agent delegation doc page exists."""
     doc = REPO_ROOT / "docs" / "development" / "ai" / "cross-agent-delegation.md"
     assert doc.is_file(), f"missing matrix doc: {doc.relative_to(REPO_ROOT)}"
+
+
+# --- The doc's numbers must be the derived ones (#754) ---------------------
+#
+# The matrix size was written out in eight places across four files and checked
+# in none; five were wrong, in three directions, and one still described the
+# five-agent era that ended with #712. The count is derived data — this module
+# already computes it — so it now lives in exactly one prose sentence, and these
+# tests hold that sentence to what the filesystem says.
+
+MATRIX_DOC = REPO_ROOT / "docs" / "development" / "ai" / "cross-agent-delegation.md"
+
+# `The 4 sources \u00d7 4 targets \u00d7 4 actions = 64 cells (including self-action).
+#  Cross-agent delegation is 4 \u00d7 3 \u00d7 4 = 48 cells, across **40 distinct files**`
+MATRIX_SENTENCE = re.compile(
+    r"The (?P<sources>\d+) sources \u00d7 (?P<targets>\d+) targets \u00d7 (?P<actions>\d+) actions "
+    r"= (?P<total>\d+) cells.*?"
+    r"Cross-agent delegation is \d+ \u00d7 \d+ \u00d7 \d+ = (?P<cross>\d+) cells, "
+    r"across \*\*(?P<files>\d+) distinct files\*\*",
+    re.DOTALL,
+)
+
+# Files that must describe the matrix structurally rather than by number, so
+# there is only one copy of the count to keep true.
+_PROSE_ONLY_DOCS = (
+    "docs/development/AI_SETUP.md",
+    "docs/development/ai/slash-commands.md",
+    ".copilot/README.md",
+    "AGENTS.md",
+)
+
+_COUNT_IN_PROSE = re.compile(
+    r"\b\d+ (?:cells|distinct files|cross-agent bridges|delegation commands|"
+    r"self-action skills|delegate-\S+ skills)\b"
+)
+
+
+def _derived_counts() -> dict[str, int]:
+    """The matrix size, computed the same way :func:`test_total_file_count` does."""
+    cross = len(AGENTS) * max(len(AGENTS) - 1, 0) * len(ACTIONS)
+    both_share = "codex" in AGENTS and "antigravity" in AGENTS
+    shared = (
+        len([t for t in AGENTS if t not in ("codex", "antigravity")]) * len(ACTIONS)
+        if both_share
+        else 0
+    )
+    return {
+        "sources": len(AGENTS),
+        "targets": len(AGENTS),
+        "actions": len(ACTIONS),
+        "total": len(AGENTS) * len(AGENTS) * len(ACTIONS),
+        "cross": cross,
+        "files": cross - shared,
+    }
+
+
+def _stated_counts(text: str) -> dict[str, int] | None:
+    match = MATRIX_SENTENCE.search(text)
+    return {k: int(v) for k, v in match.groupdict().items()} if match else None
+
+
+@pytest.mark.skipif(len(present_agents()) < 2, reason="no cross-agent matrix to size")
+def test_matrix_doc_states_the_derived_counts() -> None:
+    """A number in prose that no test reads is a number that will be wrong."""
+    stated = _stated_counts(MATRIX_DOC.read_text(encoding="utf-8"))
+    assert stated is not None, (
+        f"{MATRIX_DOC.name} no longer states the matrix size in the form this test reads. "
+        "If the sentence was reworded, update MATRIX_SENTENCE — dropping the assertion "
+        "silently is how the eight stale copies happened (#754)."
+    )
+    assert stated == _derived_counts(), (
+        f"{MATRIX_DOC.name} states {stated}, but the wired agents "
+        f"{AGENTS} \u00d7 {ACTIONS} give {_derived_counts()}."
+    )
+
+
+@pytest.mark.parametrize("relative", _PROSE_ONLY_DOCS)
+def test_only_the_matrix_doc_states_counts(relative: str) -> None:
+    """Everywhere else describes the structure, so there is nothing to drift."""
+    path = REPO_ROOT / relative
+    if not path.is_file():
+        pytest.skip(f"{relative} is not present in this project")
+    offenders = [
+        f"line {n}: {m.group(0)!r}"
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1)
+        for m in _COUNT_IN_PROSE.finditer(line)
+    ]
+    assert not offenders, (
+        f"{relative} writes out a matrix count:\n  " + "\n  ".join(offenders) + "\n"
+        f'Describe the structure instead ("one bridge per (target, action) pair"). '
+        f"{MATRIX_DOC.relative_to(REPO_ROOT)} is the one place the numbers belong (#754)."
+    )
+
+
+def test_the_count_checks_detect_a_planted_error() -> None:
+    """Guard against both scans passing because they match nothing."""
+    doctored = MATRIX_DOC.read_text(encoding="utf-8").replace("= 64 cells", "= 65 cells", 1)
+    assert _stated_counts(doctored) != _derived_counts(), (
+        "the matrix sentence parser did not notice a wrong total"
+    )
+    assert _COUNT_IN_PROSE.search("plus 12 cross-agent bridges under .github/skills/"), (
+        "the prose scan did not notice a written-out count"
+    )
