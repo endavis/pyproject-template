@@ -32,6 +32,12 @@ SKIP_DIRS = {".git", ".venv", "site", "node_modules", "__pycache__", "tmp", ".my
 # deliberately not checked.
 DOCUMENTED_PATH = re.compile(r"`([A-Za-z0-9_./-]+\.(?:py|md|toml|yaml|yml|json|cfg|txt|sh))`")
 
+# Allowlist entries that exist on a developer's machine but are never committed.
+# They are exempt from the obsolescence check below: finding one on disk says
+# nothing about whether a fresh checkout has it, and the whole point of listing
+# them is that it does not.
+NEVER_COMMITTED = frozenset({".claude/settings.local.json", "tmp/"})
+
 # Paths that are allowed not to exist, and why.
 ALLOWED: dict[str, str] = {
     # Substituted by configure.py when a project is created.
@@ -49,9 +55,14 @@ ALLOWED: dict[str, str] = {
     "tests/test_cli_farewell.py": "worked example in the add-a-feature tutorial",
     # Shorthand for a path under the user's home.
     "gh/hosts.yml": "shorthand for ~/.config/gh/hosts.yml",
+    # Never committed, by policy. `.claude/settings.local.json` is blocked by the
+    # `no-local-config` pre-commit hook; `tmp/` is generated output. Both exist on
+    # a developer's machine and in no fresh checkout -- which is precisely why the
+    # resolution below must not be satisfied by whatever happens to be on disk.
+    ".claude/settings.local.json": "local config; the no-local-config hook blocks committing it",
+    "tmp/": "generated artifacts and agent scratch space, gitignored",
     # AGENTS.md's before/after illustration of the temp-file convention.
     "/tmp/pr-body.md": "the 'wrong' half of the temp-file example",
-    "tmp/agents/claude/pr-body-issue-307.md": "the 'correct' half of the temp-file example",
     # Declared as future work.
     ".agents/skills.json": "Antigravity-side suppression, documented as planned",
 }
@@ -123,7 +134,9 @@ def test_allowlist_entries_are_still_needed() -> None:
     stale = sorted(
         prefix
         for prefix in ALLOWED
-        if not prefix.endswith("/") and (REPO_ROOT / prefix.lstrip("/")).exists()
+        if not prefix.endswith("/")
+        and prefix not in NEVER_COMMITTED
+        and (REPO_ROOT / prefix.lstrip("/")).exists()
     )
     assert not stale, (
         f"these paths exist now, so their allowlist entries are obsolete: {stale}. "
@@ -135,3 +148,14 @@ def test_every_allowlist_entry_carries_a_reason() -> None:
     """The list is decisions, not suppressions."""
     for prefix, reason in ALLOWED.items():
         assert reason.strip(), f"{prefix} is allowlisted without a reason"
+
+
+def test_never_committed_entries_are_allowlisted() -> None:
+    """Every never-committed exemption must also carry a reason in ALLOWED.
+
+    `NEVER_COMMITTED` only suppresses the obsolescence check. If an entry drifts
+    out of `ALLOWED` it would stop being exempt from the existence check while
+    still looking handled, so the two lists are held together.
+    """
+    for prefix in NEVER_COMMITTED:
+        assert prefix in ALLOWED, f"{prefix} is exempt from staleness but not allowlisted"
