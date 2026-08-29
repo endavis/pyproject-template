@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788032696688,
+  "lastUpdate": 1788033924932,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12685,6 +12685,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.466787481874234e-7",
             "extra": "mean: 2.0241714524614998 usec\nrounds: 58576"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8378851757b2ab381a9ab2b788cfa705d9fc284f",
+          "message": "docs: stop the workflow samples teaching mutable action tags (merges PR #775, addresses #772)\n\nThree docs shipped GitHub Actions samples on mutable tags -- 18 of them,\nincluding `astral-sh/setup-uv@v1` while ci.yml pins v10.0.1. That is the pattern\ntests/test_workflow_action_pinning.py exists to forbid, and it went unnoticed\nbecause the test scans .github/workflows/ and .github/actions/ only.\n\nci-cd-testing.md contradicted itself: it states the pinning rule correctly under\n\"Action pinning and workflow permissions\", with a real SHA, and violated it\nninety lines earlier in the same file.\n\nA sample is copied more often than it is read, so an unpinned one hands the\nexposure #695 removed from this repo to every project that follows the docs.\n\nTakes the second of the two directions the issue offered: stop shipping a\nparallel pipeline rather than pin and guard 18 samples. \"Recommended Workflow\nStructure\" told the reader to create .github/workflows/tests.yml -- a file this\nrepo does not have and does not need, duplicating ci.yml while hardcoding\n`python-version: [\"3.12\", \"3.14\"]` where ci.yml derives the matrix from\n.github/python-versions.json, and running raw pytest where the repo mandates\ndoit. It is replaced with what ci.yml actually does and a pointer to it. Samples\nthat cannot drift beat samples guarded against drifting.\n\nThe repeated checkout/setup boilerplate in the remaining per-job samples becomes\none comment naming the real workflow, which removes the rest of the mutable tags\nand stops those samples going stale on the parts nobody reads.\n\nTwo things found while editing, neither in the issue:\n\n- \"PR Comments\" recommended py-cov-action/python-coverage-comment-action@v3 --\n  unpinned, and used by no workflow here. Removed rather than pinned: pinning it\n  would have preserved a different wrong thing, namely a capability the template\n  advertises and does not have. The section now says so, and records that\n  benchmark regression comments went away with `contents: write` too.\n- The first elision orphaned a `with:` block and produced invalid YAML. Caught by\n  parsing every fenced yaml block in docs/, which nothing else does. Two fences\n  elsewhere do not parse either; both predate this change and are untouched.\n\nThe guard extends the pinning test to docs fences, reusing the same SHA matcher\nand PINNING_EXEMPT table, so pypa/gh-action-pypi-publish@release/v1 stays legal\nin a sample exactly as it is in the workflows -- PyPA documents that ref for\ntrusted publishing. Verified by mutation: re-adding one `@v4` turns it red, and\na scanner-reads-something test keeps it from passing on an empty scan.\n\nAddresses #772\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T21:04:42+01:00",
+          "tree_id": "89ed0b73e3241938f270226749d5ea0fabe46c63",
+          "url": "https://github.com/endavis/pyproject-template/commit/8378851757b2ab381a9ab2b788cfa705d9fc284f"
+        },
+        "date": 1788033923830,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9324053.6494997,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1238715176763879e-8",
+            "extra": "mean: 107.24949014570042 nsec\nrounds: 91183"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9215062.917486565,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2178760563758561e-8",
+            "extra": "mean: 108.51797854818693 nsec\nrounds: 85493"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6696932.130573924,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3573038360930158e-8",
+            "extra": "mean: 149.3221045849692 nsec\nrounds: 65994"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1796632.5184123486,
+            "unit": "iter/sec",
+            "range": "stddev: 2.62226989394742e-7",
+            "extra": "mean: 556.5968498019182 nsec\nrounds: 62917"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506077.09038671816,
+            "unit": "iter/sec",
+            "range": "stddev: 5.04971471804034e-7",
+            "extra": "mean: 1.975983538863321 usec\nrounds: 57651"
           }
         ]
       }
