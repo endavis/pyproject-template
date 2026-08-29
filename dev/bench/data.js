@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788033924932,
+  "lastUpdate": 1788034471713,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12744,6 +12744,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.04971471804034e-7",
             "extra": "mean: 1.975983538863321 usec\nrounds: 57651"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b5bc5ecf09e649667d6ca1607619025f3f4b7dd",
+          "message": "docs: correct four stale references, and guard the class (merges PR #776, addresses #773)\n\n* docs: correct four stale references, and guard the class\n\n#773. Each was checked against the working tree rather than recalled.\n\n1. AI_SETUP.md named `.claude/claude.md` four times. The file is\n   `.claude/CLAUDE.md`; on a case-sensitive filesystem the documented path does\n   not exist. The content claim was wrong too -- the doc said it contains\n   `@AGENTS.md`, the file contains `@../AGENTS.md` and `@./rules/*.md`. One of\n   the four was an instruction that therefore could not succeed: \"Verify\n   `.claude/claude.md` contains `@AGENTS.md`\" -- wrong path, wrong string, and\n   silent about the rule-file import that is how per-stack rules reach Claude at\n   all. The verification step now names what the file actually contains, and the\n   overview shows both lines with the reason they are relative.\n\n2. Three READMEs claimed test_rule_files.py \"enforces that the four bodies stay\n   identical\". ALL_RULE_PATHS has three entries -- Codex and Antigravity share\n   the `.agents/` copy -- and each README's own surface table lists three rows.\n   They contradicted themselves and the test they cite.\n\n3. cross-agent-delegation.md cited `.github/copilot/settings.json` as a\n   repo-level Copilot settings file. It is absent from this repo, and the\n   installed SDK never names that path. The sentence also listed\n   `.claude/settings.json` as Copilot settings, which is Claude's file. Both\n   examples are dropped; the claim that survives is the user-level one, which is\n   true.\n\n4. migration.md told a reader to update `docs/installation.md`, `docs/usage.md`\n   and `docs/api.md`. All three moved when the documentation was reorganised,\n   to docs/getting-started/, docs/usage/ and docs/reference/.\n\nThe guard is the durable half. test_markdown_links.py resolves link targets and\ntest_instruction_pointers.py resolves quoted section references and command\nnames; neither looks at a path written in backticks in prose, which is how all\nfour survived. tests/test_documented_paths.py closes that, with an allowlist\nwhose entries each carry the reason they are not real files -- placeholders\nsubstituted at setup, files written at runtime, worked examples -- so the list\nstays a set of decisions rather than a pile of suppressions. Two further tests\nkeep it honest: an allowlist entry for a path that now exists is reported as\nobsolete, and every entry must state a reason.\n\nVerified by mutation: reintroducing `.claude/claude.md` and\n`docs/installation.md` fails the guard, naming both.\n\nIts scanner check deliberately asserts that resolution *works* rather than that\nsome number of paths were found. A downstream project has fewer docs than the\ntemplate, and a test that fails because a project is smaller is the portability\ntrap #770 warns adopters about -- worth not shipping in the same week.\n\nNot covered by the guard: item 2 is a claim about a count, not a path. Prose that\ncontradicts a test remains something only reading catches.\n\nAddresses #773\n\nCo-Authored-By: Claude Opus 5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\n* fix: resolve documented paths against the repo, not the developer's machine\n\nThe guard added moments ago passed locally and failed all six CI jobs. Seven\npaths resolved on my machine and in no fresh checkout:\n`.claude/settings.local.json`, which this repo's own no-local-config hook blocks\nfrom ever being committed, and `tmp/sbom.json`, generated output.\n\nThat is the portability trap the same commit claimed to have avoided -- a test\nwhose answer depends on local state rather than on the repository. Writing the\nwarning into a docstring is not the same as heeding it.\n\nBoth are now allowlisted with the reason they are never committed. The\nobsolescence check needed the inverse fix: it flags an allowlist entry whose\npath exists, which would have failed locally for exactly the file that must stay\nlisted. NEVER_COMMITTED exempts those, and a test holds the two lists together\nso an entry cannot drift out of one and look handled by the other.\n\nVerified the way it should have been the first time: every documented path was\nresolved against `git ls-files` rather than the filesystem, which is what CI\nsees. Zero resolve only locally.\n\nAddresses #773\n\n---------\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T21:13:50+01:00",
+          "tree_id": "abda246ce6c9ca49a383e1e23c423fbff4ebf4ec",
+          "url": "https://github.com/endavis/pyproject-template/commit/3b5bc5ecf09e649667d6ca1607619025f3f4b7dd"
+        },
+        "date": 1788034469451,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16224751.440969935,
+            "unit": "iter/sec",
+            "range": "stddev: 6.3888489807264155e-9",
+            "extra": "mean: 61.63422617833452 nsec\nrounds: 81847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 16268835.21668923,
+            "unit": "iter/sec",
+            "range": "stddev: 8.205937639232226e-9",
+            "extra": "mean: 61.46721548781558 nsec\nrounds: 152533"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11896339.268941777,
+            "unit": "iter/sec",
+            "range": "stddev: 8.710099752292137e-9",
+            "extra": "mean: 84.05947219500857 nsec\nrounds: 116293"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2704577.128161268,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8294667338226108e-7",
+            "extra": "mean: 369.743568999217 nsec\nrounds: 61264"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 755540.2332558235,
+            "unit": "iter/sec",
+            "range": "stddev: 3.081344212495585e-7",
+            "extra": "mean: 1.32355625284273 usec\nrounds: 66921"
           }
         ]
       }
