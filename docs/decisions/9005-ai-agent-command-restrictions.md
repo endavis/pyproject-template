@@ -25,6 +25,7 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 
 ## Related Documentation
 
+- [ADR-9019](9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md) — what the hook should block, and how far to go to do it
 - [AI Command Blocking](../development/ai/command-blocking.md)
 - [AI Enforcement Principles](../development/ai/enforcement-principles.md)
 - [AI Setup Guide](../development/AI_SETUP.md)

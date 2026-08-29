@@ -159,6 +159,7 @@ nav:
       - ADR-9016 Unify ADRs: decisions/9016-unify-adr-directories.md
       - ADR-9017 Template ownership: decisions/9017-template-tooling-and-its-tests-are-template-owned.md
       - ADR-9018 Instruction allocation: decisions/9018-agentsmd-carries-only-shared-always-on-instructions.md
+      - ADR-9019 Hook scope: decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md
   - Reference:
       - API Reference: reference/api.md
   - Examples:

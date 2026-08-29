@@ -98,6 +98,7 @@ The Issue contains the full discussion; the ADR summarizes the outcome.
 | [9016](9016-unify-adr-directories.md) | Unify ADR directories under docs/decisions | Accepted |
 | [9017](9017-template-tooling-and-its-tests-are-template-owned.md) | Template tooling and its tests are template-owned | Accepted |
 | [9018](9018-agentsmd-carries-only-shared-always-on-instructions.md) | AGENTS.md carries only shared, always-on instructions | Accepted |
+| [9019](9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md) | The dangerous-command hook is a guardrail, not a security boundary | Accepted |
 
 ### Project-level ADRs (0001+)
 

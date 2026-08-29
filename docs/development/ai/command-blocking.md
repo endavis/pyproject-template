@@ -360,7 +360,10 @@ everyone:
 
 **What this is and is not.** It reduces *accidental* exposure — a secret dumped into a transcript
 that is then pasted into an issue, or read by a later summarisation step. It is not a boundary
-against a determined agent, which has many other routes to the same value. `$VAR` interpolation is
+against a determined agent, which has many other routes to the same value. That is true of the
+hook as a whole, not only of this section — see
+[ADR-9019](../../decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md) for the categories, the non-adversarial
+assumption, and the rules governing what may be added. `$VAR` interpolation is
 deliberately **not** blocked: legitimate uses are common, and blocking it would give false
 assurance while being trivially avoided.
 
