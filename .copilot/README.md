@@ -55,7 +55,7 @@ file structure, and a worked example.
 
 ## See Also
 
-- `.github/skills/<target>-<action>/SKILL.md` — Copilot-host workflow skills (16 files). `.github/skills/` is used (instead of `.claude/skills/`) because it's the only Copilot project skill path that Claude does not also read — avoids surfacing duplicate slash commands in Claude.
+- `.github/skills/<target>-<action>/SKILL.md` — Copilot-host workflow skills: one self-action skill per action, plus one bridge per (target, action) pair. `.github/skills/` is used (instead of `.claude/skills/`) because it's the only Copilot project skill path that Claude does not also read — avoids surfacing duplicate slash commands in Claude.
 - `.agents/skills/` — interoperable Codex skill path, also read by Copilot
 - `.claude/agents/implement-worker.md` — implement-worker subagent definition
 - `.github/hooks/copilot-hooks.json` — dangerous command hook wiring
