@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788032282115,
+  "lastUpdate": 1788032696688,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -12626,6 +12626,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.210983426474944e-7",
             "extra": "mean: 2.045416112005796 usec\nrounds: 62500"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "435639e1cfb6a603c78b4be141d5eccfe8429892",
+          "message": "refactor: let the pre-commit config own the hook set (merges PR #771, addresses #749)\n\n#749 D1, the last item.\n\n`task_pre_commit_install` ran three actions: a bare `pre-commit install` and two\n`--hook-type` variants for post-merge and post-checkout. `commit-msg` was never\nadded to that list. The task installed it anyway, because #741 added\n`default_install_hook_types` to `.pre-commit-config.yaml` and the bare install\npicks up every declared type.\n\nSo the enumeration was redundant, and worse than redundant: it described a hook\nset that was no longer the hook set. The next person adding a type would have\nfollowed the pattern, added a fourth line, and changed nothing -- the kind of\nedit that looks effective and is not.\n\nDrops the two enumerated actions and leaves the bare install. The config is the\nsingle source for which types exist, which is how #741 fixed this in the first\nplace.\n\nVerified functionally rather than by reading: with all four hooks deleted from\n.git/hooks/, the single action reinstalled `pre-commit`, `commit-msg`,\n`post-merge` and `post-checkout`.\n\nThe task had no tests. It has three now, because the design it relies on couples\ntwo files silently -- remove `default_install_hook_types` and the task keeps\npassing while `commit-msg` quietly stops being installed, which is #741 again.\nThe tests hold both ends: the task must stay a single bare install, the config\nmust declare the set, and `commit-msg` must be in it. Each was checked by\nmutation -- re-enumerating a hook type fails the first, deleting the declaration\nfails the other two.\n\ndoit-tasks-reference.md was already corrected for this in PR #769, and its\n\"equivalent command\" now matches the single action.\n\nAddresses #749\n\n\nClaude-Session: https://claude.ai/code/session_01YAvpAgsk23wBAPcDifytbZ\n\nCo-authored-by: Claude Opus 5 <noreply@anthropic.com>",
+          "timestamp": "2026-08-29T20:44:18+01:00",
+          "tree_id": "642444101b32bd77ef5d7c95d80e9c0a2b66ee34",
+          "url": "https://github.com/endavis/pyproject-template/commit/435639e1cfb6a603c78b4be141d5eccfe8429892"
+        },
+        "date": 1788032695483,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8203704.030141311,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6952376308172847e-8",
+            "extra": "mean: 121.89615767778677 nsec\nrounds: 88332"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9279312.1957789,
+            "unit": "iter/sec",
+            "range": "stddev: 1.359162308116086e-8",
+            "extra": "mean: 107.7666080094701 nsec\nrounds: 91492"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5618131.326228669,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6620025769504804e-8",
+            "extra": "mean: 177.99512719316917 nsec\nrounds: 31173"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1752323.265159399,
+            "unit": "iter/sec",
+            "range": "stddev: 3.405680787707429e-7",
+            "extra": "mean: 570.6709600234838 nsec\nrounds: 66770"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494029.29716450005,
+            "unit": "iter/sec",
+            "range": "stddev: 5.466787481874234e-7",
+            "extra": "mean: 2.0241714524614998 usec\nrounds: 58576"
           }
         ]
       }
