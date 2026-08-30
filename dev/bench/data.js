@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788040524055,
+  "lastUpdate": 1788105930281,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13098,6 +13098,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.456994097326288e-7",
             "extra": "mean: 2.011324994571401 usec\nrounds: 59841"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5fdc6fd24e277e4ff24da0b453021e07438ac597",
+          "message": "fix: make bootstrap download every module its entry points import (merges PR #791, addresses #790)\n\nbootstrap.py kept two hand-maintained file lists, and neither closed over what\nits own entry point imports.\n\nSETUP_FILES shipped four modules to the new-project wizard's temp dir, but\ntools/pyproject_template/__init__.py eagerly imports four submodules, so\n`from tools.pyproject_template.setup_repo import main` failed before the wizard\nstarted. The curl one-liner documented in new-project.md has been broken since\n0d80827 (2026-01-23), the commit that introduced the list; bootstrap catches the\nImportError and exits printing a bare internal module name (#790).\n\nSYNC_FILES omitted repo_settings.py, so `manage.py repo` could not run in a\nsynced project, and setup_repo.py, so `manage.py create` failed the same way\n(#788). Both are lazy imports inside subcommand bodies that need a real GitHub\nrepository to reach, so no test exercised them.\n\nClosing both lists over their imports left them differing by a single file, so\nthey are replaced by one TEMPLATE_MODULES covering the whole package. This\nfollows ADR-9017's finding that a single source of truth is what stops two\nderived lists diverging silently. It also ends a name collision with the\nunrelated SETUP_FILES in cleanup.py.\n\nThe four filename assertions that guarded the old lists are replaced by three\ntests that hold the list to the code: the list is every .py in the package; the\nintra-package import graph reachable from __init__, setup_repo and manage is a\nsubset of the list; and the real files import in a clean subprocess. One of the\nremoved assertions had encoded the #788 omission as intended behaviour.\n\nAlso fixes test_pinning_happens_before_any_file_is_fetched, which used\nstr.index over a two-marker tuple. With one shared marker it would have\nasserted twice about run_sync and never about run_setup.\n\nAddresses #790, #788\n\n\nClaude-Session: https://claude.ai/code/session_01QfmDkYioQXV24soTTsKEov\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-30T17:04:47+01:00",
+          "tree_id": "8a3ef34d39b0da9044be442e16a93c84a1be090c",
+          "url": "https://github.com/endavis/pyproject-template/commit/5fdc6fd24e277e4ff24da0b453021e07438ac597"
+        },
+        "date": 1788105928076,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8439416.627080278,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3522850796609562e-8",
+            "extra": "mean: 118.49160246351798 nsec\nrounds: 83459"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9113232.849576442,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4752288020592234e-8",
+            "extra": "mean: 109.73054419941406 nsec\nrounds: 89526"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5902684.379044158,
+            "unit": "iter/sec",
+            "range": "stddev: 2.826798959546533e-8",
+            "extra": "mean: 169.41444532427013 nsec\nrounds: 196464"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1748465.4676981664,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0540760602803656e-7",
+            "extra": "mean: 571.9300829638277 nsec\nrounds: 67623"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 468239.77011472895,
+            "unit": "iter/sec",
+            "range": "stddev: 7.388704133106118e-7",
+            "extra": "mean: 2.135657976585325 usec\nrounds: 64940"
           }
         ]
       }
