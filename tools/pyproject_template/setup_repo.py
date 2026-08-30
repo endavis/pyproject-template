@@ -356,6 +356,19 @@ class RepositorySetup:
                 "A short description of your package": self.config["description"],
                 "Your Name": self.config["author_name"],
                 "your.email@example.com": self.config["author_email"],
+                # Security-report address in .github/SECURITY.md. Absent from
+                # this map until #787, so every spawned project shipped a
+                # policy telling reporters to email security@example.com --
+                # a real-looking address nobody owns. The file was already in
+                # FILES_TO_UPDATE; only the mapping was missing.
+                #
+                # This is the author's address, unlike configure.py's, and for
+                # the same reason: `setup_repo` creates a brand-new project,
+                # where the person who wrote it is the person who answers for
+                # it. configure.py runs against projects that may have been
+                # adopted, so it reads [project].maintainers first.
+                "security@example.com": self.config["author_email"],
+                "[INSERT CONTACT EMAIL]": self.config["author_email"],
             }
 
             # Update main configuration files (using shared constant from utils.py)
