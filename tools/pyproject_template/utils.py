@@ -49,6 +49,8 @@ TEMPLATE_OWNED_TEST_FILES: list[str] = [
     "tests/template/test_downstream_test_retention.py",
     # Targets docs/template/migration.md, which cleanup sheds in both modes.
     "tests/template/test_migration_guide.py",
+    # Targets configure.py and setup_repo.py, both shed by configuration.
+    "tests/template/test_author_maintainer_split.py",
 ]
 
 
@@ -356,11 +358,35 @@ def get_first_author(pyproject_data: dict[str, Any]) -> tuple[str, str]:
     Returns:
         Tuple of (name, email) or ("", "") if no author found.
     """
-    authors = pyproject_data.get("project", {}).get("authors", [])
-    if not authors:
+    return _first_person(pyproject_data, "authors")
+
+
+def get_first_maintainer(pyproject_data: dict[str, Any]) -> tuple[str, str]:
+    """Extract the first maintainer's name and email from pyproject.toml data.
+
+    PEP 621 separates ``authors`` from ``maintainers`` because they diverge the
+    moment a project is adopted, forked or handed over: the author wrote it, the
+    maintainer answers for it now. A greenfield project sets only ``authors``,
+    where both roles are the same person -- callers are expected to fall back to
+    :func:`get_first_author` when this returns empty, which keeps that case
+    behaving exactly as it did before the distinction existed (#787).
+
+    Args:
+        pyproject_data: Parsed pyproject.toml data.
+
+    Returns:
+        Tuple of (name, email) or ("", "") if no maintainer found.
+    """
+    return _first_person(pyproject_data, "maintainers")
+
+
+def _first_person(pyproject_data: dict[str, Any], key: str) -> tuple[str, str]:
+    """Return (name, email) of the first entry in ``[project].<key>``."""
+    people = pyproject_data.get("project", {}).get(key, [])
+    if not people:
         return "", ""
-    author = authors[0]
-    return author.get("name", ""), author.get("email", "")
+    person = people[0]
+    return person.get("name", ""), person.get("email", "")
 
 
 # Marker tokens follow the ``__FOO__`` convention used in prose files

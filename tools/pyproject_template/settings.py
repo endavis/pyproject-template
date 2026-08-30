@@ -28,6 +28,7 @@ from utils import (  # noqa: E402
     Logger,
     command_exists,
     get_first_author,
+    get_first_maintainer,
     get_git_config,
     parse_github_url,
     validate_email,
@@ -91,6 +92,10 @@ class ProjectSettings:
     description: str = ""
     author_name: str = ""
     author_email: str = ""
+    # Empty when [project].maintainers is absent, which is the greenfield case:
+    # the author still maintains it. Consumers fall back to the author (#787).
+    maintainer_name: str = ""
+    maintainer_email: str = ""
     github_user: str = ""
     github_repo: str = ""
 
@@ -270,6 +275,15 @@ class SettingsManager:
                 self.settings.author_name = author_name
             if not self.settings.author_email:
                 self.settings.author_email = author_email
+
+            # Get maintainer info. Left empty rather than defaulted to the
+            # author so that "this project names no maintainer" stays
+            # distinguishable from "the maintainer happens to be the author".
+            maintainer_name, maintainer_email = get_first_maintainer(data)
+            if not self.settings.maintainer_name:
+                self.settings.maintainer_name = maintainer_name
+            if not self.settings.maintainer_email:
+                self.settings.maintainer_email = maintainer_email
 
             # Get GitHub user from repository URL
             if not self.settings.github_user:

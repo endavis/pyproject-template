@@ -163,13 +163,18 @@ def detect_project_settings(project_root: Path) -> dict[str, str]:
         if description:
             settings["description"] = description
 
-        authors = project.get("authors", [])
-        if authors:
-            first = authors[0]
-            if "name" in first:
-                settings["author_name"] = first["name"]
-            if "email" in first:
-                settings["author_email"] = first["email"]
+        # Author and maintainer are read separately. Collapsing them means an
+        # adopted or forked project, where PEP 621 says they differ, gets the
+        # original author's name written into settings the maintainer then
+        # uses (#787).
+        for key, prefix in (("authors", "author"), ("maintainers", "maintainer")):
+            people = project.get(key, [])
+            if people:
+                first = people[0]
+                if "name" in first:
+                    settings[f"{prefix}_name"] = first["name"]
+                if "email" in first:
+                    settings[f"{prefix}_email"] = first["email"]
 
         repo_url = project.get("urls", {}).get("Repository", "")
         if repo_url:
@@ -203,6 +208,8 @@ def create_settings_file(project_root: Path, settings: dict[str, str]) -> Path:
         "description",
         "author_name",
         "author_email",
+        "maintainer_name",
+        "maintainer_email",
         "github_user",
         "github_repo",
     ):
