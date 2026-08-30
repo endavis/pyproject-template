@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+import ast
+import os
+import shutil
+import subprocess  # nosec B404 - used to import the module list in a clean interpreter
+import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -9,8 +14,7 @@ import pytest
 
 import bootstrap
 from bootstrap import (
-    SETUP_FILES,
-    SYNC_FILES,
+    TEMPLATE_MODULES,
     create_settings_file,
     detect_project_settings,
     download_file,
@@ -19,41 +23,120 @@ from bootstrap import (
     resolve_ref,
 )
 
+REPO_ROOT = Path(__file__).resolve().parents[2]
+PACKAGE_DIR = REPO_ROOT / "tools" / "pyproject_template"
+
+# What bootstrap imports after downloading. ``__init__`` is included because
+# importing any submodule as ``tools.pyproject_template.<name>`` executes the
+# package body first -- the detail that broke the setup path in #790.
+ENTRY_POINTS = ("__init__", "setup_repo", "manage")
+
+
+def _sibling_imports(module_path: Path, package_modules: frozenset[str]) -> set[str]:
+    """Names of package siblings imported by ``module_path``.
+
+    Both import styles used in the package count: the relative
+    ``from .settings import X`` in ``__init__.py``, and the bare
+    ``from settings import X`` the modules use when run as scripts, which
+    resolves through their own ``sys.path.insert(_script_dir)``.
+    """
+    tree = ast.parse(module_path.read_text(encoding="utf-8"))
+    found: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ImportFrom):
+            candidates = [node.module] if node.module else []
+        elif isinstance(node, ast.Import):
+            candidates = [alias.name for alias in node.names]
+        else:
+            continue
+        found.update(name for name in candidates if name in package_modules)
+    return found
+
 
 class TestConstants:
-    """Tests for file list constants."""
+    """Tests for the module list both bootstrap paths download.
 
-    def test_setup_files_contains_required_modules(self) -> None:
-        """Test that SETUP_FILES contains all required setup modules."""
-        filenames = [Path(f).name for f in SETUP_FILES]
-        assert "__init__.py" in filenames
-        assert "utils.py" in filenames
-        assert "setup_repo.py" in filenames
-        assert "configure.py" in filenames
+    These replace four assertions that checked whether hand-picked filenames
+    appeared in a hand-maintained list. That shape cannot catch the defect it
+    existed to prevent: the two former lists each named plausible modules while
+    omitting ones their own entry points import, so neither bootstrap path
+    could import what it had just downloaded (#790, #788). One of them even
+    asserted the omission was deliberate. The tests below assert the properties
+    that hold the list to the code instead.
+    """
 
-    def test_sync_files_contains_required_modules(self) -> None:
-        """Test that SYNC_FILES contains all required management modules."""
-        filenames = [Path(f).name for f in SYNC_FILES]
-        assert "__init__.py" in filenames
-        assert "utils.py" in filenames
-        assert "settings.py" in filenames
-        assert "check_template_updates.py" in filenames
-        assert "manage.py" in filenames
-        assert "configure.py" in filenames
-        assert "cleanup.py" in filenames
+    def test_template_modules_is_every_module_in_the_package(self) -> None:
+        """The list is the package, so a new module cannot be left out.
 
-    def test_sync_files_does_not_contain_setup_only_modules(self) -> None:
-        """Test that SYNC_FILES excludes setup-only modules."""
-        filenames = [Path(f).name for f in SYNC_FILES]
-        assert "setup_repo.py" not in filenames
-        assert "repo_settings.py" not in filenames
+        A module added to ``tools/pyproject_template/`` but not here would not
+        be downloaded by either path, and the failure would surface as a
+        ``ModuleNotFoundError`` in a consumer project rather than in this suite.
+        """
+        on_disk = sorted(
+            f"tools/pyproject_template/{path.name}" for path in PACKAGE_DIR.glob("*.py")
+        )
+        assert sorted(TEMPLATE_MODULES) == on_disk
 
-    def test_setup_files_does_not_contain_sync_only_modules(self) -> None:
-        """Test that SETUP_FILES excludes sync-only modules."""
-        filenames = [Path(f).name for f in SETUP_FILES]
-        assert "settings.py" not in filenames
-        assert "check_template_updates.py" not in filenames
-        assert "manage.py" not in filenames
+    def test_template_modules_is_closed_under_its_entry_points_imports(self) -> None:
+        """Everything reachable from an entry point is in the list.
+
+        This is the property #790 and #788 both violated, and it is asserted
+        independently of the completeness test above so that it still holds if
+        the list is ever narrowed again. It is static because the import edges
+        that broke are not exercised by any test: ``manage.py`` imports
+        ``repo_settings`` and ``setup_repo`` lazily, inside subcommand bodies
+        that need a real GitHub repository to run.
+        """
+        package_modules = frozenset(path.stem for path in PACKAGE_DIR.glob("*.py"))
+
+        reachable: set[str] = set()
+        queue = list(ENTRY_POINTS)
+        while queue:
+            name = queue.pop()
+            if name in reachable:
+                continue
+            reachable.add(name)
+            queue.extend(_sibling_imports(PACKAGE_DIR / f"{name}.py", package_modules))
+
+        listed = {Path(rel).stem for rel in TEMPLATE_MODULES}
+        assert reachable <= listed, (
+            f"TEMPLATE_MODULES is not import-closed; reachable but not downloaded: "
+            f"{sorted(reachable - listed)}"
+        )
+
+    def test_downloaded_modules_actually_import(self, tmp_path: Path) -> None:
+        """The real files, and only the listed ones, import in a clean interpreter.
+
+        The end-to-end form of the two tests above, and the direct reproduction
+        of #790 and #788: materialise exactly what bootstrap writes to disk,
+        then perform bootstrap's own import in a subprocess so no path this
+        suite has already primed can mask a missing module.
+        """
+        pkg_dir = tmp_path / "tools" / "pyproject_template"
+        pkg_dir.mkdir(parents=True)
+        for rel_path in TEMPLATE_MODULES:
+            shutil.copy(REPO_ROOT / rel_path, pkg_dir / Path(rel_path).name)
+
+        program = (
+            "import sys; sys.path.insert(0, '.')\n"
+            "from tools.pyproject_template.setup_repo import main\n"
+            "from tools.pyproject_template import manage\n"
+            "assert manage is not None\n"
+        )
+        env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
+        result = subprocess.run(  # nosec B603 - fixed argv, no shell
+            [sys.executable, "-E", "-c", program],
+            cwd=tmp_path,
+            capture_output=True,
+            text=True,
+            timeout=60,
+            check=False,
+            env=env,
+        )
+
+        assert result.returncode == 0, (
+            f"bootstrap's own import failed against TEMPLATE_MODULES:\n{result.stderr}"
+        )
 
 
 class TestParseArgs:
@@ -303,7 +386,7 @@ class TestRunSync:
         assert pkg_dir.exists()
 
     def test_downloads_all_sync_files(self, tmp_path: Path) -> None:
-        """Test that all SYNC_FILES are downloaded."""
+        """Test that all TEMPLATE_MODULES are downloaded."""
         from bootstrap import run_sync
 
         downloaded_urls: list[str] = []
@@ -325,7 +408,7 @@ class TestRunSync:
             run_sync(tmp_path)
 
         # Verify each sync file was downloaded
-        for file_path in SYNC_FILES:
+        for file_path in TEMPLATE_MODULES:
             filename = Path(file_path).name
             expected_url_suffix = f"/{file_path}"
             assert any(url.endswith(expected_url_suffix) for url in downloaded_urls), (
@@ -395,7 +478,7 @@ class TestRunSetup:
     """Tests for run_setup function (original behavior)."""
 
     def test_downloads_setup_files_to_temp_dir(self) -> None:
-        """Test that setup mode downloads SETUP_FILES to a temp directory."""
+        """Test that setup mode downloads TEMPLATE_MODULES to a temp directory."""
         from bootstrap import run_setup
 
         downloaded_urls: list[str] = []
@@ -416,7 +499,7 @@ class TestRunSetup:
             run_setup()
 
         # Verify setup files were downloaded
-        for file_path in SETUP_FILES:
+        for file_path in TEMPLATE_MODULES:
             assert any(url.endswith(f"/{file_path}") for url in downloaded_urls), (
                 f"{file_path} was not downloaded"
             )
@@ -501,12 +584,26 @@ class TestRefPinning:
 
     def test_pinning_happens_before_any_file_is_fetched(self) -> None:
         """Ordering is the whole point: a pin applied after the first download
-        would leave that file from a different commit."""
+        would leave that file from a different commit.
+
+        Both paths share one marker now that they share one list, so every
+        occurrence is checked rather than the first -- ``str.index`` would
+        otherwise assert twice about ``run_sync`` and never about ``run_setup``.
+        """
+        marker = "for file_path in TEMPLATE_MODULES:"
         source = (Path(__file__).resolve().parents[2] / "bootstrap.py").read_text("utf-8")
-        for marker in ("for file_path in SYNC_FILES:", "for file_path in SETUP_FILES:"):
-            loop = source.index(marker)
+
+        loops = []
+        start = source.find(marker)
+        while start != -1:
+            loops.append(start)
+            start = source.find(marker, start + 1)
+
+        assert len(loops) == 2, f"expected one download loop per bootstrap path, found {len(loops)}"
+
+        for loop in loops:
             preceding = source.rindex("pin_base_url()", 0, loop)
             between = source[preceding:loop]
             assert "download_file(" not in between, (
-                f"a download happens between pin_base_url() and {marker}"
+                f"a download happens between pin_base_url() and the loop at offset {loop}"
             )

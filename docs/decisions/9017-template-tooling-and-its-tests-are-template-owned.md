@@ -48,10 +48,10 @@ that test.
 ## Consequences
 - **Downstream projects carry no tests for the *management suite*.** The suite
   (`manage.py`, `check_template_updates.py`, `cleanup.py`, …) still ships via
-  `bootstrap.py` `SYNC_FILES`, but its tests do not. We accept this: downstreams
+  `bootstrap.py` `TEMPLATE_MODULES`, but its tests do not. We accept this: downstreams
   consume that tooling without modifying it, and these tests depend on template-only
   fixtures (the `package_name` skeleton) that no longer exist once a downstream is
-  configured. This is why the alternative — adding the tests to `SYNC_FILES` so
+  configured. This is why the alternative — adding the tests to `TEMPLATE_MODULES` so
   tooling and tests travel together — was rejected: it would push non-runnable,
   skeleton-coupled tests into every downstream.
 

@@ -90,16 +90,25 @@ def pin_base_url() -> str:
     return sha
 
 
-# Files needed for new project setup (downloaded to temp dir, runs wizard)
-SETUP_FILES = [
-    "tools/pyproject_template/__init__.py",
-    "tools/pyproject_template/utils.py",
-    "tools/pyproject_template/setup_repo.py",
-    "tools/pyproject_template/configure.py",
-]
-
-# Files needed for template sync management (installed permanently)
-SYNC_FILES = [
+# Every module in ``tools/pyproject_template/``. Both bootstrap paths download
+# this same list.
+#
+# There used to be two lists — a four-file ``SETUP_FILES`` for the new-project
+# wizard and a seven-file ``SYNC_FILES`` for ``--sync`` — on the reasoning that
+# each path needs only what it runs. Neither list ever closed over what its
+# entry point actually imports, so both were broken: ``SETUP_FILES`` could not
+# import ``setup_repo`` at all (#790) and ``SYNC_FILES`` could not run
+# ``manage.py repo`` or ``manage.py create`` (#788).
+#
+# The split earned nothing to pay for that. ``__init__.py`` eagerly imports four
+# submodules, so any path that touches the package pulls most of it in; closing
+# both lists over their imports left them differing by a single file. One list
+# that is verifiably every module in the package cannot drift from the code —
+# ``tests/template/test_bootstrap.py`` asserts both the package-completeness and
+# the import-graph closure that the old filename assertions only gestured at.
+# This follows ADR-9017's finding that a single source of truth is what stops
+# two derived lists diverging silently.
+TEMPLATE_MODULES = [
     "tools/pyproject_template/__init__.py",
     "tools/pyproject_template/utils.py",
     "tools/pyproject_template/settings.py",
@@ -107,6 +116,8 @@ SYNC_FILES = [
     "tools/pyproject_template/manage.py",
     "tools/pyproject_template/configure.py",
     "tools/pyproject_template/cleanup.py",
+    "tools/pyproject_template/repo_settings.py",
+    "tools/pyproject_template/setup_repo.py",
 ]
 
 
@@ -230,8 +241,8 @@ def run_sync(project_root: Path) -> None:
 
     pin_base_url()
 
-    # Download sync files
-    for file_path in SYNC_FILES:
+    # Download the management suite
+    for file_path in TEMPLATE_MODULES:
         filename = Path(file_path).name
         url = f"{BASE_URL}/{file_path}"
         dest = pkg_dir / filename
@@ -298,8 +309,8 @@ def run_setup() -> None:
 
         pin_base_url()
 
-        # Download files
-        for file_path in SETUP_FILES:
+        # Download the management suite
+        for file_path in TEMPLATE_MODULES:
             url = f"{BASE_URL}/{file_path}"
             dest = pkg_dir / Path(file_path).name
             print(f"  Downloading {Path(file_path).name}...")
