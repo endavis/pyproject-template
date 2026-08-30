@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788105930281,
+  "lastUpdate": 1788106787104,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13157,6 +13157,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.388704133106118e-7",
             "extra": "mean: 2.135657976585325 usec\nrounds: 64940"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6cebd12edc1dd05ae46fe63e945aa87f94b6e2e3",
+          "message": "docs: give the migration guide the steps a migrated project actually needs (merges PR #792, addresses #789)\n\nThe guide named the files to copy, and that inclusion list had drifted. It\nnever mentioned tools/, which dodo.py imports, so a migration performed by\nfollowing only the guide could not run `doit check` at all. It copied\n.github/workflows/ while omitting ISSUE_TEMPLATE/ and pull_request_template.md,\nwhich `doit issue` and `doit pr` read, and labels.yml, which `doit labels_sync`\nreads. Step 2 is now \"copy everything except\", expressed as one rsync command\nwith an exclusion table beside it: three entries to maintain instead of\ntwenty-five, and the reader's git history is preserved.\n\nNothing configured the GitHub repository. A new project gets repository\nsettings, security settings, branch protection, labels and Pages applied by\nsetup_repo.py; a migrated one got none of them and was never told to run\n`manage.py repo`. Also missing: `doit publish_setup`, without which the release\nstep cannot publish anything; CODECOV_TOKEN; and any step recording the\ntemplate SHA, so the first `manage.py check` would diff against everything.\n\nCorrected while implementing: new-project.md claimed that keeping the template\nsuite puts a fresh project under fail_under. pyproject.toml omits\ntools/pyproject_template/*, so it does not. Measuring rather than reading the\nconfig, zero suite files appear in the coverage report and the total is 73.64%\nagainst a gate of 70. The claim and the omit that falsified it landed in the\nsame commit, fcf65c4 (#731).\n\nThe new tests hold the exclusion list to the rsync command it is written beside\nand to the paths later steps invoke, so the drift that caused this cannot\nrecur silently. They are template-owned: cleanup sheds migration.md in both\nmodes, so the test is registered in TEMPLATE_OWNED_TEST_FILES.\n\nAddresses #789\n\n\nClaude-Session: https://claude.ai/code/session_01QfmDkYioQXV24soTTsKEov\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-30T17:19:11+01:00",
+          "tree_id": "f520679dfc6b7e3def225c6822959f1e46fa078f",
+          "url": "https://github.com/endavis/pyproject-template/commit/6cebd12edc1dd05ae46fe63e945aa87f94b6e2e3"
+        },
+        "date": 1788106786336,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8382137.940031284,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3810562548367907e-8",
+            "extra": "mean: 119.30130560417236 nsec\nrounds: 83739"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9213869.386050487,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2333100067749678e-8",
+            "extra": "mean: 108.53203557605983 nsec\nrounds: 93546"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6144326.203554651,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8045251903862788e-8",
+            "extra": "mean: 162.7517756823318 nsec\nrounds: 60129"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1621352.9134213994,
+            "unit": "iter/sec",
+            "range": "stddev: 4.714531208352576e-7",
+            "extra": "mean: 616.768867358919 nsec\nrounds: 66676"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 407955.0224765718,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000017356216963463163",
+            "extra": "mean: 2.4512506156421408 usec\nrounds: 58069"
           }
         ]
       }
