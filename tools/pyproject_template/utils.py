@@ -47,6 +47,8 @@ TEMPLATE_OWNED_TEST_FILES: list[str] = [
     "tests/template/test_configure_paths.py",
     "tests/template/test_readme_split.py",
     "tests/template/test_downstream_test_retention.py",
+    # Targets docs/template/migration.md, which cleanup sheds in both modes.
+    "tests/template/test_migration_guide.py",
 ]
 
 
