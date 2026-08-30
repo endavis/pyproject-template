@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788106787104,
+  "lastUpdate": 1788110308848,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13216,6 +13216,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000017356216963463163",
             "extra": "mean: 2.4512506156421408 usec\nrounds: 58069"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0bb8226a03a5c3019eae3607d2c88189520a885b",
+          "message": "feat: tell the maintainer apart from the author where it changes who is contacted (merges PR #793, addresses #787)\n\nPEP 621 separates [project].authors from [project].maintainers because they\ndiverge the moment a project is adopted, forked or handed over. The template\nread only the first and used it everywhere, so a project that had the split\nright in its own pyproject.toml lost it on the way through configuration.\n\nOnly one substitution actually changes meaning, and it is the consequential\none: the security-report address in .github/SECURITY.md. configure.py mapped it\nto author_email, so an adopted project routed vulnerability reports to whoever\nwrote the code rather than whoever answers for it now. It now reads\n[project].maintainers, falling back to the author when none is named — which\nleaves every greenfield project byte-identical to before.\n\nThe LICENSE copyright line, mkdocs.yml's site_author and [project].authors all\ncorrectly name the author and are deliberately left alone. Tests pin that\ndivision so a later edit cannot move one of them in the name of consistency.\n\nAlso fixes a defect found while wiring this up: setup_repo.py's replacement map\nhad no entry for security@example.com at all, though .github/SECURITY.md is in\nFILES_TO_UPDATE. Every project created by the automated bootstrap has shipped a\nsecurity policy telling reporters to email an address nobody owns. That mapping\nuses the author's address, unlike configure.py's, because setup_repo creates a\nbrand-new project where the two are the same person.\n\nThe maintainer keys are read from the caller-supplied `defaults` mapping with a\nfallback rather than required. A mapping without them describes a project that\nnames no maintainer, which is exactly the greenfield case; requiring them broke\nfive existing callers for no gain.\n\nNot implemented, deliberately: the __MAINTAINER_NAME__ and __MAINTAINER_EMAIL__\nmarker tokens the issue also proposes. No prose file in the template consumes\nthem, and every substitution site other than the security contact correctly\nnames the author, so they would be markers with nothing to substitute.\n\nAddresses #787\n\n\nClaude-Session: https://claude.ai/code/session_01QfmDkYioQXV24soTTsKEov\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-08-30T18:17:47+01:00",
+          "tree_id": "604f9e61a8580175553c337446ef5ae78da4be1d",
+          "url": "https://github.com/endavis/pyproject-template/commit/0bb8226a03a5c3019eae3607d2c88189520a885b"
+        },
+        "date": 1788110307629,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9094646.56689516,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0570679343752803e-8",
+            "extra": "mean: 109.95479512530326 nsec\nrounds: 89518"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9255127.277367841,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0908053524539259e-8",
+            "extra": "mean: 108.04821695379214 nsec\nrounds: 92499"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6424419.817050968,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5389197942417744e-8",
+            "extra": "mean: 155.65607922226894 nsec\nrounds: 64982"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1677556.8456138577,
+            "unit": "iter/sec",
+            "range": "stddev: 2.973129342828726e-7",
+            "extra": "mean: 596.104986018567 nsec\nrounds: 63618"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 482207.69110904494,
+            "unit": "iter/sec",
+            "range": "stddev: 5.746598672822555e-7",
+            "extra": "mean: 2.0737952099023307 usec\nrounds: 63172"
           }
         ]
       }
