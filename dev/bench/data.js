@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788702181543,
+  "lastUpdate": 1788704666873,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13393,6 +13393,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.7313229184571407e-7",
             "extra": "mean: 2.010661549347882 usec\nrounds: 50483"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6bfb20cfaa847a7940dbfa82ed55e83af65951bd",
+          "message": "feat: add a template-sync skill so the downstream upgrade has an entry point (merges PR #809, addresses #806)\n\n`docs/template/ai-sync-checklist.md` is a complete 11-phase procedure for\nsynchronizing a downstream project with the template. It is a document, not a\ncommand: an agent only follows it if a human remembers it exists and names it.\nThe sync -- the mechanism by which every downstream project receives template\nimprovements -- was the one workflow here with no entry point, while\n`/ghi-finalize`, `/checkpoint`, `/restore`, `/ghi-status` and the whole\nplan/implement/review grid are all invocable.\n\nThe checklist's ordering constraints are also load-bearing and easy to get wrong\nfrom memory. Running the drift check before `bootstrap --sync` compares against\na stale checker. Adopting `.pre-commit-config.yaml` without re-running\n`doit pre_commit_install` leaves `commit-msg` uninstalled and conventional-commit\nenforcement silently off. Adopting `test_agents_md_allocation.py` into a project\nlacking the paths its `RELOCATION_TARGETS` names installs a test that cannot\npass.\n\nTwo files cover all four hosts, following the `ghi-finalize` pattern:\n\n- `.claude/commands/template-sync.md` -- Claude, and Copilot as a single-file\n  command (#757)\n- `.agents/skills/template-sync/SKILL.md` -- Codex, Antigravity and Copilot,\n  which all read `.agents/skills/`\n\nNo `.copilot/commands/` copy: that path is never loaded, per `.copilot/README.md`.\n\nTen steps, with three gates the checklist leaves to discipline:\n\n- Refuses to run in the template repo itself. There is nothing to sync from, and\n  an agent that does not stop will \"sync\" the upstream to itself and report\n  success.\n- `bootstrap.py --sync` before the drift check, never after.\n- Batches every judgment call it cannot settle from the repo into one round of\n  questions -- thresholds the project may differ on deliberately, new dev\n  dependencies, divergences with no ADR, second-time reverts that are\n  `sync-exclude.toml` candidates -- then posts the triage as a plan comment on\n  the tracking issue and stops. Nothing is applied until the repo admin\n  approves.\n\nTests assert the contract rather than the prose: the two bodies are not\nbyte-identical and should not be, since invocation syntax differs per host. What\nmust agree is the 14-element contract, the identical approval-gate sentence, and\ntwo orderings -- refresh before check, plan before apply. Each ordering test was\nverified to fail on a mutated body. A non-vacuity companion keeps the contract\nscanner from passing while checking nothing.\n\n`test_no_body_teaches_the_stale_extraction_path` outlives the fix in #805:\n`pyproject-template-main` is the name a writer reaches for from memory, and a\nbody that puts it in a `diff` command hands the reader a path that is never\nthere.\n\nAddresses #806\n\n\nClaude-Session: https://claude.ai/code/session_014sxHHdgQNpwfQ92gXdZHZB\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-09-06T15:23:50+01:00",
+          "tree_id": "f9973d54cfeb1d2ee2aed8b3a5d9db0753582af4",
+          "url": "https://github.com/endavis/pyproject-template/commit/6bfb20cfaa847a7940dbfa82ed55e83af65951bd"
+        },
+        "date": 1788704665081,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8458942.18461571,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2613279169912706e-8",
+            "extra": "mean: 118.21809136119897 nsec\nrounds: 82420"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8829905.79833386,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3872432125780188e-8",
+            "extra": "mean: 113.2514913339951 nsec\nrounds: 86949"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5418484.024901289,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4829934312636698e-8",
+            "extra": "mean: 184.55346465992716 nsec\nrounds: 55206"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1669236.8410830554,
+            "unit": "iter/sec",
+            "range": "stddev: 2.917506145926214e-7",
+            "extra": "mean: 599.0761618651834 nsec\nrounds: 49710"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 488962.1756662448,
+            "unit": "iter/sec",
+            "range": "stddev: 4.920685015393555e-7",
+            "extra": "mean: 2.0451479680149713 usec\nrounds: 58783"
           }
         ]
       }
