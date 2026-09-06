@@ -928,15 +928,14 @@ class TestYesFlagBehavior:
             patch("tools.pyproject_template.manage.prompt") as mock_prompt,
             patch("subprocess.run") as mock_subprocess,
         ):
-            # subprocess calls succeed
-            mock_subprocess.return_value = MagicMock(returncode=0)
-
             action_mark_synced(mock_manager, dry_run=False, yes=True)
 
             # prompt should NOT have been called
             mock_prompt.assert_not_called()
             # update_template_state should have been called
             mock_manager.update_template_state.assert_called_once_with(sha, "2025-06-15")
+            # and nothing was committed or pushed on the user's behalf (#808)
+            mock_subprocess.assert_not_called()
 
     def test_cleanup_with_yes_skips_prompt(self) -> None:
         """Verify action_template_cleanup() with yes=True skips prompt_cleanup."""
@@ -1004,3 +1003,104 @@ class TestYesFlagBehavior:
             result = action_template_cleanup(mock_manager, dry_run=False, cleanup_mode="invalid")
 
             assert result == 1
+
+
+class TestMarkSyncedTouchesNoGit:
+    """Recording a sync point writes one file; committing it is the user's (#808).
+
+    `action_mark_synced` used to stage that file, commit it with hook
+    verification disabled, and push -- on whatever branch was checked out. The
+    documented sync procedure starts from a clean `main`, so that is the branch
+    it would have pushed to: no branch, no PR, no review, and none of the hooks
+    this project relies on, including the one that blocks commits to `main`.
+
+    The prompt that authorised all of it read `Mark as synced to <sha>?`.
+    """
+
+    @staticmethod
+    def _reviewed(tmp_path: Path, sha: str, date: str = "2025-06-15") -> Path:
+        template_dir = tmp_path / "tmp" / "extracted" / f"pyproject-template-{sha}"
+        template_dir.mkdir(parents=True)
+        (template_dir / ".template_commit").write_text(f"{sha}\n{date}\n", encoding="utf-8")
+        return template_dir
+
+    def test_no_git_command_is_ever_run(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The whole point: no staging, no commit, no push."""
+        from tools.pyproject_template.manage import action_mark_synced
+
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        self._reviewed(tmp_path, sha)
+        monkeypatch.chdir(tmp_path)
+
+        mock_manager = MagicMock()
+        mock_manager.template_state.commit = "oldcommit000"
+
+        with patch("subprocess.run") as mock_subprocess:
+            assert action_mark_synced(mock_manager, dry_run=False, yes=True) == 0
+
+        assert mock_subprocess.call_args_list == [], (
+            f"action_mark_synced shelled out: {mock_subprocess.call_args_list}"
+        )
+
+    def test_the_sync_point_is_still_recorded(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Dropping the git writes must not drop the job the function exists for."""
+        from tools.pyproject_template.manage import action_mark_synced
+
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        self._reviewed(tmp_path, sha)
+        monkeypatch.chdir(tmp_path)
+
+        mock_manager = MagicMock()
+        mock_manager.template_state.commit = None
+
+        with patch("subprocess.run"):
+            action_mark_synced(mock_manager, dry_run=False, yes=True)
+
+        mock_manager.update_template_state.assert_called_once_with(sha, "2025-06-15")
+
+    def test_the_user_is_told_how_to_commit_it(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The guidance used to print only when there was nothing to commit.
+
+        The function always knew the right workflow; it followed it only in the
+        branch where it had no changes to make.
+        """
+        from tools.pyproject_template.manage import action_mark_synced
+
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        self._reviewed(tmp_path, sha)
+        monkeypatch.chdir(tmp_path)
+
+        mock_manager = MagicMock()
+        mock_manager.template_state.commit = "oldcommit000"
+
+        with patch("subprocess.run"):
+            action_mark_synced(mock_manager, dry_run=False, yes=True)
+
+        out = capsys.readouterr().out
+        assert "doit issue --type=chore" in out
+        assert "git checkout -b chore/<issue#>-sync-template-state" in out
+        assert "doit pr --title=" in out
+
+    def test_the_download_is_still_cleaned_up(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The other half of the function's job, downstream of the removed block."""
+        from tools.pyproject_template.manage import action_mark_synced
+
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        self._reviewed(tmp_path, sha)
+        monkeypatch.chdir(tmp_path)
+
+        mock_manager = MagicMock()
+        mock_manager.template_state.commit = "oldcommit000"
+
+        with patch("subprocess.run"):
+            action_mark_synced(mock_manager, dry_run=False, yes=True)
+
+        assert not (tmp_path / "tmp" / "extracted").exists()

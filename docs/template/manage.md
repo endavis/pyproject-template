@@ -122,6 +122,12 @@ After reviewing and applying template changes, marks your project as synced:
 
 1. Updates `.config/pyproject_template/settings.toml` with the reviewed commit
 2. Cleans up the downloaded template directory
+3. Prints the workflow for committing that settings file
+
+It does **not** touch git. Committing `settings.toml` is yours, through the same
+Issue → Branch → PR flow as any other change. Earlier versions staged, committed and pushed it for
+you, skipping the pre-commit hooks — including the one that blocks commits to `main`, which is
+exactly the branch a sync starts from (#808).
 
 **When to use:** After running "Check for template updates" and applying the changes you want.
 

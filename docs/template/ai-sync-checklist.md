@@ -301,6 +301,10 @@ This:
 3. Cleans up the `tmp/extracted/` directory
 4. Future runs of `manage.py check` will compare from this sync point
 
+It does not commit or push. The changed `settings.toml` goes into this sync's own commit in Phase
+11, along with everything else adopted — it is not a separate change and does not need its own PR
+(#808).
+
 ---
 
 ## Phase 11: Commit & PR
