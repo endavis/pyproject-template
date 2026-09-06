@@ -576,9 +576,12 @@ def action_repo_settings(manager: SettingsManager, dry_run: bool) -> int:
 
 
 def action_mark_synced(manager: SettingsManager, dry_run: bool, *, yes: bool = False) -> int:
-    """Mark project as synced to reviewed template commit."""
+    """Mark project as synced to reviewed template commit.
+
+    Writes the sync point to `.config/pyproject_template/settings.toml` and
+    removes the downloaded template. It does not touch git: see #808.
+    """
     import shutil
-    import subprocess  # nosec B404 - subprocess is required for git operations
 
     Logger.header("Mark as Synced to Template")
 
@@ -626,52 +629,32 @@ def action_mark_synced(manager: SettingsManager, dry_run: bool, *, yes: bool = F
     # Update template state
     manager.update_template_state(new_commit, new_date)
 
-    # Commit the settings file if there are changes
+    # Recording the sync point writes one file. Committing it is the user's,
+    # through the same Issue -> Branch -> PR flow as any other change.
+    #
+    # This used to stage, commit with hook verification disabled, and push --
+    # on whatever branch happened to be checked out, which for a sync starting
+    # from a clean `main` is `main` (#808). That skipped the very hooks this
+    # project relies on, including the one that blocks commits to `main`, and it
+    # did so from a prompt that only offered to "mark as synced".
     settings_file = ".config/pyproject_template/settings.toml"
-    try:
-        subprocess.run(["git", "add", settings_file], check=True)
-
-        # Check if there are staged changes to commit
-        result = subprocess.run(
-            ["git", "diff", "--cached", "--quiet"],
-            capture_output=True,
-        )
-        if result.returncode != 0:
-            # There are changes to commit
-            subprocess.run(
-                [
-                    "git",
-                    "commit",
-                    "--no-verify",
-                    "-m",
-                    f"chore: sync template state to {new_commit}",
-                ],
-                check=True,
-            )
-            subprocess.run(["git", "push"], check=True)
-            Logger.success(f"Marked as synced to {new_commit}")
-        else:
-            # Settings file exists but wasn't committed (maybe already staged)
-            Logger.success(f"Marked as synced to {new_commit}")
-            print()
-            print(f"{Colors.BOLD}{Colors.YELLOW}*** IMPORTANT ***{Colors.NC}")
-            print(f"{Colors.BOLD}Don't forget to commit the settings file:{Colors.NC}")
-            print()
-            print("  # 1. Create an issue")
-            print("  doit issue --type=chore --title='Sync template state'")
-            print()
-            print("  # 2. Create branch, commit, and push")
-            print("  git checkout -b chore/<issue#>-sync-template-state")
-            print(f"  git add {settings_file}")
-            print(f"  git commit -m 'chore: sync template state to {new_commit[:12]}'")
-            print("  git push -u origin HEAD")
-            print()
-            print("  # 3. Create PR and merge")
-            print("  doit pr --title='chore: sync template state'")
-            print()
-    except subprocess.CalledProcessError as e:
-        Logger.error(f"Failed to commit: {e}")
-        return 1
+    Logger.success(f"Marked as synced to {new_commit}")
+    print()
+    print(f"{Colors.BOLD}{Colors.YELLOW}*** IMPORTANT ***{Colors.NC}")
+    print(f"{Colors.BOLD}Don't forget to commit the settings file:{Colors.NC}")
+    print()
+    print("  # 1. Create an issue")
+    print("  doit issue --type=chore --title='Sync template state'")
+    print()
+    print("  # 2. Create branch, commit, and push")
+    print("  git checkout -b chore/<issue#>-sync-template-state")
+    print(f"  git add {settings_file}")
+    print(f"  git commit -m 'chore: sync template state to {new_commit[:12]}'")
+    print("  git push -u origin HEAD")
+    print()
+    print("  # 3. Create PR and merge")
+    print("  doit pr --title='chore: sync template state'")
+    print()
 
     # Clean up template directory
     if template_dir.exists():
