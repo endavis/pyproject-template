@@ -417,8 +417,11 @@ class SettingsManager:
         self.save()
 
 
-def get_template_latest_commit() -> tuple[str, str] | None:
-    """Fetch the latest commit info from the template repository.
+def get_template_commit(ref: str = "main") -> tuple[str, str] | None:
+    """Fetch commit info for *ref* -- a tag, branch or SHA -- from the template.
+
+    Args:
+        ref: The ref to look up. Defaults to `main`.
 
     Returns:
         Tuple of (commit_sha, commit_date) or None if fetch fails.
@@ -426,7 +429,7 @@ def get_template_latest_commit() -> tuple[str, str] | None:
     import json
     import urllib.request
 
-    api_url = f"https://api.github.com/repos/{TEMPLATE_REPO}/commits/main"
+    api_url = f"https://api.github.com/repos/{TEMPLATE_REPO}/commits/{ref}"
     try:
         req = urllib.request.Request(api_url)
         req.add_header("Accept", "application/vnd.github.v3+json")
@@ -440,8 +443,17 @@ def get_template_latest_commit() -> tuple[str, str] | None:
                 commit_date = dt.strftime("%Y-%m-%d")
             return (commit_sha, commit_date)
     except Exception as e:
-        Logger.warning(f"Could not fetch latest template commit: {e}")
+        Logger.warning(f"Could not fetch template commit for '{ref}': {e}")
         return None
+
+
+def get_template_latest_commit() -> tuple[str, str] | None:
+    """Fetch the latest commit info from the template repository's `main`.
+
+    Returns:
+        Tuple of (commit_sha, commit_date) or None if fetch fails.
+    """
+    return get_template_commit("main")
 
 
 def get_template_commits_since(since_commit: str) -> list[dict[str, str]] | None:

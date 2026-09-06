@@ -169,14 +169,15 @@ python tools/pyproject_template/manage.py
 # Select [3] Check for template updates
 ```
 
-This downloads the latest template and shows what's different. The template files are kept at `tmp/extracted/pyproject-template-main/` for review.
+This downloads the latest template and shows what's different. The template files are kept at `tmp/extracted/pyproject-template-<commit-sha>/` for review — the archive root is named for the resolved commit (ADR-9020), so locate it by glob rather than by a fixed name.
 
 ### 2. Review changes
 
 Use the provided diff commands to compare files:
 
 ```bash
-diff .github/workflows/ci.yml tmp/extracted/pyproject-template-main/.github/workflows/ci.yml
+TEMPLATE_DIR=$(ls -d tmp/extracted/pyproject-template-*/ | head -1)
+diff .github/workflows/ci.yml "$TEMPLATE_DIR/.github/workflows/ci.yml"
 ```
 
 Or view the commit history on GitHub using the provided compare URL.

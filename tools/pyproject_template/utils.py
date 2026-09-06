@@ -23,6 +23,59 @@ except ModuleNotFoundError:  # pragma: no cover
 TEMPLATE_REPO = "endavis/pyproject-template"
 TEMPLATE_URL = f"https://github.com/{TEMPLATE_REPO}"
 
+# Where `check` leaves the downloaded template, and the file inside it that
+# records which commit was reviewed.
+#
+# The directory is named by GitHub's archive root, which is
+# `pyproject-template-<ref>` for the ref that was fetched. Since #779 the ref is
+# always a resolved commit SHA (ADR-9020), so the name carries the reviewed
+# commit and must never be hardcoded: `manage.py` looked for a fixed
+# `pyproject-template-main` that no longer exists, which silently killed the
+# whole check -> sync handoff (#805).
+EXTRACTED_DIR = Path("tmp/extracted")
+TEMPLATE_COMMIT_FILE = ".template_commit"
+_ARCHIVE_ROOT_GLOB = "pyproject-template-*"
+
+# A full commit SHA, as GitHub names archive roots and as `.template_commit`
+# records them.
+SHA_RE = re.compile(r"^[0-9a-f]{40}$", re.IGNORECASE)
+
+
+def find_extracted_template(project_root: Path | None = None) -> Path | None:
+    """Return the extracted upstream template directory, or None if absent.
+
+    Located by glob rather than by a fixed name: the archive root is named for
+    the commit that was fetched, so the name differs on every run (#805). When
+    more than one is present -- an interrupted earlier run -- the most recently
+    modified wins, which is the one the current check produced.
+    """
+    root = (project_root or Path.cwd()) / EXTRACTED_DIR
+    if not root.is_dir():
+        return None
+
+    candidates = [path for path in root.glob(_ARCHIVE_ROOT_GLOB) if path.is_dir()]
+    if not candidates:
+        return None
+    return max(candidates, key=lambda path: path.stat().st_mtime)
+
+
+def extracted_template_commit(template_dir: Path) -> str | None:
+    """Return the commit SHA *template_dir* was extracted from, or None.
+
+    Read from the directory name, so it names what is actually on disk rather
+    than what a second API call thinks the ref points at now. Returns None when
+    the suffix is not a full SHA -- which happens when `resolve_template_ref`
+    could not reach the API and fell back to the moving ref. A moving ref is not
+    a sync point, so recording it would be worse than recording nothing.
+    """
+    prefix = _ARCHIVE_ROOT_GLOB.rstrip("*")
+    name = template_dir.name
+    if not name.startswith(prefix):
+        return None
+    suffix = name[len(prefix) :]
+    return suffix if SHA_RE.match(suffix) else None
+
+
 # Tests that are template-owned: they live in the template's own CI, are
 # excluded from the drift checker, and are shed from downstreams by cleanup
 # and by configure.py. All three consumers — check_template_updates.py,

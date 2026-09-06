@@ -104,14 +104,17 @@ This will (per [Tools Reference](tools-reference.md)):
 
 1. Fetch the template at `main` — or at a specific tag, branch or commit SHA via `manage.py check --template-version <ref>` (ADR-9020)
 2. Compare all files - categorized as **Modified**, **Missing** (new in template), or **Extra** (project-specific)
-3. Keep the template at `tmp/extracted/pyproject-template-main/` for diff commands
+3. Keep the template at `tmp/extracted/pyproject-template-<commit-sha>/` for diff commands —
+   the archive root is named for the **resolved commit** (ADR-9020), so locate it by glob rather
+   than by a fixed name
 4. Show GitHub compare URL for commit history since last sync
 5. Save commit info to `.template_commit` for later `sync` marking
 
 **Diff commands** (per documentation):
 
 ```bash
-diff <file> tmp/extracted/pyproject-template-main/<file>
+TEMPLATE_DIR=$(ls -d tmp/extracted/pyproject-template-*/ | head -1)
+diff <file> "$TEMPLATE_DIR/<file>"
 ```
 
 Review the output and proceed with Phases 3-8 to selectively apply changes.
@@ -282,7 +285,9 @@ python tools/pyproject_template/manage.py --yes sync
 
 This:
 
-1. Reads the reviewed commit from `tmp/extracted/pyproject-template-main/.template_commit` (saved during Phase 2)
+1. Reads the reviewed commit from `.template_commit` in the extracted template directory (saved
+   during Phase 2). The commit recorded is the one that was **actually reviewed** — with
+   `--template-version` that is the pinned ref, not the tip of `main` (#805)
 2. Updates `.config/pyproject_template/settings.toml` with the template commit SHA and date
 3. Cleans up the `tmp/extracted/` directory
 4. Future runs of `manage.py check` will compare from this sync point

@@ -783,3 +783,93 @@ class TestPrompt:
             assert prompt("Name?") == "finally"
 
         assert mock_input.call_count == 3
+
+
+class TestFindExtractedTemplate:
+    """Locating the reviewed template by glob rather than by a fixed name.
+
+    `manage.py` looked for `tmp/extracted/pyproject-template-main`, a directory
+    the download stopped producing when #779 made it fetch `/archive/<sha>.zip`.
+    GitHub names the archive root for the ref it served, so the name carries the
+    reviewed commit and changes every run. Nothing noticed, because nothing
+    tested the handoff (#805).
+    """
+
+    def test_returns_none_when_nothing_was_extracted(self, tmp_path: Path) -> None:
+        """No `tmp/extracted` at all is the state before the first check."""
+        from tools.pyproject_template.utils import find_extracted_template
+
+        assert find_extracted_template(tmp_path) is None
+
+    def test_returns_none_when_the_directory_is_empty(self, tmp_path: Path) -> None:
+        """A cleaned-up `tmp/extracted` must not read as a reviewed template."""
+        from tools.pyproject_template.utils import find_extracted_template
+
+        (tmp_path / "tmp" / "extracted").mkdir(parents=True)
+        assert find_extracted_template(tmp_path) is None
+
+    def test_finds_the_archive_root_whatever_its_commit(self, tmp_path: Path) -> None:
+        """The name is the reviewed commit, so it cannot be predicted."""
+        from tools.pyproject_template.utils import find_extracted_template
+
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        extracted = tmp_path / "tmp" / "extracted" / f"pyproject-template-{sha}"
+        extracted.mkdir(parents=True)
+
+        assert find_extracted_template(tmp_path) == extracted
+
+    def test_ignores_files_and_unrelated_directories(self, tmp_path: Path) -> None:
+        """Only a `pyproject-template-*` directory counts."""
+        from tools.pyproject_template.utils import find_extracted_template
+
+        root = tmp_path / "tmp" / "extracted"
+        root.mkdir(parents=True)
+        (root / "pyproject-template-notadir").write_text("x", encoding="utf-8")
+        (root / "some-other-repo-abc").mkdir()
+
+        assert find_extracted_template(tmp_path) is None
+
+    def test_prefers_the_most_recent_of_several(self, tmp_path: Path) -> None:
+        """An interrupted earlier run leaves a stale root beside the current one."""
+        import os
+
+        from tools.pyproject_template.utils import find_extracted_template
+
+        root = tmp_path / "tmp" / "extracted"
+        root.mkdir(parents=True)
+        stale = root / ("pyproject-template-" + "a" * 40)
+        fresh = root / ("pyproject-template-" + "b" * 40)
+        stale.mkdir()
+        fresh.mkdir()
+        os.utime(stale, (1_000_000, 1_000_000))
+        os.utime(fresh, (2_000_000, 2_000_000))
+
+        assert find_extracted_template(tmp_path) == fresh
+
+
+class TestExtractedTemplateCommit:
+    """The reviewed commit read off the archive root's own name."""
+
+    def test_reads_the_sha_from_the_directory_name(self) -> None:
+        """The SHA on disk beats a second API call that could disagree."""
+        from tools.pyproject_template.utils import extracted_template_commit
+
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        assert extracted_template_commit(Path(f"/x/pyproject-template-{sha}")) == sha
+
+    @pytest.mark.parametrize("name", ["pyproject-template-main", "pyproject-template-v2.2.0"])
+    def test_a_moving_ref_is_not_a_commit(self, name: str) -> None:
+        """`resolve_template_ref` falls back to the ref when the API is unreachable.
+
+        A branch or tag name is not a sync point: recording it would claim a
+        reproducible identity the project does not have. None is the honest
+        answer, and the caller warns rather than recording.
+        """
+        from tools.pyproject_template.utils import extracted_template_commit
+
+        assert extracted_template_commit(Path("/x") / name) is None
+
+    def test_an_unrelated_directory_yields_none(self) -> None:
+        from tools.pyproject_template.utils import extracted_template_commit
+
+        assert extracted_template_commit(Path("/x/some-other-repo-abc")) is None

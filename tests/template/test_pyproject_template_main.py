@@ -7,6 +7,8 @@ import subprocess
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from tools.pyproject_template.settings import (
     PreflightWarning,
     ProjectContext,
@@ -896,32 +898,36 @@ class TestYesFlagBehavior:
                 template_version=None,
             )
 
-    def test_sync_with_yes_skips_prompt(self, tmp_path: Path) -> None:
-        """Verify action_mark_synced() with yes=True skips the confirmation prompt."""
+    def test_sync_with_yes_skips_prompt(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Verify action_mark_synced() with yes=True skips the confirmation prompt.
+
+        The fixture is placed at the real relative path and the test chdirs into
+        it, rather than patching `manage.Path` to intercept a literal path
+        string. The old approach pinned the hardcoded
+        `tmp/extracted/pyproject-template-main` that was itself the bug in #805:
+        it asserted that name was used, so it passed for exactly as long as the
+        check -> sync handoff was broken. It also reached the real working
+        directory, where `action_mark_synced` ends by removing `tmp/extracted`.
+        """
         from tools.pyproject_template.manage import action_mark_synced
 
-        # Set up template commit file
-        template_dir = tmp_path / "tmp" / "extracted" / "pyproject-template-main"
+        # The archive root is named for the resolved commit (ADR-9020).
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        template_dir = tmp_path / "tmp" / "extracted" / f"pyproject-template-{sha}"
         template_dir.mkdir(parents=True)
         commit_file = template_dir / ".template_commit"
-        commit_file.write_text("abc123newcommit\n2025-06-15\n", encoding="utf-8")
+        commit_file.write_text(f"{sha}\n2025-06-15\n", encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
 
         mock_manager = MagicMock()
         mock_manager.template_state.commit = "oldcommit000"
 
         with (
-            patch("tools.pyproject_template.manage.Path") as mock_path_cls,
             patch("tools.pyproject_template.manage.prompt") as mock_prompt,
             patch("subprocess.run") as mock_subprocess,
         ):
-            # Make Path("tmp/extracted/...") resolve to our tmp_path
-            def path_side_effect(arg: str = "") -> Path:
-                if arg == "tmp/extracted/pyproject-template-main":
-                    return template_dir
-                return Path(arg)
-
-            mock_path_cls.side_effect = path_side_effect
-
             # subprocess calls succeed
             mock_subprocess.return_value = MagicMock(returncode=0)
 
@@ -930,9 +936,7 @@ class TestYesFlagBehavior:
             # prompt should NOT have been called
             mock_prompt.assert_not_called()
             # update_template_state should have been called
-            mock_manager.update_template_state.assert_called_once_with(
-                "abc123newcommit", "2025-06-15"
-            )
+            mock_manager.update_template_state.assert_called_once_with(sha, "2025-06-15")
 
     def test_cleanup_with_yes_skips_prompt(self) -> None:
         """Verify action_template_cleanup() with yes=True skips prompt_cleanup."""

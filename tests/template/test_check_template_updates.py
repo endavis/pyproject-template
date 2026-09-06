@@ -359,7 +359,7 @@ class TestTemplateVersionFlag:
 
         with (
             mock.patch.object(manage, "run_check_updates", _capture),
-            mock.patch.object(manage, "get_template_latest_commit", lambda: None),
+            mock.patch.object(manage, "get_template_commit", lambda _ref: None),
         ):
             manage.action_check_updates(mock.MagicMock(), dry_run=True, template_version="v2.2.0")
         assert seen.get("template_version") == "v2.2.0"
@@ -502,3 +502,154 @@ class TestGuardedScriptsAreNotDocumentedDirectly:
             + "\n  ".join(offenders)
             + "\nUse the `manage.py` equivalent -- `manage.py check`, `configure`, `repo`."
         )
+
+
+class TestCheckToSyncHandoff:
+    """`check` must leave behind what `sync` goes looking for (#805).
+
+    Each half was covered on its own and both passed, while the pair was broken
+    for every project: `check` wrote `.template_commit` into a hardcoded
+    `tmp/extracted/pyproject-template-main`, a directory the download stopped
+    producing when #779 switched it to `/archive/<sha>.zip`. The write was
+    guarded by `if template_dir.exists()`, so it silently did nothing, and
+    `sync` aborted with "No reviewed template found" immediately after a
+    successful check.
+
+    These tests drive the two functions against a real extracted-directory shape
+    rather than mocking the path, because the path was the bug.
+    """
+
+    @staticmethod
+    def _manage() -> types.ModuleType:
+        return importlib.import_module("tools.pyproject_template.manage")
+
+    @staticmethod
+    def _extract(project_root: Path, sha: str) -> Path:
+        """Create the archive root `download_and_extract_archive` would produce."""
+        root = project_root / "tmp" / "extracted" / f"pyproject-template-{sha}"
+        root.mkdir(parents=True)
+        return root
+
+    def test_check_records_the_reviewed_commit_where_sync_reads_it(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The end-to-end contract: check writes it, sync finds it."""
+        manage = self._manage()
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        extracted = self._extract(tmp_path, sha)
+        monkeypatch.chdir(tmp_path)
+
+        manager = mock.MagicMock()
+        manager.template_state.commit = None
+
+        with (
+            mock.patch.object(manage, "run_check_updates", lambda **_: 0),
+            mock.patch.object(manage, "get_template_commit", lambda _ref: (sha, "2026-09-06")),
+        ):
+            manage.action_check_updates(manager, dry_run=False)
+
+        commit_file = extracted / ".template_commit"
+        assert commit_file.exists(), "check left nothing for sync to read"
+        assert commit_file.read_text(encoding="utf-8").splitlines()[:2] == [sha, "2026-09-06"]
+
+    def test_check_records_the_pinned_ref_not_the_tip_of_main(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """`--template-version` exists for staged upgrades; recording `main` defeats it.
+
+        The commit is taken from the archive root's name, so it is whatever was
+        actually downloaded and compared -- not whatever `main` points at now.
+        """
+        manage = self._manage()
+        pinned = "b036360e28dfff5328f6c816fbe1074b153b5c94"
+        extracted = self._extract(tmp_path, pinned)
+        monkeypatch.chdir(tmp_path)
+
+        manager = mock.MagicMock()
+        manager.template_state.commit = None
+
+        # If anything reached for `main`, this would supply a different SHA.
+        with (
+            mock.patch.object(manage, "run_check_updates", lambda **_: 0),
+            mock.patch.object(manage, "get_template_commit", lambda ref: (ref, "2026-09-05")),
+            mock.patch.object(
+                manage, "get_template_latest_commit", lambda: ("f" * 40, "2026-09-06")
+            ),
+        ):
+            manage.action_check_updates(manager, dry_run=False, template_version=pinned)
+
+        recorded = (extracted / ".template_commit").read_text(encoding="utf-8").splitlines()
+        assert recorded[0] == pinned
+
+    def test_a_failed_date_lookup_still_records_a_usable_sync_point(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The SHA comes off disk, so only the date depends on the API.
+
+        The file `action_mark_synced` reads is strictly two lines; a blank
+        second line is rejected as malformed. A date lookup that fails must not
+        cost the sync point it is only decorating.
+        """
+        manage = self._manage()
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        extracted = self._extract(tmp_path, sha)
+        monkeypatch.chdir(tmp_path)
+
+        manager = mock.MagicMock()
+        manager.template_state.commit = None
+
+        with (
+            mock.patch.object(manage, "run_check_updates", lambda **_: 0),
+            mock.patch.object(manage, "get_template_commit", lambda _ref: None),
+        ):
+            manage.action_check_updates(manager, dry_run=False)
+
+        recorded = (extracted / ".template_commit").read_text(encoding="utf-8")
+        assert recorded.strip().split("\n") == [sha, "unknown"]
+
+        # And the half that consumes it accepts the result.
+        assert manage.action_mark_synced(manager, dry_run=True, yes=True) == 0
+
+    def test_no_commit_is_recorded_when_the_ref_never_resolved(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Offline, the archive root is named for the moving ref, which is not a sync point."""
+        manage = self._manage()
+        extracted = self._extract(tmp_path, "main")
+        monkeypatch.chdir(tmp_path)
+
+        manager = mock.MagicMock()
+        manager.template_state.commit = None
+
+        with (
+            mock.patch.object(manage, "run_check_updates", lambda **_: 0),
+            mock.patch.object(manage, "get_template_commit", lambda _ref: None),
+        ):
+            manage.action_check_updates(manager, dry_run=False)
+
+        assert not (extracted / ".template_commit").exists()
+
+    def test_sync_reads_the_commit_check_recorded(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The half that used to abort: sync must locate the archive by glob."""
+        manage = self._manage()
+        sha = "3683148e5da66ae682ced50873eace83a6388db5"
+        extracted = self._extract(tmp_path, sha)
+        (extracted / ".template_commit").write_text(f"{sha}\n2026-09-06\n", encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+
+        manager = mock.MagicMock()
+        manager.template_state.commit = None
+
+        # dry_run stops before the settings write and the git commands.
+        assert manage.action_mark_synced(manager, dry_run=True, yes=True) == 0
+
+    def test_sync_still_refuses_when_no_check_has_run(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The error path must survive the fix: nothing extracted is still an error."""
+        manage = self._manage()
+        monkeypatch.chdir(tmp_path)
+
+        assert manage.action_mark_synced(mock.MagicMock(), dry_run=True, yes=True) == 1
