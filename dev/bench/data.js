@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788704666873,
+  "lastUpdate": 1788707619528,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13452,6 +13452,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.920685015393555e-7",
             "extra": "mean: 2.0451479680149713 usec\nrounds: 58783"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f9cdaebda5b7458b5153d4670e51a905e9ce3163",
+          "message": "fix: stop manage.py sync committing and pushing on the user's behalf (merges PR #810, addresses #808)\n\n`action_mark_synced` staged `.config/pyproject_template/settings.toml`,\ncommitted it with hook verification disabled, and pushed -- on whatever branch\nwas checked out. The documented sync procedure starts from a clean `main`, so\nthat is the branch it pushed to: no branch, no PR, no review, and none of the\nhooks this project relies on, including the one that blocks commits to `main`.\n\nThe prompt that authorised all of it read `Mark as synced to <sha>?`, and\n`docs/template/manage.md` option [5] documented two steps, neither of them a\ncommit.\n\nThe correct workflow was already in the function. Its `else` branch -- reached\nonly when there was nothing staged -- printed the Issue -> Branch -> PR sequence\nfor the user to follow by hand. It knew what the workflow was and followed it\nonly when it had no work to do. That guidance now always prints, and the git\ncalls are gone.\n\nAlso removed: the `git add` ran before the decision to commit, so even on the\n`else` path it left a staged change in the user's index.\n\nLeft alone deliberately: `action_create_project` and the three calls in\n`setup_repo.py` use the same flag, but they run during repository creation, in a\nfreshly cloned repo before branch protection is applied, committing scaffolding\nthe tool itself just generated. Their comments say so. That is a different\nsituation from writing into an established project on someone's current branch.\n\nTests: `TestMarkSyncedTouchesNoGit` covers all four halves -- no git command is\nrun, the sync point is still recorded, the user is told how to commit it, and\nthe download is still cleaned up. The last three matter because deleting the git\nblock could plausibly have taken the function's actual job with it. Restoring\nthe git writes fails two of them.\n\n`test_sync_with_yes_skips_prompt` had a `patch(\"subprocess.run\")` that became\ninert; it now asserts the mock was never called rather than silently guarding\nnothing.\n\nDocs: `manage.md` option [5] gains the third step and an explicit statement that\nsync does not touch git; `ai-sync-checklist.md` Phase 10 notes that the changed\n`settings.toml` belongs in the sync's own commit in Phase 11 rather than a\nseparate PR.\n\nAddresses #808\n\n\nClaude-Session: https://claude.ai/code/session_014sxHHdgQNpwfQ92gXdZHZB\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-09-06T16:13:02+01:00",
+          "tree_id": "49e6f151f931ad2f1606d8e33d2be7de386947d0",
+          "url": "https://github.com/endavis/pyproject-template/commit/f9cdaebda5b7458b5153d4670e51a905e9ce3163"
+        },
+        "date": 1788707618751,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13012931.566142296,
+            "unit": "iter/sec",
+            "range": "stddev: 7.2462880113797685e-9",
+            "extra": "mean: 76.84663481992409 nsec\nrounds: 122775"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13367903.343922332,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4573480043345955e-8",
+            "extra": "mean: 74.80604656336375 nsec\nrounds: 71773"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9043795.38812343,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0582012391315829e-8",
+            "extra": "mean: 110.57304561680249 nsec\nrounds: 84574"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2233491.6481706183,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4654348360886853e-7",
+            "extra": "mean: 447.7294557242102 nsec\nrounds: 46850"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 681116.0721251633,
+            "unit": "iter/sec",
+            "range": "stddev: 3.592648558782302e-7",
+            "extra": "mean: 1.4681785394960376 usec\nrounds: 57091"
           }
         ]
       }
