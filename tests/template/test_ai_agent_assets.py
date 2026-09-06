@@ -70,6 +70,24 @@ def test_self_action_grid_exists() -> None:
             assert path.exists(), f"Missing self-action file: {path}"
 
 
+def test_template_sync_exists_on_every_wired_surface() -> None:
+    """`template-sync` is the entry point to the template upgrade, on every host.
+
+    Claude reads `.claude/commands/`; Codex, Antigravity and Copilot all read
+    `.agents/skills/` (Copilot additionally picks the Claude file up as a
+    single-file command, #757). There is no `.copilot/commands/` copy because
+    that path is never loaded — see `.copilot/README.md`.
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "template-sync.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "template-sync" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing template-sync file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [
