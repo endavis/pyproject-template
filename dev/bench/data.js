@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788110308848,
+  "lastUpdate": 1788695951208,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13275,6 +13275,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.746598672822555e-7",
             "extra": "mean: 2.0737952099023307 usec\nrounds: 63172"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c262b29ed4933f6fb10059a4eefec4677c21124c",
+          "message": "ci: group codeql-action bumps so init and analyze move together (merges PR #800, addresses #799)\n\nDependabot treats `github/codeql-action/init` and `github/codeql-action/analyze`\nas independent dependencies and opens a separate PR for each. CodeQL does not\ntolerate that split: `init` writes a config file stamped with its own version,\nand `analyze` refuses to load a config written by a different one.\n\n    Loaded a configuration file for version '4.37.8', but running version '4.37.9'\n\nThe 4.37.9 bump therefore arrived as two PRs -- #794 bumping `analyze`, #795\nbumping `init` -- each holding half the change and mismatched on its own branch.\nBoth failed the required `CodeQL` check, and neither could be merged to unblock\nthe other.\n\nGroup `github/codeql-action*` in the `github-actions` ecosystem so the pair\nalways lands in one PR, and apply the 4.37.9 bump to both pins here, since\nneither split PR can pass alone. This supersedes #794 and #795.\n\nTwo tests guard the invariant from both ends. `test_dependabot_config.py`\nasserts the group still matches both sub-actions, and that no group matches one\nwithout the other -- a group covering only `init` would recreate the split.\n`test_codeql_workflow.py` asserts the two pins agree, whatever route a bump\ntakes to get there.\n\nAddresses #799\n\n\nClaude-Session: https://claude.ai/code/session_014sxHHdgQNpwfQ92gXdZHZB\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-09-06T12:58:23+01:00",
+          "tree_id": "dc9f585aafaee207990593752632b3d0f4eccffc",
+          "url": "https://github.com/endavis/pyproject-template/commit/c262b29ed4933f6fb10059a4eefec4677c21124c"
+        },
+        "date": 1788695949178,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18453567.341503266,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2723434709613963e-8",
+            "extra": "mean: 54.19006425662399 nsec\nrounds: 180213"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 18754021.792510975,
+            "unit": "iter/sec",
+            "range": "stddev: 5.338964295349172e-9",
+            "extra": "mean: 53.32189602122191 nsec\nrounds: 182883"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13037097.36303993,
+            "unit": "iter/sec",
+            "range": "stddev: 9.003067805038208e-9",
+            "extra": "mean: 76.70419052288374 nsec\nrounds: 122956"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3371636.2251370177,
+            "unit": "iter/sec",
+            "range": "stddev: 1.167094706986182e-7",
+            "extra": "mean: 296.5919017433032 nsec\nrounds: 79177"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 934727.2382748618,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2577632727384193e-7",
+            "extra": "mean: 1.0698308116553938 usec\nrounds: 63521"
           }
         ]
       }
