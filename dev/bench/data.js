@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788707619528,
+  "lastUpdate": 1788712511355,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13511,6 +13511,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.592648558782302e-7",
             "extra": "mean: 1.4681785394960376 usec\nrounds: 57091"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0b60a90e0174460ecb494153a33aae4282b0070f",
+          "message": "feat: add a standalone template-migrate skill that plans an existing project's migration (merges PR #812, addresses #811)\n\n* feat: add a standalone template-migrate skill that plans an existing project's migration\n\n`template-sync` (#806) upgrades a project that already uses the template.\nNothing helped a project take the first step. The manual path is\n`docs/template/migration.md`, a 15-step checklist -- a document in this\nrepository, which is exactly where the person who needs it is not.\n\nThis skill plans; it does not migrate. #783 deleted an automated migrator\nbecause it did the one mechanical step destructively while leaving every\njudgement step untouched: which package is *the* package, how imports break\nmoving to a `src/` layout, which dependencies survive the merge. This is the\ncomplement to that decision, not a reversal of it. Both bodies cite #783 so the\nreasoning travels with the file.\n\nTwo files, the same all-hosts layout as `template-sync`:\n\n- `.claude/commands/template-migrate.md` -- Claude, and Copilot as a\n  single-file command\n- `.agents/skills/template-migrate/SKILL.md` -- Codex, Antigravity, Copilot\n\nStandalone: the skill is meant to be copied into a project that does not use\nthe template, so the template is only its distribution point. It assumes\nnothing from *this template* is installed and fetches every template fact over\nHTTP, pinning `main` to a commit first so the plan records what it planned\nagainst (ADR-9020). There is no documentation site for this repository, so raw\nURLs are the only online source.\n\nWhat it does not assume is that the target is empty. A `dodo.py`, an\n`AGENTS.md`, a `tools/` directory are the owner's, predate any contact with\nthis template, and are conflicts to plan around rather than files to overwrite\n-- and where the project has its own agent instructions, those outrank the\nskill. The inventory covers both, and Step 4 asks about them.\n\nEight steps: refuse the wrong targets (including redirecting to `template-sync`\nwhen the project has already migrated), pin the version, inventory read-only,\nbatch the open questions, assess the gap, write `TEMPLATE_MIGRATION_PLAN.md` to\nthe repository root, stop for approval, execute only if asked. The plan is a\nfile rather than an issue so the owner decides what becomes of it.\n\nTests: `tests/test_template_migrate_skill.py`. A 19-element contract, the\nidentical approval-gate sentence, two orderings (inventory before plan, plan\nbefore execute), and the guard specific to being standalone -- template\ndocuments must be fetched, never read from disk, because `docs/template/` is\nnot there and an agent that finds nothing tends to invent content rather than\nreport the miss.\n\nThat guard is scoped to `docs/template/`. `AGENTS.md`, `pyproject.toml` and\n`README.md` are deliberately not matched: the target repository may have its\nown, reading those locally is exactly what Step 3 should do, and an earlier\nversion of this guard forbade it. Its non-vacuity companion pins both\ndirections -- it must catch a template-doc read and must not catch a read of\nthe project's own files.\n\nContract checks normalise whitespace so a sentence that wraps still matches; the\ncontract is the wording, not where the lines break.\n\nAddresses #811\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_014sxHHdgQNpwfQ92gXdZHZB\n\n* test: drop the hostname-substring exemption CodeQL flagged in the standalone guard\n\nCodeQL raised `py/incomplete-url-substring-sanitization` (high) against the\nline that skipped any body line containing the raw GitHub host:\n\n    if \"raw.githubusercontent.com\" in line or \"$RAW\" in line:\n        continue\n\nIt is left over from the first version of `_LOCAL_READ`, which matched bare\n`AGENTS.md` and so would have fired on the `curl` lines that fetch it. Narrowing\nthe pattern to require a read command immediately before `docs/template/` made\nthe exemption redundant: a `curl -sSL \"$RAW/docs/template/migration.md\"` line has\n`$RAW/` in that position, not `cat` or `Read`, so fetches are excluded by shape.\nThe non-vacuity companion already asserted exactly that.\n\nRedundant is the smaller half. The exemption also weakened the guard, because\n`Read docs/template/migration.md (from $RAW)` is a genuine violation that names\nthe host and would have been skipped. Removing it fixes the alert and makes the\ncheck stricter, so this is a fix rather than a suppression.\n\nThe companion now pins that case, and the docstring records why there is no\nhost-based exemption -- otherwise the next person to widen the pattern is likely\nto add one back.\n\nAddresses #811\n\nCo-Authored-By: Claude Opus 5 (1M context) <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_014sxHHdgQNpwfQ92gXdZHZB\n\n---------\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-09-06T17:34:35+01:00",
+          "tree_id": "9908dfdaaa5493ead611be9173ee03d7f6291054",
+          "url": "https://github.com/endavis/pyproject-template/commit/0b60a90e0174460ecb494153a33aae4282b0070f"
+        },
+        "date": 1788712510370,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8592681.550669735,
+            "unit": "iter/sec",
+            "range": "stddev: 1.943715858213629e-8",
+            "extra": "mean: 116.37810549630545 nsec\nrounds: 81747"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8622390.480780536,
+            "unit": "iter/sec",
+            "range": "stddev: 1.259057319937838e-8",
+            "extra": "mean: 115.97711820509845 nsec\nrounds: 86866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5556492.925941206,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4463479642714038e-8",
+            "extra": "mean: 179.9696343230045 nsec\nrounds: 57291"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1632491.5931875433,
+            "unit": "iter/sec",
+            "range": "stddev: 3.108691857379745e-7",
+            "extra": "mean: 612.5605817347191 nsec\nrounds: 47374"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 491591.2176522255,
+            "unit": "iter/sec",
+            "range": "stddev: 5.557058859864581e-7",
+            "extra": "mean: 2.034210466118308 usec\nrounds: 60347"
           }
         ]
       }
