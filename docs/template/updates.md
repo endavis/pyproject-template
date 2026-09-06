@@ -230,7 +230,24 @@ code --diff your_file.py tmp/pyproject-template-*/your_file.py
 
 ## AI Agent Workflow
 
-If you're using an AI agent (Claude, Codex, etc.) to perform the synchronization, see the **[AI Sync Checklist](ai-sync-checklist.md)** for a structured, step-by-step guide covering all phases from pre-flight through commit.
+Every supported agent ships a `template-sync` command that drives this whole page:
+
+| Agent | Invocation |
+| :--- | :--- |
+| Claude Code | `/template-sync [ref]` |
+| GitHub Copilot CLI | `/template-sync` |
+| Codex CLI | `$template-sync` |
+| Antigravity CLI | describe the task; the skill activates on its description |
+
+It opens a tracking issue, refreshes the management suite, runs the drift check, asks you about
+the judgment calls it cannot settle from the repo, and posts its triage as a **plan comment on the
+issue for you to approve before it changes anything**. Only after approval does it apply, run
+`doit check`, and mark the sync point. See
+[Slash Commands and Workflows](../development/ai/slash-commands.md#template-sync-ref).
+
+The command follows the **[AI Sync Checklist](ai-sync-checklist.md)**, which remains the
+authoritative step-by-step reference — read it when a step is ambiguous, or when driving a sync by
+hand.
 
 ## Best Practices
 

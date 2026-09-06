@@ -114,6 +114,14 @@ Pause-and-resume helpers for long-running workstreams. `/checkpoint` writes a pa
 
 **Auto-checkpoint (PreCompact / SessionStart hooks):** Claude Code also ships two lifecycle hooks that automate the pause/resume pattern for the most common context-loss event — autocompact firing mid-task. The `PreCompact` hook synthesizes a checkpoint to `tmp/checkpoints/{inv_epoch}-auto-precompact.md` before compaction; the `SessionStart` hook (matcher `compact|resume`) injects the newest auto-precompact file into the new session's context automatically. Auto-precompact files share the same filename convention and directory as manual `/checkpoint` files, so `/restore auto-precompact` also works. Set `CLAUDE_NO_AUTO_RESTORE=1` to opt out of the automatic restore; set `CLAUDE_RESTORE_ANY=1` to widen the restore glob to any `*.md` checkpoint. See [Auto-Checkpoint and Session-Restore Hooks](auto-checkpoint-hook.md) for full details.
 
+### `/template-sync [ref]`
+
+**Args:** optional template ref (tag, branch, or commit SHA) to sync *to*; defaults to `main`. **Sources:** `.claude/commands/template-sync.md` (Claude), `.agents/skills/template-sync/SKILL.md` (Codex, Antigravity, and Copilot — all three read `.agents/skills/`; Copilot additionally picks up the Claude file as a single-file command).
+
+Upgrades a downstream project to the latest `pyproject-template`. Refuses to run in the template repo itself. Opens a tracking issue and branch, refreshes the management suite with `bootstrap.py --sync` **before** running `manage.py check` (a stale drift checker misreports drift), triages the diff into adopt / skip / merge-by-hand, batches every open judgment call into one round of questions to the user, then posts the result as a plan comment on the issue under the header `## Sync Plan for #<n>: <ref>` and **stops for the repo admin to approve**. Only after approval does it apply, validate with `doit check`, mark the sync point, and hand off to `/ghi-finalize`. **Workflow position:** any time, independent of the issue lifecycle. **Design note:** the plan gate is the point of the command — a sync applied first and explained afterwards is a record, not a decision the admin got to make. `tests/test_template_sync_skill.py` enforces that both bodies carry the same gate sentence and that the gate precedes the apply step.
+
+This command drives the tooling documented in [Template Management](../../template/manage.md) and the procedure in [AI Sync Checklist](../../template/ai-sync-checklist.md); it replaces neither. Read the checklist when a step is ambiguous.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -125,6 +133,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$codex-review` reviews the current branch's PR and posts findings after user approval
 - `$codex-adversarial-review` runs an adversarial challenge review
 - `$ghi-finalize` drafts the commit and PR artifacts and uses `doit pr` after explicit approval
+- `$template-sync` upgrades the project to the latest template, posting a plan on the tracking issue for the admin to approve before applying anything
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -141,6 +150,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - `antigravity-review` reviews the current branch's PR and posts findings after user approval
 - `antigravity-adversarial-review` runs an adversarial challenge review
 - The shared `ghi-finalize` skill (from `.agents/skills/`) drafts the commit and PR artifacts
+- The shared `template-sync` skill (from `.agents/skills/`) upgrades the project to the latest template behind an admin review gate
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 

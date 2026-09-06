@@ -13,6 +13,15 @@ tags:
 
 This checklist guides an AI agent through synchronizing a downstream project with the latest pyproject-template. It uses the official `manage.py` tooling documented in [Template Manager](manage.md), [Keeping Up to Date](updates.md), and [Tools Reference](tools-reference.md).
 
+> **There is a command for this.** Every supported agent ships `template-sync`, which drives this
+> checklist end to end — `/template-sync` in Claude Code and Copilot CLI, `$template-sync` in Codex,
+> description-activated in Antigravity. It asks you about the calls it cannot settle from the repo
+> and posts its triage as a plan comment on the tracking issue for you to approve **before** it
+> changes anything. See
+> [Slash Commands and Workflows](../development/ai/slash-commands.md#template-sync-ref).
+> This page remains the authoritative procedure; read it when a step is ambiguous or you are
+> driving a sync by hand.
+
 **Prerequisites:**
 
 - Downstream project already uses pyproject-template structure (doit tasks, CI workflows, pre-commit, etc.)
