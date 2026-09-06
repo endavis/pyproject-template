@@ -88,6 +88,23 @@ def test_template_sync_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing template-sync file: {path}"
 
 
+def test_template_migrate_exists_on_every_wired_surface() -> None:
+    """`template-migrate` plans an existing project's move onto the template.
+
+    Same two-surface layout as `template-sync`, but this one is meant to be
+    copied into a project that does not use the template yet — so the template
+    is only its distribution point.
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "template-migrate.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "template-migrate" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing template-migrate file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [
