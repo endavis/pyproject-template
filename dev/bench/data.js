@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788695951208,
+  "lastUpdate": 1788702181543,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13334,6 +13334,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.2577632727384193e-7",
             "extra": "mean: 1.0698308116553938 usec\nrounds: 63521"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4bf959896fa6316281a181d48b3691070ea08e7b",
+          "message": "fix: locate the reviewed template by glob so check hands off to sync (merges PR #807, addresses #805)\n\n`check` extracts the template to `tmp/extracted/pyproject-template-<sha>` --\nGitHub names the archive root for the ref it served, and since #779 that ref is\nalways a resolved commit (ADR-9020). `manage.py` still looked for a fixed\n`pyproject-template-main` at four sites.\n\nThe `.template_commit` write was guarded by `if template_dir.exists()`, so it\nsilently did nothing, and `sync` aborted with \"No reviewed template found\" even\nimmediately after a successful check. The documented sync-marking path was dead\nfor every downstream project: no sync point was ever recorded, so every later\ncheck ran without a baseline.\n\nA second defect in the same code: the commit written came from\n`get_template_latest_commit()`, which hardcodes `commits/main` and ignores\n`--template-version`. Once the directory bug was fixed that would have recorded\nthe tip of `main` for a review of an older ref, defeating the staged upgrade the\nflag exists for.\n\nBoth halves were covered by tests and both passed; nothing checked that they\nmet.\n\n- `utils.find_extracted_template()` globs for the archive root; the most\n  recently modified wins when an interrupted run left more than one.\n- `utils.extracted_template_commit()` reads the reviewed commit off the\n  directory name, so it names what is on disk rather than what a second API call\n  thinks the ref points at now. Returns None for a moving ref -- offline,\n  `resolve_template_ref` falls back to the ref, and a branch name is not a sync\n  point.\n- `settings.get_template_latest_commit()` becomes `get_template_commit(ref)`,\n  with the old name kept as a wrapper. Only the commit date needs the API now,\n  so a failed lookup costs the date and not the sync point.\n- `SHA_RE` moves to `utils`, where both consumers can reach it.\n\nTests: 11 new, covering the locator, the SHA parsing, the check -> sync handoff,\nthe pinned-ref case and the failed-date-lookup edge. Restoring the hardcoded\nname fails five of them.\n\n`test_sync_with_yes_skips_prompt` now chdirs to a fixture at the real relative\npath instead of patching `manage.Path` to intercept the literal\n`\"tmp/extracted/pyproject-template-main\"`. Same subject and assertions. That\nmock is why the bug survived -- it asserted the hardcoded name was used, so it\npassed for exactly as long as the handoff was broken -- and it reached the real\nworking directory, where the function ends by removing `tmp/extracted`.\n\nAlso corrected: a blank date line made a file `action_mark_synced` rejects as\nmalformed (now `unknown`); a docstring on `action_check_updates` describing a\nrelease lookup that #781 removed; the dead path taught in `ai-sync-checklist.md`\nand `manage.md`. ADR-9020 records this consequence, since the archive-root\nnaming follows from that decision and was never propagated to `manage.py`.\n\nAddresses #805\n\n\nClaude-Session: https://claude.ai/code/session_014sxHHdgQNpwfQ92gXdZHZB\n\nCo-authored-by: Claude Opus 5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-09-06T14:42:25+01:00",
+          "tree_id": "71885c7de148316fbbe0ed5c6ece7e6ea2b7e33e",
+          "url": "https://github.com/endavis/pyproject-template/commit/4bf959896fa6316281a181d48b3691070ea08e7b"
+        },
+        "date": 1788702180764,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8963203.07687171,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2799891133433647e-8",
+            "extra": "mean: 111.56725909517324 nsec\nrounds: 86829"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9175846.501829812,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1384242955266831e-8",
+            "extra": "mean: 108.98177076094112 nsec\nrounds: 89470"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6613349.105949682,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3304000306262774e-8",
+            "extra": "mean: 151.20931678933334 nsec\nrounds: 64797"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1756483.2068505646,
+            "unit": "iter/sec",
+            "range": "stddev: 2.733004749234945e-7",
+            "extra": "mean: 569.3194196789589 nsec\nrounds: 56994"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 497348.74590123334,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7313229184571407e-7",
+            "extra": "mean: 2.010661549347882 usec\nrounds: 50483"
           }
         ]
       }
