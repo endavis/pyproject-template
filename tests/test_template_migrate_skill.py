@@ -173,15 +173,20 @@ def test_no_body_reads_template_docs_from_disk() -> None:
     Scoped to `docs/template/` on purpose. The target repository may have its own
     `AGENTS.md`, `pyproject.toml` or `README.md`; reading those locally is
     correct and is what Step 3 does.
+
+    There is no exemption for lines that mention the raw host. The pattern needs
+    a read command immediately before `docs/template/`, which a `curl` line does
+    not have, so fetches are already excluded by shape. An earlier version
+    skipped any line containing the hostname -- redundant, and it would have
+    waved through a genuine violation that happened to name the host on the same
+    line. CodeQL flagged the substring check
+    (`py/incomplete-url-substring-sanitization`) and was right to.
     """
     offenders = []
     for surface, path in _wired_bodies():
         if not path.is_file():
             continue
         for line_no, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-            # A URL on the line means it is being fetched, which is the point.
-            if "raw.githubusercontent.com" in line or "$RAW" in line:
-                continue
             if _LOCAL_READ.search(line):
                 offenders.append(f"{surface}:{line_no}: {line.strip()}")
 
@@ -197,6 +202,9 @@ def test_the_local_read_scanner_detects_a_violation() -> None:
     assert _LOCAL_READ.search("Read docs/template/consumer-notes.md first")
     # Must not fire on the correct form: fetched, not read.
     assert not _LOCAL_READ.search('curl -sSL "$RAW/docs/template/migration.md"')
+    # Naming the host does not launder a local read. This is what the removed
+    # hostname-substring exemption used to let through.
+    assert _LOCAL_READ.search("Read docs/template/migration.md (from $RAW)")
     # Must not fire on the project's own files, which Step 3 reads locally and
     # which share their names with template files (#811 review).
     assert not _LOCAL_READ.search("Read AGENTS.md and follow it")
