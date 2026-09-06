@@ -18,6 +18,34 @@ Bring your existing Python project into the pyproject-template.
 > automatically. The rest is judgement about your own code: which dependencies to carry
 > over, how imports change when moving to a `src/` layout. Work through the checklist.
 
+## Let an agent plan it for you
+
+The `template-migrate` skill reads your project, fetches this checklist, asks you what your
+repository cannot answer, and writes a plan specific to your code — layout, dependencies, what will
+break — to `TEMPLATE_MIGRATION_PLAN.md`. It changes nothing until you approve it.
+
+It is **standalone**: copy one file into your project and activate it. Nothing else needs to be
+installed first.
+
+```bash
+# Claude Code
+mkdir -p .claude/commands && curl -sSL \
+  https://raw.githubusercontent.com/endavis/pyproject-template/main/.claude/commands/template-migrate.md \
+  -o .claude/commands/template-migrate.md
+
+# Codex, Antigravity, or Copilot
+mkdir -p .agents/skills/template-migrate && curl -sSL \
+  https://raw.githubusercontent.com/endavis/pyproject-template/main/.agents/skills/template-migrate/SKILL.md \
+  -o .agents/skills/template-migrate/SKILL.md
+```
+
+Then `/template-migrate` (Claude, Copilot), `$template-migrate` (Codex), or just describe the task
+(Antigravity). See
+[Slash Commands and Workflows](../development/ai/slash-commands.md#template-migrate-ref).
+
+The plan it writes maps onto the checklist below, which stays authoritative — read it when a step is
+ambiguous, or when migrating by hand.
+
 ## Manual Migration Checklist
 
 Use this checklist for a manual migration. The flow assumes hatch-vcs for versioning, commitizen for tagging/changelog, uv for deps, and doit for tasks.

@@ -122,6 +122,28 @@ Upgrades a downstream project to the latest `pyproject-template`. Refuses to run
 
 This command drives the tooling documented in [Template Management](../../template/manage.md) and the procedure in [AI Sync Checklist](../../template/ai-sync-checklist.md); it replaces neither. Read the checklist when a step is ambiguous.
 
+### `/template-migrate [ref]`
+
+**Args:** optional template ref (tag, branch, or commit SHA) to plan against; defaults to `main`. **Sources:** `.claude/commands/template-migrate.md` (Claude), `.agents/skills/template-migrate/SKILL.md` (Codex, Antigravity, Copilot).
+
+Plans an **existing** project's migration onto the template — the step before `/template-sync` has anything to sync. Unlike every other file here it is **standalone**: it is meant to be copied into a project that does not use the template, so it assumes no `doit`, no `tools/pyproject_template/`, no `AGENTS.md`, and no local copy of any template document. It resolves the template ref to a commit, fetches `migration.md`, `consumer-notes.md`, `AGENTS.md`, `python-versions.json` and `pyproject.toml` over raw HTTP (there is no documentation site, so raw URLs are the only online source), inventories the project read-only, batches its open questions to the owner, and writes `TEMPLATE_MIGRATION_PLAN.md` to the repository root. **It changes nothing until the owner approves the plan.**
+
+**Workflow position:** before adopting the template at all; `/template-sync` takes over afterwards. **Design note:** it plans rather than migrates on purpose. #783 deleted an automated migrator because it did the one mechanical step destructively while leaving every judgement step — which package is *the* package, how imports break moving to `src/`, which dependencies survive the merge — untouched. This is the complement to that decision. `tests/test_template_migrate_skill.py` enforces that both bodies fetch rather than read from disk, and that the plan gate precedes the execute step.
+
+**Installing it into another project:**
+
+```bash
+# Claude Code
+mkdir -p .claude/commands && curl -sSL \
+  https://raw.githubusercontent.com/endavis/pyproject-template/main/.claude/commands/template-migrate.md \
+  -o .claude/commands/template-migrate.md
+
+# Codex, Antigravity, or Copilot
+mkdir -p .agents/skills/template-migrate && curl -sSL \
+  https://raw.githubusercontent.com/endavis/pyproject-template/main/.agents/skills/template-migrate/SKILL.md \
+  -o .agents/skills/template-migrate/SKILL.md
+```
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -134,6 +156,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$codex-adversarial-review` runs an adversarial challenge review
 - `$ghi-finalize` drafts the commit and PR artifacts and uses `doit pr` after explicit approval
 - `$template-sync` upgrades the project to the latest template, posting a plan on the tracking issue for the admin to approve before applying anything
+- `$template-migrate` is the standalone precursor: copied into a project that does not use the template yet, it plans the migration and writes it to `TEMPLATE_MIGRATION_PLAN.md`
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -151,6 +174,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - `antigravity-adversarial-review` runs an adversarial challenge review
 - The shared `ghi-finalize` skill (from `.agents/skills/`) drafts the commit and PR artifacts
 - The shared `template-sync` skill (from `.agents/skills/`) upgrades the project to the latest template behind an admin review gate
+- The shared `template-migrate` skill plans an existing project's move onto the template, changing nothing until the owner approves
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
