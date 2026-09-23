@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1788712511355,
+  "lastUpdate": 1790179130422,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13570,6 +13570,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.557058859864581e-7",
             "extra": "mean: 2.034210466118308 usec\nrounds: 60347"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c9f664fa4c659c43a17e357853c7d8df69788894",
+          "message": "fix: compare benchmarks against the latest saved baseline, not the first (merges PR #840, addresses #838)\n\ndoit benchmark_save numbers every save (0001_baseline, 0002_baseline, ...),\nbut doit benchmark_compare was pinned to --benchmark-compare=0001_baseline.\nAfter a second save it kept comparing against the oldest one.\n\nGiven no value, --benchmark-compare uses the latest saved run. doit benchmark\nnever saves, so the latest run in tmp/benchmarks/ is always the latest\nbaseline.\n\nThe test assertion that pinned 0001_baseline asserted the defect. It now\nchecks for the bare flag, and a new test fails if any run ID is pinned.\n\nAddresses #838\n\nCo-authored-by: Claude Opus 5.5 (1M context) <noreply@anthropic.com>",
+          "timestamp": "2026-09-23T16:58:05+01:00",
+          "tree_id": "0ea892085d567176435d0dba076853fa5f77c2f7",
+          "url": "https://github.com/endavis/pyproject-template/commit/c9f664fa4c659c43a17e357853c7d8df69788894"
+        },
+        "date": 1790179128952,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9115830.1363064,
+            "unit": "iter/sec",
+            "range": "stddev: 9.01001522776044e-9",
+            "extra": "mean: 109.69927971970584 nsec\nrounds: 91034"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9322249.66117876,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0511411788658485e-8",
+            "extra": "mean: 107.27024445229821 nsec\nrounds: 80711"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5702067.6611524215,
+            "unit": "iter/sec",
+            "range": "stddev: 2.013182393325844e-8",
+            "extra": "mean: 175.37497964341836 nsec\nrounds: 196002"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1648767.56459025,
+            "unit": "iter/sec",
+            "range": "stddev: 2.427940697497491e-7",
+            "extra": "mean: 606.5136296203881 nsec\nrounds: 45159"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 530199.6430349367,
+            "unit": "iter/sec",
+            "range": "stddev: 3.389125852023324e-7",
+            "extra": "mean: 1.8860819940878506 usec\nrounds: 54260"
           }
         ]
       }
