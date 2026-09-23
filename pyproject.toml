@@ -50,7 +50,7 @@ dev = [
     "radon>=6.0",
     "pytest-benchmark>=5.3.0",
     "mutmut>=3.8.0",
-    "hypothesis>=6.167.1",
+    "hypothesis>=6.168.0",
 ]
 security = [
     "pip-audit>=2.10.1",
