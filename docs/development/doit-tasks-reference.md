@@ -142,7 +142,8 @@ doit benchmark_save
 
 **What it does:**
 - Runs benchmarks and saves results to `tmp/benchmarks/`
-- Saved baseline can be used for comparison with `benchmark_compare`
+- Each run saves a new numbered baseline (`0001_baseline`, `0002_baseline`, ...); `benchmark_compare`
+  compares against the latest one
 
 **Equivalent command:**
 ```bash
@@ -151,19 +152,20 @@ uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-
 
 ### `benchmark_compare`
 
-Run benchmarks and compare against a saved baseline.
+Run benchmarks and compare against the latest saved baseline.
 
 ```bash
 doit benchmark_compare
 ```
 
 **What it does:**
-- Runs benchmarks and compares results against the saved baseline
+- Runs benchmarks and compares results against the most recent baseline saved by `benchmark_save`
 - Shows performance regressions or improvements
+- With no saved baseline, pytest-benchmark warns `Can't compare` and the run still passes
 
 **Equivalent command:**
 ```bash
-uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-compare=0001_baseline --benchmark-storage=tmp/benchmarks -v
+uv run pytest tests/benchmarks/ --benchmark-enable --benchmark-only --benchmark-compare --benchmark-storage=tmp/benchmarks -v
 ```
 
 ---

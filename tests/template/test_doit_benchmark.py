@@ -59,6 +59,16 @@ class TestTaskBenchmarkCompare:
         action = result["actions"][0]
         assert "--benchmark-enable" in action
         assert "--benchmark-only" in action
-        assert "--benchmark-compare=0001_baseline" in action
+        assert "--benchmark-compare" in action.split()
         assert "--benchmark-storage=tmp/benchmarks" in action
         assert "tests/benchmarks/" in action
+
+    def test_compare_uses_latest_save_not_a_pinned_run(self) -> None:
+        """Test that the compare flag names no run, so the latest save is used (#838).
+
+        ``benchmark_save`` numbers every save (0001_baseline, 0002_baseline, ...).
+        A pinned run ID keeps comparing against the first save after later ones
+        exist.
+        """
+        action = task_benchmark_compare()["actions"][0]
+        assert not [arg for arg in action.split() if arg.startswith("--benchmark-compare=")]
