@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790179130422,
+  "lastUpdate": 1790353702218,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13629,6 +13629,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.389125852023324e-7",
             "extra": "mean: 1.8860819940878506 usec\nrounds: 54260"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d87a27608887446c56f0df85c1c95233554e5fe7",
+          "message": "docs: add the Dependencies section AGENTS.md points to (merges PR #846, addresses #828)\n\nAGENTS.md's Pre-Action Checks table sends every agent to\n`.github/CONTRIBUTING.md` (Dependencies) before it adds a dependency.\nCONTRIBUTING.md had no such section. It now has one, listed in its table of\ncontents: the Ask First policy, the hook that blocks `uv add` for agents,\nwhere a dependency goes (runtime, the `dev` extra or the `security` extra),\nthe stub-or-override typing requirement, and `doit audit` / `doit licenses`.\n\ntests/test_instruction_pointers.py now checks that pointer form. A section\nname must match the leading words of a heading, in any case, so (TodoWrite)\nresolves to `# TODOWRITE USAGE (MANDATORY)`. A substring match would have\nresolved (Dependencies) against a shell comment in a CONTRIBUTING.md code\nblock, and the missing section would have passed. Before the section\nexisted, the new test failed on exactly AGENTS.md:58.\n\narchitectural-conventions.md and tooling-roles.md told contributors to use a\n`[dependency-groups] dev` table that pyproject.toml does not have. They now\nname `[project.optional-dependencies] dev`, and architectural-conventions.md\nlinks its Ask First pointer to the new section.\n\nAddresses #828\n\n\nClaude-Session: https://claude.ai/code/session_01SNdixhsnxW7mMwE713bB34\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-25T17:27:32+01:00",
+          "tree_id": "36695f887cac71bf3a0a2c656b44801d5a2e81f6",
+          "url": "https://github.com/endavis/pyproject-template/commit/d87a27608887446c56f0df85c1c95233554e5fe7"
+        },
+        "date": 1790353700875,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8543665.610974045,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1426563230080165e-8",
+            "extra": "mean: 117.04577935675925 nsec\nrounds: 84589"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8849876.70979337,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4657178212088446e-8",
+            "extra": "mean: 112.9959244396466 nsec\nrounds: 85230"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5719289.059476051,
+            "unit": "iter/sec",
+            "range": "stddev: 1.498880640549159e-8",
+            "extra": "mean: 174.84690659989317 nsec\nrounds: 56488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1666830.3325635633,
+            "unit": "iter/sec",
+            "range": "stddev: 3.362418728714043e-7",
+            "extra": "mean: 599.9410860624387 nsec\nrounds: 70289"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 500791.5089450385,
+            "unit": "iter/sec",
+            "range": "stddev: 5.489293015118954e-7",
+            "extra": "mean: 1.9968389681897527 usec\nrounds: 54157"
           }
         ]
       }
