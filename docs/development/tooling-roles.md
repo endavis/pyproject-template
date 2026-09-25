@@ -65,7 +65,7 @@ The template is opinionated about a small number of things:
   ships to every user of the package. Add to it sparingly.
 - **Dev tooling is heavy and lives under `tools/`.** Contributors get the
   full suite (doit, ruff, mypy, pytest, mkdocs, mutmut, etc.) via
-  `[dependency-groups] dev`.
+  `[project.optional-dependencies] dev`.
 - **`doit` is a development tool, not a runtime tool.** Tasks under
   `tools/doit/` exist to make contributor workflows reproducible. They are
   not part of the package's public API.
