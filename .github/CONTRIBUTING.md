@@ -10,6 +10,7 @@ Thank you for your interest in contributing to this project! We welcome contribu
 - [How to Contribute](#how-to-contribute)
 - [Coding Standards](#coding-standards)
 - [Testing Guidelines](#testing-guidelines)
+- [Dependencies](#dependencies)
 - [Commit Guidelines](#commit-guidelines)
 - [Pull Request Process](#pull-request-process)
 - [Release Process](#release-process)
@@ -230,6 +231,59 @@ def test_feature_with_multiple_inputs(input_value, expected):
     """Test feature with various inputs."""
     assert function_to_test(input_value) == expected
 ```
+
+## Dependencies
+
+### Ask First
+
+Get approval before you add any dependency: a runtime dependency, an entry in the `dev` or
+`security` extra, or a type stub. Propose it first — name the package, what it is for, the table
+it belongs in, and why the standard library or an existing dependency will not do. Contributors
+propose it on the issue. AI agents ask the user and wait.
+
+AI agents cannot run `uv add` at all. The dangerous-command hook,
+[`block-dangerous-commands.py`](../tools/hooks/ai/block-dangerous-commands.py), blocks it in any
+form — with flags, chained after another command, even `uv add --help` — and tells the agent to
+suggest the package and let the user run the command. The script is wired into every supported
+agent's hook configuration; see
+[AI Command Blocking](../docs/development/ai/command-blocking.md#blocked-workflow-commands). The
+hook matches the command, not the intent: writing the entry into `pyproject.toml` by hand is the
+same change and needs the same approval.
+
+### Where a Dependency Goes
+
+| `pyproject.toml` table | Holds | Command |
+| :--- | :--- | :--- |
+| `[project] dependencies` | What code under `src/` imports at runtime. It ships to every user of the package, so keep it minimal. | `uv add <package>` |
+| `[project.optional-dependencies] dev` | Tests, linting, type checking, docs, and `doit` tasks. Type stubs go here, even for a runtime package. | `uv add --optional dev <package>` |
+| `[project.optional-dependencies] security` | The tools behind `doit audit`, `doit security`, `doit licenses` and `doit sbom`. | `uv add --optional security <package>` |
+
+There is no `[dependency-groups]` table. uv's `--dev` flags act on a `dev` dependency *group*,
+not on the `dev` extra above.
+
+Give every entry a `>=` lower bound, as the existing entries have, and commit `pyproject.toml`
+and `uv.lock` together.
+
+### Typing
+
+mypy runs without a global `ignore_missing_imports`, so importing a package that ships neither
+inline types nor stubs fails with `[import-untyped]`. Either:
+
+- add its stub package to the `dev` extra, as `types-pyyaml` is there for `pyyaml`; or
+- if no stubs exist, add a `[[tool.mypy.overrides]]` entry with `ignore_missing_imports = true`
+  for that package's modules only, as `pyproject.toml` has for `doit.*`.
+
+### Checks
+
+Install the `security` extra (`uv sync --all-extras` or `uv sync --extra security`), then run:
+
+- `doit audit` — `pip-audit` checks the environment for dependencies with known
+  vulnerabilities.
+- `doit licenses` — `pip-licenses` lists every installed package by license. Confirm the new
+  package, and anything it pulls in, is compatible with the project's license.
+
+Without the extra, both tasks print an install hint and exit 0, a pass that checked nothing.
+`doit check` runs `audit` but not `licenses`.
 
 ## Commit Guidelines
 

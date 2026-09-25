@@ -24,13 +24,13 @@ This page is the imperative-form rulebook AI agents must follow when generating 
 - DO expose the application's user-facing command-line interface as a console script declared in `[project.scripts]` in `pyproject.toml`, backed by a module under `src/__PACKAGE_NAME__/`.
 - DO keep `[project] dependencies` minimal. Every entry ships to every end user of the package.
 - DO use `doit <task>` for development workflows (test, lint, type-check, build, release, issue and PR creation).
-- DO add heavy libraries used only by tests or tooling to `[dependency-groups] dev`, not `[project] dependencies`.
+- DO add heavy libraries used only by tests or tooling to `[project.optional-dependencies] dev`, not `[project] dependencies`.
 
 **DO NOT:**
 
 - DO NOT import from `tools/` or `dodo.py` in any module under `src/__PACKAGE_NAME__/`. Runtime code must be installable and runnable without any dev tooling present.
 - DO NOT use `doit` tasks to expose application functionality to end users. `doit` is a dev surface, not a runtime surface.
-- DO NOT add a runtime dependency without asking the user first. See the "Ask First" policy in `.github/CONTRIBUTING.md`.
+- DO NOT add a runtime dependency without asking the user first. See the "Ask First" policy in [CONTRIBUTING.md — Dependencies](../../../.github/CONTRIBUTING.md#dependencies).
 - DO NOT conflate the development CLI (`doit`) with the application's runtime CLI (console script) in code, PR descriptions, or docs.
 
 ## Common failure modes
@@ -53,7 +53,7 @@ Concrete anti-patterns AI agents hit in this template, with the correct framing 
 
 **Wrong:** Test needs `hypothesis`, so agent runs `uv add hypothesis`, which adds it to `[project] dependencies`. Every downstream user of the package now pulls `hypothesis` at install time.
 
-**Right:** Add test-only and tooling-only libraries to `[dependency-groups] dev`. Runtime dependencies ship to every user of the package and must stay minimal. New runtime deps require explicit user approval (do not run `uv add` on your own — that command is blocked for AI agents).
+**Right:** Add test-only and tooling-only libraries to `[project.optional-dependencies] dev`. Runtime dependencies ship to every user of the package and must stay minimal. New runtime deps require explicit user approval (do not run `uv add` on your own — that command is blocked for AI agents).
 
 ### 4. Proposing `doit run_app` as the user entry point
 
