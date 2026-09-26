@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790433510586,
+  "lastUpdate": 1790434982994,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14219,6 +14219,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.841987291415024e-7",
             "extra": "mean: 2.016967238064392 usec\nrounds: 59734"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6dcb40cdd508bcd8bdcda5ab8f3c990b12788fe2",
+          "message": "fix: have /ghi-status suggest gh issue close for a merged PR (merges PR #867, addresses #865)\n\nFor a merged PR, /ghi-status suggested `doit pr_merge --auto-close`. That\ntask refuses any PR that is not open (\"PR is not open (state: MERGED)\")\nbefore it merges or closes anything, so the suggestion closed nothing. The\nrow now suggests gh issue close with the \"Addressed in PR #<PR>\" comment\nthat AGENTS.md asks for.\n\ntests/test_ghi_status_command.py holds the row to that.\n\nAddresses #865\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T16:02:26+01:00",
+          "tree_id": "2c4dedf57ace30b7a62e0b2cc9a4aed87ab28d47",
+          "url": "https://github.com/endavis/pyproject-template/commit/6dcb40cdd508bcd8bdcda5ab8f3c990b12788fe2"
+        },
+        "date": 1790434981635,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12832851.778031116,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1140270294652521e-8",
+            "extra": "mean: 77.92500196347046 nsec\nrounds: 129871"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13689901.06835119,
+            "unit": "iter/sec",
+            "range": "stddev: 8.235476973606224e-9",
+            "extra": "mean: 73.04654686744495 nsec\nrounds: 132416"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8844985.829879384,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0199837553634874e-8",
+            "extra": "mean: 113.0584061109385 nsec\nrounds: 87321"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2225575.721908896,
+            "unit": "iter/sec",
+            "range": "stddev: 1.382822030245168e-7",
+            "extra": "mean: 449.3219395574153 nsec\nrounds: 67025"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 688760.747355633,
+            "unit": "iter/sec",
+            "range": "stddev: 2.931633532264201e-7",
+            "extra": "mean: 1.4518829707402918 usec\nrounds: 54559"
           }
         ]
       }
