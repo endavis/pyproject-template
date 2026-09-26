@@ -16,6 +16,9 @@ Thank you for your interest in contributing to this project! We welcome contribu
 - [Release Process](#release-process)
 - [Reporting Bugs](#reporting-bugs)
 - [Requesting Features](#requesting-features)
+- [Development Workflow](#development-workflow)
+- [Questions?](#questions)
+- [Thank You!](#thank-you)
 
 ## Code of Conduct
 
