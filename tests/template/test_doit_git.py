@@ -165,8 +165,11 @@ class TestWorktree:
     ) -> None:
         """An inherited VIRTUAL_ENV names the main checkout's .venv; the sync must not see it."""
         _, mock_sync = mocks
+        # Absolute on every OS. "/shared/uv-cache" has no drive, so on Windows it
+        # is not absolute and is rightly resolved against the current drive.
+        cache = tmp_path / "uv-cache"
         monkeypatch.setenv("VIRTUAL_ENV", "/main/.venv")
-        monkeypatch.setenv("UV_CACHE_DIR", "/shared/uv-cache")
+        monkeypatch.setenv("UV_CACHE_DIR", str(cache))
         self._create(self.BRANCH)
 
         mock_sync.assert_called_once()
@@ -174,7 +177,7 @@ class TestWorktree:
         assert mock_sync.call_args.kwargs["cwd"] == tmp_path / "worktrees" / self.BRANCH
         env = mock_sync.call_args.kwargs["env"]
         assert "VIRTUAL_ENV" not in env
-        assert env["UV_CACHE_DIR"] == "/shared/uv-cache"
+        assert env["UV_CACHE_DIR"] == str(cache)
 
     def test_a_relative_uv_cache_stays_this_checkouts_cache(
         self,
