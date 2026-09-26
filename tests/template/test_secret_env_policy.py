@@ -28,7 +28,7 @@ from agent_roster import skip_if_absent
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HOOK_PATH = REPO_ROOT / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
 CODEX_CONFIG = REPO_ROOT / ".codex" / "config.toml"
-SKIP_DIRS = {".git", "site", "tmp", ".venv", "__pycache__"}
+SKIP_DIRS = {".git", "site", "tmp", ".venv", "__pycache__", "worktrees"}
 SCANNED_SUFFIXES = {".py", ".toml", ".json", ".yaml", ".yml"}
 
 
@@ -119,6 +119,18 @@ def test_stray_search_skips_only_directories_inside_the_root(tmp_path: Path) -> 
     (root / "tmp" / "scratch.toml").write_text(copy, encoding="utf-8")
 
     assert _stray_copies(root) == [str(Path("config") / "agent.toml")]
+
+
+def test_stray_search_skips_worktrees(tmp_path: Path) -> None:
+    """A worktree holds its own copy of the hook and configs, not a stray (#854)."""
+    copy = '"*_API_KEY",\n"*_SECRET",\n'
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "agent.toml").write_text(copy, encoding="utf-8")
+    worktree_config = tmp_path / "worktrees" / "feat" / "42-add-export" / ".codex"
+    worktree_config.mkdir(parents=True)
+    (worktree_config / "config.toml").write_text(copy, encoding="utf-8")
+
+    assert _stray_copies(tmp_path) == [str(Path("config") / "agent.toml")]
 
 
 def test_documentation_records_per_agent_coverage() -> None:

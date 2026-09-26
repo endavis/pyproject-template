@@ -101,6 +101,7 @@ The Issue contains the full discussion; the ADR summarizes the outcome.
 | [9019](9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md) | The dangerous-command hook is a guardrail, not a security boundary | Accepted |
 | [9020](9020-a-template-version-is-a-commit-sha.md) | A template version is a commit SHA | Accepted |
 | [9021](9021-a-pr-may-target-the-unmerged-branch-it-builds-on.md) | A PR may target the unmerged branch it builds on | Accepted |
+| [9022](9022-worktrees-live-in-worktrees-each-with-its-own-environment.md) | Worktrees live in worktrees/, each with its own environment | Accepted |
 
 ### Project-level ADRs (0001+)
 

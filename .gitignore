@@ -71,6 +71,9 @@ tmp/*
 !tmp/.gitkeep
 .cache/
 
+# Git worktrees made by `doit worktree`. Not temporary: each lives until its PR merges.
+worktrees/
+
 # Documentation
 site/
 

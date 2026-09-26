@@ -864,6 +864,18 @@ git checkout -b feat/42-add-feature
 
 **Branch naming is enforced by pre-commit hooks.**
 
+**When your checkout holds other work,** create the branch in a worktree instead:
+
+```bash
+doit worktree --branch=feat/42-add-feature
+```
+
+The worktree goes in `worktrees/feat/42-add-feature` (gitignored), with its own `.venv`. Inside it,
+run everything through `uv run` (`uv run doit check`, `uv run doit pr`) and never pass `--active`,
+which installs the worktree into the main checkout's `.venv`. Once the PR has merged, remove it
+from the main checkout with `git worktree remove worktrees/feat/42-add-feature`. See
+[`doit worktree`](../docs/development/doit-tasks-reference.md#worktree).
+
 #### 3. **Commit:** Use Conventional Commits
 
 **Format:** `<type>: <subject>`

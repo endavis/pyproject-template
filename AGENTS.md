@@ -192,6 +192,7 @@ The tool hierarchy (prefer higher over lower):
 | Create ADRs | `doit adr` | Manual file creation |
 | Sync GitHub labels | `doit labels_sync` | `gh label create` / `gh label edit` manually |
 | Commit (interactive) | `doit commit` | `git commit` without format |
+| Create a worktree | `doit worktree --branch=<branch>` | `git worktree add` by hand |
 | Install/add packages | `uv add <pkg>` | `pip install` |
 | Sync dependencies | `uv sync` | `pip install -r` |
 | Run Python scripts | `uv run <script>` | `python` directly |
@@ -304,6 +305,8 @@ Where `<agent-type>` is one of: `claude`, `copilot`, `codex`, `antigravity`, or 
 **Cleanup rule:** Agents must delete their temporary files when the task is complete. Do not leave stale files in `tmp/agents/`.
 
 **Exception:** `tmp/checkpoints/` is the one location outside `tmp/agents/<agent-type>/`. Checkpoints written by `/checkpoint` are portable project-state captures meant to be readable by any agent — Claude can write a checkpoint and Codex or Copilot can restore from it.
+
+**Worktrees are not temporary files.** A worktree lives until its PR merges, so it goes in `worktrees/` (gitignored), never under `tmp/`, which `doit cleanup` empties. Create one with `doit worktree`. Inside it, run commands through `uv run` and never pass `--active`, which installs the worktree into the main checkout's `.venv`.
 
 ## Token Efficiency
 - **Be Concise:** Minimal text output.
