@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790353702218,
+  "lastUpdate": 1790418834036,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13688,6 +13688,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.489293015118954e-7",
             "extra": "mean: 1.9968389681897527 usec\nrounds: 54157"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "739e8157c3d3efa8c806687421a15de328725254",
+          "message": "fix: stop two test walkers skipping every file when the checkout sits under tmp/ (merges PR #849, addresses #848)\n\ntests/test_instruction_pointers.py and tests/template/test_secret_env_policy.py\nmatched their skip lists against each file's absolute path. A checkout under a\ndirectory named tmp, such as a worktree in tmp/agents/<agent>/, has tmp in every\npath, so both walkers scanned nothing: the pointer guard failed, and the stray\nsecret-pattern search passed having checked nothing.\n\nBoth now match against the path relative to the repository root, as\ntests/test_documented_paths.py already does. Each gains a regression test that\nbuilds its root under a tmp directory, because CI's checkout path contains none\nof the skipped names.\n\nAddresses #848\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T11:33:03+01:00",
+          "tree_id": "efdffdf664b3a5c4acc19c9eb23c16484fba2a5d",
+          "url": "https://github.com/endavis/pyproject-template/commit/739e8157c3d3efa8c806687421a15de328725254"
+        },
+        "date": 1790418833200,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8628756.764078831,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1428736465394285e-8",
+            "extra": "mean: 115.89155046796081 nsec\nrounds: 84955"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8882733.591809297,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0929115419393061e-8",
+            "extra": "mean: 112.5779569615926 nsec\nrounds: 88246"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5598872.374394374,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8888639730486708e-8",
+            "extra": "mean: 178.60739326249944 nsec\nrounds: 55088"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1668010.8211431748,
+            "unit": "iter/sec",
+            "range": "stddev: 2.250106078178857e-7",
+            "extra": "mean: 599.5164943322418 nsec\nrounds: 67811"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 501630.4634409088,
+            "unit": "iter/sec",
+            "range": "stddev: 5.203171125862237e-7",
+            "extra": "mean: 1.9934993443989637 usec\nrounds: 59482"
           }
         ]
       }
