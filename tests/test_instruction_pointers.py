@@ -43,7 +43,7 @@ INSTRUCTION_GLOBS = (
     ".github/instructions/*.md",
 )
 
-SKIP_DIRS = {".venv", "node_modules", "site", "tmp", ".git", "__pycache__"}
+SKIP_DIRS = {".venv", "node_modules", "site", "tmp", ".git", "__pycache__", "worktrees"}
 
 # A quoted markdown heading. Backslashes are excluded so that shell examples like
 # `--body="## Problem\nDescribe the problem"` in AGENTS.md are not mistaken for
@@ -346,6 +346,20 @@ def test_markdown_files_skip_only_directories_inside_the_root(tmp_path: Path) ->
     (root / "tmp" / "skipped.md").write_text("# Skipped\n", encoding="utf-8")
 
     assert _markdown_files(root) == [root / "docs" / "kept.md"]
+
+
+def test_markdown_files_skip_worktrees(tmp_path: Path) -> None:
+    """Each worktree under `worktrees/` is a full copy of the repository (#854).
+
+    Scanning them would check every copy's instruction files, not this checkout's.
+    """
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "kept.md").write_text("# Kept\n", encoding="utf-8")
+    copy = tmp_path / "worktrees" / "feat" / "42-add-export"
+    copy.mkdir(parents=True)
+    (copy / "AGENTS.md").write_text("# Copy\n", encoding="utf-8")
+
+    assert _markdown_files(tmp_path) == [tmp_path / "docs" / "kept.md"]
 
 
 @pytest.mark.parametrize(

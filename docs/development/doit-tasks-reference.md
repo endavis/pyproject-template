@@ -41,7 +41,7 @@ doit <task_name>
 | [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync`, `env_create`, `env_list`, `publish_setup` | Issue, PR, and environment management |
 | [Release](#release-tasks) | `release`, `release_tag`, `publish` | Version and release management |
 | [Version](#version-tasks) | `bump`, `changelog` | Version bumping and changelog |
-| [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv` | Development environment |
+| [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv`, `worktree` | Development environment |
 | [Maintenance](#maintenance-tasks) | `cleanup`, `template_clean` | Project cleanup |
 
 ---
@@ -1082,6 +1082,40 @@ doit commit
 ```bash
 uv run cz commit
 ```
+
+### `worktree`
+
+Create a git worktree with its own environment, for working on a branch while the main checkout
+holds other work.
+
+```bash
+doit worktree --branch=feat/42-add-export
+```
+
+**What it does:**
+1. Checks the branch name with `git check-ref-format`
+2. Fetches `origin/main` and creates `worktrees/<branch>` in the main checkout, on a new branch
+   with no upstream, so `doit pr` pushes it
+3. Runs `uv sync --all-extras --dev` inside the worktree with `VIRTUAL_ENV` unset, so the worktree
+   gets its own `.venv` and the main checkout's is left alone
+4. Prints how to work there and how to remove it
+
+**Working in a worktree:**
+- Run everything through `uv run` (for example `uv run doit check`), which uses the worktree's
+  `.venv`. The shell's `VIRTUAL_ENV` and `PATH` still point at the main checkout's environment,
+  so a bare `pytest` or `doit` runs from that environment instead.
+- Never pass `--active` to `uv`. It installs the worktree's copy of the project into the main
+  checkout's `.venv`.
+- direnv users can run `direnv allow` in the worktree to switch the shell to its `.venv`.
+- Once the PR has merged, remove it from the main checkout: `git worktree remove worktrees/<branch>`,
+  then `git branch -D <branch>` if the branch still exists.
+
+`worktrees/` is gitignored and skipped by the repository-wide test walkers, so `doit check` in the
+main checkout does not scan the worktrees' copies. Worktrees do not go under `tmp/`, which
+[`cleanup`](#cleanup) empties.
+
+**Options:**
+- `--branch`: Name of the branch to create (required). The worktree path is `worktrees/<branch>`.
 
 ---
 

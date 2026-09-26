@@ -25,7 +25,16 @@ import re
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
-SKIP_DIRS = {".git", ".venv", "site", "node_modules", "__pycache__", "tmp", ".mypy_cache"}
+SKIP_DIRS = {
+    ".git",
+    ".venv",
+    "site",
+    "node_modules",
+    "__pycache__",
+    "tmp",
+    ".mypy_cache",
+    "worktrees",
+}
 
 # A backticked path with a directory component and a known extension. Bare
 # filenames ("run `configure.py`") are shorthand, not location claims, and are
@@ -68,11 +77,11 @@ ALLOWED: dict[str, str] = {
 }
 
 
-def _markdown_files() -> list[Path]:
+def _markdown_files(root: Path = REPO_ROOT) -> list[Path]:
     return [
         path
-        for path in sorted(REPO_ROOT.rglob("*.md"))
-        if not any(part in SKIP_DIRS for part in path.relative_to(REPO_ROOT).parts)
+        for path in sorted(root.rglob("*.md"))
+        if not any(part in SKIP_DIRS for part in path.relative_to(root).parts)
     ]
 
 
@@ -110,6 +119,21 @@ def test_documented_paths_exist() -> None:
         + "\n  ".join(missing)
         + "\nFix the path, or add it to ALLOWED with the reason it is not a real file."
     )
+
+
+def test_the_scanner_skips_worktrees(tmp_path: Path) -> None:
+    """Each worktree under `worktrees/` is a full copy of the repository (#854).
+
+    Its docs name paths relative to itself, and a check run from the main
+    checkout must not also judge every copy.
+    """
+    (tmp_path / "docs").mkdir()
+    (tmp_path / "docs" / "kept.md").write_text("# Kept\n", encoding="utf-8")
+    copy = tmp_path / "worktrees" / "feat" / "42-add-export" / "docs"
+    copy.mkdir(parents=True)
+    (copy / "index.md").write_text("# Copy\n", encoding="utf-8")
+
+    assert _markdown_files(tmp_path) == [tmp_path / "docs" / "kept.md"]
 
 
 def test_the_scanner_reads_something() -> None:
