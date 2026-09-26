@@ -1,3 +1,14 @@
+---
+title: "ADR-9020: A template version is a commit SHA"
+description: A template version is a commit SHA, not a release tag or a branch name
+date: 2026-08-29
+audience:
+  - contributors
+tags:
+  - adr
+  - template
+---
+
 # ADR-9020: A template version is a commit SHA
 
 ## Status
