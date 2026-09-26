@@ -685,6 +685,8 @@ doit pr_merge --auto-close
    the repository's default branch, or has a title that is not in conventional commit format
 3. Merges with conventional commit format: `<type>: <subject> (merges PR #XX, addresses #YY)`
 4. If `--auto-close` is set, closes each linked issue with a `Addressed in PR #XX` comment; otherwise prints the `gh issue close` commands as a reminder.
+5. If a linked worktree has the PR's branch checked out, deletes the branch itself and removes the
+   worktree (see below)
 
 The task does not check approvals or CI itself. GitHub refuses the merge when branch protection
 requires them and they are not met.
@@ -697,6 +699,32 @@ branch onto `main`, then retarget it with `gh pr edit <number> --base main`.
 **Stacked PRs:** PRs in a GitHub native stack are not supported. GitHub merges them only through its
 asynchronous merge API, so `gh pr merge` fails on them. The task recognizes that error and says so.
 Unstack them with `gh stack unstack` (gh-stack extension), then merge them bottom first.
+
+**A PR whose branch is in a worktree:** `gh pr merge --delete-branch` checks out `main` in the
+checkout that has the PR's branch, then deletes the branch. In a linked worktree git refuses that
+checkout while `main` is checked out anywhere else, and from any other checkout git refuses to
+delete the branch. So when a linked worktree has the branch, the task merges without
+`--delete-branch`. Once GitHub reports the PR as merged, it:
+
+- deletes the branch on GitHub, unless the repository already deletes head branches on merge
+- removes the worktree, if it is under `worktrees/`. It is kept, with the files listed, when it has
+  modified or untracked files, which git refuses to remove, or an ignored file that cannot be
+  rebuilt, such as `.envrc.local`, which git would delete without asking. `.venv/`, caches and
+  build output are rebuilt, so they do not count
+- deletes the local branch if it still points at the commit the PR merged. A squash merge needs
+  `git branch -D`, which would otherwise drop a commit that was never pushed
+- removes the directories under `worktrees/` that the worktree leaves empty
+
+Run it from the main checkout, and pass `--pr`: without it, the task merges the PR for the main
+checkout's own branch.
+
+```bash
+uv run doit pr_merge --pr=123 --auto-close
+```
+
+Run from inside the worktree, the task merges but cannot remove the directory it runs in, so it
+prints the commands that do. A worktree outside `worktrees/`, such as one Claude Code made in
+`.claude/worktrees/`, is left in place with its branch.
 
 **Options:**
 - `--pr`: PR number to merge (defaults to PR for current branch)
@@ -1098,7 +1126,7 @@ doit worktree --branch=feat/42-add-export
    with no upstream, so `doit pr` pushes it
 3. Runs `uv sync --all-extras --dev` inside the worktree with `VIRTUAL_ENV` unset, so the worktree
    gets its own `.venv` and the main checkout's is left alone
-4. Prints how to work there and how to remove it
+4. Prints how to work there, and how to merge its PR so that the worktree is removed
 
 **Working in a worktree:**
 - Run everything through `uv run` (for example `uv run doit check`), which uses the worktree's
@@ -1107,8 +1135,9 @@ doit worktree --branch=feat/42-add-export
 - Never pass `--active` to `uv`. It installs the worktree's copy of the project into the main
   checkout's `.venv`.
 - direnv users can run `direnv allow` in the worktree to switch the shell to its `.venv`.
-- Once the PR has merged, remove it from the main checkout: `git worktree remove worktrees/<branch>`,
-  then `git branch -D <branch>` if the branch still exists.
+- Merge its PR from the main checkout with `uv run doit pr_merge --pr=<number>`, which removes the
+  worktree and its branch. See [`pr_merge`](#pr_merge). To remove a worktree without merging, run
+  `git worktree remove worktrees/<branch>` from the main checkout.
 
 `worktrees/` is gitignored and skipped by the repository-wide test walkers, so `doit check` in the
 main checkout does not scan the worktrees' copies. Worktrees do not go under `tmp/`, which

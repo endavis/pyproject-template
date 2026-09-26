@@ -11,8 +11,9 @@ Accepted
 2. `doit worktree --branch=<branch>` fetches `origin/main`, creates the branch from it with no
    upstream (so `doit pr` pushes it), and runs `uv sync --all-extras --dev` inside the worktree
    with `VIRTUAL_ENV` unset.
-3. Inside a worktree, commands run through `uv run`, never with `--active`. The worktree is
-   removed with `git worktree remove` once its PR has merged.
+3. Inside a worktree, commands run through `uv run`, never with `--active`. The PR is merged from
+   the main checkout with `doit pr_merge --pr=<number>`, which then removes the worktree and
+   deletes its branch (#863).
 
 ## Rationale
 An agent needs a separate checkout when the user has uncommitted work in theirs. Doing it by hand
@@ -39,6 +40,15 @@ done wrong. The task does all three steps. It also resolves a relative `UV_CACHE
 running `uv` inside the worktree, so the worktree shares the main checkout's uv cache instead of
 starting an empty one.
 
+Removal was a manual step until #863, and the merge made it worse. `gh pr merge --delete-branch`
+checks out `main` in the worktree that has the PR's branch. Git refuses that while `main` is
+checked out anywhere else, including the main checkout. Run from the main checkout instead, git
+refuses to delete a branch that a worktree has checked out. So `doit pr_merge` merges such a PR
+without `--delete-branch` and deletes the branch itself. It removes the worktree only when that
+loses nothing: git refuses modified and untracked files, but deletes ignored ones without asking,
+so an ignored file that cannot be rebuilt, such as `.envrc.local`, keeps the worktree. The local
+branch goes only if it still points at the commit the PR merged.
+
 ## Consequences
 - **Every repository-wide walker must skip `worktrees/`.** Each worktree is a full copy of the
   repository, so a scan from the main checkout would otherwise judge every copy.
@@ -49,6 +59,10 @@ starting an empty one.
   in it. `uv run` is what makes commands use the worktree's `.venv`.
 - **Worktrees are always created from `origin/main`.** Branching from an unmerged branch, for
   work that builds on it, is not covered by the task.
+- **The PR is merged from the main checkout.** Run inside the worktree, `doit pr_merge` cannot
+  remove the directory it runs in, so it prints the commands instead. From the main checkout it
+  needs `--pr`, or it merges the PR for that checkout's own branch. It also runs that checkout's
+  copy of the task, so a main checkout on a branch older than #863 does not remove the worktree.
 
 ## Related Issues
 - Issue #854: a gitignored `worktrees/` directory and a `doit worktree` task
@@ -56,8 +70,9 @@ starting an empty one.
   checked nothing
 - Issue #847: the stacked-PR trial where the manual worktree procedure failed
 - Issue #860: the rule is anchored to `/worktrees/`, and `.claude/worktrees/` has its own entry
+- Issue #863: `doit pr_merge` removes the merged PR's worktree and deletes its branch itself
 
 ## Related Documentation
-- [Doit Tasks Reference](../development/doit-tasks-reference.md) — the `worktree` task and how to
-  work in a worktree
+- [Doit Tasks Reference](../development/doit-tasks-reference.md) — the `worktree` task, how to
+  work in a worktree, and how `pr_merge` removes it
 - [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) — Development Workflow, step 2
