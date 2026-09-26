@@ -1,3 +1,14 @@
+---
+title: "ADR-9008: PR-based development workflow"
+description: Every change goes Issue → Branch → Commit → PR → Merge, and nothing is committed to main directly
+date: 2026-01-21
+audience:
+  - contributors
+tags:
+  - adr
+  - workflow
+---
+
 # ADR-9008: PR-based development workflow
 
 ## Status
