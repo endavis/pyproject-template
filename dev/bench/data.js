@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790418834036,
+  "lastUpdate": 1790419937231,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13747,6 +13747,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.203171125862237e-7",
             "extra": "mean: 1.9934993443989637 usec\nrounds: 59482"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "18033b7213a3c148f2ab99b9885210bb57530379",
+          "message": "docs: point mkdocs.yml's link-validation comment at test_markdown_links.py (merges PR #850, addresses #843)\n\nThe comment explaining why `links.not_found` is ignored named\ntests/test_docs_links.py as the test that validates links. #716 renamed that\nfile to tests/test_markdown_links.py, so the pointer led nowhere.\n\nAddresses #843\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T11:51:41+01:00",
+          "tree_id": "877d9a45372fd31f5af27fd52960df32c4ae18b9",
+          "url": "https://github.com/endavis/pyproject-template/commit/18033b7213a3c148f2ab99b9885210bb57530379"
+        },
+        "date": 1790419935908,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8523783.945901657,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4644791693367925e-8",
+            "extra": "mean: 117.31878779973215 nsec\nrounds: 81150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8653910.581816856,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6979390350737402e-8",
+            "extra": "mean: 115.55469524969989 nsec\nrounds: 85529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5673325.831355714,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7327484844343835e-8",
+            "extra": "mean: 176.26345281865068 nsec\nrounds: 57301"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1721387.378341848,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5692424516054514e-7",
+            "extra": "mean: 580.9267644121248 nsec\nrounds: 65665"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 490020.81771199097,
+            "unit": "iter/sec",
+            "range": "stddev: 5.654706435716108e-7",
+            "extra": "mean: 2.0407296258742798 usec\nrounds: 41143"
           }
         ]
       }
