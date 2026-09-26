@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790435133334,
+  "lastUpdate": 1790435920555,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14337,6 +14337,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.704602752884405e-7",
             "extra": "mean: 1.115882525176926 usec\nrounds: 59085"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f526db3ee268a18d387f600d24e730da25149ffa",
+          "message": "docs: correct where AI_SETUP.md says /ghi-status comes from (merges PR #870, addresses #869)\n\nAI_SETUP.md said twice, in the Copilot section, that /ghi-status comes\nfrom .agents/skills/. That directory has no ghi-status skill. Copilot\nreads /ghi-status from .claude/commands/ghi-status.md as a single-file\ncommand: `copilot skill list` shows it with that file's text as its\ndescription. Both lines now say so, which also matches .copilot/README.md\nand slash-commands.md.\n\ntests/test_ai_setup_skill_sources.py checks that every command the doc\nsays comes from .agents/skills/ has a skill there.\n\nAddresses #869\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T16:18:05+01:00",
+          "tree_id": "6601e8b2ca9e360674b7e6a0b64ecb8ed52b7c0b",
+          "url": "https://github.com/endavis/pyproject-template/commit/f526db3ee268a18d387f600d24e730da25149ffa"
+        },
+        "date": 1790435918324,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9034643.166367305,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8269649500499835e-8",
+            "extra": "mean: 110.68505768137436 nsec\nrounds: 85383"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8866510.737941274,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3225497170321303e-8",
+            "extra": "mean: 112.78393829951999 nsec\nrounds: 88881"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5483492.950957969,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9999284611991387e-8",
+            "extra": "mean: 182.36551208209346 nsec\nrounds: 55206"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1686750.7207495947,
+            "unit": "iter/sec",
+            "range": "stddev: 2.749304110272998e-7",
+            "extra": "mean: 592.8558308578035 nsec\nrounds: 73497"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 475626.9276369984,
+            "unit": "iter/sec",
+            "range": "stddev: 5.846215605509906e-7",
+            "extra": "mean: 2.102488193778647 usec\nrounds: 58952"
           }
         ]
       }
