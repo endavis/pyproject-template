@@ -287,6 +287,49 @@ class TestCheckBranchUpToDate:
         assert "abc1234" in output
         assert "def5678" in output
 
+    def test_default_base_is_main(self, mock_subprocess: MagicMock) -> None:
+        mock_subprocess.register(
+            {("git", "rev-list", "--count"): {"stdout": "0\n"}, ("git", "fetch"): {}}
+        )
+        _check_branch_up_to_date("feat/x", self._make_console())
+
+        cmds = [c.args[0] for c in mock_subprocess.call_args_list]
+        assert ["git", "fetch", "origin", "main"] in cmds
+        assert ["git", "rev-list", "--count", "HEAD..origin/main"] in cmds
+
+    def test_compares_against_the_given_base(self, mock_subprocess: MagicMock) -> None:
+        """`doit pr --base` checks the branch the PR builds on, not main (#855)."""
+        console = self._make_console()
+        mock_subprocess.register(
+            {("git", "rev-list", "--count"): {"stdout": "0\n"}, ("git", "fetch"): {}}
+        )
+        _check_branch_up_to_date("feat/2-upper", console, base="feat/1-lower")
+
+        cmds = [c.args[0] for c in mock_subprocess.call_args_list]
+        assert ["git", "fetch", "origin", "feat/1-lower"] in cmds
+        assert ["git", "rev-list", "--count", "HEAD..origin/feat/1-lower"] in cmds
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "up to date with origin/feat/1-lower" in output
+
+    def test_behind_the_given_base_rebases_onto_it(self, mock_subprocess: MagicMock) -> None:
+        """The layer must contain the tip of the branch it builds on (#855)."""
+        console = self._make_console()
+        mock_subprocess.register(
+            {
+                ("git", "rev-list", "--count"): {"stdout": "1\n"},
+                ("git", "fetch"): {},
+                ("git", "log"): {"stdout": "abc1234 feat: lower change\n"},
+            }
+        )
+
+        with pytest.raises(SystemExit) as excinfo:
+            _check_branch_up_to_date("feat/2-upper", console, base="feat/1-lower")
+
+        assert excinfo.value.code == 1
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "behind origin/feat/1-lower" in output
+        assert "git rebase origin/feat/1-lower" in output
+
 
 class TestEnsureBranchPushed:
     """Tests for _ensure_branch_pushed helper."""
@@ -1649,6 +1692,50 @@ class TestCreatePr:
             _pr_action()(title="feat: x", body_file=str(tmp_path / "absent.md"))
 
         assert exc.value.code == 1
+
+    def test_base_is_forwarded_to_gh_and_the_up_to_date_check(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """`--base` opens the PR against the branch it builds on (#855)."""
+        with (
+            patch(
+                "tools.doit.github.subprocess.run",
+                return_value=self._on_branch("feat/2-upper"),
+            ),
+            patch("tools.doit.github._check_branch_up_to_date") as mock_check,
+            patch("tools.doit.github._ensure_branch_pushed"),
+            patch(
+                "tools.doit.github._run_gh_with_retry",
+                return_value=MagicMock(stdout="https://github.com/o/r/pull/8\n"),
+            ) as mock_gh,
+        ):
+            _pr_action()(title="feat: x", body="## Description\nx", base="feat/1-lower")
+
+        cmd = mock_gh.call_args.args[0]
+        assert cmd[cmd.index("--base") + 1] == "feat/1-lower"
+        assert mock_check.call_args.kwargs["base"] == "feat/1-lower"
+        # doit pr_merge refuses the PR until it targets main, so say how to get there.
+        assert "gh pr edit https://github.com/o/r/pull/8 --base main" in capsys.readouterr().out
+
+    def test_without_base_the_pr_targets_main_as_before(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        with (
+            patch(
+                "tools.doit.github.subprocess.run",
+                return_value=self._on_branch("feat/42-thing"),
+            ),
+            patch("tools.doit.github._check_branch_up_to_date") as mock_check,
+            patch("tools.doit.github._ensure_branch_pushed"),
+            patch(
+                "tools.doit.github._run_gh_with_retry", return_value=MagicMock(stdout="url\n")
+            ) as mock_gh,
+        ):
+            _pr_action()(title="feat: x", body="## Description\nx")
+
+        assert "--base" not in mock_gh.call_args.args[0]
+        assert mock_check.call_args.kwargs["base"] == "main"
+        assert "retarget" not in capsys.readouterr().out
 
 
 class TestGetPrInfo:

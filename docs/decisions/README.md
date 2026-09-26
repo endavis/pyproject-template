@@ -100,6 +100,7 @@ The Issue contains the full discussion; the ADR summarizes the outcome.
 | [9018](9018-agentsmd-carries-only-shared-always-on-instructions.md) | AGENTS.md carries only shared, always-on instructions | Accepted |
 | [9019](9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md) | The dangerous-command hook is a guardrail, not a security boundary | Accepted |
 | [9020](9020-a-template-version-is-a-commit-sha.md) | A template version is a commit SHA | Accepted |
+| [9021](9021-a-pr-may-target-the-unmerged-branch-it-builds-on.md) | A PR may target the unmerged branch it builds on | Accepted |
 
 ### Project-level ADRs (0001+)
 

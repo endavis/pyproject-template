@@ -639,6 +639,9 @@ doit pr --title="fix: bug fix" --body-file=pr.md
 
 # Create draft PR
 doit pr --draft
+
+# Open against the unmerged branch this work builds on
+doit pr --base=feat/42-add-parser
 ```
 
 **Features:**
@@ -651,10 +654,15 @@ doit pr --draft
 - `--body`: PR body content (non-interactive)
 - `--body-file`: File containing PR body (non-interactive)
 - `--draft`: Create as draft PR
+- `--base`: Open the PR against this branch instead of `main`, for work that builds on an unmerged
+  branch. The up-to-date check then compares with `origin/<branch>`. After that branch merges,
+  the PR must be rebased onto `main` and retargeted before `doit pr_merge` accepts it. The steps
+  are in CONTRIBUTING.md, Development Workflow, step 4.
 - `--no-push`: Skip the automatic push of a branch that has no upstream. The
   task pushes by default; with this flag it aborts instead.
 - `--no-update-check`: Skip the check that aborts when the branch is behind
-  `origin/main`. Use only when you know the branch is deliberately behind.
+  `origin/main` (or `origin/<branch>` with `--base`). Use only when you know the branch is
+  deliberately behind.
 
 ### `pr_merge`
 
