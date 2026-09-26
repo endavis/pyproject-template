@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790434982994,
+  "lastUpdate": 1790435133334,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14278,6 +14278,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.931633532264201e-7",
             "extra": "mean: 1.4518829707402918 usec\nrounds: 54559"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "871f12b34475ae2f9df82c7074bea204468eda7e",
+          "message": "docs: add the worktree path to the AI agent walkthrough (merges PR #868, addresses #866)\n\nfirst-5-minutes.md never mentioned worktrees, although step 4 checks out\nmain in the checkout Claude runs in. A new section, \"When your checkout\nholds other work\", creates the issue's worktree before step 4 and starts\nClaude Code there. /claude:implement then finds it is already on the\nissue's branch and skips creating one. The PR is merged from the main\ncheckout with doit pr_merge --pr=<number>, which removes the worktree.\nSteps 4 and 7 point to the section.\n\ntests/test_walkthrough_worktrees.py holds the section to implement.md's\nbranch rule, and checks that its merge command passes --pr.\n\nAddresses #866\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T16:04:53+01:00",
+          "tree_id": "7e0cf33cb6efa1675829b2025dceba3fb8efd7a0",
+          "url": "https://github.com/endavis/pyproject-template/commit/871f12b34475ae2f9df82c7074bea204468eda7e"
+        },
+        "date": 1790435132264,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16673561.766724518,
+            "unit": "iter/sec",
+            "range": "stddev: 1.771683105260005e-8",
+            "extra": "mean: 59.97518790470452 nsec\nrounds: 166973"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 17529414.33060816,
+            "unit": "iter/sec",
+            "range": "stddev: 8.026471678679868e-9",
+            "extra": "mean: 57.04697151540865 nsec\nrounds: 170970"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11914180.016166061,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4986602626707627e-8",
+            "extra": "mean: 83.93359833770552 nsec\nrounds: 121759"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3171983.887773741,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8900089085746224e-7",
+            "extra": "mean: 315.2601133487631 nsec\nrounds: 66521"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 896151.6803405875,
+            "unit": "iter/sec",
+            "range": "stddev: 2.704602752884405e-7",
+            "extra": "mean: 1.115882525176926 usec\nrounds: 59085"
           }
         ]
       }
