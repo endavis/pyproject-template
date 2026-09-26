@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790427805253,
+  "lastUpdate": 1790433510586,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14160,6 +14160,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.948651314455826e-7",
             "extra": "mean: 2.0158016500746396 usec\nrounds: 55513"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bf09d787a64c0737a7dee8d9f21eb2bd8e981bab",
+          "message": "feat: have doit pr_merge remove the merged PR's worktree (merges PR #864, addresses #863)\n\ngh pr merge --delete-branch checks out main in the checkout that has the\nPR's branch, then deletes the branch. In a linked worktree git refuses\nthat checkout while main is checked out anywhere else, and from any other\ncheckout it refuses to delete a branch that a worktree has checked out.\nSo when a worktree has the PR's branch, doit pr_merge now merges without\n--delete-branch and, once GitHub reports the PR as merged, deletes the\nbranch itself: on GitHub unless the repository already does that on\nmerge, then the worktree and the local branch.\n\nA worktree under worktrees/ is removed only when that loses nothing: no\nmodified or untracked files, and no ignored files beyond rebuildable\nones such as .venv/ and caches, because git deletes ignored files without\nasking. The local branch is deleted only if it still points at the commit\nthe PR merged. Run from inside the worktree, the task prints the commands\ninstead. A cleanup failure is reported, never as a failed merge.\n\ndoit worktree, the task reference, CONTRIBUTING, AGENTS.md and ADR-9022\nnow say to merge from the main checkout with doit pr_merge --pr=<number>.\n\nAddresses #863\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T15:37:42+01:00",
+          "tree_id": "50193826859c4ce7b3552ca5d358c2181214e5b0",
+          "url": "https://github.com/endavis/pyproject-template/commit/bf09d787a64c0737a7dee8d9f21eb2bd8e981bab"
+        },
+        "date": 1790433508510,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8693743.245438814,
+            "unit": "iter/sec",
+            "range": "stddev: 1.653827458910463e-8",
+            "extra": "mean: 115.02525112236914 nsec\nrounds: 85536"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8649483.525440915,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4885933994728403e-8",
+            "extra": "mean: 115.61383949211282 nsec\nrounds: 86949"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5331750.473263226,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5983771543877323e-8",
+            "extra": "mean: 187.5556639446338 nsec\nrounds: 53634"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1703110.468954323,
+            "unit": "iter/sec",
+            "range": "stddev: 3.084547733994134e-7",
+            "extra": "mean: 587.1609729543737 nsec\nrounds: 68409"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 495793.873657394,
+            "unit": "iter/sec",
+            "range": "stddev: 5.841987291415024e-7",
+            "extra": "mean: 2.016967238064392 usec\nrounds: 59734"
           }
         ]
       }
