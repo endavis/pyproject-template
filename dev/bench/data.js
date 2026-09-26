@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790419937231,
+  "lastUpdate": 1790420153125,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13806,6 +13806,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.654706435716108e-7",
             "extra": "mean: 2.0407296258742798 usec\nrounds: 41143"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a9bacaadc92566168e5bf69be42c50392fffa1ae",
+          "message": "docs: list Development Workflow, Questions? and Thank You! in CONTRIBUTING's TOC (merges PR #851, addresses #845)\n\nThe table of contents stopped at Requesting Features. It left out Development\nWorkflow, the section .claude/CLAUDE.md marks mandatory and AGENTS.md's\nPre-Action Checks send agents to, along with Questions? and Thank You!. It now\nlists every level-two section.\n\nAddresses #845\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T11:55:20+01:00",
+          "tree_id": "8cb5dab1ec65784b357554f9ca7ffc51d318ca3b",
+          "url": "https://github.com/endavis/pyproject-template/commit/a9bacaadc92566168e5bf69be42c50392fffa1ae"
+        },
+        "date": 1790420152386,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8677200.933696805,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4166705817638852e-8",
+            "extra": "mean: 115.24453653212379 nsec\nrounds: 81613"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8990241.275940064,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4148674678615489e-8",
+            "extra": "mean: 111.23171996242502 nsec\nrounds: 89438"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5477409.773821088,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5188539470083245e-8",
+            "extra": "mean: 182.56804608255402 nsec\nrounds: 54511"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1693413.4631031326,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7503424163965967e-7",
+            "extra": "mean: 590.5232371115841 nsec\nrounds: 65972"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492198.6838790929,
+            "unit": "iter/sec",
+            "range": "stddev: 5.503463254562984e-7",
+            "extra": "mean: 2.0316998658323246 usec\nrounds: 56648"
           }
         ]
       }
