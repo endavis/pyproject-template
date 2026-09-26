@@ -673,9 +673,22 @@ doit pr_merge --auto-close
 
 **What it does:**
 1. Finds PR associated with current branch (or uses `--pr`)
-2. Validates PR is approved and checks pass
+2. Stops, before merging or closing anything, if the PR is not open, targets a branch other than
+   the repository's default branch, or has a title that is not in conventional commit format
 3. Merges with conventional commit format: `<type>: <subject> (merges PR #XX, addresses #YY)`
 4. If `--auto-close` is set, closes each linked issue with a `Addressed in PR #XX` comment; otherwise prints the `gh issue close` commands as a reminder.
+
+The task does not check approvals or CI itself. GitHub refuses the merge when branch protection
+requires them and they are not met.
+
+**A PR that targets another branch:** GitHub merges a PR into its base branch. A PR opened against
+another feature branch would squash into that branch, and `--auto-close` would close issues whose
+work never reached `main`. The task names the base and stops. Merge the PR it builds on, rebase this
+branch onto `main`, then retarget it with `gh pr edit <number> --base main`.
+
+**Stacked PRs:** PRs in a GitHub native stack are not supported. GitHub merges them only through its
+asynchronous merge API, so `gh pr merge` fails on them. The task recognizes that error and says so.
+Unstack them with `gh stack unstack` (gh-stack extension), then merge them bottom first.
 
 **Options:**
 - `--pr`: PR number to merge (defaults to PR for current branch)

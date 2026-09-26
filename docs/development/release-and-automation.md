@@ -390,12 +390,13 @@ doit pr_merge --auto-close
 
 ### What It Does
 
-1. **Validates PR title** - Ensures the title follows conventional commit format (`<type>: <subject>`)
-2. **Extracts linked issues** - Parses PR body for `addresses #XX`
-3. **Formats merge commit** - Creates a standardized commit message with PR and issue references
-4. **Squash merges** - Uses squash merge to maintain clean history
-5. **Deletes branch** - Removes the source branch after merge (default behavior)
-6. **Reminds to close issues** - Displays commands to manually close linked issues
+1. **Checks the base branch** - Refuses a PR that does not target the default branch, so nothing merges into another branch
+2. **Validates PR title** - Ensures the title follows conventional commit format (`<type>: <subject>`)
+3. **Extracts linked issues** - Parses PR body for `addresses #XX`
+4. **Formats merge commit** - Creates a standardized commit message with PR and issue references
+5. **Squash merges** - Uses squash merge to maintain clean history
+6. **Deletes branch** - Removes the source branch after merge (default behavior)
+7. **Reminds to close issues** - Displays commands to manually close linked issues
 
 ### Merge Commit Format
 
