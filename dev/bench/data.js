@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790425568776,
+  "lastUpdate": 1790425767380,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13983,6 +13983,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000011078431802579668",
             "extra": "mean: 2.318922303322827 usec\nrounds: 62345"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8dd55ea5b1b60070d4bd10533eaf9051fdbdb48b",
+          "message": "feat: add doit worktree and a gitignored worktrees/ directory (merges PR #858, addresses #854)\n\n* feat: add doit worktree and a gitignored worktrees/ directory\n\nAn agent needs a separate checkout when the user has uncommitted work, and\nthe repo had no place or procedure for one. Done by hand in the #847\ntrial, it went wrong three ways: the worktree sat under tmp/, which\n`doit cleanup` empties; its tools resolved to the main checkout's .venv;\nand `uv run --active` installed the worktree into that .venv.\n\n- worktrees/ is gitignored.\n- doit worktree --branch=<branch> creates worktrees/<branch> in the main\n  checkout (also when run from a linked worktree) from a fresh\n  origin/main with no upstream, so doit pr pushes it, then runs\n  uv sync --all-extras --dev inside it with VIRTUAL_ENV unset. A relative\n  UV_CACHE_DIR is resolved first, so the worktree shares the main\n  checkout's uv cache. The branch name is checked with git\n  check-ref-format, which also keeps the path inside worktrees/.\n- The three repo-wide test walkers skip worktrees/, each with a test.\n  With one real worktree present, the old walkers read 160 markdown files\n  inside it; the new ones read none.\n- Docs: tasks reference, CONTRIBUTING step 2, and AGENTS.md (a Tool\n  Reference row, and worktrees as an exception to the temporary-files\n  rule). ADR-9022 records the decision. It is numbered 9022 because #855's\n  ADR takes 9021.\n\nAddresses #854\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\n* test: use a cache path that is absolute on Windows in the worktree sync test\n\ntest_syncs_its_own_environment_without_virtual_env set UV_CACHE_DIR to\n/shared/uv-cache and expected it back unchanged. On Windows that path has\nno drive, so it is not absolute: doit worktree resolves it against the\ncurrent drive, as it should, and the test failed on both Windows jobs\nwith 'D:\\shared\\uv-cache' != '/shared/uv-cache'. The test now uses a path\nunder tmp_path, which is absolute on every OS.\n\nAddresses #854\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T13:28:52+01:00",
+          "tree_id": "15bf07ef8a260f3ce7381860f442d1bc34f3b053",
+          "url": "https://github.com/endavis/pyproject-template/commit/8dd55ea5b1b60070d4bd10533eaf9051fdbdb48b"
+        },
+        "date": 1790425766118,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8641482.092934897,
+            "unit": "iter/sec",
+            "range": "stddev: 1.371021690878957e-8",
+            "extra": "mean: 115.72089014887618 nsec\nrounds: 84660"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8619765.329876563,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2365902289467436e-8",
+            "extra": "mean: 116.01243905491802 nsec\nrounds: 87866"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5767784.418722704,
+            "unit": "iter/sec",
+            "range": "stddev: 1.735677948996879e-8",
+            "extra": "mean: 173.37679902770248 nsec\nrounds: 57998"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1585732.8180441982,
+            "unit": "iter/sec",
+            "range": "stddev: 3.0786490324472164e-7",
+            "extra": "mean: 630.6232605019641 nsec\nrounds: 65536"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 494932.05322149355,
+            "unit": "iter/sec",
+            "range": "stddev: 6.872352019787842e-7",
+            "extra": "mean: 2.020479363765266 usec\nrounds: 56648"
           }
         ]
       }
