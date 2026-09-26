@@ -65,9 +65,16 @@ def _instruction_files() -> list[Path]:
     return [f for f in files if f.is_file()]
 
 
-def _markdown_files() -> list[Path]:
+def _markdown_files(root: Path = REPO_ROOT) -> list[Path]:
+    """Return the markdown files under *root*, minus those in SKIP_DIRS.
+
+    SKIP_DIRS applies to directories inside *root* only. Matched against the
+    absolute path, a checkout under a directory named `tmp` skipped every file (#848).
+    """
     return sorted(
-        p for p in REPO_ROOT.rglob("*.md") if not SKIP_DIRS.intersection(p.parts) and p.is_file()
+        p
+        for p in root.rglob("*.md")
+        if not SKIP_DIRS.intersection(p.relative_to(root).parts) and p.is_file()
     )
 
 
@@ -324,6 +331,21 @@ def test_section_name_checker_detects_a_broken_pointer(tmp_path: Path) -> None:
         "source.md:4 -> (Dependencies) not a heading in target.md",
         "source.md:5 -> missing.md not found",
     ]
+
+
+def test_markdown_files_skip_only_directories_inside_the_root(tmp_path: Path) -> None:
+    """A `tmp` directory above the checkout must not hide the whole tree (#848).
+
+    A worktree under `tmp/agents/<agent>/` has `tmp` in every absolute path, and
+    CI's checkout path has none, so nothing else would catch a regression.
+    """
+    root = tmp_path / "tmp" / "checkout"
+    (root / "docs").mkdir(parents=True)
+    (root / "docs" / "kept.md").write_text("# Kept\n", encoding="utf-8")
+    (root / "tmp").mkdir()
+    (root / "tmp" / "skipped.md").write_text("# Skipped\n", encoding="utf-8")
+
+    assert _markdown_files(root) == [root / "docs" / "kept.md"]
 
 
 @pytest.mark.parametrize(
