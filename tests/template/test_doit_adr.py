@@ -288,3 +288,46 @@ Use Redis.
         console = self._mock_console()
         assert _validate_adr_content(content, console) is True
         mock_get_sections.assert_called_once()
+
+
+_VALID_BODY = (
+    "## Status\nAccepted\n\n"
+    "## Decision\nEnd every ADR with one newline.\n\n"
+    "## Rationale\nend-of-file-fixer rewrites any other ending.\n"
+)
+
+
+class TestCreatedAdrEnding:
+    """The ADR `doit adr` writes ends with exactly one newline (#859).
+
+    `end-of-file-fixer` rewrites a file that ends with more, which fails the
+    commit and makes the author stage and commit again.
+    """
+
+    @staticmethod
+    def _create(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, **source: str) -> str:
+        """Run `doit adr --template` with *source* (body or body_file); return the ADR text."""
+        adr_dir = tmp_path / "decisions"
+        monkeypatch.setattr(adr_module, "ADR_DIR", adr_dir)
+        action = adr_module.task_adr()["actions"][0]
+        action(title="End with one newline", template=True, **source)
+        (adr,) = adr_dir.glob("9*.md")
+        return adr.read_text(encoding="utf-8")
+
+    @pytest.mark.parametrize("ending", ["", "\n", "\n\n\n"], ids=["none", "one", "several"])
+    def test_body_file(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, ending: str) -> None:
+        """Editors save with a final newline, so the usual body file already has one."""
+        body_file = tmp_path / "body.md"
+        body_file.write_text(_VALID_BODY.rstrip("\n") + ending, encoding="utf-8")
+
+        text = self._create(tmp_path, monkeypatch, body_file=str(body_file))
+
+        assert text.endswith("Rationale\nend-of-file-fixer rewrites any other ending.\n")
+
+    def test_body_string_ending_in_a_newline(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        text = self._create(tmp_path, monkeypatch, body=_VALID_BODY + "\n")
+
+        assert text.endswith("any other ending.\n")
+        assert not text.endswith("\n\n")

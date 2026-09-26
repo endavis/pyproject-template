@@ -348,8 +348,9 @@ def task_adr() -> dict[str, Any]:
             console.print("[red]ADR content validation failed.[/red]")
             sys.exit(1)
 
-        # Write ADR file
-        adr_path.write_text(body_content + "\n", encoding="utf-8")
+        # Write ADR file. Exactly one final newline: a body file usually ends
+        # with one already, and a second fails end-of-file-fixer (#859).
+        adr_path.write_text(body_content.rstrip("\n") + "\n", encoding="utf-8")
 
         console.print()
         console.print(
