@@ -894,6 +894,32 @@ Features:
 - Pre-fills the PR template with detected issue
 - Validates required fields before creating
 
+**Work that builds on an unmerged branch:** When issue B needs code from issue A's branch before A
+merges, branch B from A and open B's PR against A's branch. The PR then shows only B's changes:
+
+```bash
+git checkout -b feat/43-use-parser feat/42-add-parser
+doit pr --base=feat/42-add-parser --title="feat: use the parser" --body-file=pr.md
+```
+
+`doit pr` then checks that B is up to date with `origin/feat/42-add-parser` instead of
+`origin/main`. While B targets A's branch, `ci.yml` and `merge-gate.yml` do not run on it (both
+filter on `branches: [main]`), and `doit pr_merge` refuses it.
+
+Merge A first. Then replay only B's own commits onto `main`, retarget the PR, and push:
+
+```bash
+lower_tip=$(gh pr view <A's PR number> --json headRefOid --jq .headRefOid)
+git fetch origin
+git rebase --onto origin/main "$lower_tip"
+gh pr edit <B's PR number> --base main
+git push --force-with-lease origin feat/43-use-parser
+```
+
+Do not use a plain `git rebase origin/main` here. A was squash-merged, so B still carries A's
+original commits, and replaying them can conflict. Retarget before pushing: CI starts on the push,
+not on the retarget.
+
 **PR Title:**
 - Must follow conventional commit format: `<type>: <subject>`
 - PR title becomes the merge commit message
