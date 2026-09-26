@@ -752,6 +752,10 @@ doit adr --title="Use some tool" --template --body-file=adr.md
 - Creates a new ADR in `docs/decisions/`
 - Auto-numbers based on existing ADRs in the chosen series
 - Uses ADR template format
+- Starts the ADR with the template's frontmatter, with the title and date filled in. A body
+  that starts with its own frontmatter keeps it, and `doit adr` sets its title. If the
+  description is still the template's placeholder, it says so; write one sentence that says
+  what was decided, because `docs/TABLE_OF_CONTENTS.md` lists it next to the title
 
 **Series:**
 - Default (project-level, 0XXX): decisions specific to this project. Numbering starts at `0001`.

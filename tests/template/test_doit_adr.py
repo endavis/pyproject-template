@@ -1,10 +1,13 @@
 """Tests for adr.py doit tasks."""
 
+from datetime import date
 from io import StringIO
 from pathlib import Path
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
+import yaml
 
 from tools.doit import adr as adr_module
 from tools.doit.adr import (
@@ -14,6 +17,7 @@ from tools.doit.adr import (
     _title_to_slug,
     _validate_adr_content,
 )
+from tools.doit.templates import FRONTMATTER_PATTERN, get_adr_template
 
 
 class TestTitleToSlug:
@@ -331,3 +335,124 @@ class TestCreatedAdrEnding:
 
         assert text.endswith("any other ending.\n")
         assert not text.endswith("\n\n")
+
+
+class TestCreatedAdrFrontmatter:
+    """The ADR `doit adr` writes starts with the template's frontmatter, filled in (#841).
+
+    `docs/TABLE_OF_CONTENTS.md` is generated from each document's frontmatter,
+    so an ADR without it is listed bare and reaches no audience section.
+    """
+
+    @staticmethod
+    def _create(
+        tmp_path: Path, monkeypatch: pytest.MonkeyPatch, title: str = "Use Redis", **source: str
+    ) -> str:
+        """Run `doit adr --template` with *source* (body or body_file); return the ADR text."""
+        adr_dir = tmp_path / "decisions"
+        monkeypatch.setattr(adr_module, "ADR_DIR", adr_dir)
+        action = adr_module.task_adr()["actions"][0]
+        action(title=title, template=True, **source)
+        (adr,) = adr_dir.glob("9*.md")
+        return adr.read_text(encoding="utf-8")
+
+    @staticmethod
+    def _meta(text: str) -> dict[str, Any]:
+        """Parse the frontmatter *text* starts with."""
+        match = FRONTMATTER_PATTERN.match(text)
+        assert match, "the ADR does not start with a frontmatter block"
+        meta: dict[str, Any] = yaml.safe_load(match.group(1))
+        return meta
+
+    def test_body_gets_the_template_frontmatter(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        text = self._create(tmp_path, monkeypatch, body=_VALID_BODY)
+        meta = self._meta(text)
+
+        assert meta["title"] == "ADR-9001: Use Redis"
+        assert isinstance(meta["date"], date)
+        assert meta["audience"] == ["contributors"]
+        assert meta["tags"] == ["adr"]
+        assert "\n# ADR-9001: Use Redis\n" in text
+
+    def test_title_with_quotes_and_backslashes(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        title = 'Quote "this" and C:\\temp'
+
+        text = self._create(tmp_path, monkeypatch, title=title, body=_VALID_BODY)
+
+        assert self._meta(text)["title"] == f"ADR-9001: {title}"
+
+    def test_body_frontmatter_is_kept_and_titled(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        body = "---\ndescription: Cache sessions in Redis\ntags:\n  - adr\n---\n\n" + _VALID_BODY
+
+        text = self._create(tmp_path, monkeypatch, body=body)
+
+        assert self._meta(text) == {
+            "title": "ADR-9001: Use Redis",
+            "description": "Cache sessions in Redis",
+            "tags": ["adr"],
+        }
+        assert text.count("---\n") == 2
+
+    def test_body_frontmatter_title_is_corrected(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        body = '---\ntitle: "ADR-0042: Old name"\ndescription: Cache\n---\n' + _VALID_BODY
+
+        text = self._create(tmp_path, monkeypatch, body=body)
+
+        assert self._meta(text)["title"] == "ADR-9001: Use Redis"
+
+    def test_warns_while_the_description_is_the_placeholder(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        text = self._create(tmp_path, monkeypatch, body=_VALID_BODY)
+
+        assert self._meta(text)["description"] == get_adr_template().placeholder_description
+        assert "Replace the placeholder description" in capsys.readouterr().out
+
+    def test_no_warning_once_the_description_is_written(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        body = "---\ndescription: Cache sessions in Redis\n---\n" + _VALID_BODY
+
+        self._create(tmp_path, monkeypatch, body=body)
+
+        assert "Replace the placeholder description" not in capsys.readouterr().out
+
+    def test_editor_instructions_stay_out_of_the_adr(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, mock_subprocess: MagicMock
+    ) -> None:
+        """Left in, they sat above the frontmatter, so it no longer counted as frontmatter."""
+
+        def edit(cmd: list[str]) -> MagicMock:
+            path = Path(cmd[1])
+            text = path.read_text(encoding="utf-8")
+            text = text.replace("One sentence that says what was decided.", "Cache in Redis")
+            text = text.replace("Brief summary of what was decided.", "Use Redis.")
+            text = text.replace("Why this decision was made.", "It is fast.")
+            path.write_text(text, encoding="utf-8")
+            return MagicMock(returncode=0)
+
+        monkeypatch.setenv("EDITOR", "stand-in-editor")
+        mock_subprocess.register({("stand-in-editor",): edit})
+
+        text = self._create(tmp_path, monkeypatch)
+
+        assert text.startswith("---\n")
+        assert "Lines starting with #" not in text
+        meta = self._meta(text)
+        assert meta["title"] == "ADR-9001: Use Redis"
+        assert meta["description"] == "Cache in Redis"
+        assert isinstance(meta["date"], date)

@@ -1,3 +1,14 @@
+---
+title: "ADR-9022: Worktrees live in worktrees/, each with its own environment"
+description: A worktree lives in worktrees/<branch>, is created with doit worktree, and has its own environment
+date: 2026-09-26
+audience:
+  - contributors
+tags:
+  - adr
+  - workflow
+---
+
 # ADR-9022: Worktrees live in worktrees/, each with its own environment
 
 ## Status

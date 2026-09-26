@@ -1,3 +1,14 @@
+---
+title: Architecture Decision Records
+description: What an ADR is, the two numbering series, the ADR format, and how to create one with doit adr
+audience:
+  - contributors
+  - ai-agents
+tags:
+  - adr
+  - architecture
+---
+
 # Architecture Decision Records
 
 This directory contains Architecture Decision Records (ADRs) for the project.
@@ -22,6 +33,16 @@ Downstream projects spawned from `pyproject-template` inherit the 9XXX template 
 ADRs use a simplified format:
 
 ```markdown
+---
+title: "ADR-NNNN: Title"
+description: One sentence that says what was decided.
+date: YYYY-MM-DD
+audience:
+  - contributors
+tags:
+  - adr
+---
+
 # ADR-NNNN: Title
 
 ## Status
@@ -42,6 +63,11 @@ Why this decision was made.
 
 See [adr-template.md](adr-template.md) for the template.
 
+The frontmatter is what [`docs/TABLE_OF_CONTENTS.md`](../TABLE_OF_CONTENTS.md) is generated from:
+it lists each ADR by its `title` and `description`, under each `audience`. The `title` is quoted
+because every ADR title holds a colon, which YAML otherwise reads as a key. `doit adr` fills in
+the title and the date; the description is yours to write.
+
 ## Creating a New ADR
 
 ```bash
@@ -58,6 +84,11 @@ doit adr --title="Use some tool" --template --body-file=adr.md
 ```
 
 Use `--template` when the decision is about the template's own tooling, workflow, or conventions (something every downstream project will inherit). Use the default (project-level) for decisions specific to this project.
+
+A body passed with `--body` or `--body-file` gets the template's frontmatter unless it starts with
+its own. Either way, `doit adr` sets the title and fills in the date. If the description is still
+the template's placeholder, `doit adr` says so; replace it before you commit, because `doit check`
+fails on an ADR that keeps it.
 
 ## When to Create an ADR
 
