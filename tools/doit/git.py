@@ -3,7 +3,8 @@
 import os
 import subprocess  # nosec B404 - subprocess is required for doit tasks
 import sys
-from pathlib import Path
+from fnmatch import fnmatch
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from doit.tools import title_with_actions
@@ -15,6 +16,27 @@ from .base import install_check_or_skip, run_streamed
 # gitignored and skipped by the repo-wide test walkers. Not under tmp/, which
 # `doit cleanup` empties (#854).
 WORKTREES_DIR = "worktrees"
+
+# Ignored files a worktree can always rebuild, matched against the last part of
+# each path `git status --ignored` lists. `git worktree remove` deletes ignored
+# files without asking, so any other ignored file keeps the worktree: it may be
+# an `.envrc.local`, or notes under tmp/ (#863).
+_REBUILDABLE_IGNORED = (
+    ".venv",
+    ".direnv",
+    "__pycache__",
+    "*_cache",  # .pytest_cache, .mypy_cache, .ruff_cache
+    ".hypothesis",
+    ".coverage*",
+    "coverage.xml",
+    "htmlcov",
+    ".doit.db*",
+    "_version.py",
+    "build",
+    "dist",
+    "site",
+    "*.egg-info",
+)
 
 
 def task_commit() -> dict[str, Any]:
@@ -103,6 +125,153 @@ def _main_checkout() -> Path:
     return Path(result.stdout.splitlines()[0].removeprefix("worktree "))
 
 
+def worktree_for_branch(branch: str) -> Path | None:
+    """Return the linked worktree that has *branch* checked out, or ``None``.
+
+    The main checkout is never returned. ``gh pr merge --delete-branch``
+    handles a branch checked out there (#863).
+    """
+    result = subprocess.run(
+        ["git", "worktree", "list", "--porcelain"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    # One block per worktree, separated by a blank line. The first block is the
+    # main checkout.
+    for block in result.stdout.split("\n\n")[1:]:
+        lines = block.splitlines()
+        if f"branch refs/heads/{branch}" in lines:
+            return Path(lines[0].removeprefix("worktree "))
+    return None
+
+
+def _worktree_leftovers(worktree: Path) -> list[str]:
+    """Return the ``git status`` lines for files that removing *worktree* would affect.
+
+    ``git worktree remove`` refuses modified and untracked files, and deletes
+    ignored ones. So every line counts, except ignored files that can be rebuilt.
+    """
+    status = subprocess.run(
+        ["git", "-C", str(worktree), "status", "--porcelain", "--ignored"],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    leftovers = []
+    for line in status.stdout.splitlines():
+        name = PurePosixPath(line[3:].rstrip("/")).name
+        if line.startswith("!! ") and any(fnmatch(name, p) for p in _REBUILDABLE_IGNORED):
+            continue
+        leftovers.append(line)
+    return leftovers
+
+
+def _branch_tip(branch: str) -> str:
+    """Return the commit *branch* points at, or ``""`` if there is no such branch."""
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip()
+
+
+def _remove_empty_parents(worktree: Path, stop: Path) -> None:
+    """Remove the directories *worktree* leaves empty, up to but not including *stop*."""
+    for parent in worktree.parents:
+        if parent.resolve() == stop.resolve():
+            return
+        try:
+            parent.rmdir()
+        except OSError:  # not empty: another worktree is still there
+            return
+
+
+def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, console: Console) -> None:
+    """Remove a merged PR's worktree and local branch, or print how to (#863).
+
+    Only a worktree under ``worktrees/`` is removed, and only when git would not
+    refuse and no ignored file other than a rebuildable one would be deleted
+    with it. The branch is deleted only if it points at *merged_head*, the
+    commit the PR merged: a squash merge needs ``git branch -D``, which would
+    otherwise drop a commit that was never pushed.
+
+    Args:
+        worktree: The linked worktree that has *branch* checked out.
+        branch: The PR's head branch.
+        merged_head: The PR's head commit when it merged.
+        console: Rich console for output.
+    """
+    root = _main_checkout()
+    managed = root / WORKTREES_DIR
+    if not worktree.resolve().is_relative_to(managed.resolve()):
+        console.print(
+            f"[yellow]{branch} is checked out in {worktree}, which `doit worktree` did not "
+            "create. Left the worktree and the branch in place.[/yellow]",
+            soft_wrap=True,
+        )
+        return
+
+    tip = _branch_tip(branch)
+    inside = Path.cwd().resolve().is_relative_to(worktree.resolve())
+    leftovers = _worktree_leftovers(worktree)
+    if inside or leftovers:
+        if inside:
+            console.print(
+                "[yellow]This task runs inside the worktree, so it cannot remove it.[/yellow]"
+            )
+        if leftovers:
+            console.print(
+                f"[yellow]Left {worktree} in place. `git worktree remove` refuses modified and "
+                "untracked files, and deletes ignored ones:[/yellow]",
+                soft_wrap=True,
+            )
+            for line in leftovers:
+                console.print(f"  {line}", soft_wrap=True, markup=False)
+        console.print("[bold]To remove it, from the main checkout:[/bold]")
+        console.print(f"  cd {root}", soft_wrap=True, markup=False)
+        console.print(f"  git worktree remove {worktree}", soft_wrap=True, markup=False)
+        if tip and tip == merged_head:
+            console.print(f"  git branch -D {branch}", soft_wrap=True, markup=False)
+        elif tip:
+            _warn_branch_moved(branch, tip, merged_head, console)
+        return
+
+    try:
+        subprocess.run(
+            ["git", "worktree", "remove", str(worktree)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        console.print(
+            f"[yellow]git worktree remove failed: {(e.stderr or '').strip()}[/yellow]",
+            soft_wrap=True,
+        )
+        return
+    console.print(f"[green]Removed worktree {worktree}[/green]", soft_wrap=True)
+    _remove_empty_parents(worktree, managed)
+
+    if tip and tip == merged_head:
+        subprocess.run(["git", "branch", "-D", branch], capture_output=True, text=True, check=True)
+        console.print(f"[green]Deleted local branch {branch}[/green]")
+    elif tip:
+        _warn_branch_moved(branch, tip, merged_head, console)
+
+
+def _warn_branch_moved(branch: str, tip: str, merged_head: str, console: Console) -> None:
+    """Say why *branch* was kept: it no longer points at the commit the PR merged."""
+    console.print(
+        f"[yellow]Kept local branch {branch}: it is at {tip[:7]}, but the PR merged "
+        f"{merged_head[:7] or 'an unknown commit'}. Delete it with `git branch -D {branch}` "
+        "once nothing on it is needed.[/yellow]",
+        soft_wrap=True,
+    )
+
+
 def task_worktree() -> dict[str, Any]:
     """Create a git worktree in ``worktrees/<branch>`` with its own environment.
 
@@ -184,9 +353,13 @@ def task_worktree() -> dict[str, Any]:
         console.print(
             "[dim]Never pass --active: it installs the worktree into the main .venv.[/dim]"
         )
-        console.print("[bold]Once its PR has merged, from the main checkout:[/bold]")
+        console.print(
+            "[bold]Merge its PR from the main checkout, which removes the worktree:[/bold]"
+        )
+        console.print(f"  cd {root}")
+        console.print("  uv run doit pr_merge --pr=<number>")
+        console.print("[bold]To remove it without merging:[/bold]")
         console.print(f"  git worktree remove {path}")
-        console.print(f"  git branch -D {branch}  # if it still exists")
 
     return {
         "actions": [create_worktree],

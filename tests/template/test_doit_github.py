@@ -15,9 +15,11 @@ from tools.doit.github import (
     _PR_TITLE_PATTERN,
     _check_branch_up_to_date,
     _close_linked_issues,
+    _delete_remote_branch,
     _ensure_branch_pushed,
     _extract_linked_issues,
     _fetch_github_labels,
+    _finish_branch_in_worktree,
     _format_merge_subject,
     _get_default_branch,
     _get_pr_info,
@@ -27,11 +29,13 @@ from tools.doit.github import (
     _gh_repo_slug,
     _is_transient_gh_error,
     _load_labels_file,
+    _merged_head,
     _parse_markdown_sections,
     _read_body_file,
     _reconcile_labels,
     _run_gh_with_retry,
     _validate_issue_content,
+    _worktree_holding,
     task_env_create,
     task_env_list,
     task_issue,
@@ -1752,6 +1756,18 @@ class TestGetPrInfo:
         assert "baseRefName" in cmd[cmd.index("--json") + 1].split(",")
         assert info == pr
 
+    def test_requests_the_head_branch_and_whether_it_is_a_fork(
+        self, mock_subprocess: MagicMock
+    ) -> None:
+        """`doit pr_merge` looks the branch up among the worktrees, unless a fork owns it (#863)."""
+        mock_subprocess.register({("gh", "pr", "view"): {"stdout": "{}"}})
+
+        _get_pr_info("42", Console(file=io.StringIO(), width=200))
+
+        cmd = mock_subprocess.call_args.args[0]
+        fields = cmd[cmd.index("--json") + 1].split(",")
+        assert {"headRefName", "isCrossRepository"} <= set(fields)
+
 
 class TestGetDefaultBranch:
     """``_get_default_branch`` — the only base `doit pr_merge` merges into (#853)."""
@@ -1997,3 +2013,282 @@ class TestMergePr:
             _merge_action()(pr="42")
 
         assert "stack" not in capsys.readouterr().out
+
+
+class TestMergePrWithWorktree:
+    """`doit pr_merge` for a PR whose branch a linked worktree has checked out (#863).
+
+    gh's `--delete-branch` would check out `main` in that worktree, which git
+    refuses while `main` is checked out anywhere else, so the task deletes the
+    branch itself after the merge.
+    """
+
+    WORKTREE = Path("/src/project/worktrees/feat/1-x")
+
+    @staticmethod
+    def _pr(**overrides: object) -> dict[str, object]:
+        info: dict[str, object] = {
+            "number": 42,
+            "title": "feat: add a thing",
+            "body": "## Description\nx\n\nAddresses #7",
+            "state": "OPEN",
+            "headRefName": "feat/1-x",
+            "isCrossRepository": False,
+        }
+        info.update(overrides)
+        return info
+
+    def test_leaves_the_branch_to_the_task(self) -> None:
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr()),
+            patch("tools.doit.github.worktree_for_branch", return_value=self.WORKTREE) as mock_find,
+            patch("tools.doit.github._run_gh_with_retry") as mock_gh,
+            patch("tools.doit.github._finish_branch_in_worktree") as mock_finish,
+        ):
+            _merge_action()(pr="42")
+
+        mock_find.assert_called_once_with("feat/1-x")
+        assert "--delete-branch" not in mock_gh.call_args.args[0]
+        assert mock_finish.call_args.args[:3] == (42, "feat/1-x", self.WORKTREE)
+
+    def test_a_branch_no_worktree_holds_is_left_to_gh(self) -> None:
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr()),
+            patch("tools.doit.github.worktree_for_branch", return_value=None),
+            patch("tools.doit.github._run_gh_with_retry") as mock_gh,
+            patch("tools.doit.github._finish_branch_in_worktree") as mock_finish,
+        ):
+            _merge_action()(pr="42")
+
+        assert "--delete-branch" in mock_gh.call_args.args[0]
+        mock_finish.assert_not_called()
+
+    def test_a_fork_branch_is_never_looked_up(self) -> None:
+        """A fork's branch name can match an unrelated local branch."""
+        with (
+            patch(
+                "tools.doit.github._get_pr_info",
+                return_value=self._pr(isCrossRepository=True),
+            ),
+            patch("tools.doit.github.worktree_for_branch") as mock_find,
+            patch("tools.doit.github._run_gh_with_retry") as mock_gh,
+        ):
+            _merge_action()(pr="42")
+
+        mock_find.assert_not_called()
+        assert "--delete-branch" in mock_gh.call_args.args[0]
+
+    def test_keeping_the_branch_keeps_the_worktree(self) -> None:
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr()),
+            patch("tools.doit.github.worktree_for_branch") as mock_find,
+            patch("tools.doit.github._run_gh_with_retry"),
+            patch("tools.doit.github._finish_branch_in_worktree") as mock_finish,
+        ):
+            _merge_action()(pr="42", delete_branch=False)
+
+        mock_find.assert_not_called()
+        mock_finish.assert_not_called()
+
+    def test_a_cleanup_failure_is_not_a_failed_merge(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """The PR has merged, so the issues still close and the task still succeeds."""
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr()),
+            patch("tools.doit.github.worktree_for_branch", return_value=self.WORKTREE),
+            patch("tools.doit.github._run_gh_with_retry"),
+            patch("tools.doit.github._close_linked_issues") as mock_close,
+            patch("tools.doit.github._merged_head", return_value="abc123"),
+            patch("tools.doit.github._delete_remote_branch"),
+            patch(
+                "tools.doit.github.remove_merged_worktree",
+                side_effect=subprocess.CalledProcessError(1, ["git"], stderr="disk full"),
+            ),
+        ):
+            _merge_action()(pr="42", auto_close=True)
+
+        mock_close.assert_called_once()
+        out = capsys.readouterr().out
+        assert "merged successfully" in out
+        assert "Cleanup after the merge failed: disk full" in out
+        assert "Failed to merge PR" not in out
+
+
+class TestWorktreeHolding:
+    def test_a_git_failure_leaves_the_branch_to_gh(self) -> None:
+        with patch(
+            "tools.doit.github.worktree_for_branch",
+            side_effect=subprocess.CalledProcessError(128, ["git"], stderr="not a git repository"),
+        ):
+            assert _worktree_holding({"headRefName": "feat/1-x"}) is None
+
+    def test_a_pr_without_a_head_branch_is_not_looked_up(self) -> None:
+        with patch("tools.doit.github.worktree_for_branch") as mock_find:
+            assert _worktree_holding({}) is None
+
+        mock_find.assert_not_called()
+
+
+class TestFinishBranchInWorktree:
+    """After the merge: the branch on GitHub, then the worktree and local branch (#863)."""
+
+    WORKTREE = Path("/src/project/worktrees/feat/1-x")
+
+    @staticmethod
+    def _console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    def test_an_unmerged_pr_deletes_nothing(self) -> None:
+        console = self._console()
+        with (
+            patch("tools.doit.github._merged_head", return_value=None),
+            patch("tools.doit.github._delete_remote_branch") as mock_remote,
+            patch("tools.doit.github.remove_merged_worktree") as mock_local,
+        ):
+            _finish_branch_in_worktree(42, "feat/1-x", self.WORKTREE, console)
+
+        mock_remote.assert_not_called()
+        mock_local.assert_not_called()
+        assert "in place" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_a_merged_pr_deletes_its_branch_everywhere(self) -> None:
+        console = self._console()
+        with (
+            patch("tools.doit.github._merged_head", return_value="abc123"),
+            patch("tools.doit.github._delete_remote_branch") as mock_remote,
+            patch("tools.doit.github.remove_merged_worktree") as mock_local,
+        ):
+            _finish_branch_in_worktree(42, "feat/1-x", self.WORKTREE, console)
+
+        mock_remote.assert_called_once_with("feat/1-x", console)
+        mock_local.assert_called_once_with(self.WORKTREE, "feat/1-x", "abc123", console)
+
+    def test_an_os_error_is_reported_not_raised(self) -> None:
+        console = self._console()
+        with (
+            patch("tools.doit.github._merged_head", return_value="abc123"),
+            patch("tools.doit.github._delete_remote_branch"),
+            patch(
+                "tools.doit.github.remove_merged_worktree",
+                side_effect=OSError("Permission denied"),
+            ),
+        ):
+            _finish_branch_in_worktree(42, "feat/1-x", self.WORKTREE, console)
+
+        assert "Permission denied" in console.file.getvalue()  # type: ignore[attr-defined]
+
+
+class TestMergedHead:
+    @staticmethod
+    def _console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    def test_returns_the_head_the_pr_merged(self, mock_subprocess: MagicMock) -> None:
+        pr = {"state": "MERGED", "headRefOid": "abc123"}
+        mock_subprocess.register({("gh", "pr", "view"): {"stdout": json.dumps(pr)}})
+
+        assert _merged_head(42, self._console()) == "abc123"
+        assert mock_subprocess.call_args.args[0] == [
+            "gh",
+            "pr",
+            "view",
+            "42",
+            "--json",
+            "state,headRefOid",
+        ]
+
+    @pytest.mark.parametrize("state", ["OPEN", "CLOSED"])
+    def test_an_unmerged_pr_returns_none(self, mock_subprocess: MagicMock, state: str) -> None:
+        console = self._console()
+        pr = {"state": state, "headRefOid": "abc123"}
+        mock_subprocess.register({("gh", "pr", "view"): {"stdout": json.dumps(pr)}})
+
+        assert _merged_head(42, console) is None
+        assert f"is {state}, not merged" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_a_lookup_failure_returns_none(self, mock_subprocess: MagicMock) -> None:
+        console = self._console()
+        mock_subprocess.register(
+            {
+                ("gh", "pr", "view"): subprocess.CalledProcessError(
+                    1, ["gh"], stderr="GraphQL: Could not resolve to a PullRequest"
+                )
+            }
+        )
+
+        assert _merged_head(42, console) is None
+        assert "Could not resolve" in console.file.getvalue()  # type: ignore[attr-defined]
+
+
+class TestDeleteRemoteBranch:
+    """What `gh pr merge --delete-branch` would have done on GitHub (#863)."""
+
+    SETTING = ("gh", "repo", "view")
+
+    @staticmethod
+    def _console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    @staticmethod
+    def _api_calls(mock_subprocess: MagicMock) -> list[list[str]]:
+        calls = [call.args[0] for call in mock_subprocess.call_args_list]
+        return [cmd for cmd in calls if cmd[:2] == ["gh", "api"]]
+
+    def test_left_to_github_when_the_repository_deletes_head_branches(
+        self, mock_subprocess: MagicMock
+    ) -> None:
+        mock_subprocess.register({self.SETTING: {"stdout": "true\n"}})
+
+        _delete_remote_branch("feat/1-x", self._console())
+
+        assert self._api_calls(mock_subprocess) == []
+
+    def test_deletes_the_branch_through_the_api_otherwise(self, mock_subprocess: MagicMock) -> None:
+        console = self._console()
+        mock_subprocess.register({self.SETTING: {"stdout": "false\n"}, ("gh", "api"): {}})
+
+        _delete_remote_branch("feat/1-x", console)
+
+        assert self._api_calls(mock_subprocess) == [
+            ["gh", "api", "--method", "DELETE", "repos/{owner}/{repo}/git/refs/heads/feat/1-x"]
+        ]
+        assert "Deleted branch feat/1-x on GitHub" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_a_setting_lookup_failure_still_deletes(self, mock_subprocess: MagicMock) -> None:
+        mock_subprocess.register(
+            {
+                self.SETTING: subprocess.CalledProcessError(1, ["gh"], stderr="GraphQL: denied"),
+                ("gh", "api"): {},
+            }
+        )
+
+        _delete_remote_branch("feat/1-x", self._console())
+
+        assert len(self._api_calls(mock_subprocess)) == 1
+
+    def test_quotes_a_name_that_would_cut_the_endpoint_short(
+        self, mock_subprocess: MagicMock
+    ) -> None:
+        """Unquoted, `feat/1-x#y` would delete `feat/1-x`: the rest reads as a URL fragment."""
+        mock_subprocess.register({self.SETTING: {"stdout": "false\n"}, ("gh", "api"): {}})
+
+        _delete_remote_branch("feat/1-x#y", self._console())
+
+        endpoint = self._api_calls(mock_subprocess)[0][-1]
+        assert endpoint.endswith("/git/refs/heads/feat/1-x%23y")
+
+    def test_a_failed_delete_is_reported(self, mock_subprocess: MagicMock) -> None:
+        console = self._console()
+        mock_subprocess.register(
+            {
+                self.SETTING: {"stdout": "false\n"},
+                ("gh", "api"): subprocess.CalledProcessError(
+                    1, ["gh"], stderr="gh: Reference does not exist (HTTP 422)"
+                ),
+            }
+        )
+
+        _delete_remote_branch("feat/1-x", console)
+
+        assert "Reference does not exist" in console.file.getvalue()  # type: ignore[attr-defined]

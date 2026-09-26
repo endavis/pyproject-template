@@ -7,10 +7,13 @@ tag/version bump failures, changelog generation failures — propagate
 instead of being swallowed by the legacy ``|| echo 'not installed'`` pattern.
 
 Addresses issue #527. ``TestWorktree`` covers ``doit worktree`` (#854).
+``TestWorktreeForBranch`` and ``TestRemoveMergedWorktree`` cover how
+``doit pr_merge`` finds and removes a merged PR's worktree (#863).
 """
 
 from __future__ import annotations
 
+import io
 import subprocess
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -18,14 +21,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from rich.console import Console
 
 from tools.doit.git import (
     _main_checkout,
+    remove_merged_worktree,
     task_bump,
     task_changelog,
     task_commit,
     task_pre_commit_install,
     task_worktree,
+    worktree_for_branch,
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -209,6 +215,19 @@ class TestWorktree:
         assert "Never pass --active" in out
         assert f"git worktree remove {path}" in out
 
+    def test_points_at_pr_merge_to_remove_it(
+        self,
+        mocks: tuple[MagicMock, MagicMock],
+        tmp_path: Path,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """Merged from the main checkout, the PR takes its worktree with it (#863)."""
+        self._create(self.BRANCH)
+
+        lines = capsys.readouterr().out.splitlines()
+        assert f"  cd {tmp_path}" in lines
+        assert "  uv run doit pr_merge --pr=<number>" in lines
+
     def test_requires_a_branch(self, mocks: tuple[MagicMock, MagicMock]) -> None:
         mock_run, mock_sync = mocks
         with pytest.raises(SystemExit) as exc:
@@ -328,3 +347,199 @@ def test_other_directories_named_worktrees_stay_tracked() -> None:
         check=False,
     )
     assert result.returncode == 1
+
+
+def _git(cwd: Path, *args: str) -> str:
+    """Run git in *cwd* with a fixed identity; return its stripped stdout."""
+    result = subprocess.run(
+        ["git", "-c", "user.email=t@example.com", "-c", "user.name=Test", *args],
+        cwd=cwd,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return result.stdout.strip()
+
+
+@pytest.fixture
+def main_checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A real repository to run from, ignoring what this one does for the tests below."""
+    repo = tmp_path / "repo"
+    repo.mkdir()
+    _git(repo, "init", "-q", "-b", "main")
+    (repo / ".gitignore").write_text(
+        ".venv/\n__pycache__/\n.envrc.local\n/worktrees/\n", encoding="utf-8"
+    )
+    _git(repo, "add", ".gitignore")
+    _git(repo, "commit", "-q", "-m", "init")
+    monkeypatch.chdir(repo)
+    return repo
+
+
+def _add_worktree(repo: Path, branch: str, path: Path | None = None) -> tuple[Path, str]:
+    """Create *branch* in a worktree with one commit; return its path and that commit."""
+    path = path or repo / "worktrees" / branch
+    _git(repo, "worktree", "add", "-q", "-b", branch, str(path))
+    (path / "export.py").write_text("x = 1\n", encoding="utf-8")
+    _git(path, "add", "export.py")
+    _git(path, "commit", "-q", "-m", "feat: add export")
+    return path, _git(path, "rev-parse", "HEAD")
+
+
+def _has_branch(repo: Path, branch: str) -> bool:
+    result = subprocess.run(
+        ["git", "rev-parse", "--verify", "--quiet", f"refs/heads/{branch}"],
+        cwd=repo,
+        capture_output=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+class TestWorktreeForBranch:
+    """Which linked worktree holds a PR's branch (#863)."""
+
+    def test_returns_the_worktree_that_has_the_branch_checked_out(
+        self, main_checkout: Path
+    ) -> None:
+        path, _ = _add_worktree(main_checkout, "feat/1-x")
+
+        found = worktree_for_branch("feat/1-x")
+
+        assert found is not None
+        assert found.resolve() == path.resolve()
+
+    def test_never_returns_the_main_checkout(self, main_checkout: Path) -> None:
+        """gh's --delete-branch handles a branch checked out there."""
+        _add_worktree(main_checkout, "feat/1-x")
+
+        assert worktree_for_branch("main") is None
+
+    def test_returns_none_for_a_branch_no_worktree_has_checked_out(
+        self, main_checkout: Path
+    ) -> None:
+        _git(main_checkout, "branch", "feat/2-y")
+
+        assert worktree_for_branch("feat/2-y") is None
+
+
+class TestRemoveMergedWorktree:
+    """`doit pr_merge` removes a merged PR's worktree and branch, with real git (#863)."""
+
+    BRANCH = "feat/1-add-export"
+
+    @staticmethod
+    def _remove(path: Path, branch: str, merged_head: str) -> str:
+        output = io.StringIO()
+        remove_merged_worktree(path, branch, merged_head, Console(file=output, width=200))
+        return output.getvalue()
+
+    def test_removes_the_worktree_its_branch_and_the_emptied_directory(
+        self, main_checkout: Path
+    ) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert not path.exists()
+        assert not (main_checkout / "worktrees" / "feat").exists()
+        assert (main_checkout / "worktrees").is_dir()
+        assert not _has_branch(main_checkout, self.BRANCH)
+        assert "Removed worktree" in out
+        assert "Deleted local branch" in out
+
+    def test_rebuildable_ignored_files_do_not_keep_it(self, main_checkout: Path) -> None:
+        """Every worktree has a .venv; deleting it with the worktree loses nothing."""
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        (path / ".venv" / "bin").mkdir(parents=True)
+        (path / ".venv" / "bin" / "python").write_text("", encoding="utf-8")
+        (path / "__pycache__").mkdir()
+        (path / "__pycache__" / "export.cpython-312.pyc").write_bytes(b"")
+
+        self._remove(path, self.BRANCH, head)
+
+        assert not path.exists()
+
+    @pytest.mark.parametrize(
+        ("name", "status"),
+        [
+            ("notes.md", "?? notes.md"),  # untracked: git refuses
+            ("export.py", " M export.py"),  # modified: git refuses
+            (".envrc.local", "!! .envrc.local"),  # ignored: git would delete it
+        ],
+    )
+    def test_files_the_merge_did_not_take_keep_it(
+        self, main_checkout: Path, name: str, status: str
+    ) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        (path / name).write_text("local\n", encoding="utf-8")
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert (path / name).exists()
+        assert _has_branch(main_checkout, self.BRANCH)
+        lines = out.splitlines()
+        assert f"  {status}" in lines
+        assert f"  git worktree remove {path}" in lines
+        assert f"  git branch -D {self.BRANCH}" in lines
+
+    def test_a_branch_that_moved_past_the_merged_commit_is_kept(self, main_checkout: Path) -> None:
+        """`-D` would drop the commit the PR never merged."""
+        path, merged = _add_worktree(main_checkout, self.BRANCH)
+        (path / "export.py").write_text("x = 2\n", encoding="utf-8")
+        _git(path, "commit", "-q", "-am", "fix: not pushed")
+
+        out = self._remove(path, self.BRANCH, merged)
+
+        assert not path.exists()
+        assert _has_branch(main_checkout, self.BRANCH)
+        assert f"Kept local branch {self.BRANCH}" in out
+
+    def test_from_inside_the_worktree_it_prints_the_commands(
+        self, main_checkout: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The task runs in the directory it would delete, so it removes nothing."""
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        root = _main_checkout()
+        monkeypatch.chdir(path)
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.is_dir()
+        assert _has_branch(main_checkout, self.BRANCH)
+        lines = out.splitlines()
+        assert "runs inside the worktree" in out
+        assert f"  cd {root}" in lines
+        assert f"  git worktree remove {path}" in lines
+        assert f"  git branch -D {self.BRANCH}" in lines
+
+    def test_a_worktree_outside_worktrees_dir_is_left_alone(
+        self, main_checkout: Path, tmp_path: Path
+    ) -> None:
+        """Another tool made it, such as Claude Code in .claude/worktrees/."""
+        path, head = _add_worktree(main_checkout, self.BRANCH, tmp_path / "elsewhere")
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.is_dir()
+        assert _has_branch(main_checkout, self.BRANCH)
+        assert "did not create" in out
+
+    def test_a_sibling_worktree_keeps_the_shared_directory(self, main_checkout: Path) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        sibling, _ = _add_worktree(main_checkout, "feat/2-other")
+
+        self._remove(path, self.BRANCH, head)
+
+        assert not path.exists()
+        assert sibling.is_dir()
+
+    def test_a_git_refusal_is_reported_and_keeps_the_branch(self, main_checkout: Path) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        _git(main_checkout, "worktree", "lock", str(path))
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.is_dir()
+        assert _has_branch(main_checkout, self.BRANCH)
+        assert "git worktree remove failed" in out

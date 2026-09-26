@@ -18,12 +18,14 @@ import tempfile
 import time
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
+from urllib.parse import quote
 
 import yaml
 from doit.tools import title_with_actions
 from rich.console import Console
 from rich.panel import Panel
 
+from tools.doit.git import remove_merged_worktree, worktree_for_branch
 from tools.doit.templates import get_issue_template, get_pr_template, get_required_sections
 
 if TYPE_CHECKING:
@@ -698,7 +700,13 @@ def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any
     """
     import json
 
-    cmd = ["gh", "pr", "view", "--json", "number,title,body,state,baseRefName"]
+    cmd = [
+        "gh",
+        "pr",
+        "view",
+        "--json",
+        "number,title,body,state,baseRefName,headRefName,isCrossRepository",
+    ]
     if pr_number:
         cmd.append(pr_number)
 
@@ -813,6 +821,100 @@ def _close_linked_issues(issues: list[str], pr_number: int, console: Console) ->
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").strip()
             console.print(f"[yellow]Failed to close #{issue}: {stderr}[/yellow]")
+
+
+def _worktree_holding(pr_info: dict[str, Any]) -> Path | None:
+    """Return the linked worktree that has the PR's branch checked out, if any (#863).
+
+    A cross-repository PR's branch lives in the fork, so it is not looked up.
+    """
+    branch = pr_info.get("headRefName")
+    if not branch or pr_info.get("isCrossRepository"):
+        return None
+    try:
+        return worktree_for_branch(branch)
+    except (subprocess.CalledProcessError, OSError):
+        return None
+
+
+def _merged_head(pr_number: int, console: Console) -> str | None:
+    """Return the head commit PR *pr_number* merged, or ``None`` if it has not merged.
+
+    Nothing is deleted until GitHub reports the PR as merged.
+    """
+    try:
+        result = _run_gh_with_retry(
+            ["gh", "pr", "view", str(pr_number), "--json", "state,headRefOid"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip()
+        console.print(f"[yellow]Could not read the state of PR #{pr_number}: {stderr}[/yellow]")
+        return None
+    data: dict[str, Any] = json.loads(result.stdout)
+    if data.get("state") != "MERGED":
+        console.print(f"[yellow]PR #{pr_number} is {data.get('state')}, not merged yet.[/yellow]")
+        return None
+    head: str = data.get("headRefOid") or ""
+    return head
+
+
+def _delete_remote_branch(branch: str, console: Console) -> None:
+    """Delete *branch* on GitHub, as ``gh pr merge --delete-branch`` would.
+
+    Skipped when the repository deletes head branches on merge itself.
+    """
+    setting = _run_gh_with_retry(
+        ["gh", "repo", "view", "--json", "deleteBranchOnMerge", "--jq", ".deleteBranchOnMerge"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if setting.returncode == 0 and setting.stdout.strip() == "true":
+        return
+    # Quoted, so a "#" or "?" in the name cannot cut the endpoint short and name
+    # a different branch.
+    ref = quote(f"heads/{branch}", safe="/")
+    result = _run_gh_with_retry(
+        ["gh", "api", "--method", "DELETE", f"repos/{{owner}}/{{repo}}/git/refs/{ref}"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode == 0:
+        console.print(f"[green]Deleted branch {branch} on GitHub[/green]")
+    else:
+        stderr = (result.stderr or "").strip()
+        console.print(f"[yellow]Could not delete branch {branch} on GitHub: {stderr}[/yellow]")
+
+
+def _finish_branch_in_worktree(
+    pr_number: int, branch: str, worktree: Path, console: Console
+) -> None:
+    """Delete a merged PR's branch, which a linked worktree has checked out (#863).
+
+    ``gh pr merge`` ran without ``--delete-branch``, so this deletes the branch
+    on GitHub, then removes the worktree and the local branch. It never raises:
+    the PR has merged, so a failure here is reported, not fatal.
+    """
+    console.print()
+    try:
+        merged_head = _merged_head(pr_number, console)
+        if merged_head is None:
+            console.print(
+                f"[yellow]Left {branch} and its worktree {worktree} in place.[/yellow]",
+                soft_wrap=True,
+            )
+            return
+        _delete_remote_branch(branch, console)
+        remove_merged_worktree(worktree, branch, merged_head, console)
+    except subprocess.CalledProcessError as e:
+        stderr = (e.stderr or "").strip() or str(e)
+        console.print(f"[yellow]Cleanup after the merge failed: {stderr}[/yellow]")
+    except OSError as e:
+        console.print(f"[yellow]Cleanup after the merge failed: {e}[/yellow]")
 
 
 def _check_branch_up_to_date(current_branch: str, console: Console, base: str = "main") -> None:
@@ -934,6 +1036,10 @@ def task_pr_merge() -> dict[str, Any]:
     Uses squash merge with a custom subject line to ensure consistent
     commit history that matches the documented format.
 
+    For a PR whose branch is checked out in a worktree under ``worktrees/``,
+    run it from the main checkout: after the merge it removes the worktree and
+    the branch. Run from inside the worktree, it prints how to (#863).
+
     Examples:
         doit pr_merge                    # Merge PR for current branch
         doit pr_merge --pr=123           # Merge specific PR
@@ -1017,7 +1123,13 @@ def task_pr_merge() -> dict[str, Any]:
             "--subject",
             merge_subject,
         ]
-        if delete_branch:
+        # gh's --delete-branch checks out the base branch in the checkout that
+        # holds the PR's branch, then deletes the branch. In a linked worktree git
+        # refuses that checkout while the base is checked out anywhere else, and
+        # from any other checkout it refuses the delete. So a branch in a worktree
+        # is deleted by the task, after the merge (#863).
+        worktree = _worktree_holding(pr_info) if delete_branch else None
+        if delete_branch and worktree is None:
             cmd.append("--delete-branch")
 
         # Execute merge
@@ -1067,6 +1179,11 @@ def task_pr_merge() -> dict[str, Any]:
                 )
                 console.print("  gh stack unstack")
             sys.exit(1)
+
+        # Outside the try: the PR has merged, so no failure from here on may be
+        # reported as a failed merge.
+        if worktree is not None:
+            _finish_branch_in_worktree(pr_number, pr_info["headRefName"], worktree, console)
 
     return {
         "actions": [merge_pr],
