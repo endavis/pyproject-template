@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790425767380,
+  "lastUpdate": 1790427663321,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14042,6 +14042,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.872352019787842e-7",
             "extra": "mean: 2.020479363765266 usec\nrounds: 56648"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6bd7ff0008815dd1ffb973dc7df83af8be6e43bc",
+          "message": "fix: write ADRs from doit adr with exactly one trailing newline (merges PR #861, addresses #859)\n\ndoit adr wrote body_content + \"\\n\". A --body-file body read unstripped\nusually ends with a newline already, so the ADR ended with two, and the\nend-of-file-fixer hook rewrote it and failed the commit. That happened to\nADR-9021 and ADR-9022.\n\nThe write now strips trailing newlines and adds one. The editor path\nalready stripped its content, so only --body-file and a --body string\nending in a newline change.\n\nTests run task_adr for a body file ending in no newline, one and several,\nand for a --body string ending in one. Against the old write, all but the\nno-newline case fail.\n\nAddresses #859\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T13:59:51+01:00",
+          "tree_id": "259f4593f623ad248a17e839e2e7e333954de917",
+          "url": "https://github.com/endavis/pyproject-template/commit/6bd7ff0008815dd1ffb973dc7df83af8be6e43bc"
+        },
+        "date": 1790427661514,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8164483.928313867,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2071394467592936e-8",
+            "extra": "mean: 122.48171578023063 nsec\nrounds: 80698"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8779092.108588645,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7022773713297724e-8",
+            "extra": "mean: 113.90699489548507 nsec\nrounds: 86200"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5510648.534540531,
+            "unit": "iter/sec",
+            "range": "stddev: 1.44443208328827e-8",
+            "extra": "mean: 181.46684437086466 nsec\nrounds: 55054"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1703861.2895962563,
+            "unit": "iter/sec",
+            "range": "stddev: 3.219718634641859e-7",
+            "extra": "mean: 586.902235590409 nsec\nrounds: 67857"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493867.4175997067,
+            "unit": "iter/sec",
+            "range": "stddev: 5.408250069427904e-7",
+            "extra": "mean: 2.0248349341614755 usec\nrounds: 68088"
           }
         ]
       }
