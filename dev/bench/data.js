@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790425402089,
+  "lastUpdate": 1790425568776,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13924,6 +13924,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.694095509753121e-7",
             "extra": "mean: 1.9731207976959813 usec\nrounds: 59521"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bbbaa636b0d6e4e6628c7c5513a31d8e04ad7a97",
+          "message": "feat: add --base to doit pr for work that builds on an unmerged branch (merges PR #857, addresses #855)\n\ndoit pr always opened the PR against main and checked the branch against\norigin/main. Work that needs another issue's unmerged branch had to wait\nfor it, or open against main with the other branch's diff included.\n\n- doit pr --base=<branch> passes --base to gh pr create, so the PR shows\n  only its own changes. The up-to-date check then compares with\n  origin/<branch>; without --base, nothing changes.\n- A PR opened against another branch gets a note to rebase onto main and\n  retarget once that branch merges, with the gh pr edit command.\n- CONTRIBUTING step 4 documents the flow. After the lower PR is\n  squash-merged, a plain git rebase origin/main can conflict on its\n  original commits, so the steps use git rebase --onto with the lower\n  PR's head commit, and retarget before pushing: ci.yml runs on the push,\n  not on the retarget.\n- ADR-9021 records that a PR may target the unmerged branch it builds on\n  while merging stays main-only (#853); ADR-9008 lists #855.\n\nAddresses #855\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T13:25:37+01:00",
+          "tree_id": "8cf9e87e382b17f399da17839f53c5b658c28eea",
+          "url": "https://github.com/endavis/pyproject-template/commit/bbbaa636b0d6e4e6628c7c5513a31d8e04ad7a97"
+        },
+        "date": 1790425567656,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8319108.024948911,
+            "unit": "iter/sec",
+            "range": "stddev: 5.134160530635085e-8",
+            "extra": "mean: 120.20519471570888 nsec\nrounds: 84020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8789812.88071331,
+            "unit": "iter/sec",
+            "range": "stddev: 1.170970115917393e-8",
+            "extra": "mean: 113.76806464153627 nsec\nrounds: 87405"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5502421.97068503,
+            "unit": "iter/sec",
+            "range": "stddev: 1.866342263521781e-8",
+            "extra": "mean: 181.73815191340256 nsec\nrounds: 56361"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1708253.8951889467,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4834578698360175e-7",
+            "extra": "mean: 585.3930746573195 nsec\nrounds: 69455"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 431234.801859071,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011078431802579668",
+            "extra": "mean: 2.318922303322827 usec\nrounds: 62345"
           }
         ]
       }
