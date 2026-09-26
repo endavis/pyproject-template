@@ -300,3 +300,31 @@ def test_worktrees_directory_is_gitignored() -> None:
         check=False,
     )
     assert result.returncode == 0
+
+
+def test_claude_code_worktrees_are_ignored_by_their_own_rule() -> None:
+    """Claude Code's worktree tool uses `.claude/worktrees/` (#860).
+
+    Until #860 that directory was ignored only because `worktrees/` matched at
+    every level, so anchoring that rule would have exposed it.
+    """
+    result = subprocess.run(
+        ["git", "check-ignore", "-v", ".claude/worktrees/847-trial/pyproject.toml"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert result.returncode == 0
+    source = result.stdout.split("\t")[0]  # "<file>:<line>:<pattern>"
+    assert source.endswith(":.claude/worktrees/")
+
+
+def test_other_directories_named_worktrees_stay_tracked() -> None:
+    """The rule is anchored to the root, so a `docs/worktrees/` page can be committed (#860)."""
+    result = subprocess.run(
+        ["git", "check-ignore", "-q", "docs/worktrees/notes.md"],
+        cwd=REPO_ROOT,
+        check=False,
+    )
+    assert result.returncode == 1

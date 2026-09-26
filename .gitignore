@@ -72,7 +72,10 @@ tmp/*
 .cache/
 
 # Git worktrees made by `doit worktree`. Not temporary: each lives until its PR merges.
-worktrees/
+# Anchored to the root, so a directory named `worktrees` elsewhere stays tracked (#860).
+/worktrees/
+# Claude Code's built-in worktree tool (EnterWorktree) creates worktrees here.
+.claude/worktrees/
 
 # Documentation
 site/

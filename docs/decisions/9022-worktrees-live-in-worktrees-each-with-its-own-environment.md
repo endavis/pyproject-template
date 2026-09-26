@@ -22,8 +22,8 @@ during the #847 trial went wrong three ways (#854):
   worktree lives until its PR merges. `doit cleanup` also empties `tmp/`
   (`tools/doit/maintenance.py`), which would delete a worktree there along with any uncommitted
   work in it. A directory an agent's own tooling picks is not necessarily ignored:
-  `.claude/worktrees/` is not, so a worktree there shows as untracked and `git add -A` would
-  embed it.
+  `.claude/worktrees/` was not, so a worktree there showed as untracked and `git add -A` would
+  have embedded it. It has its own entry since #860.
 - **Environment.** A new worktree has no `.venv`, and the shell's `VIRTUAL_ENV` and `PATH` still
   point at the main checkout's. A `.venv` created by plain `uv run` has runtime dependencies
   only, so `pytest`, `ruff` and `mypy` resolved to the main checkout's environment.
@@ -55,6 +55,7 @@ starting an empty one.
 - Issue #848: the walkers skipped by absolute path, so a checkout under `tmp/` passed having
   checked nothing
 - Issue #847: the stacked-PR trial where the manual worktree procedure failed
+- Issue #860: the rule is anchored to `/worktrees/`, and `.claude/worktrees/` has its own entry
 
 ## Related Documentation
 - [Doit Tasks Reference](../development/doit-tasks-reference.md) — the `worktree` task and how to
