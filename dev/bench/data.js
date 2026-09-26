@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790427663321,
+  "lastUpdate": 1790427805253,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14101,6 +14101,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.408250069427904e-7",
             "extra": "mean: 2.0248349341614755 usec\nrounds: 68088"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1673e90cc495e963ff807b513718d4529836695f",
+          "message": "chore: anchor the worktrees/ ignore rule and ignore .claude/worktrees/ explicitly (merges PR #862, addresses #860)\n\nClaude Code's built-in worktree tool creates worktrees in\n.claude/worktrees/, and nothing in .gitignore named it. It was ignored\nonly because #858's worktrees/ rule has no leading slash, so git applied\nit at every level. The same rule also ignored any other directory named\nworktrees, such as docs/worktrees/, which was never intended.\n\n- .gitignore: worktrees/ becomes /worktrees/, and .claude/worktrees/ gets\n  its own entry.\n- Tests: .claude/worktrees/ is ignored by its own rule, and\n  docs/worktrees/ is not ignored. The existing test still covers the root\n  worktrees/.\n- ADR-9022 lists #860, and its rationale now says .claude/worktrees/ was\n  not ignored, in the past tense.\n\nThe test walkers need no change: they skip any path component named\nworktrees.\n\nAddresses #860\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T14:02:45+01:00",
+          "tree_id": "47f611c130b28412dc563bc7bfce2672fb102473",
+          "url": "https://github.com/endavis/pyproject-template/commit/1673e90cc495e963ff807b513718d4529836695f"
+        },
+        "date": 1790427804429,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8671224.391686272,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0858845685192236e-8",
+            "extra": "mean: 115.32396750783802 nsec\nrounds: 82974"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8897564.626937972,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4419671834931052e-8",
+            "extra": "mean: 112.39030475512737 nsec\nrounds: 86791"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5373019.501850868,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7718485579690955e-8",
+            "extra": "mean: 186.11508848153736 nsec\nrounds: 53175"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1718476.3575786056,
+            "unit": "iter/sec",
+            "range": "stddev: 2.696124260404566e-7",
+            "extra": "mean: 581.9108279202837 nsec\nrounds: 68037"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496080.55433577637,
+            "unit": "iter/sec",
+            "range": "stddev: 4.948651314455826e-7",
+            "extra": "mean: 2.0158016500746396 usec\nrounds: 55513"
           }
         ]
       }
