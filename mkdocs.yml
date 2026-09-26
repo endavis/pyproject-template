@@ -74,7 +74,7 @@ markdown_extensions:
 # mkdocs 1.6 reports those identically to genuinely broken links
 # (`links.not_found`), so silencing one silences the other. `not_found` is
 # therefore ignored here and link validation lives in
-# `tests/test_docs_links.py`, which resolves every relative link against the
+# `tests/test_markdown_links.py`, which resolves every relative link against the
 # whole repository — including the out-of-docs links mkdocs can never check.
 # Anchors are still validated here, where mkdocs has the rendered headings.
 #
