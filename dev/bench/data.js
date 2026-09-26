@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790420153125,
+  "lastUpdate": 1790425402089,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -13865,6 +13865,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.503463254562984e-7",
             "extra": "mean: 2.0316998658323246 usec\nrounds: 56648"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9a63e7efc232bd864d7d9ea104013f766bb85344",
+          "message": "feat: make doit pr_merge refuse a PR whose base isn't the default branch (merges PR #856, addresses #853)\n\nGitHub merges a PR into its base branch. doit pr_merge never looked at the\nbase, so a PR opened against another feature branch would have been\nsquashed into that branch with a \"(merges PR #XX, addresses #YY)\" subject,\nand --auto-close would have closed issues whose work never reached main.\n\n- _get_pr_info now requests baseRefName. merge_pr compares it with the\n  repository's default branch (gh repo view, falling back to main with a\n  warning) and stops before merging or closing anything, naming the base\n  and the retarget command.\n- GitHub's refusal for a PR in a native stack (\"part of a stack and must\n  be merged using the asynchronous merge REST API\") is now explained:\n  doit pr_merge does not support stacks; unstack, then merge bottom first.\n- Docs: the pr_merge descriptions in the tasks reference, CONTRIBUTING and\n  release-and-automation, with the reference's claim that the task\n  validates approvals and checks corrected; ADR-9008 lists #853.\n\nAddresses #853\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-26T13:22:43+01:00",
+          "tree_id": "45ed4f93e4fe6f02353248ac59537c04f0d52bcd",
+          "url": "https://github.com/endavis/pyproject-template/commit/9a63e7efc232bd864d7d9ea104013f766bb85344"
+        },
+        "date": 1790425400894,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8869973.79303589,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1508530533580285e-8",
+            "extra": "mean: 112.73990468665566 nsec\nrounds: 82150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8886655.427391192,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2354447004855886e-8",
+            "extra": "mean: 112.52827435141869 nsec\nrounds: 88332"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5820112.966088031,
+            "unit": "iter/sec",
+            "range": "stddev: 1.41961503143824e-8",
+            "extra": "mean: 171.81797085841558 nsec\nrounds: 58542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1730118.9376190482,
+            "unit": "iter/sec",
+            "range": "stddev: 3.31583335918306e-7",
+            "extra": "mean: 577.9949448886897 nsec\nrounds: 53807"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 506811.3422998241,
+            "unit": "iter/sec",
+            "range": "stddev: 5.694095509753121e-7",
+            "extra": "mean: 1.9731207976959813 usec\nrounds: 59521"
           }
         ]
       }
