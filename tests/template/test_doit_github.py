@@ -19,6 +19,8 @@ from tools.doit.github import (
     _extract_linked_issues,
     _fetch_github_labels,
     _format_merge_subject,
+    _get_default_branch,
+    _get_pr_info,
     _gh_env_create,
     _gh_env_exists,
     _gh_env_list,
@@ -1649,6 +1651,52 @@ class TestCreatePr:
         assert exc.value.code == 1
 
 
+class TestGetPrInfo:
+    """``_get_pr_info`` — the fields `doit pr_merge` decides on."""
+
+    def test_requests_the_base_branch(self, mock_subprocess: MagicMock) -> None:
+        """The base-branch guard reads ``baseRefName``; without it, the guard never runs (#853)."""
+        pr = {"number": 42, "baseRefName": "main"}
+        mock_subprocess.register({("gh", "pr", "view"): {"stdout": json.dumps(pr)}})
+
+        info = _get_pr_info("42", Console(file=io.StringIO(), width=200))
+
+        cmd = mock_subprocess.call_args.args[0]
+        assert "baseRefName" in cmd[cmd.index("--json") + 1].split(",")
+        assert info == pr
+
+
+class TestGetDefaultBranch:
+    """``_get_default_branch`` — the only base `doit pr_merge` merges into (#853)."""
+
+    @staticmethod
+    def _make_console() -> Console:
+        return Console(file=io.StringIO(), width=200)
+
+    def test_returns_the_repository_default_branch(self, mock_subprocess: MagicMock) -> None:
+        mock_subprocess.register({("gh", "repo", "view"): {"stdout": "trunk\n"}})
+
+        assert _get_default_branch(self._make_console()) == "trunk"
+        cmd = mock_subprocess.call_args.args[0]
+        assert cmd[cmd.index("--json") + 1] == "defaultBranchRef"
+
+    def test_falls_back_to_main_with_a_warning(self, mock_subprocess: MagicMock) -> None:
+        """A lookup failure is reported, not swallowed."""
+        console = self._make_console()
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): subprocess.CalledProcessError(
+                    1, ["gh"], stderr="HTTP 404: Not Found"
+                )
+            }
+        )
+
+        assert _get_default_branch(console) == "main"
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "HTTP 404" in output
+        assert "Assuming 'main'" in output
+
+
 def _merge_action() -> Callable[..., None]:
     """Return the `merge_pr` action that `doit pr_merge` runs."""
     action: Callable[..., None] = task_pr_merge()["actions"][0]
@@ -1784,3 +1832,81 @@ class TestMergePr:
             _merge_action()(pr="42")
 
         assert exc.value.code == 1
+
+    @pytest.mark.parametrize(
+        ("base", "default"),
+        [
+            ("feat/1-lower", "main"),  # built on an unmerged branch
+            ("main", "trunk"),  # the default branch is not always main
+        ],
+    )
+    def test_refuses_a_pr_whose_base_is_not_the_default_branch(
+        self, base: str, default: str, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """GitHub merges into the base, so this would land beside `main`, not on it (#853).
+
+        Nothing is merged, and no issue is closed although `--auto-close` asks for it.
+        """
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName=base)),
+            patch("tools.doit.github._get_default_branch", return_value=default),
+            patch("tools.doit.github._run_gh_with_retry") as mock_gh,
+            patch("tools.doit.github._close_linked_issues") as mock_close,
+            pytest.raises(SystemExit) as exc,
+        ):
+            _merge_action()(pr="42", auto_close=True)
+
+        assert exc.value.code == 1
+        mock_gh.assert_not_called()
+        mock_close.assert_not_called()
+        out = capsys.readouterr().out
+        assert f"targets '{base}'" in out
+        assert f"gh pr edit 42 --base {default}" in out
+
+    @pytest.mark.parametrize("branch", ["main", "trunk"])
+    def test_merges_a_pr_that_targets_the_default_branch(self, branch: str) -> None:
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName=branch)),
+            patch("tools.doit.github._get_default_branch", return_value=branch),
+            patch("tools.doit.github._run_gh_with_retry") as mock_gh,
+        ):
+            _merge_action()(pr="42")
+
+        assert mock_gh.call_args.args[0][:4] == ["gh", "pr", "merge", "42"]
+
+    def test_explains_a_stacked_pr_refusal(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """GitHub's refusal for a PR in a native stack, as observed on #850 (#853)."""
+        stderr = (
+            "GraphQL: This pull request is part of a stack and must be merged using the "
+            "asynchronous merge REST API. (mergePullRequest)"
+        )
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName="main")),
+            patch("tools.doit.github._get_default_branch", return_value="main"),
+            patch(
+                "tools.doit.github._run_gh_with_retry",
+                side_effect=subprocess.CalledProcessError(1, ["gh"], stderr=stderr),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _merge_action()(pr="42")
+
+        assert exc.value.code == 1
+        out = capsys.readouterr().out
+        assert "does not support" in out
+        assert "gh stack unstack" in out
+
+    def test_other_merge_failures_get_no_stack_explanation(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr()),
+            patch(
+                "tools.doit.github._run_gh_with_retry",
+                side_effect=subprocess.CalledProcessError(1, ["gh"], stderr="not mergeable"),
+            ),
+            pytest.raises(SystemExit),
+        ):
+            _merge_action()(pr="42")
+
+        assert "stack" not in capsys.readouterr().out

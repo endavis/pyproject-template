@@ -61,6 +61,11 @@ _PR_TITLE_PATTERN = re.compile(
     r"^(feat|fix|refactor|docs|test|chore|ci|perf|release)(\(.+\))?:\s.+"
 )
 
+# GitHub refuses ``gh pr merge`` on a PR in a native stack with "This pull
+# request is part of a stack and must be merged using the asynchronous merge
+# REST API." ``doit pr_merge`` does not support stacks (#847, #853).
+_STACKED_PR_MARKER = "part of a stack"
+
 
 def _is_transient_gh_error(stderr: str) -> str | None:
     """Return the matched transient-error marker, or ``None`` if not transient.
@@ -672,7 +677,7 @@ def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any
     """
     import json
 
-    cmd = ["gh", "pr", "view", "--json", "number,title,body,state"]
+    cmd = ["gh", "pr", "view", "--json", "number,title,body,state,baseRefName"]
     if pr_number:
         cmd.append(pr_number)
 
@@ -686,6 +691,29 @@ def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any
         else:
             console.print(f"[red]Failed to get PR info: {e.stderr}[/red]")
         return None
+
+
+def _get_default_branch(console: "ConsoleType") -> str:
+    """Return the repository's default branch, or ``main`` if GitHub can't say.
+
+    Args:
+        console: Rich console for the fallback warning
+
+    Returns:
+        The default branch name (for example ``main``).
+    """
+    try:
+        result = _run_gh_with_retry(
+            ["gh", "repo", "view", "--json", "defaultBranchRef", "--jq", ".defaultBranchRef.name"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except subprocess.CalledProcessError as e:
+        console.print(f"[yellow]Could not read the default branch: {e.stderr}[/yellow]")
+        console.print("[yellow]Assuming 'main'.[/yellow]")
+        return "main"
+    return result.stdout.strip() or "main"
 
 
 def _extract_linked_issues(body: str) -> list[str]:
@@ -919,6 +947,26 @@ def task_pr_merge() -> dict[str, Any]:
             console.print(f"[red]PR is not open (state: {pr_state}).[/red]")
             sys.exit(1)
 
+        # GitHub merges a PR into its base. A PR built on another branch would
+        # squash into that branch, and --auto-close would close issues that never
+        # reached the default branch (#853).
+        base = pr_info.get("baseRefName")
+        if base:
+            default_branch = _get_default_branch(console)
+            if base != default_branch:
+                console.print(
+                    f"[red]PR #{pr_number} targets '{base}', not '{default_branch}'.[/red]"
+                )
+                console.print(
+                    f"[yellow]doit pr_merge merges only into '{default_branch}'.[/yellow]"
+                )
+                console.print(
+                    "[yellow]Merge the PR it builds on, rebase this branch onto "
+                    f"'{default_branch}', then retarget it:[/yellow]"
+                )
+                console.print(f"  gh pr edit {pr_number} --base {default_branch}")
+                sys.exit(1)
+
         # Validate PR title format.
         if not _PR_TITLE_PATTERN.match(pr_title):
             console.print("[red]PR title does not follow conventional commit format.[/red]")
@@ -983,6 +1031,20 @@ def task_pr_merge() -> dict[str, Any]:
             console.print("[red]Failed to merge PR.[/red]")
             if e.stderr:
                 console.print(f"[red]{e.stderr}[/red]")
+            if _STACKED_PR_MARKER in (e.stderr or "").lower():
+                console.print(
+                    "[yellow]This PR is part of a GitHub stack, which doit pr_merge does not "
+                    "support.[/yellow]"
+                )
+                console.print(
+                    "[yellow]GitHub merges stacked PRs only through its asynchronous merge "
+                    "API.[/yellow]"
+                )
+                console.print(
+                    "[yellow]Unstack it (gh-stack extension), then merge the PRs bottom "
+                    "first:[/yellow]"
+                )
+                console.print("  gh stack unstack")
             sys.exit(1)
 
     return {

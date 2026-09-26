@@ -944,6 +944,7 @@ doit pr_merge --delete-branch=false
 
 The task:
 - Fetches PR title, number, and linked issues from GitHub
+- Refuses a PR whose base is not the default branch, before merging or closing anything
 - Validates PR title follows conventional commit format
 - Constructs the merge commit subject automatically
 - Uses squash merge with the formatted subject
