@@ -59,6 +59,32 @@ where an implicit trust assumption should not be extended. See
 
 ## Needs a one-off action
 
+### Give every document under `docs/` frontmatter
+
+**Who.** Every project with a document under `docs/` that has no frontmatter block, or has one that
+does not parse. That includes any ADR written before `doit adr` started writing the block.
+
+**Why.** `tests/test_docs_frontmatter.py` fails `doit check` for each such document.
+`docs/TABLE_OF_CONTENTS.md` is generated from these blocks, and a document without one is listed
+bare and reaches no audience section.
+
+**The fix.** Start each document with a block that has at least a `description`, and quote any value
+that holds `: ` — every ADR title does:
+
+```yaml
+---
+title: "ADR-0001: Use Redis for caching"
+description: Cache sessions in Redis
+audience:
+  - contributors
+tags:
+  - adr
+---
+```
+
+`uv run pytest tests/test_docs_frontmatter.py` names each document that still needs one, and for a
+block that does not parse, why. An ADR must also replace the template's placeholder description.
+
 ### Re-run `doit pre_commit_install`
 
 **Who.** Every project that ran it *before* adopting the `.pre-commit-config.yaml` that declares

@@ -1,3 +1,12 @@
+---
+title: install_tools Framework
+description: Reusable framework for installing developer tools from GitHub releases or other URLs into ~/.local/bin
+audience:
+  - contributors
+tags:
+  - tooling
+---
+
 # install_tools Framework
 
 A reusable Python framework for installing developer tools from GitHub

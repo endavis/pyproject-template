@@ -1,3 +1,14 @@
+---
+title: "ADR-9021: A PR may target the unmerged branch it builds on"
+description: A PR may target the unmerged branch it builds on, but it merges only into main
+date: 2026-09-26
+audience:
+  - contributors
+tags:
+  - adr
+  - workflow
+---
+
 # ADR-9021: A PR may target the unmerged branch it builds on
 
 ## Status

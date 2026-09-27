@@ -1,3 +1,15 @@
+---
+title: "ADR-9005: AI agent command restrictions via hooks"
+description: Block dangerous commands such as --force, --admin and --no-verify at the tool level, through each AI agent's hooks
+date: 2026-01-21
+audience:
+  - contributors
+tags:
+  - adr
+  - ai
+  - hooks
+---
+
 # ADR-9005: AI agent command restrictions via hooks
 
 ## Status
