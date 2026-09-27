@@ -68,11 +68,11 @@ CONTRACT: tuple[tuple[str, str], ...] = (
     ("checks the live setting instead of asserting it", "Check `major_version_zero` in"),
     (
         "true is the shipped default, bumps minor",
-        "with `true`, the shipped default, that footer bumps MINOR at any version",
+        "with `true`, the shipped default, that footer bumps MINOR",
     ),
     (
-        "the policy claim that does not hold, cited to the tracking issue",
-        '"Breaking changes require major version bump" does not hold (#881)',
+        "the release refuses 1.0 while it is on, cited to the tracking issue",
+        "`doit release` refuses to release 1.0 or later until the setting is `false` (#881)",
     ),
     ("false bumps major", "with `false`, it bumps MAJOR"),
     ("tell the user rather than edit config", "Do not edit `pyproject.toml` to change it"),

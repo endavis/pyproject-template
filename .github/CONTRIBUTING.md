@@ -483,6 +483,12 @@ Version bumping is handled by [commitizen](https://commitizen-tools.github.io/co
 | `feat:` | Minor (1.0.0 → 1.1.0) |
 | `BREAKING CHANGE:` | Major (1.0.0 → 2.0.0) |
 
+The table assumes `major_version_zero = false` in `[tool.commitizen]`. The template ships it as
+`true` for a project still on 0.x, where a `BREAKING CHANGE:` bumps MINOR (0.3.0 → 0.4.0).
+commitizen applies the setting at every version, not only below 1.0, so set it to `false` before
+the 1.0.0 release: `doit release` refuses to release 1.0.0 or later while it is `true`.
+`doit release --increment=MAJOR` then cuts 1.0.0 from 0.x.
+
 ### Release Workflow
 
 All releases — production and pre-release — go through a pull request.
