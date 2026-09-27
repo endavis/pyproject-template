@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790529428630,
+  "lastUpdate": 1790529556407,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15399,6 +15399,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.708174240344105e-7",
             "extra": "mean: 1.9051198333748027 usec\nrounds: 53894"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "17efff5cbb5cdfcae80ebaf142ca1f349a0967fb",
+          "message": "fix: print PR titles and gh errors in doit pr_merge as text, not Rich markup (merges PR #895, addresses #893)\n\ndoit pr_merge put the PR title into Rich markup unescaped, so Rich read\nbracketed text as tags. `[tool.mutmut]` vanished from the printed title\n(PR #874). A title containing `[/tmp]` raised MarkupError on the first\nprint, which runs before `gh pr merge`, so the task could not merge that PR\nat all.\n\n- `tools/doit/github.py`: `rich.markup.escape()` wraps the title, the merge\n  subject preview, the success panel's subject, and gh's stderr when the\n  merge fails.\n- `tests/template/test_doit_github.py`: a bracketed title prints verbatim\n  on all three lines, a `[/tmp]` title merges, and a gh error containing\n  `[/x]` prints as text. Output is compared with ANSI codes stripped:\n  FORCE_COLOR makes Rich color the brackets separately.\n\nOther console.print calls in tools/doit/ interpolate external text the same\nway. This change keeps to the prints #893 lists.\n\nAddresses #893\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T18:18:36+01:00",
+          "tree_id": "af295ec2e410c8a79fdc2cdb874b6b391e6503fd",
+          "url": "https://github.com/endavis/pyproject-template/commit/17efff5cbb5cdfcae80ebaf142ca1f349a0967fb"
+        },
+        "date": 1790529554716,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 15390349.528945353,
+            "unit": "iter/sec",
+            "range": "stddev: 9.338391060515087e-9",
+            "extra": "mean: 64.97578226662448 nsec\nrounds: 167673"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 16406109.350265535,
+            "unit": "iter/sec",
+            "range": "stddev: 7.20455273305185e-9",
+            "extra": "mean: 60.9529034977336 nsec\nrounds: 172981"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 10027447.198503355,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2803579499774987e-8",
+            "extra": "mean: 99.72627930160081 nsec\nrounds: 107504"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3333490.786020858,
+            "unit": "iter/sec",
+            "range": "stddev: 4.595169475156652e-8",
+            "extra": "mean: 299.98582992745753 nsec\nrounds: 168436"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 832824.6938102241,
+            "unit": "iter/sec",
+            "range": "stddev: 1.37409356590699e-7",
+            "extra": "mean: 1.2007328882443897 usec\nrounds: 86274"
           }
         ]
       }
