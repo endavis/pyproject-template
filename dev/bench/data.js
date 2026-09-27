@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790517223562,
+  "lastUpdate": 1790517388959,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14986,6 +14986,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.385879782275418e-7",
             "extra": "mean: 2.0648125651706852 usec\nrounds: 59450"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6efe1a3fde6a1984e224aaf0a1f47914a8c627bb",
+          "message": "feat: add a security-triage skill so bandit and pip-audit findings are fixed or justified, not silenced (merges PR #885, addresses #834)\n\nThe new skill triages `doit security` (bandit) and `doit audit` (pip-audit)\nfindings. Each finding ends one of three ways:\n- fixed;\n- justified with a reason that names it;\n- escalated to the user.\n\nA bandit suppression must be `# nosec <ID> - <reason>`, never a bare\n`# nosec`. The agent stops and asks before adding a new `skips` entry or\nignoring an advisory.\n\nFor pip-audit, the agent first finds where the package comes from:\n- A direct dependency gets the exact `uv add` for its table, which the agent\n  hands to the user.\n- A transitive one gets `uv lock --upgrade-package`, which the agent runs\n  itself.\n\nThe skill also names the two ways to get a clean scan that checked nothing:\n- the missing `security` extra, which `uv sync --all-extras` restores, never\n  `--extra security` alone;\n- a bandit sample under the excluded `tmp/`.\n\n- `.claude/commands/security-triage.md` for Claude, and\n  `.agents/skills/security-triage/SKILL.md` for Codex, Antigravity and Copilot.\n- `tests/test_security_triage_skill.py` holds both bodies to the same steps in\n  the same order. It also holds them to the same three gate sentences, word\n  for word and each inside its step: no bare `# nosec`, ask before a new\n  `skips` entry, and ask before ignoring an advisory.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #834\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T14:55:45+01:00",
+          "tree_id": "86aca82ea5aa6c115277747ab5a880b7c390eb48",
+          "url": "https://github.com/endavis/pyproject-template/commit/6efe1a3fde6a1984e224aaf0a1f47914a8c627bb"
+        },
+        "date": 1790517387420,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8620618.197301468,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3253715550724298e-8",
+            "extra": "mean: 116.00096154508181 nsec\nrounds: 87245"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8901995.205370015,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9401865366239772e-8",
+            "extra": "mean: 112.33436740077808 nsec\nrounds: 85536"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5365865.200027381,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0874354970775911e-7",
+            "extra": "mean: 186.36323551230788 nsec\nrounds: 55237"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1571263.4270541263,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000021611268934138467",
+            "extra": "mean: 636.4305200400698 nsec\nrounds: 64148"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 479351.13333536655,
+            "unit": "iter/sec",
+            "range": "stddev: 8.527976601027398e-7",
+            "extra": "mean: 2.0861534070899417 usec\nrounds: 47827"
           }
         ]
       }
