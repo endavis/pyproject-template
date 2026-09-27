@@ -34,6 +34,7 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 - Issue #362: Add Copilot CLI command-blocking hook integration
 - Issue #409: Complete Copilot CLI coverage in AI_SETUP, enforcement-principles, first-5-minutes
 - Issue #678: Fix dangerous-command hook for git global options, refspecs, and shell wrappers
+- Issue #829: Add an add-dependency skill that prepares the blocked `uv add` for the user to run
 
 ## Related Documentation
 
@@ -41,3 +42,4 @@ Documentation alone is insufficient - AI agents may violate rules after context 
 - [AI Command Blocking](../development/ai/command-blocking.md)
 - [AI Enforcement Principles](../development/ai/enforcement-principles.md)
 - [AI Setup Guide](../development/AI_SETUP.md)
+- [Slash Commands and Workflows](../development/ai/slash-commands.md) — `/add-dependency`, the workflow for a dependency the hook will not let an agent add
