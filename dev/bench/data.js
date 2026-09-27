@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790536098985,
+  "lastUpdate": 1790536287239,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15576,6 +15576,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2890973231608209e-7",
             "extra": "mean: 1.4301094938901027 usec\nrounds: 73047"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d63feda1c02047968b7bc96e109f2490254bea55",
+          "message": "docs: match the benchmark docs to benchmark.yml, which posts no PR comments (merges PR #903, addresses #880)\n\n#695 cut benchmark.yml to `contents: read`, with `contents: write` on the `store` job alone, and\nPRs stopped getting a benchmark comment. The docs still described PR comments, a PR comparison and\nworkflow-wide write permissions.\n\n- ci-cd-testing.md: the trigger table matches the three triggers; only a push to `main` stores\n  results, from the `store` job, which never runs for a PR. Name the step that creates\n  `gh-benchmarks`. \"PR Comments\" becomes \"Pull Requests\": no comment, download the artifact or\n  compare locally. The alert applies only to pushes to `main` and never fails the workflow.\n- github-repository-settings.md: the Benchmark row lists the real triggers and permissions.\n- tests/test_workflow_permissions_doc.py: compare every row of that table with the permissions\n  its workflow grants, at workflow and job scope.\n\nAddresses #880\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T20:10:47+01:00",
+          "tree_id": "af6580889fbf7b502d9f0d817c4a81fbb6e6b60a",
+          "url": "https://github.com/endavis/pyproject-template/commit/d63feda1c02047968b7bc96e109f2490254bea55"
+        },
+        "date": 1790536285429,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8602693.4600885,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6914185620704018e-8",
+            "extra": "mean: 116.24266337507188 nsec\nrounds: 89518"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8736213.869630018,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2805196140256135e-8",
+            "extra": "mean: 114.46606217784255 nsec\nrounds: 91576"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5687058.066376983,
+            "unit": "iter/sec",
+            "range": "stddev: 1.560938553793462e-8",
+            "extra": "mean: 175.83783888407936 nsec\nrounds: 59659"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2098437.625434125,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3352439975971888e-7",
+            "extra": "mean: 476.5450199136225 nsec\nrounds: 185529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 515365.26608563977,
+            "unit": "iter/sec",
+            "range": "stddev: 1.807060730242154e-7",
+            "extra": "mean: 1.940371355631536 usec\nrounds: 54248"
           }
         ]
       }
