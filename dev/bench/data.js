@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790528954608,
+  "lastUpdate": 1790529428630,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15340,6 +15340,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.4575935037933033e-7",
             "extra": "mean: 1.8638227699442402 usec\nrounds: 56456"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "08326aec2a48bbc77f75f1f01da69f1b1a4b9dfd",
+          "message": "fix: refuse a 1.0+ release while major_version_zero is still true (merges PR #899, addresses #881)\n\ncommitizen applies `major_version_zero` at every version, not only below\n1.0. The template ships it as `true` and nothing turned it off, so after 1.0\na `BREAKING CHANGE:` footer still produced a MINOR bump (#881).\n\n- tools/doit/release.py: once `cz bump --get-next` has computed the next\n  version, `doit release` stops with instructions when that version is\n  1.0.0 or later and `[tool.commitizen].major_version_zero` is true. It\n  stops before the release branch exists.\n- tests/template/test_doit_release.py: the setting reader, the\n  major-number parser, the refusal at 1.0.0, and releases below 1.0 or with\n  the setting off going on to create the branch.\n- CONTRIBUTING.md's versioning section now says:\n  - the bump table assumes the setting is false;\n  - when to change it;\n  - that `doit release --increment=MAJOR` cuts 1.0.0.\n- AGENTS.md's Breaking Changes Policy item 4 is reworded to match.\n- The deprecate-api and python-version-bump skills (both copies of each)\n  said the bump stays MINOR past 1.0. They now describe the refusal, and the\n  deprecate-api contract test pins the new wording.\n\nAddresses #881\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T18:16:22+01:00",
+          "tree_id": "d3011021f628385cd9490a8277d7ba19d5be3f06",
+          "url": "https://github.com/endavis/pyproject-template/commit/08326aec2a48bbc77f75f1f01da69f1b1a4b9dfd"
+        },
+        "date": 1790529427514,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8688718.61955913,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2292407993674531e-8",
+            "extra": "mean: 115.09176942948815 nsec\nrounds: 89040"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8909320.488730032,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4446740025925725e-8",
+            "extra": "mean: 112.24200557887256 nsec\nrounds: 92851"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5763997.154751737,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4443702911717064e-8",
+            "extra": "mean: 173.4907171450662 nsec\nrounds: 58956"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2096682.9142535063,
+            "unit": "iter/sec",
+            "range": "stddev: 6.673397755689752e-8",
+            "extra": "mean: 476.9438398156812 nsec\nrounds: 184502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 524901.3644609229,
+            "unit": "iter/sec",
+            "range": "stddev: 1.708174240344105e-7",
+            "extra": "mean: 1.9051198333748027 usec\nrounds: 53894"
           }
         ]
       }
