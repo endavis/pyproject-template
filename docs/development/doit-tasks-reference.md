@@ -401,7 +401,7 @@ doit security
 - Uses configuration from `pyproject.toml` `[tool.bandit]`
 - Excludes tests, tmp, and .venv directories
 
-**Requires:** `[security]` extras installed (`uv sync --extra security`)
+**Requires:** the `security` extra, which `doit install_dev` installs
 
 ### `audit`
 
@@ -415,7 +415,7 @@ doit audit
 - Scans all dependencies for known CVE vulnerabilities
 - Reports any security advisories
 
-**Requires:** `[security]` extras installed (`uv sync --extra security`)
+**Requires:** the `security` extra, which `doit install_dev` installs
 
 ### `licenses`
 
@@ -429,7 +429,7 @@ doit licenses
 - Lists all dependency licenses for compliance review
 - Outputs in markdown table format
 
-**Requires:** `[security]` extras installed (`uv sync --extra security`)
+**Requires:** the `security` extra, which `doit install_dev` installs
 
 ### `sbom`
 
@@ -447,7 +447,7 @@ doit sbom
 - `tmp/sbom.json` -- CycloneDX JSON format
 - `tmp/sbom.xml` -- CycloneDX XML format
 
-**Requires:** `[security]` extras installed (`uv sync --extra security`)
+**Requires:** the `security` extra, which `doit install_dev` installs
 
 **When to use:**
 - For regulatory compliance (e.g., US Executive Order 14028)
@@ -541,6 +541,8 @@ doit install
 **What it does:**
 - Syncs dependencies from lock file
 - Installs package in editable mode
+- Uninstalls the `dev` and `security` extras, `doit` included. Use it where you only run the
+  program; to develop, use `install_dev`.
 
 **Equivalent command:**
 ```bash
@@ -556,14 +558,16 @@ doit install_dev
 ```
 
 **What it does:**
-- Syncs all dependencies including dev extras
-- Installs pre-commit hooks
+- Syncs all dependencies, including the `dev` and `security` extras
+- Installs package in editable mode
 
 **Equivalent command:**
 ```bash
 uv sync --all-extras --dev
-uv run pre-commit install
 ```
+
+On a fresh clone `doit` is not installed yet, so the first sync is the equivalent command. The task
+does not install the pre-commit hooks; run `doit pre_commit_install` for those.
 
 > **Note:** `src/__PACKAGE_NAME__/_version.py` is a build-time artifact written
 > by `hatch-vcs`. It is gitignored and untracked — `hatch-vcs` regenerates

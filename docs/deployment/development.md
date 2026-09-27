@@ -21,8 +21,8 @@ This guide covers setting up and running Python applications built with this tem
 git clone <repository-url>
 cd <project-name>
 
-# Install dependencies
-uv sync
+# Install the project and its development tools
+uv sync --all-extras --dev
 
 # Run tests to verify setup
 doit test
@@ -58,16 +58,17 @@ uv --version
 ### Project Setup
 
 ```bash
-# Create virtual environment and install dependencies
-uv sync
-
-# Install with development dependencies
-uv sync --all-extras
+# Create the virtual environment and install the project with its development tools
+uv sync --all-extras --dev
 
 # Activate the environment (optional, uv run handles this)
 source .venv/bin/activate  # Linux/macOS
 .venv\Scripts\activate     # Windows
 ```
+
+The development tools, `doit` included, live in the `dev` and `security` extras, and a plain
+`uv sync` uninstalls them. Every sync after this first one is `doit install_dev`, which runs the
+same command.
 
 ## Configuration
 
@@ -315,7 +316,7 @@ doit pre_commit_run
 git commit --no-verify -m "WIP: work in progress"
 ```
 
-The project also includes **post-merge** and **post-checkout** hooks that automatically run `uv sync` when `uv.lock` changes after a `git pull` or branch switch. This keeps your local environment in sync without manual intervention.
+The project also includes **post-merge** and **post-checkout** hooks that automatically run `uv sync --all-extras --dev` when `uv.lock` changes after a `git pull` or branch switch. This keeps your local environment in sync without manual intervention.
 
 ### Type Checking
 
@@ -354,16 +355,16 @@ doit format_check
 #### Virtual Environment Not Found
 
 ```bash
-# Recreate the environment
+# Recreate the environment (doit went with it, so call uv directly)
 rm -rf .venv
-uv sync
+uv sync --all-extras --dev
 ```
 
 #### Import Errors
 
 ```bash
 # Ensure package is installed in editable mode
-uv sync
+doit install_dev
 
 # Verify installation
 uv run python -c "import __PACKAGE_NAME__; print(__PACKAGE_NAME__.__version__)"
@@ -407,7 +408,7 @@ uv python use 3.12
 # Clear cache and reinstall
 uv cache clean
 rm -rf .venv uv.lock
-uv sync
+uv sync --all-extras --dev
 ```
 
 ## IDE Setup

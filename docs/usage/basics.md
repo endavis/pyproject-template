@@ -191,7 +191,7 @@ Install hooks after cloning:
 doit pre_commit_install
 ```
 
-The **post-merge** and **post-checkout** hooks automatically run `uv sync` when `uv.lock` changes after a `git pull` or branch switch, keeping your environment in sync.
+The **post-merge** and **post-checkout** hooks automatically run `uv sync --all-extras --dev` when `uv.lock` changes after a `git pull` or branch switch, keeping your environment in sync.
 
 ## Creating Custom doit Tasks
 
@@ -622,8 +622,7 @@ uv pip list --outdated
 uv run doit update_deps
 
 # Or manually:
-uv pip install --upgrade -e ".[dev,security]"
-uv lock
+uv sync --all-extras --dev --upgrade
 uv run doit check
 ```
 

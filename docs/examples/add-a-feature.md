@@ -26,7 +26,7 @@ branching, runtime code, tests, documentation, and the PR process.
 
 ## Prerequisites
 
-- The project is cloned and dependencies are installed (`uv sync`).
+- The project is cloned and its development tools are installed (`uv sync --all-extras --dev`).
 - You have read the [CLI Guide](../usage/cli.md) and understand the existing
   `greet` subcommand.
 - You are familiar with [Tooling Roles and Architectural Boundaries](../development/tooling-roles.md),

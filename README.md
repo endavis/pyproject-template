@@ -106,6 +106,9 @@ uv run pre-commit install
 doit check          # test, lint, type-check, security, spelling
 ```
 
+The development tools, `doit` included, live in the `dev` and `security` extras, and a plain
+`uv sync` uninstalls them. Sync again later with `doit install_dev`, which runs the same command.
+
 `doit list` shows every task. `doit check` is the gate CI enforces — run it before staging.
 
 Contributions follow the same workflow the template ships: an issue, a branch, `doit check`, a PR

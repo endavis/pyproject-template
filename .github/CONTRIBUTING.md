@@ -54,12 +54,16 @@ direnv allow
 # Optional: Create .envrc.local for personal settings
 cp .envrc.local.example .envrc.local
 
-# Install dependencies (creates venv automatically)
-uv sync --all-extras
+# Install the project and its development tools (creates the venv)
+uv sync --all-extras --dev
 
 # Install pre-commit hooks
 doit pre_commit_install
 ```
+
+The development tools, `doit` included, live in the `dev` and `security` extras, and a plain
+`uv sync` uninstalls them. Every sync after this first one is `doit install_dev`, which runs the
+same command.
 
 ### Available Commands
 
@@ -278,7 +282,8 @@ inline types nor stubs fails with `[import-untyped]`. Either:
 
 ### Checks
 
-Install the `security` extra (`uv sync --all-extras` or `uv sync --extra security`), then run:
+Both tasks need the `security` extra, which `doit install_dev` installs with the other development
+tools. Then run:
 
 - `doit audit` — `pip-audit` checks the environment for dependencies with known
   vulnerabilities.

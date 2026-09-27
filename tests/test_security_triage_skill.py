@@ -45,7 +45,7 @@ CONTRACT: tuple[tuple[str, str], ...] = (
     ("the pip-audit task", "`doit audit`"),
     ("doit check runs both", "`doit check`"),
     ("the security-extra trap", "a pass that checked nothing"),
-    ("the install fix", "`uv sync --all-extras`"),
+    ("the install fix", "`doit install_dev`"),
     ("never extra-security alone", "never `uv sync --extra security` alone"),
     ("the tmp exclusion trap", "`[tool.bandit] exclude_dirs` in `pyproject.toml` excludes `tmp`"),
     ("bandit fix: subprocess", "`shell=True`"),

@@ -44,36 +44,20 @@ cd __PACKAGE_NAME__
 ### Install in Development Mode
 
 ```bash
-# Using uv (recommended)
-uv venv
-source .venv/bin/activate
-uv pip install -e ".[dev]"
-
-# Using pip
-python -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev]"
+# Creates .venv and installs the project, editable, with every extra from uv.lock
+uv sync --all-extras --dev
 ```
+
+The development tools, `doit` included, live in the `dev` and `security` extras, and a plain
+`uv sync` uninstalls them. Every sync after this first one is `doit install_dev`, which runs the
+same command.
 
 ## Optional Dependencies
 
-### Security Auditing
+The development setup above installs both extras:
 
-Install security audit tools:
-
-```bash
-uv pip install -e ".[security]"
-```
-
-This adds:
-- `pip-audit` - Security vulnerability scanner
-- `bandit` - Security issue detector in Python code
-
-### All Optional Dependencies
-
-```bash
-uv pip install -e ".[dev,security]"
-```
+- `dev` - the test, lint, type-check, docs and release tools, `doit` among them
+- `security` - `pip-audit`, `bandit` and the other security tools
 
 ## Verify Installation
 
@@ -103,7 +87,7 @@ pip install --upgrade __PYPI_NAME__
 ```bash
 cd __PACKAGE_NAME__
 git pull
-uv pip install -e ".[dev]"
+doit install_dev
 ```
 
 ## Uninstallation

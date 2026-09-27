@@ -17,7 +17,7 @@ convention and pip-audit's advisory handling were unwritten before it (#834).
 Run `doit security` and `doit audit` (or `doit check`, which runs both along with everything else).
 
 Both need the `security` extra. Without it they print an install hint and exit 0, a pass that
-checked nothing. If you see the hint, run `uv sync --all-extras` — never `uv sync --extra security`
+checked nothing. If you see the hint, run `doit install_dev` — never `uv sync --extra security`
 alone, which syncs to exactly that extra and uninstalls the `dev` extra's tools `doit check` itself
 needs — and run the task again. Triage nothing until you have seen a real scan.
 

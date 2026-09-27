@@ -91,6 +91,9 @@ direnv allow
 cp .envrc.local.example .envrc.local
 ```
 
+The development tools, `doit` included, live in the `dev` and `security` extras, and a plain
+`uv sync` uninstalls them. Sync again later with `doit install_dev`, which runs the same command.
+
 ## Versioning & Releases
 
 This project uses automated versioning and releases powered by `commitizen` and `hatch-vcs`.

@@ -228,7 +228,7 @@ doit docs_build
 ### Troubleshooting
 
 **Module not found errors:**
-- Ensure the package is installed: `uv sync --dev`
+- Ensure the package is installed: `doit install_dev`
 - Check import paths match your package structure
 
 **Docstrings not rendering:**
