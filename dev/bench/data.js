@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790528919214,
+  "lastUpdate": 1790528939362,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15222,6 +15222,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 4.773181197818008e-7",
             "extra": "mean: 1.963904207494523 usec\nrounds: 46465"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b750ea563139a02c24b3818cc5a8bde9d37622b9",
+          "message": "fix: apply the hook's merge rule per command, so reads pass and a chained --ff-only doesn't (merges PR #897, addresses #894)\n\ncheck_merge_to_protected looked for the tokens `git` and `merge` anywhere on\nthe command line, and let the command through if `--ff-only` appeared\nanywhere. On `main` that refused read-only lines such as\n`git log --grep merge` and `git diff ... | grep merge`. It also allowed\n`git merge origin/main; echo --ff-only`, which is a real merge (#894).\n\n- `tools/hooks/ai/block-dangerous-commands.py`: each `git` token's own\n  subcommand decides whether it is a merge, found with `_git_subcommand_index`\n  as the push rule finds it. `--ff-only` counts only up to the end of that\n  command. The command ends at the next shell operator, or at an operator\n  glued to a word (`origin/main;echo`), which shlex leaves as one token.\n- `tests/test_hook_block_dangerous_commands.py`: the issue's cases plus the\n  chained, glued and `git -C` forms, run with the branch pinned to `main`.\n- `docs/development/ai/command-blocking.md`: two rows for the new cases.\n\nAddresses #894\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T18:08:22+01:00",
+          "tree_id": "8f47ba3e47c35315b55df1102a2956e17406f7cb",
+          "url": "https://github.com/endavis/pyproject-template/commit/b750ea563139a02c24b3818cc5a8bde9d37622b9"
+        },
+        "date": 1790528937666,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9054978.869505335,
+            "unit": "iter/sec",
+            "range": "stddev: 9.196247646911503e-9",
+            "extra": "mean: 110.43648079265249 nsec\nrounds: 89864"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9230086.074389024,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6500048388382183e-8",
+            "extra": "mean: 108.34135152593298 nsec\nrounds: 81493"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5587625.8213553075,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6749311345907285e-8",
+            "extra": "mean: 178.96688718455468 nsec\nrounds: 190731"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1643082.5942323525,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9996553934041942e-7",
+            "extra": "mean: 608.6121315570259 nsec\nrounds: 63256"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 531554.5201072624,
+            "unit": "iter/sec",
+            "range": "stddev: 3.321666563901134e-7",
+            "extra": "mean: 1.8812745676552802 usec\nrounds: 30772"
           }
         ]
       }
