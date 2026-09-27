@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790517691738,
+  "lastUpdate": 1790528919214,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15163,6 +15163,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.953830643445521e-7",
             "extra": "mean: 1.9897891468051707 usec\nrounds: 50234"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9eefb93bf6ecab4d6c1bf57e9e94a0090ce9a77e",
+          "message": "fix: have doit pr_merge fast-forward the base branch it was run from (merges PR #896, addresses #891)\n\ngh's `--delete-branch` switches the checkout to the base and pulls it only\nwhen the task runs from the PR's branch. A worktree's PR is merged from the\nmain checkout while it is on `main`, and there the task passes no\n`--delete-branch`, so that `main` stayed at the commit before the merge\n(#891). The main checkout is the one that runs the doit tasks and the AI\nhooks, so a merged fix to either did not apply until someone pulled.\n\n- `tools/doit/github.py`: `_current_branch()` records the branch the task\n  starts on. After a successful merge and any worktree cleanup,\n  `_fast_forward_base()` runs `git pull --ff-only origin <base>` when that\n  branch is the PR's base. A pull that cannot fast-forward is reported with\n  the command to run, not raised, because the PR has already merged.\n- `tests/template/test_doit_github.py`: when the task pulls and when it\n  leaves the base to gh, no pull after a failed merge, the pull after the\n  worktree is removed, and both helpers. An autouse fixture stubs the branch\n  lookup so no test reaches a real `git pull`.\n- CONTRIBUTING.md, doit-tasks-reference.md and first-5-minutes.md say the\n  merge now fast-forwards `main`.\n\nAddresses #891\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T18:08:01+01:00",
+          "tree_id": "c05e23ceca0f19cb26ab7573252a891f3b6c8f2d",
+          "url": "https://github.com/endavis/pyproject-template/commit/9eefb93bf6ecab4d6c1bf57e9e94a0090ce9a77e"
+        },
+        "date": 1790528918425,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8931497.152251737,
+            "unit": "iter/sec",
+            "range": "stddev: 1.853497221022075e-8",
+            "extra": "mean: 111.96331174420047 nsec\nrounds: 86000"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9284343.7645508,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2404534318888861e-8",
+            "extra": "mean: 107.70820484030003 nsec\nrounds: 89953"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6645872.8615789525,
+            "unit": "iter/sec",
+            "range": "stddev: 2.678675179371985e-8",
+            "extra": "mean: 150.46932447070859 nsec\nrounds: 66570"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1805376.2092405062,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4996765769128104e-7",
+            "extra": "mean: 553.9011729974467 nsec\nrounds: 57717"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 509189.8047694309,
+            "unit": "iter/sec",
+            "range": "stddev: 4.773181197818008e-7",
+            "extra": "mean: 1.963904207494523 usec\nrounds: 46465"
           }
         ]
       }
