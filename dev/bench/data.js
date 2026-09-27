@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790516545692,
+  "lastUpdate": 1790516899709,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14809,6 +14809,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.1147845790870636e-7",
             "extra": "mean: 1.4360177506732499 usec\nrounds: 55209"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f19a811f6ada32d445dce202a2433935a1dbeed",
+          "message": "feat: add a property-tests skill so Hypothesis tests assert a named property (merges PR #883, addresses #831)\n\nA property test that only checks that a call doesn't raise, or that restates\nthe implementation, passes forever and finds nothing. The new skill makes the\nagent:\n- name the property first (round-trip, idempotence, invariant or oracle), and\n  stop if none fits;\n- build the strategy from types;\n- leave `deadline` and `max_examples` to the `tests/conftest.py` profiles;\n- break the code on purpose to prove the test can fail, then undo only that\n  break.\n\nA real failing input is a bug. The agent fixes the code first, then pins the\ninput with `@example(...)`, because the local `.hypothesis/examples/` database\nnever reaches a fresh clone or CI.\n\n- `.claude/commands/property-tests.md` for Claude, and\n  `.agents/skills/property-tests/SKILL.md` for Codex, Antigravity and Copilot.\n- `tests/test_property_tests_skill.py` holds both bodies to the same steps in\n  the same order and the same gate sentences. It also checks that no body\n  shows a per-test `@settings(...)` override, and that the code is fixed before\n  the input is pinned.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #831\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T14:47:36+01:00",
+          "tree_id": "c2956b83ac7ec80e2219c64c6881e63ed19170f3",
+          "url": "https://github.com/endavis/pyproject-template/commit/7f19a811f6ada32d445dce202a2433935a1dbeed"
+        },
+        "date": 1790516897536,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8560849.303146677,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0817311323934516e-8",
+            "extra": "mean: 116.81084020862674 nsec\nrounds: 81813"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8685997.457917806,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9425040449269713e-8",
+            "extra": "mean: 115.12782554275793 nsec\nrounds: 87093"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5557681.341967132,
+            "unit": "iter/sec",
+            "range": "stddev: 8.660690887907986e-8",
+            "extra": "mean: 179.931150864805 nsec\nrounds: 57661"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1680528.5741136144,
+            "unit": "iter/sec",
+            "range": "stddev: 3.4763521455939264e-7",
+            "extra": "mean: 595.0508758992358 nsec\nrounds: 47665"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 492211.25859610003,
+            "unit": "iter/sec",
+            "range": "stddev: 5.290445463089385e-7",
+            "extra": "mean: 2.0316479611868905 usec\nrounds: 55670"
           }
         ]
       }
