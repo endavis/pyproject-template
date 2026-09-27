@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790532529528,
+  "lastUpdate": 1790536098985,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15517,6 +15517,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9770544609761752e-7",
             "extra": "mean: 1.8924515237897706 usec\nrounds: 55421"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "701d0eac3da5dac8fb642a0f27e9b2a7a6527399",
+          "message": "docs: stop telling contributors to edit CHANGELOG.md by hand (merges PR #902, addresses #890)\n\n`doit release` writes CHANGELOG.md from the commit messages, but the docs told contributors to\nupdate it themselves, and the PR template asked for a checkbox that PRs leave unticked.\n\n- Remove the CHANGELOG checkbox from the PR template and the CHANGELOG item from CONTRIBUTING's\n  release checklist.\n- Change AGENTS.md's breaking-change step 3 in place: don't edit CHANGELOG.md, `doit release`\n  writes it, footer included.\n- Point basics.md's documentation best practice at `doit release`.\n- Replace \"update changelog\" in the release hook's message with \"check commit messages\".\n- Pin the template's lack of a CHANGELOG item in test_templates.py.\n\nAddresses #890\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T20:07:46+01:00",
+          "tree_id": "7a6b9290c906968ff1b8ec571e2018e9ebf79ee8",
+          "url": "https://github.com/endavis/pyproject-template/commit/701d0eac3da5dac8fb642a0f27e9b2a7a6527399"
+        },
+        "date": 1790536098130,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11184102.889923435,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4485801373376114e-8",
+            "extra": "mean: 89.4126252093918 nsec\nrounds: 114509"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11718312.251792116,
+            "unit": "iter/sec",
+            "range": "stddev: 8.655335348175459e-9",
+            "extra": "mean: 85.33652103758091 nsec\nrounds: 119162"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8543708.319744527,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0383606110230911e-8",
+            "extra": "mean: 117.04519426172331 nsec\nrounds: 87820"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2927850.9371947306,
+            "unit": "iter/sec",
+            "range": "stddev: 4.279755831601515e-8",
+            "extra": "mean: 341.54744262975777 nsec\nrounds: 198531"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 699247.1585373906,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2890973231608209e-7",
+            "extra": "mean: 1.4301094938901027 usec\nrounds: 73047"
           }
         ]
       }
