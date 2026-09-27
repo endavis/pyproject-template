@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790517067518,
+  "lastUpdate": 1790517223562,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14927,6 +14927,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.323744638223563e-7",
             "extra": "mean: 1.897714716638338 usec\nrounds: 54034"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f9e20ed7570f56b3f7692a82b0aeec3b78ba2b84",
+          "message": "feat: add a python-version-bump skill and a test that the seven version settings agree (merges PR #888, addresses #833)\n\nThe supported Python range is declared in seven places:\n- `requires-python`\n- ruff `target-version`\n- mypy `python_version`\n- pyright `pythonVersion`\n- `.python-version`\n- `.github/python-versions.json`\n- the classifiers\n\nNothing checked that they agree.\n\nThe new test does. It fails when any floor setting differs from\n`requires-python`, or when the classifiers are not exactly `oldest` through\n`newest`. It also proves both checks catch a synthetic mismatch.\n\nThe new skill moves the range in either direction. Adding a newest version\nneeds no approval. Raising the floor asks the user first, and then changes all\nseven settings in one commit. It also runs `uv lock`, rebuilds the environment\nwith `uv sync --all-extras --dev`, applies the `UP` fixes and removes dead\nversion branches. The rebuild is needed because a new `.python-version` makes\n`uv run` rebuild `.venv` without the dev tools. Finally it updates the prose that states the\nold version, found with one `git grep` over tracked files, sorted so that\nhistory and feature-arrival facts stay as written.\n\n- `.claude/commands/python-version-bump.md` for Claude, and\n  `.agents/skills/python-version-bump/SKILL.md` for Codex, Antigravity and\n  Copilot.\n- `tests/test_python_versions_agree.py` reads only downstream-owned files and\n  imports neither the package nor `tools/`, so it ships downstream.\n- `tests/test_python_version_bump_skill.py` holds both bodies to the same steps\n  in the same order and the same ask-first and one-commit sentences.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #833\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T14:53:09+01:00",
+          "tree_id": "9df47c686ac5e128dd73e45bb59bb95ae177fd30",
+          "url": "https://github.com/endavis/pyproject-template/commit/f9e20ed7570f56b3f7692a82b0aeec3b78ba2b84"
+        },
+        "date": 1790517222156,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7948948.86323977,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9074629687852942e-8",
+            "extra": "mean: 125.80279697414332 nsec\nrounds: 79847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8424260.71656249,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9727603936234403e-8",
+            "extra": "mean: 118.70477821679394 nsec\nrounds: 82761"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5033622.233108718,
+            "unit": "iter/sec",
+            "range": "stddev: 5.216515665669666e-8",
+            "extra": "mean: 198.66409390487956 nsec\nrounds: 197629"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1603859.9845402918,
+            "unit": "iter/sec",
+            "range": "stddev: 5.018380859886878e-7",
+            "extra": "mean: 623.4958223529881 nsec\nrounds: 61159"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 484305.46039288375,
+            "unit": "iter/sec",
+            "range": "stddev: 5.385879782275418e-7",
+            "extra": "mean: 2.0648125651706852 usec\nrounds: 59450"
           }
         ]
       }
