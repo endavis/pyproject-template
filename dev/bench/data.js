@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790502590529,
+  "lastUpdate": 1790502795194,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14573,6 +14573,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.176967086568436e-7",
             "extra": "mean: 1.9621627237747388 usec\nrounds: 59770"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "57d3a3ba6defe55a04415569351ca5f7bec36c63",
+          "message": "fix: ignore fenced code blocks when finding headings for pointer checks (merges PR #875, addresses #844)\n\n_headings() in tests/test_instruction_pointers.py returned every line\nthat starts with #, including comments inside fenced code blocks. The\nquoted-heading, anchor and parenthesized-section checks all build on it,\nso a pointer to a shell or Python comment passed as a pointer to a\nsection. A link to CONTRIBUTING.md's install-dependencies comment\nresolved, though on GitHub it lands at the top of the page.\n\n- Skip lines inside fenced code blocks. A block ends only at a fence of\n  the same character, at least as long, with nothing after it, and a\n  fence may be indented up to three spaces.\n- Test the issue's case and each of those fence rules.\n\nNo existing pointer resolved only through a fenced line: the three\nrepo-wide pointer checks still pass.\n\nAddresses #844\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T10:52:36+01:00",
+          "tree_id": "696a1d1918bde4d109925d74318482a0deb7bbf4",
+          "url": "https://github.com/endavis/pyproject-template/commit/57d3a3ba6defe55a04415569351ca5f7bec36c63"
+        },
+        "date": 1790502794284,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8409008.201455327,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3502364120102387e-8",
+            "extra": "mean: 118.92008855776028 nsec\nrounds: 86723"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8556186.183644863,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4339282067038245e-8",
+            "extra": "mean: 116.87450208966916 nsec\nrounds: 84232"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5385473.33226445,
+            "unit": "iter/sec",
+            "range": "stddev: 1.511675331354388e-8",
+            "extra": "mean: 185.68469998894716 nsec\nrounds: 54098"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1644281.057240968,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5943603704985707e-7",
+            "extra": "mean: 608.1685339597334 nsec\nrounds: 65156"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 493677.9371800893,
+            "unit": "iter/sec",
+            "range": "stddev: 5.665636496119833e-7",
+            "extra": "mean: 2.025612093811697 usec\nrounds: 55516"
           }
         ]
       }
