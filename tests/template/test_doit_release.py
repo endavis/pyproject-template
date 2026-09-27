@@ -552,6 +552,20 @@ class TestValidateMergeCommits:
 
         assert validate_merge_commits(self._silent_console()) is False
 
+    def test_prints_a_bracketed_subject_verbatim(self, monkeypatch: MonkeyPatch) -> None:
+        """A subject is text, not markup: `[/tmp]` crashed `doit release` here (#900)."""
+        _, fake = self._fake_run(
+            describe_returncode=0,
+            describe_stdout="v0.1.0\n",
+            log_stdout="abc1234 Merge [tool.x] from [/tmp] into main",
+        )
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
+        console = self._silent_console()
+
+        assert validate_merge_commits(console) is False
+        output = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "abc1234 Merge [tool.x] from [/tmp] into main" in output
+
 
 class TestExtractNextVersionFromCzOutput:
     """Tests for ``_extract_next_version_from_cz_output`` (issue #641).
@@ -1068,6 +1082,26 @@ class TestCreateReleasePrGuards:
 
         # Exits on the *later* validation gate, not the prerelease check.
         assert exc.value.code == 1
+
+    def test_prints_uncommitted_paths_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """`git status -s` output is text, not markup: a `[/x]` path crashed this guard (#900)."""
+        status = "?? docs/[draft].md\n?? [/x]"
+
+        def fake_run(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            stdout = status if cmd[:3] == ["git", "status", "-s"] else "main\n"
+            return MagicMock(stdout=stdout, returncode=0)
+
+        with (
+            patch("tools.doit.release.subprocess.run", side_effect=fake_run),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()()
+
+        assert exc.value.code == 1
+        out = _ANSI.sub("", capsys.readouterr().out)
+        assert "Uncommitted changes detected" in out
+        assert "?? docs/[draft].md" in out
+        assert "?? [/x]" in out
 
 
 class TestCreateReleaseTag:

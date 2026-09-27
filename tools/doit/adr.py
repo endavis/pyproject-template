@@ -12,6 +12,7 @@ from typing import TYPE_CHECKING, Any
 
 from doit.tools import title_with_actions
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 
 from tools.doit.templates import (
@@ -171,7 +172,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
     try:
         return path.read_text(encoding="utf-8")
     except Exception as e:
-        console.print(f"[red]Error reading file: {e}[/red]")
+        console.print(f"[red]Error reading file: {escape(str(e))}[/red]")
         return None
 
 
