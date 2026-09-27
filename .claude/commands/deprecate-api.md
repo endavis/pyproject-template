@@ -136,9 +136,9 @@ entry from commit history — not by hand-editing the file. The same is true of 
 `pyproject.toml`: it comes from git tags, never a hand edit. The agent's own part of the policy is the
 `BREAKING CHANGE:` footer above; `doit release`'s commitizen bump reads it to write the entry and
 choose the version. Check `major_version_zero` in `[tool.commitizen]`: with `true`, the shipped
-default, that footer bumps MINOR at any version, so `AGENTS.md`'s "Breaking changes require major
-version bump" does not hold (#881), and the agent tells the user; with `false`, it bumps MAJOR. Do
-not edit `pyproject.toml` to change it.
+default, that footer bumps MINOR, which is right while the project is on 0.x, and `doit release`
+refuses to release 1.0 or later until the setting is `false` (#881); with `false`, it bumps MAJOR.
+The agent tells the user which applies. Do not edit `pyproject.toml` to change it.
 
 When the task is done, hand off to `/ghi-finalize`, and make sure the PR body it drafts carries the
 migration guide.

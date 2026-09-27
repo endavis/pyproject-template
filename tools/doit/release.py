@@ -290,6 +290,28 @@ def _get_pypi_name_from_pyproject() -> str | None:
     return name
 
 
+def _major_version_zero_enabled() -> bool:
+    """Return ``True`` if ``[tool.commitizen].major_version_zero`` is on in ``pyproject.toml``.
+
+    commitizen applies the setting at every version, not only below 1.0: while it
+    is on, a breaking change bumps MINOR even after 1.0 (#881). Reads the file in
+    the current directory. A missing or unreadable file counts as off, since
+    ``cz bump --get-next`` has already failed on it by the time this is asked.
+    """
+    try:
+        with Path("pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+    except (tomllib.TOMLDecodeError, OSError):
+        return False
+    return data.get("tool", {}).get("commitizen", {}).get("major_version_zero") is True
+
+
+def _major_version(version: str) -> int:
+    """Return the major number of a version such as ``1.0.0`` or ``1.0.0a0``."""
+    match = re.match(r"\d+", version)
+    return int(match.group()) if match else 0
+
+
 def task_release() -> dict[str, Any]:
     """Create a release PR with changelog updates (PR-based release flow).
 
@@ -433,6 +455,21 @@ def task_release() -> dict[str, Any]:
             console.print("[bold red]❌ Failed to determine next version.[/bold red]")
             console.print(f"[red]Stdout: {e.stdout}[/red]")
             console.print(f"[red]Stderr: {e.stderr}[/red]")
+            sys.exit(1)
+
+        # commitizen applies major_version_zero at every version, so from 1.0 on it
+        # would keep turning breaking changes into MINOR bumps (#881).
+        if _major_version(next_version) >= 1 and _major_version_zero_enabled():
+            console.print(
+                "[bold red]❌ major_version_zero = true in \\[tool.commitizen].[/bold red]"
+            )
+            console.print(
+                "[yellow]From 1.0.0 on, it makes a breaking change bump MINOR, not MAJOR.[/yellow]"
+            )
+            console.print(
+                "[yellow]Set it to false in pyproject.toml, merge that, then re-run "
+                "doit release.[/yellow]"
+            )
             sys.exit(1)
 
         # Create release branch

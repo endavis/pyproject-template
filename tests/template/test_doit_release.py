@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import io
 import os
+import re
 import subprocess
 import sys
 from typing import TYPE_CHECKING
@@ -29,6 +30,8 @@ from tools.doit.release import (
     _extract_next_version_from_cz_output,
     _extract_version_from_release_pr,
     _get_pypi_name_from_pyproject,
+    _major_version,
+    _major_version_zero_enabled,
     _repo_has_version_tags,
     task_release,
     task_release_tag,
@@ -1100,3 +1103,106 @@ class TestCreateReleaseTag:
 
         assert exc.value.code == 1
         assert "Error pulling latest changes" in capsys.readouterr().out
+
+
+class TestMajorVersionZeroEnabled:
+    """Reads ``[tool.commitizen].major_version_zero`` from the cwd's ``pyproject.toml`` (#881)."""
+
+    @pytest.mark.parametrize(
+        ("pyproject", "expected"),
+        [
+            ("[tool.commitizen]\nmajor_version_zero = true\n", True),
+            ("[tool.commitizen]\nmajor_version_zero = false\n", False),
+            ('[tool.commitizen]\nname = "cz_conventional_commits"\n', False),
+            ('[project]\nname = "my-pkg"\n', False),
+        ],
+    )
+    def test_reads_the_setting(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, pyproject: str, expected: bool
+    ) -> None:
+        (tmp_path / "pyproject.toml").write_text(pyproject, encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        assert _major_version_zero_enabled() is expected
+
+    def test_a_missing_pyproject_counts_as_off(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        assert _major_version_zero_enabled() is False
+
+
+class TestMajorVersion:
+    @pytest.mark.parametrize(
+        ("version", "major"),
+        [("0.4.0", 0), ("1.0.0", 1), ("1.0.0a0", 1), ("2.0.0rc1", 2), ("10.1.0", 10)],
+    )
+    def test_reads_the_leading_number(self, version: str, major: int) -> None:
+        assert _major_version(version) == major
+
+
+class _ReachedBranchCreation(Exception):  # noqa: N818 - sentinel, not a runtime error
+    """Sentinel raised at ``git checkout -b`` to prove the flow got past the version checks."""
+
+
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+class TestReleaseRefusesMajorVersionZeroFromOne:
+    """`doit release` stops at 1.0 or later while major_version_zero is on (#881).
+
+    commitizen applies the setting at every version, so from 1.0 on every breaking
+    change would bump MINOR. The check runs once the next version is known, before
+    the release branch exists.
+    """
+
+    @staticmethod
+    def _walk_to_branch_creation(monkeypatch: MonkeyPatch, next_version: str) -> list[list[str]]:
+        """Fake every step up to ``git checkout -b``, with cz answering *next_version*."""
+        calls: list[list[str]] = []
+
+        def fake_run(
+            cmd: list[str], *_args: object, **_kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
+            calls.append(cmd)
+            if cmd[:3] == ["git", "checkout", "-b"]:
+                raise _ReachedBranchCreation
+            if cmd[:3] == ["git", "branch", "--show-current"]:
+                stdout = "main\n"
+            elif "--get-next" in cmd:
+                stdout = f"{next_version}\n"
+            else:
+                stdout = ""
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake_run)
+        monkeypatch.setattr("tools.doit.release.run_streamed", lambda *a, **kw: None)
+        monkeypatch.setattr("tools.doit.release.validate_merge_commits", lambda _console: True)
+        monkeypatch.setattr("tools.doit.release.validate_issue_links", lambda _console: True)
+        return calls
+
+    def test_refuses_1_0_while_the_setting_is_on(
+        self, monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        calls = self._walk_to_branch_creation(monkeypatch, "1.0.0")
+        monkeypatch.setattr("tools.doit.release._major_version_zero_enabled", lambda: True)
+
+        with pytest.raises(SystemExit) as exc:
+            _release_action()(increment="major")
+
+        assert exc.value.code == 1
+        assert not any(cmd[:3] == ["git", "checkout", "-b"] for cmd in calls)
+        out = _ANSI.sub("", capsys.readouterr().out)
+        assert "major_version_zero = true in [tool.commitizen]" in out
+
+    @pytest.mark.parametrize(
+        ("next_version", "enabled"),
+        [("0.4.0", True), ("1.3.0", False), ("2.0.0", False)],
+    )
+    def test_releases_below_1_0_or_with_the_setting_off(
+        self, monkeypatch: MonkeyPatch, next_version: str, enabled: bool
+    ) -> None:
+        self._walk_to_branch_creation(monkeypatch, next_version)
+        monkeypatch.setattr("tools.doit.release._major_version_zero_enabled", lambda: enabled)
+
+        with pytest.raises(_ReachedBranchCreation):
+            _release_action()()
