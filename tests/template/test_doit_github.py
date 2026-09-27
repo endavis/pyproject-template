@@ -2,6 +2,7 @@
 
 import io
 import json
+import re
 import subprocess
 from collections.abc import Callable
 from pathlib import Path
@@ -1818,6 +1819,14 @@ def _merge_action() -> Callable[..., None]:
     return action
 
 
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+
+def _plain(text: str) -> str:
+    """Remove ANSI color codes, which split substrings such as `[x]` when FORCE_COLOR is set."""
+    return _ANSI.sub("", text)
+
+
 class TestMergePr:
     """`doit pr_merge` — the mandated path that mutates remote state (#708).
 
@@ -2067,6 +2076,55 @@ class TestMergePr:
             _merge_action()(pr="42")
 
         assert "stack" not in capsys.readouterr().out
+
+    def test_prints_a_bracketed_title_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """Rich read `[tool.x]` as a markup tag and dropped it from every line (#893)."""
+        with (
+            patch(
+                "tools.doit.github._get_pr_info",
+                return_value=self._pr(title="fix: read [tool.x]"),
+            ),
+            patch("tools.doit.github._run_gh_with_retry"),
+        ):
+            _merge_action()(pr="42")
+
+        out = _plain(capsys.readouterr().out)
+        assert "PR #42: fix: read [tool.x]" in out
+        assert "  fix: read [tool.x] (merges PR #42, addresses #7)" in out
+        assert "Commit: fix: read [tool.x] (merges PR #42, addresses #7)" in out
+
+    def test_a_closing_tag_in_the_title_does_not_stop_the_merge(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """`[/tmp]` raised MarkupError on the first print, before `gh pr merge` ran (#893)."""
+        with (
+            patch(
+                "tools.doit.github._get_pr_info",
+                return_value=self._pr(title="fix: strip [/tmp] prefix"),
+            ),
+            patch("tools.doit.github._run_gh_with_retry") as mock_gh,
+        ):
+            _merge_action()(pr="42")
+
+        mock_gh.assert_called_once()
+        assert "PR #42: fix: strip [/tmp] prefix" in _plain(capsys.readouterr().out)
+
+    def test_prints_gh_stderr_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """gh's error text is printed as text, not parsed as markup (#893)."""
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr()),
+            patch(
+                "tools.doit.github._run_gh_with_retry",
+                side_effect=subprocess.CalledProcessError(
+                    1, ["gh"], stderr="refusing [/x]: not mergeable"
+                ),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _merge_action()(pr="42")
+
+        assert exc.value.code == 1
+        assert "refusing [/x]: not mergeable" in _plain(capsys.readouterr().out)
 
 
 class TestMergePrWithWorktree:
