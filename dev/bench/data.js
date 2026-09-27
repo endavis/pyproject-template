@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790435920555,
+  "lastUpdate": 1790501307234,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14396,6 +14396,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.846215605509906e-7",
             "extra": "mean: 2.102488193778647 usec\nrounds: 58952"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "58972a1cf0f3b879877c4c5ebc55ca8dcedc2d37",
+          "message": "docs: require approval for every new dependency in the conventions (merges PR #871, addresses #842)\n\narchitectural-conventions.md scoped the Ask First rule to runtime\ndependencies, while AGENTS.md and .github/CONTRIBUTING.md put every new\ndependency under it. Its failure mode 3 read as permission to add a dev\nlibrary without asking.\n\n- State the rule for every dependency: a runtime dependency, an entry in\n  the dev or security extra, or a type stub, as CONTRIBUTING.md does.\n- Say that writing the entry into pyproject.toml by hand needs the same\n  approval as uv add.\n- tests/test_dependency_approval_scope.py holds the doc to CONTRIBUTING's\n  scope and fails any sentence that scopes approval to runtime\n  dependencies.\n\nAddresses #842\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T10:27:45+01:00",
+          "tree_id": "11c1b0b5284f8ed47d40ab2fe0a5c93b1861f82a",
+          "url": "https://github.com/endavis/pyproject-template/commit/58972a1cf0f3b879877c4c5ebc55ca8dcedc2d37"
+        },
+        "date": 1790501305949,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8812483.011452219,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0926440223448077e-8",
+            "extra": "mean: 113.47539606039011 nsec\nrounds: 85896"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8809656.010250838,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3408245979226658e-8",
+            "extra": "mean: 113.51181009070147 nsec\nrounds: 88874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6125961.779493001,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5992396663352416e-8",
+            "extra": "mean: 163.23967337627795 nsec\nrounds: 62151"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1316028.5999232645,
+            "unit": "iter/sec",
+            "range": "stddev: 6.451448759375579e-7",
+            "extra": "mean: 759.8619057810054 nsec\nrounds: 69315"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 390255.31573860697,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000013234159539947488",
+            "extra": "mean: 2.5624250578300902 usec\nrounds: 57898"
           }
         ]
       }
