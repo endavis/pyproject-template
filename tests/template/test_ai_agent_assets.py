@@ -105,6 +105,22 @@ def test_template_migrate_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing template-migrate file: {path}"
 
 
+def test_add_dependency_exists_on_every_wired_surface() -> None:
+    """`add-dependency` walks an agent through a new dependency it cannot add itself.
+
+    Same two-surface layout as `template-sync`. It ships to downstream projects,
+    which is who adds dependencies, so it is not in `cleanup.SETUP_FILES` (#829).
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "add-dependency.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "add-dependency" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing add-dependency file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [
