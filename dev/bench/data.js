@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790506829727,
+  "lastUpdate": 1790516545692,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14750,6 +14750,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.00042465147467e-7",
             "extra": "mean: 1.5072344857086248 usec\nrounds: 60976"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f55a121062863b71333a25c694b3862371efbdb6",
+          "message": "feat: add a mutation-triage skill so surviving mutants become behavior tests (merges PR #882, addresses #830)\n\nA surviving mutant tells an agent that a test is missing, but not which test.\nWithout a procedure, the shortcuts are cheap: call the survivor equivalent\nwithout saying why, or write a test pinned to the mutated literal, which kills\nthe mutant but checks no behavior. The new skill runs the steps in order:\n- Scope the run to one module with an fnmatch pattern\n  (`uv run mutmut run \"<package>.<module>.*\"`).\n- Read each survivor with `mutmut show`.\n- Classify it as equivalent, missing assertion, untested branch or real bug.\n- Write a behavior test. A new test file goes into\n  `pytest_add_cli_args_test_selection` (#873).\n- Re-run what the test targeted and paste the before and after status to prove\n  the kill.\n\nAn equivalent verdict must say why no input tells the two versions apart. A\nreal bug stops for the user rather than being pinned by a test.\n\n- `.claude/commands/mutation-triage.md` for Claude, and\n  `.agents/skills/mutation-triage/SKILL.md` for Codex, Antigravity and Copilot.\n- `tests/test_mutation_triage_skill.py` holds both bodies to the same steps in\n  the same order, and to the same three gate sentences word for word.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #830\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T14:41:50+01:00",
+          "tree_id": "34886deb8d7ff8828f635c6436a749b06496f7d5",
+          "url": "https://github.com/endavis/pyproject-template/commit/f55a121062863b71333a25c694b3862371efbdb6"
+        },
+        "date": 1790516543701,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13150255.602154462,
+            "unit": "iter/sec",
+            "range": "stddev: 8.866133744299584e-9",
+            "extra": "mean: 76.0441492738868 nsec\nrounds: 128502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13848342.597228097,
+            "unit": "iter/sec",
+            "range": "stddev: 6.898396435327923e-9",
+            "extra": "mean: 72.21080739294834 nsec\nrounds: 137269"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8528489.867489418,
+            "unit": "iter/sec",
+            "range": "stddev: 9.862635015701142e-9",
+            "extra": "mean: 117.25405265614461 nsec\nrounds: 82156"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2442101.3816378796,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5558192581400638e-7",
+            "extra": "mean: 409.4834094599772 nsec\nrounds: 68503"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 696370.222116801,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1147845790870636e-7",
+            "extra": "mean: 1.4360177506732499 usec\nrounds: 55209"
           }
         ]
       }
