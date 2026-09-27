@@ -184,6 +184,14 @@ The supported Python range is declared in seven places (`requires-python`, ruff 
 
 **Workflow position:** mid-task, whenever the work is to change which Python versions the project supports. **Design note:** it applies the policy in [CI/CD Testing Guide — Python Version Support Policy](../ci-cd-testing.md#python-version-support-policy) rather than restating it. `tests/test_python_version_bump_skill.py` enforces that both bodies take the same steps in the same order and carry the same ask-first and one-commit sentences.
 
+### `/security-triage [bandit|pip-audit]`
+
+**Args:** optional, which scanner to focus on; empty triages both. **Sources:** `.claude/commands/security-triage.md` (Claude), `.agents/skills/security-triage/SKILL.md` (Codex, Antigravity, Copilot).
+
+Triages a `doit security` (bandit) or `doit audit` (pip-audit) finding instead of letting an agent reach for the fastest suppression. For a bandit finding it fixes the pattern when it can (list-form `subprocess` without `shell=True`, `yaml.safe_load`, a validated path) or justifies it with `# nosec <ID> - <reason>` naming only the IDs reported on that line — **never a bare `# nosec`, and never a new `[tool.bandit] skips` entry without asking.** For a pip-audit finding it upgrades to a fixed version, or assesses reachability when none exists, and **stops to ask before a `--ignore-vuln` advisory is accepted.** It also guards against a false clean result: both scanners need the `security` extra and silently pass without it, and a bandit run scoped to a sample under `tmp/` finds nothing because `[tool.bandit] exclude_dirs` excludes that directory.
+
+**Workflow position:** whenever `doit check`, `doit security` or `doit audit` reports a finding. **Design note:** bandit's `# nosec` convention and pip-audit's advisory handling were unwritten before this skill (#834); it is the policy, not an application of one. `tests/test_security_triage_skill.py` enforces that both bodies take the same steps in the same order and carry the bare-nosec, skips and ignore-vuln gates word for word.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -203,6 +211,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$deprecate-api` warns callers off a public name in one release and only removes it in a later one, following the Breaking Changes Policy
 - `$python-version-bump` adds a newest supported Python version, or asks first and then raises the
   floor across all seven settings in one commit
+- `$security-triage` fixes or justifies each bandit and pip-audit finding, and stops to ask before a `skips` entry or an ignored advisory
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -227,6 +236,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `deprecate-api` skill warns callers off a public name in one release and only removes it in a later one, following the Breaking Changes Policy
 - The shared `python-version-bump` skill adds a newest supported Python version, or asks first and
   then raises the floor across all seven settings in one commit
+- The shared `security-triage` skill fixes or justifies each bandit and pip-audit finding, and stops to ask before a `skips` entry or an ignored advisory
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -286,9 +296,9 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 48 |
+| project entries Copilot lists | 49 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 31 |
+| from `.agents/skills/` | 32 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
@@ -297,8 +307,8 @@ Two reasons the number is one:
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
 - **Names collide and dedupe.** `add-dependency`, `checkpoint`, `deprecate-api`, `ghi-finalize`,
   `multi-*`, `mutation-triage`, `property-tests`, `python-version-bump`, `restore`,
-  `template-migrate` and `template-sync` exist in `.agents/skills/` as well, and Copilot keeps one
-  entry per name.
+  `security-triage`, `template-migrate` and `template-sync` exist in `.agents/skills/` as well, and
+  Copilot keeps one entry per name.
 
 The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
 `.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`
