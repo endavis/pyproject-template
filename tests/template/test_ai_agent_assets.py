@@ -121,6 +121,25 @@ def test_add_dependency_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing add-dependency file: {path}"
 
 
+def test_mutation_triage_exists_on_every_wired_surface() -> None:
+    """`mutation-triage` turns a mutmut survivor or an uncovered line into a behavior test.
+
+    Same two-surface layout as `add-dependency` (#830): `doit mutate` and `doit
+    coverage` are both informational, so nothing stops a survivor being declared
+    equivalent with no reason, or a line staying uncovered forever. It ships to
+    downstream projects, which is who runs `doit mutate`, so it is not in
+    `cleanup.SETUP_FILES`.
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "mutation-triage.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "mutation-triage" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing mutation-triage file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [

@@ -152,6 +152,14 @@ Walks an agent through adding a dependency, which it cannot do alone: the danger
 
 **Workflow position:** mid-task, whenever the work needs a package the project does not have. **Design note:** it applies the policy in [CONTRIBUTING.md — Dependencies](../../../.github/CONTRIBUTING.md#dependencies) rather than restating it. `tests/test_add_dependency_skill.py` enforces that both bodies take the same steps in the same order and carry the same stop and hand-off sentences, and that neither puts `uv add` in a command for the agent to run.
 
+### `/mutation-triage [scope]`
+
+**Args:** an optional scope — a dotted module path or a file under `src/` to triage, optionally followed by specific mutant names already known to survive; empty means every current survivor. **Sources:** `.claude/commands/mutation-triage.md` (Claude), `.agents/skills/mutation-triage/SKILL.md` (Codex, Antigravity, Copilot).
+
+Turns a `doit mutate` survivor, or a `doit coverage` line marked `Missing`, into a behavior test or a documented reason it needs none. For each survivor in scope it inspects the diff with `mutmut show`, classifies it as equivalent, a missing assertion, an untested branch, or a real bug — stopping to report a bug rather than writing a test that pins it — then writes a test for the genuine gaps and re-runs what it targeted, by exact name or by an `fnmatch` pattern, to prove each one is now killed.
+
+**Workflow position:** after `doit mutate` or `doit coverage` finds something worth a second look, before the change that produced it is finalized. **Design note:** both underlying tasks are informational — neither fails on a survivor or an uncovered line — so nothing but this command's own gates stops a survivor being declared equivalent with no reason, or "killed" by a test keyed to the mutated literal instead of real behavior. `tests/test_mutation_triage_skill.py` enforces that both bodies take the same six steps in the same order and carry the same four gate sentences in place.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -166,6 +174,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$template-sync` upgrades the project to the latest template, posting a plan on the tracking issue for the admin to approve before applying anything
 - `$template-migrate` is the standalone precursor: copied into a project that does not use the template yet, it plans the migration and writes it to `TEMPLATE_MIGRATION_PLAN.md`
 - `$add-dependency` prepares a new dependency for the user to approve and install, since the agent cannot run `uv add`, then settles its typing and runs the license and audit checks
+- `$mutation-triage` classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -185,6 +194,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `template-sync` skill (from `.agents/skills/`) upgrades the project to the latest template behind an admin review gate
 - The shared `template-migrate` skill plans an existing project's move onto the template, changing nothing until the owner approves
 - The shared `add-dependency` skill prepares a new dependency for the user to approve and install, then settles its typing and runs the license and audit checks
+- The shared `mutation-triage` skill classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -244,9 +254,9 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 44 |
+| project entries Copilot lists | 45 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 27 |
+| from `.agents/skills/` | 28 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
@@ -254,8 +264,8 @@ Two reasons the number is one:
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
 - **Names collide and dedupe.** `add-dependency`, `checkpoint`, `ghi-finalize`, `multi-*`,
-  `restore`, `template-migrate` and `template-sync` exist in `.agents/skills/` as well, and Copilot
-  keeps one entry per name.
+  `mutation-triage`, `restore`, `template-migrate` and `template-sync` exist in `.agents/skills/`
+  as well, and Copilot keeps one entry per name.
 
 The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
 `.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`
