@@ -156,6 +156,22 @@ def test_property_tests_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing property-tests file: {path}"
 
 
+def test_deprecate_api_exists_on_every_wired_surface() -> None:
+    """`deprecate-api` warns callers off a public name before a later release removes it.
+
+    Same two-surface layout as `template-sync`. It ships to downstream projects, which is who
+    retires their own public API, so it is not in `cleanup.SETUP_FILES` (#832).
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "deprecate-api.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "deprecate-api" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing deprecate-api file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [
