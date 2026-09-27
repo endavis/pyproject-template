@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790502795194,
+  "lastUpdate": 1790503692713,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14632,6 +14632,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.665636496119833e-7",
             "extra": "mean: 2.025612093811697 usec\nrounds: 55516"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8b911690b23cdfcfdcb8192fd4d63cdb2e35cede",
+          "message": "feat: add an add-dependency skill for agents that cannot run uv add (merges PR #876, addresses #829)\n\nThe dangerous-command hook blocks `uv add` for every agent, so an agent that\nneeds a package mid-task could only ask the user to run it, with none of the\nsurrounding work done. The new skill does that work. It rules out the standard\nlibrary and existing dependencies, places the package in `[project]\ndependencies` or the `dev` or `security` extra, vets its license, supported\nPython versions, maintenance and typing against PyPI, and hands the user the\nexact `uv add` command with a `>=` lower bound. Then it stops. Once the user\nhas run the command, it confirms what landed, adds the stub or\n`[[tool.mypy.overrides]]` entry before any check runs, runs `doit licenses`,\n`doit audit` and `doit check`, and carries the justification into the PR\ndescription. It applies the policy in CONTRIBUTING.md's Dependencies section\nrather than restating it.\n\n- `.claude/commands/add-dependency.md` for Claude, and\n  `.agents/skills/add-dependency/SKILL.md` for Codex, Antigravity and Copilot.\n- `tests/test_add_dependency_skill.py` holds both bodies to the same steps in\n  the same order, the same stop and hand-off sentences word for word, typing\n  settled before `doit check`, and no `uv add` in a command for the agent.\n- `tests/template/test_ai_agent_assets.py` checks every wired surface has its\n  file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it, and\n  ADR-9005 links the issue. The Copilot discovery table in slash-commands.md\n  is re-measured with `copilot skill list` (Copilot CLI 1.0.88).\n\nAddresses #829\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T11:07:29+01:00",
+          "tree_id": "e801276df523012ca4d079098179c377254bf1c0",
+          "url": "https://github.com/endavis/pyproject-template/commit/8b911690b23cdfcfdcb8192fd4d63cdb2e35cede"
+        },
+        "date": 1790503690589,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8553657.967316238,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1621677710677086e-8",
+            "extra": "mean: 116.90904684534118 nsec\nrounds: 84876"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8842473.612837493,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0472300809386847e-8",
+            "extra": "mean: 113.09052690281156 nsec\nrounds: 87018"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5723397.86029643,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3369054394355122e-8",
+            "extra": "mean: 174.72138481531448 nsec\nrounds: 56874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1688781.1699034446,
+            "unit": "iter/sec",
+            "range": "stddev: 2.73174976391889e-7",
+            "extra": "mean: 592.143030619636 nsec\nrounds: 74935"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 496421.03941602,
+            "unit": "iter/sec",
+            "range": "stddev: 5.33634493034526e-7",
+            "extra": "mean: 2.0144190527790293 usec\nrounds: 50953"
           }
         ]
       }
