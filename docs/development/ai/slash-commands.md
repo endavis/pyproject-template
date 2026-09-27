@@ -176,6 +176,14 @@ Retires a public name over two releases instead of breaking callers with no noti
 
 **Workflow position:** whenever a public name needs to change, in two separate PRs a release apart. **Design note:** pytest's own configuration (`--strict-config --strict-markers`, no `filterwarnings`) does not fail a test merely because code under test raises `DeprecationWarning`, so the `pytest.warns` test is the only thing that catches a shim that silently stops warning — measured against this project's own `tests/test_core.py`. `tests/test_deprecate_api_skill.py` enforces that both bodies take the same phases and steps in the same order and carry the same gate sentences, and that neither body's code examples use `@warnings.deprecated` or `@typing_extensions.deprecated`.
 
+### `/python-version-bump [direction] [version]`
+
+**Args:** the direction and the version, e.g. `newest 3.15` or `floor 3.13`. **Sources:** `.claude/commands/python-version-bump.md` (Claude), `.agents/skills/python-version-bump/SKILL.md` (Codex, Antigravity, Copilot).
+
+The supported Python range is declared in seven places (`requires-python`, ruff `target-version`, mypy `python_version`, pyright `pythonVersion`, `.python-version`, `.github/python-versions.json`'s `oldest`/`newest`, and the PyPI classifiers), and `tests/test_python_versions_agree.py` is the only check that they agree. This command moves the range in either direction. Adding a newest version touches `.github/python-versions.json`, a classifier, and any prose that states the range — no gate, and no `uv lock` since the floor does not move. Raising the floor drops support for the oldest version, so **it asks the user first**, in the same message asking whether the release should carry a `BREAKING CHANGE:` footer and whether the last release still supporting the old floor should be tagged, then changes all seven settings in one commit, regenerates `uv.lock`, rebuilds the environment with `uv sync --all-extras --dev` (the new interpreter's `.venv` comes back without the dev tools), applies the `UP` rewrites `doit lint` reports, removes dead `sys.version_info` branches for the dropped version, updates any other prose that stated the old floor, and runs `doit check`.
+
+**Workflow position:** mid-task, whenever the work is to change which Python versions the project supports. **Design note:** it applies the policy in [CI/CD Testing Guide — Python Version Support Policy](../ci-cd-testing.md#python-version-support-policy) rather than restating it. `tests/test_python_version_bump_skill.py` enforces that both bodies take the same steps in the same order and carry the same ask-first and one-commit sentences.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -193,6 +201,8 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$mutation-triage` classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
 - `$property-tests` names the property a Hypothesis test asserts, builds the strategy from types, proves the test can fail against deliberately broken code, and pins the counterexample
 - `$deprecate-api` warns callers off a public name in one release and only removes it in a later one, following the Breaking Changes Policy
+- `$python-version-bump` adds a newest supported Python version, or asks first and then raises the
+  floor across all seven settings in one commit
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -215,6 +225,8 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `mutation-triage` skill classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
 - The shared `property-tests` skill names the property a Hypothesis test asserts, builds the strategy from types, proves the test can fail against deliberately broken code, and pins the counterexample
 - The shared `deprecate-api` skill warns callers off a public name in one release and only removes it in a later one, following the Breaking Changes Policy
+- The shared `python-version-bump` skill adds a newest supported Python version, or asks first and
+  then raises the floor across all seven settings in one commit
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -274,9 +286,9 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 47 |
+| project entries Copilot lists | 48 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 30 |
+| from `.agents/skills/` | 31 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
@@ -284,8 +296,9 @@ Two reasons the number is one:
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
 - **Names collide and dedupe.** `add-dependency`, `checkpoint`, `deprecate-api`, `ghi-finalize`,
-  `multi-*`, `mutation-triage`, `property-tests`, `restore`, `template-migrate` and `template-sync`
-  exist in `.agents/skills/` as well, and Copilot keeps one entry per name.
+  `multi-*`, `mutation-triage`, `property-tests`, `python-version-bump`, `restore`,
+  `template-migrate` and `template-sync` exist in `.agents/skills/` as well, and Copilot keeps one
+  entry per name.
 
 The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
 `.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`

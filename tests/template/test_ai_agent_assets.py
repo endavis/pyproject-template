@@ -172,6 +172,22 @@ def test_deprecate_api_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing deprecate-api file: {path}"
 
 
+def test_python_version_bump_exists_on_every_wired_surface() -> None:
+    """`python-version-bump` keeps the seven Python-version settings from drifting apart.
+
+    Same two-surface layout as `add-dependency`. It ships to downstream projects, which are who
+    bump Python versions, so it is not in `cleanup.SETUP_FILES` (#833).
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "python-version-bump.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "python-version-bump" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing python-version-bump file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [
