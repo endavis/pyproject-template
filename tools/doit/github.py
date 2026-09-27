@@ -356,7 +356,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
     try:
         return path.read_text(encoding="utf-8")
     except Exception as e:
-        console.print(f"[red]Error reading file: {e}[/red]")
+        console.print(f"[red]Error reading file: {escape(str(e))}[/red]")
         return None
 
 
@@ -396,10 +396,10 @@ def task_issue() -> dict[str, Any]:
         try:
             issue_template = get_issue_template(type)
         except ValueError as e:
-            console.print(f"[red]{e}[/red]")
+            console.print(f"[red]{escape(str(e))}[/red]")
             sys.exit(1)
         except FileNotFoundError as e:
-            console.print(f"[red]Template error: {e}[/red]")
+            console.print(f"[red]Template error: {escape(str(e))}[/red]")
             sys.exit(1)
 
         labels = issue_template.labels
@@ -469,7 +469,7 @@ def task_issue() -> dict[str, Any]:
             )
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to create issue:[/red]")
-            console.print(f"[red]{e.stderr}[/red]")
+            console.print(f"[red]{escape(e.stderr)}[/red]")
             sys.exit(1)
 
     return {
@@ -584,7 +584,7 @@ def task_pr() -> dict[str, Any]:
             try:
                 template = get_pr_template()
             except FileNotFoundError as e:
-                console.print(f"[red]Template error: {e}[/red]")
+                console.print(f"[red]Template error: {escape(str(e))}[/red]")
                 sys.exit(1)
 
             # Pre-fill issue number if detected
@@ -643,7 +643,7 @@ def task_pr() -> dict[str, Any]:
                 console.print(f"  gh pr edit {pr_url} --base main")
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to create PR:[/red]")
-            console.print(f"[red]{e.stderr}[/red]")
+            console.print(f"[red]{escape(e.stderr)}[/red]")
             sys.exit(1)
 
     return {
@@ -719,7 +719,7 @@ def _get_pr_info(pr_number: str | None, console: "ConsoleType") -> dict[str, Any
         if "no pull requests found" in e.stderr.lower():
             console.print("[red]No PR found for current branch.[/red]")
         else:
-            console.print(f"[red]Failed to get PR info: {e.stderr}[/red]")
+            console.print(f"[red]Failed to get PR info: {escape(e.stderr)}[/red]")
         return None
 
 
@@ -740,7 +740,7 @@ def _get_default_branch(console: "ConsoleType") -> str:
             check=True,
         )
     except subprocess.CalledProcessError as e:
-        console.print(f"[yellow]Could not read the default branch: {e.stderr}[/yellow]")
+        console.print(f"[yellow]Could not read the default branch: {escape(e.stderr)}[/yellow]")
         console.print("[yellow]Assuming 'main'.[/yellow]")
         return "main"
     return result.stdout.strip() or "main"
@@ -821,7 +821,7 @@ def _close_linked_issues(issues: list[str], pr_number: int, console: Console) ->
             console.print(f"[green]Closed issue #{issue}[/green]")
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").strip()
-            console.print(f"[yellow]Failed to close #{issue}: {stderr}[/yellow]")
+            console.print(f"[yellow]Failed to close #{issue}: {escape(stderr)}[/yellow]")
 
 
 def _worktree_holding(pr_info: dict[str, Any]) -> Path | None:
@@ -852,7 +852,9 @@ def _merged_head(pr_number: int, console: Console) -> str | None:
         )
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
-        console.print(f"[yellow]Could not read the state of PR #{pr_number}: {stderr}[/yellow]")
+        console.print(
+            f"[yellow]Could not read the state of PR #{pr_number}: {escape(stderr)}[/yellow]"
+        )
         return None
     data: dict[str, Any] = json.loads(result.stdout)
     if data.get("state") != "MERGED":
@@ -888,7 +890,9 @@ def _delete_remote_branch(branch: str, console: Console) -> None:
         console.print(f"[green]Deleted branch {branch} on GitHub[/green]")
     else:
         stderr = (result.stderr or "").strip()
-        console.print(f"[yellow]Could not delete branch {branch} on GitHub: {stderr}[/yellow]")
+        console.print(
+            f"[yellow]Could not delete branch {branch} on GitHub: {escape(stderr)}[/yellow]"
+        )
 
 
 def _finish_branch_in_worktree(
@@ -913,9 +917,9 @@ def _finish_branch_in_worktree(
         remove_merged_worktree(worktree, branch, merged_head, console)
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip() or str(e)
-        console.print(f"[yellow]Cleanup after the merge failed: {stderr}[/yellow]")
+        console.print(f"[yellow]Cleanup after the merge failed: {escape(stderr)}[/yellow]")
     except OSError as e:
-        console.print(f"[yellow]Cleanup after the merge failed: {e}[/yellow]")
+        console.print(f"[yellow]Cleanup after the merge failed: {escape(str(e))}[/yellow]")
 
 
 def _current_branch() -> str | None:
@@ -981,7 +985,9 @@ def _check_branch_up_to_date(current_branch: str, console: Console, base: str = 
         )
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
-        console.print(f"[yellow]Warning: `git fetch origin {base}` failed: {stderr}[/yellow]")
+        console.print(
+            f"[yellow]Warning: `git fetch origin {base}` failed: {escape(stderr)}[/yellow]"
+        )
         console.print("[yellow]Skipping up-to-date check; proceeding.[/yellow]")
         return
 
@@ -1008,7 +1014,7 @@ def _check_branch_up_to_date(current_branch: str, console: Console, base: str = 
     console.print(f"[red]Branch is {behind} commit(s) behind {upstream}.[/red]")
     console.print("[dim]Missing commits:[/dim]")
     for line in log_result.stdout.strip().splitlines():
-        console.print(f"  {line}")
+        console.print(f"  {escape(line)}")
     console.print()
     console.print("[yellow]Rebase and force-push, then re-run `doit pr`:[/yellow]")
     console.print(f"  git rebase {upstream} && git push --force-with-lease origin {current_branch}")
@@ -1061,7 +1067,7 @@ def _ensure_branch_pushed(current_branch: str, console: Console, no_push: bool) 
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
         console.print(f"[red]Failed to push {current_branch}:[/red]")
-        console.print(f"[red]{stderr}[/red]")
+        console.print(f"[red]{escape(stderr)}[/red]")
         sys.exit(1)
 
     console.print(f"[dim]Pushed {current_branch} to origin.[/dim]")
@@ -1284,7 +1290,7 @@ def _load_labels_file(path: Path, console: Console) -> list[dict[str, str]]:
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as e:
-        console.print(f"[red]Failed to parse {path}: {e}[/red]")
+        console.print(f"[red]Failed to parse {path}: {escape(str(e))}[/red]")
         sys.exit(1)
 
     if raw is None:
@@ -1362,13 +1368,13 @@ def _fetch_github_labels(console: Console) -> dict[str, dict[str, str]]:
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
         console.print("[red]Failed to fetch labels from GitHub:[/red]")
-        console.print(f"[red]{stderr}[/red]")
+        console.print(f"[red]{escape(stderr)}[/red]")
         sys.exit(1)
 
     try:
         data = json.loads(result.stdout or "[]")
     except json.JSONDecodeError as e:
-        console.print(f"[red]Could not parse `gh label list` output: {e}[/red]")
+        console.print(f"[red]Could not parse `gh label list` output: {escape(str(e))}[/red]")
         sys.exit(1)
 
     if not isinstance(data, list):
@@ -1494,7 +1500,7 @@ def _run_label_cmd(cmd: list[str], console: Console) -> None:
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
         console.print(f"[red]Command failed: {' '.join(cmd)}[/red]")
-        console.print(f"[red]{stderr}[/red]")
+        console.print(f"[red]{escape(stderr)}[/red]")
         sys.exit(1)
 
 
@@ -1792,7 +1798,7 @@ def task_labels_sync() -> dict[str, Any]:
         except SystemExit:
             raise
         except Exception as e:  # pragma: no cover - defensive catch-all
-            console.print(f"[red]Unexpected error during label sync: {e}[/red]")
+            console.print(f"[red]Unexpected error during label sync: {escape(str(e))}[/red]")
             sys.exit(1)
 
     return {

@@ -294,6 +294,27 @@ class TestCheckBranchUpToDate:
         assert "abc1234" in output
         assert "def5678" in output
 
+    def test_prints_bracketed_subjects_verbatim(self, mock_subprocess: MagicMock) -> None:
+        """A subject is text, not markup: `[tool.x]` vanished and `[/tmp]` crashed (#900)."""
+        console = self._make_console()
+        log_out = (
+            "56ad2af chore: move [tool.mutmut] to the keys\nabc1234 fix: strip [/tmp] prefix\n"
+        )
+        mock_subprocess.register(
+            {
+                ("git", "rev-list", "--count"): {"stdout": "2\n"},
+                ("git", "fetch"): {},
+                ("git", "log"): {"stdout": log_out},
+            }
+        )
+
+        with pytest.raises(SystemExit):
+            _check_branch_up_to_date("feat/x", console)
+
+        output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
+        assert "56ad2af chore: move [tool.mutmut] to the keys" in output
+        assert "abc1234 fix: strip [/tmp] prefix" in output
+
     def test_default_base_is_main(self, mock_subprocess: MagicMock) -> None:
         mock_subprocess.register(
             {("git", "rev-list", "--count"): {"stdout": "0\n"}, ("git", "fetch"): {}}
@@ -397,6 +418,32 @@ class TestEnsureBranchPushed:
         output = console.file.getvalue()  # type: ignore[attr-defined]
         assert "Failed to push" in output
         assert "remote rejected" in output
+
+    def test_prints_gits_rejection_verbatim(self, mock_subprocess: MagicMock) -> None:
+        """git's `[rejected]` marker vanished from this error, and `[/x]` crashed it (#900)."""
+        console = self._make_console()
+        stderr = (
+            "To github.com:o/r.git\n"
+            " ! [rejected]        feat/x -> feat/x (non-fast-forward)\n"
+            "remote: see [/docs/push-rules] for details\n"
+        )
+        mock_subprocess.register(
+            {
+                ("git", "rev-parse"): subprocess.CalledProcessError(
+                    returncode=128, cmd=["git", "rev-parse"], stderr="no upstream"
+                ),
+                ("git", "push", "-u"): subprocess.CalledProcessError(
+                    returncode=1, cmd=["git", "push", "-u"], stderr=stderr
+                ),
+            }
+        )
+
+        with pytest.raises(SystemExit):
+            _ensure_branch_pushed("feat/x", console, no_push=False)
+
+        output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
+        assert "! [rejected]        feat/x -> feat/x (non-fast-forward)" in output
+        assert "remote: see [/docs/push-rules] for details" in output
 
     def test_no_push_flag_and_no_upstream_aborts(self, mock_subprocess: MagicMock) -> None:
         """no_push=True with missing upstream → SystemExit(1), no push."""
@@ -1463,6 +1510,16 @@ class TestReadBodyFile:
 
         assert _read_body_file(str(tmp_path), console) is None
         assert "Error reading file" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_error_keeps_a_bracketed_path(self, tmp_path: Path) -> None:
+        """The error quotes the path, which is text, not markup (#900)."""
+        folder = tmp_path / "[draft]"
+        folder.mkdir()
+        # soft_wrap: a long tmp_path would otherwise wrap inside "[draft]".
+        console = Console(file=io.StringIO(), soft_wrap=True)
+
+        assert _read_body_file(str(folder), console) is None
+        assert "[draft]" in _plain(console.file.getvalue())  # type: ignore[attr-defined]
 
 
 def _issue_action() -> Callable[..., None]:

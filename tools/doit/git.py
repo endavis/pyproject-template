@@ -9,6 +9,7 @@ from typing import Any
 
 from doit.tools import title_with_actions
 from rich.console import Console
+from rich.markup import escape
 
 from .base import install_check_or_skip, run_streamed
 
@@ -248,7 +249,7 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
         )
     except subprocess.CalledProcessError as e:
         console.print(
-            f"[yellow]git worktree remove failed: {(e.stderr or '').strip()}[/yellow]",
+            f"[yellow]git worktree remove failed: {escape((e.stderr or '').strip())}[/yellow]",
             soft_wrap=True,
         )
         return
@@ -318,7 +319,9 @@ def task_worktree() -> dict[str, Any]:
             )
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").strip()
-            console.print(f"[yellow]Warning: `git fetch origin main` failed: {stderr}[/yellow]")
+            console.print(
+                f"[yellow]Warning: `git fetch origin main` failed: {escape(stderr)}[/yellow]"
+            )
             console.print("[yellow]Branching from the last fetched origin/main.[/yellow]")
 
         try:
@@ -329,7 +332,7 @@ def task_worktree() -> dict[str, Any]:
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            console.print(f"[red]git worktree add failed: {(e.stderr or '').strip()}[/red]")
+            console.print(f"[red]git worktree add failed: {escape((e.stderr or '').strip())}[/red]")
             sys.exit(1)
         console.print(f"[green]Created {path} on {branch}, from origin/main.[/green]")
 
