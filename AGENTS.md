@@ -194,7 +194,7 @@ The tool hierarchy (prefer higher over lower):
 | Commit (interactive) | `doit commit` | `git commit` without format |
 | Create a worktree | `doit worktree --branch=<branch>` | `git worktree add` by hand |
 | Install/add packages | `uv add <pkg>` | `pip install` |
-| Sync dependencies | `uv sync` | `pip install -r` |
+| Sync dependencies | `doit install_dev` | plain `uv sync`, `pip install -r` |
 | Run Python scripts | `uv run <script>` | `python` directly |
 | Run a specific test file | `uv run pytest tests/test_foo.py` | `pytest` directly |
 | Read issues/PRs/comments | `gh issue view`, `gh pr view`, `gh api` | `WebFetch` on GitHub URLs |

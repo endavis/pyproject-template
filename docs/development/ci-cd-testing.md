@@ -132,7 +132,7 @@ code-quality:
   steps:
     # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
     - name: Install dependencies
-      run: uv sync --dev
+      run: uv sync --all-extras --dev
     - name: Format check
       run: uv run doit format_check
     - name: Lint check
@@ -150,7 +150,7 @@ security:
   steps:
     # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
     - name: Install security tools
-      run: uv sync --extra security
+      run: uv sync --all-extras --dev
     - name: Run security audit
       run: uv run doit audit
     - name: Run bandit scan

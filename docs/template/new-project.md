@@ -175,6 +175,9 @@ uv sync --all-extras --dev
 doit pre_commit_install
 ```
 
+The development tools, `doit` included, live in the `dev` and `security` extras, and a plain
+`uv sync` uninstalls them. Sync again later with `doit install_dev`, which runs the same command.
+
 #### Enable Shell Completions (Optional)
 
 Enable tab completion for `doit` commands:

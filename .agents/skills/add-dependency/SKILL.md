@@ -156,7 +156,7 @@ Once the user says the command ran:
    doit audit
    ```
    Both need the `security` extra. Without it they print an install hint and exit 0, a pass that
-   checked nothing. If you see the hint, run `uv sync --all-extras` and run them again. Read the
+   checked nothing. If you see the hint, run `doit install_dev` and run them again. Read the
    `doit licenses` output for the new package and for everything `git diff uv.lock` shows arriving
    with it.
 4. **Validate.**
