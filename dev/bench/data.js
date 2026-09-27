@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790501307234,
+  "lastUpdate": 1790501510465,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14455,6 +14455,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000013234159539947488",
             "extra": "mean: 2.5624250578300902 usec\nrounds: 57898"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "12d41edb74b67e8086e0a38a35b635016a34f4c1",
+          "message": "fix: give every doc and new ADR frontmatter the TOC can read (merges PR #872, addresses #841)\n\ndocs/TABLE_OF_CONTENTS.md is generated from each document's frontmatter.\nThe ADRs, docs/decisions/README.md,\ndocs/development/ai/cross-agent-delegation.md and\ndocs/development/install-tools-framework.md had none, so they reached no\naudience section and the index listed them bare. The ADR template had\nnone either, so doit adr minted the gap with every new record.\n\n- Add frontmatter to those documents. An ADR's date is the day its file\n  was first committed.\n- Give adr-template.md frontmatter. doit adr fills in the quoted title\n  and the date, keeps a body's own frontmatter and sets its title, and\n  warns while the description is still the template's placeholder.\n- Stop interactive doit adr from writing its editor instructions into\n  the ADR, where they sat above the frontmatter.\n- generate_doc_toc.py reports a block that does not parse apart from a\n  missing one, with the reason and the line. A --- inside a value no\n  longer closes the block. The ADR template is left out of the TOC, as\n  mkdocs.yml leaves it out of the nav.\n- tests/test_docs_frontmatter.py fails any document under docs/ whose\n  frontmatter is missing, does not parse or has no description, and any\n  ADR that keeps the template's placeholder description.\n- Add a consumer note: a project that syncs that test must give its own\n  documents frontmatter.\n\nAddresses #841\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T10:31:14+01:00",
+          "tree_id": "0a2714ca50b73d9fd3624db988429c49a18c2044",
+          "url": "https://github.com/endavis/pyproject-template/commit/12d41edb74b67e8086e0a38a35b635016a34f4c1"
+        },
+        "date": 1790501509477,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11384483.723517982,
+            "unit": "iter/sec",
+            "range": "stddev: 8.49600533363953e-9",
+            "extra": "mean: 87.8388536789075 nsec\nrounds: 109123"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11582973.791969784,
+            "unit": "iter/sec",
+            "range": "stddev: 8.622429919043493e-9",
+            "extra": "mean: 86.33361500768288 nsec\nrounds: 115701"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8525742.976974456,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1790402706253344e-8",
+            "extra": "mean: 117.29183048336176 nsec\nrounds: 84617"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2300652.949500288,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9886896921135057e-7",
+            "extra": "mean: 434.6592128192149 nsec\nrounds: 71373"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 656144.1280264618,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2718204646879394e-7",
+            "extra": "mean: 1.524055397718458 usec\nrounds: 72512"
           }
         ]
       }
