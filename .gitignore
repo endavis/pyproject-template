@@ -35,6 +35,8 @@ env/
 htmlcov/
 .tox/
 .hypothesis/
+# mutmut's working copy, made by `doit mutate` at the repository root.
+/mutants/
 
 # Type checking and linting
 .mypy_cache/

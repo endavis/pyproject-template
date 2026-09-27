@@ -785,6 +785,12 @@ doit mutate
 uv run mutmut results
 ```
 
+### Which Tests Run
+
+mutmut does not run all of `tests/`. It copies `src/`, `tests/`, `pyproject.toml` and `uv.lock` into `mutants/` (git-ignored) and runs the tests there. A test that imports `tools` or reads any other file in the repository fails in that copy. mutmut passes `-x` to pytest, so the first such failure stops the run before any mutant is checked (#873).
+
+`pytest_add_cli_args_test_selection` in `[tool.mutmut]` therefore lists only the tests that exercise `src/`. When you add a test file that imports the package, add it to that list. `tests/test_mutmut_config.py` fails until you do. It also fails if a listed file imports a module that mutmut does not copy, or no longer exists. The benchmarks in `tests/benchmarks/` are left out on purpose: they time the package and assert nothing, so they cannot kill a mutant.
+
 ### Interpreting Results
 
 | Term | Meaning |
@@ -798,7 +804,7 @@ The **mutation score** is the percentage of mutants killed out of total mutants 
 
 ### CI Schedule
 
-Mutation testing runs weekly in CI (Sunday midnight UTC) via the `.github/workflows/mutation.yml` workflow. It is informational only and does not block merges or fail the build.
+Mutation testing runs weekly in CI (Sunday midnight UTC) via the `.github/workflows/mutation.yml` workflow. It is informational: it does not block merges, and surviving mutants do not fail it. A run that cannot test the mutants at all does fail, and its **Mutation results** step prints mutmut's log. Until #873 the workflow ignored mutmut's exit code, and it stayed green through months of runs that checked no mutant.
 
 Results are uploaded as the `mutmut-results.txt` artifact with 90-day retention. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
 
