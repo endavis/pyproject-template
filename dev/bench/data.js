@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790503692713,
+  "lastUpdate": 1790506829727,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14691,6 +14691,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.33634493034526e-7",
             "extra": "mean: 2.0144190527790293 usec\nrounds: 50953"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43e39e0c4099c9b15772f7e94743854ac3c2545a",
+          "message": "fix: make the mutation run check its mutants and fail when it cannot (merges PR #877, addresses #873)\n\nmutmut runs the selected tests inside mutants/, a copy holding src/, tests/,\npyproject.toml and uv.lock but not tools/ or the rest of the repository.\nSelecting all of tests/ reached tests that import tools, so collection failed.\nmutmut passes -x to pytest, so its stats run stopped before any mutant was\nchecked. The workflow ended that line in `|| true`, so every weekly run whose\nlog is still available checked none of its mutants and reported success.\n\n- `[tool.mutmut]` selects the tests that exercise src/: the four top-level\n  package tests and tests/template/test_properties.py.\n- mutation.yml no longer ignores mutmut's exit status, which mutmut 3.8 sets\n  only when it cannot test the mutants. Surviving mutants still pass. The job\n  uses the ci Hypothesis profile, as ci.yml does, so a slow runner cannot fail\n  a property test on its deadline.\n- tests/test_mutmut_config.py checks three things: every selected path\n  exists, no selected test or conftest it loads imports what mutants/ lacks,\n  and every test that imports the package is selected.\n  tests/test_mutation_workflow.py runs the step with a stub uv: a failing\n  mutmut fails it, and a completed run passes it.\n- mutants/ is git-ignored. test_secret_env_policy.py now skips it, since it\n  holds a copy of that test and made doit check fail after any doit mutate.\n- ci-cd-testing.md documents the selection. doit-tasks-reference.md no\n  longer says doit mutate prints a mutation score.\n\nLocally, mutmut now checks all 80 mutants: 74 killed, 6 survived.\n\nAddresses #873\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T11:59:53+01:00",
+          "tree_id": "1a9f1b656097821c8aa6fbf7b437c505abf3a875",
+          "url": "https://github.com/endavis/pyproject-template/commit/43e39e0c4099c9b15772f7e94743854ac3c2545a"
+        },
+        "date": 1790506827722,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12947517.446429683,
+            "unit": "iter/sec",
+            "range": "stddev: 8.057277417768092e-9",
+            "extra": "mean: 77.23488337725723 nsec\nrounds: 121803"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13136620.755194468,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0150162359049003e-8",
+            "extra": "mean: 76.12307751250115 nsec\nrounds: 26112"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8124862.154841614,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0752903392564706e-8",
+            "extra": "mean: 123.07901118102033 nsec\nrounds: 84161"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2414545.5414661523,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5118696499820603e-7",
+            "extra": "mean: 414.1566115968901 nsec\nrounds: 68705"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 663466.7727429625,
+            "unit": "iter/sec",
+            "range": "stddev: 5.00042465147467e-7",
+            "extra": "mean: 1.5072344857086248 usec\nrounds: 60976"
           }
         ]
       }
