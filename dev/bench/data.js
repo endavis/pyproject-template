@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790529556407,
+  "lastUpdate": 1790532529528,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15458,6 +15458,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.37409356590699e-7",
             "extra": "mean: 1.2007328882443897 usec\nrounds: 86274"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5dade00d1039037f2ecd9a527a39a53334666f7a",
+          "message": "fix: print command output, commit subjects and errors in doit tasks as text, not Rich markup (merges PR #901, addresses #900)\n\nThe doit tasks put text they did not write into Rich markup strings, so Rich\nread bracketed text as tags (#900). An unknown tag vanished: `doit pr`\nprinted commit 56ad2af without its `[tool.mutmut]`, and a rejected push lost\ngit's `[rejected]` marker. A closing tag with no opener, such as a `[/tmp]`\ncommit subject, raised MarkupError instead of printing the rebase command.\n\n- tools/doit/: `rich.markup.escape()` wraps every site #900 lists: git, gh\n  and cz output, commit subjects and PR titles, and exception messages, as\n  `escape(str(e))`. It also wraps release.py's `git status -s` output. The\n  issue missed that site; a comment on #900 corrects it.\n- tests/template/test_doit_markup_escaping.py: an AST scan of tools/doit/\n  fails when a markup call interpolates stdout or stderr, an `except ... as`\n  variable, or a subject variable without escape(). Its own tests pin what\n  it flags and what it passes.\n- test_doit_github.py, test_doit_release.py: bracketed text survives in each\n  case #900 reproduced, in merge subjects, in `git status` paths, and in an\n  error that quotes a path.\n- docs/usage/basics.md: custom tasks should escape outside text too.\n\nPaths, label names and the user's own flags stay unescaped, as #900 decided.\n\nAddresses #900\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T19:08:09+01:00",
+          "tree_id": "45e4e0ec4d6a09b89acce363a4605ac12716e95c",
+          "url": "https://github.com/endavis/pyproject-template/commit/5dade00d1039037f2ecd9a527a39a53334666f7a"
+        },
+        "date": 1790532527286,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8592898.955857398,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1452565159640136e-8",
+            "extra": "mean: 116.3751610646305 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8661768.26062372,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6555170627848193e-8",
+            "extra": "mean: 115.44986773035552 nsec\nrounds: 92765"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5434601.516446657,
+            "unit": "iter/sec",
+            "range": "stddev: 5.783874592513958e-8",
+            "extra": "mean: 184.00613126348165 nsec\nrounds: 59270"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1971874.5980000778,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9449124244393192e-7",
+            "extra": "mean: 507.1316406297966 nsec\nrounds: 184163"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 528415.1205085708,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9770544609761752e-7",
+            "extra": "mean: 1.8924515237897706 usec\nrounds: 55421"
           }
         ]
       }
