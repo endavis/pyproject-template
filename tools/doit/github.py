@@ -23,6 +23,7 @@ from urllib.parse import quote
 import yaml
 from doit.tools import title_with_actions
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 
 from tools.doit.git import remove_merged_worktree, worktree_for_branch
@@ -1106,7 +1107,9 @@ def task_pr_merge() -> dict[str, Any]:
         pr_body = pr_info.get("body", "") or ""
         pr_state = pr_info.get("state", "")
 
-        console.print(f"[dim]PR #{pr_number}: {pr_title}[/dim]")
+        # The title is text, not markup: Rich drops `[tool.x]` as an unknown tag
+        # and raises MarkupError on `[/x]`, so escape it wherever it is printed (#893).
+        console.print(f"[dim]PR #{pr_number}: {escape(pr_title)}[/dim]")
 
         # Check PR state
         if pr_state.upper() != "OPEN":
@@ -1150,7 +1153,7 @@ def task_pr_merge() -> dict[str, Any]:
         # Format merge subject
         merge_subject = _format_merge_subject(pr_title, pr_number, issues)
         console.print("\n[cyan]Merge commit subject:[/cyan]")
-        console.print(f"  [bold]{merge_subject}[/bold]")
+        console.print(f"  [bold]{escape(merge_subject)}[/bold]")
 
         # Build merge command
         cmd = [
@@ -1184,7 +1187,7 @@ def task_pr_merge() -> dict[str, Any]:
             console.print(
                 Panel.fit(
                     f"[bold green]PR #{pr_number} merged successfully![/bold green]\n\n"
-                    f"Commit: {merge_subject}",
+                    f"Commit: {escape(merge_subject)}",
                     border_style="green",
                 )
             )
@@ -1207,7 +1210,7 @@ def task_pr_merge() -> dict[str, Any]:
         except subprocess.CalledProcessError as e:
             console.print("[red]Failed to merge PR.[/red]")
             if e.stderr:
-                console.print(f"[red]{e.stderr}[/red]")
+                console.print(f"[red]{escape(e.stderr)}[/red]")
             if _STACKED_PR_MARKER in (e.stderr or "").lower():
                 console.print(
                     "[yellow]This PR is part of a GitHub stack, which doit pr_merge does not "
