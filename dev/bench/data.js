@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790516899709,
+  "lastUpdate": 1790517067518,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14868,6 +14868,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.290445463089385e-7",
             "extra": "mean: 2.0316479611868905 usec\nrounds: 55670"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1493fe78b4f8eb0968c3257200774aca6713be69",
+          "message": "feat: add a deprecate-api skill so a public name is retired without breaking callers first (merges PR #884, addresses #832)\n\nThe new skill retires a public name in two phases, normally a release apart.\n\nPhase 1 keeps the old name working as a shim over the new one. The shim warns\nwith `warnings.warn(..., DeprecationWarning, stacklevel=2)`, because Python\n3.12 has no `warnings.deprecated`. The phase also needs a `pytest.warns` test,\nand the agent confirms that test fails once the warning is removed.\n\nPhase 2 deletes the name, but only after `git tag --contains` shows the\ndeprecating commit is in a release. The removal commit carries a\n`BREAKING CHANGE:` footer. The skill has the agent check `major_version_zero`,\nbecause with the shipped `true` that footer bumps MINOR at any version (#881).\n\n- `.claude/commands/deprecate-api.md` for Claude, and\n  `.agents/skills/deprecate-api/SKILL.md` for Codex, Antigravity and Copilot.\n- `tests/test_deprecate_api_skill.py` checks both bodies:\n  - the same phases and steps, in the same order;\n  - the gate sentences, word for word;\n  - no `@warnings.deprecated` or `@typing_extensions.deprecated` in any code\n    example.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #832\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T14:50:28+01:00",
+          "tree_id": "a7fa7e5415896fc94d189b2cb113418d1aedd8a2",
+          "url": "https://github.com/endavis/pyproject-template/commit/1493fe78b4f8eb0968c3257200774aca6713be69"
+        },
+        "date": 1790517066207,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8377161.684887831,
+            "unit": "iter/sec",
+            "range": "stddev: 3.344864318286685e-8",
+            "extra": "mean: 119.37217372848043 nsec\nrounds: 89542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9081118.623813907,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2384780922970047e-8",
+            "extra": "mean: 110.11859237006838 nsec\nrounds: 78927"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5558365.293658109,
+            "unit": "iter/sec",
+            "range": "stddev: 2.422343505953924e-8",
+            "extra": "mean: 179.9090105036751 nsec\nrounds: 192160"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1669913.7020422881,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9063383381315628e-7",
+            "extra": "mean: 598.8333401762079 nsec\nrounds: 72993"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 526949.5942843435,
+            "unit": "iter/sec",
+            "range": "stddev: 3.323744638223563e-7",
+            "extra": "mean: 1.897714716638338 usec\nrounds: 54034"
           }
         ]
       }
