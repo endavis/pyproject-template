@@ -56,6 +56,10 @@ MD_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 # capital and hold only words, so a summary such as
 # `AGENTS.md` (Issue → Branch → Commit → PR) is not read as a pointer.
 PARENTHESIZED_SECTION = re.compile(r"`([\w./-]+\.md)`\s*\(([A-Z][\w-]*(?: [\w-]+)*)\)")
+# A code fence: three or more backticks or tildes, indented at most three spaces.
+# The block it opens ends at a fence of the same character that is at least as
+# long and has nothing after it.
+FENCE = re.compile(r" {0,3}(`{3,}|~{3,})")
 
 
 def _instruction_files() -> list[Path]:
@@ -79,15 +83,34 @@ def _markdown_files(root: Path = REPO_ROOT) -> list[Path]:
 
 
 def _headings(path: Path) -> set[str] | None:
-    """Return the literal heading lines in *path*, or None if unreadable."""
+    """Return the literal heading lines in *path*, or None if unreadable.
+
+    Lines inside fenced code blocks are skipped. A `# comment` in a shell or
+    Python example is not a section, and read as one it made a pointer to that
+    comment pass every check here (#844).
+    """
     try:
-        return {
-            line.strip()
-            for line in path.read_text(encoding="utf-8").splitlines()
-            if line.startswith("#")
-        }
+        text = path.read_text(encoding="utf-8")
     except OSError:
         return None
+
+    headings = set()
+    fence = ""  # the fence that opened the current code block, if inside one
+    for line in text.splitlines():
+        match = FENCE.match(line)
+        if fence:
+            if (
+                match
+                and match.group(1)[0] == fence[0]
+                and len(match.group(1)) >= len(fence)
+                and not line[match.end() :].strip()
+            ):
+                fence = ""
+        elif match:
+            fence = match.group(1)
+        elif line.startswith("#"):
+            headings.add(line.strip())
+    return headings
 
 
 def _slug(heading: str) -> str:
@@ -307,11 +330,47 @@ def test_anchor_checker_detects_a_broken_anchor(tmp_path: Path) -> None:
     assert "no-such-heading" not in (_anchors(target) or set())
 
 
+def test_fenced_comments_are_not_headings(tmp_path: Path) -> None:
+    """A `# comment` in a code block names no section (#844).
+
+    CONTRIBUTING.md's Initial Setup holds `# Install dependencies (creates venv
+    automatically)` in a bash block. Read as a heading, a link to its slug passed
+    the anchor check, and on GitHub it lands at the top of the page.
+    """
+    target = tmp_path / "target.md"
+    target.write_text(
+        "# Real Heading\n\n```bash\n# Install dependencies (creates venv automatically)\n```\n",
+        encoding="utf-8",
+    )
+
+    assert _anchors(target) == {"real-heading"}
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "~~~\n# Tilde fence\n~~~\n# After\n",
+        "````md\n```\n# Inside the outer fence\n```\n````\n# After\n",
+        "```\n~~~\n# Inside the backtick fence\n~~~\n```\n# After\n",
+        "   ```\n# Inside an indented fence\n   ```\n# After\n",
+        "```\n# Code\n``` not a closing fence\n# Still code\n```\n# After\n",
+    ],
+    ids=["tilde", "shorter-fence-inside", "other-character-inside", "indented", "text-after"],
+)
+def test_a_code_block_ends_only_at_its_closing_fence(tmp_path: Path, text: str) -> None:
+    """A fence closes only on the same character, at least as long, with nothing after it."""
+    target = tmp_path / "target.md"
+    target.write_text(text, encoding="utf-8")
+
+    assert _headings(target) == {"# After"}
+
+
 def test_section_name_checker_detects_a_broken_pointer(tmp_path: Path) -> None:
     """The parenthesized check must fail on a name that no heading starts with.
 
     The target mirrors CONTRIBUTING.md before #828: the only line holding the
-    word is a shell comment in a code block, which `_headings` reads as a heading.
+    word is a shell comment in a code block, which `_headings` read as a heading
+    until #844.
     """
     (tmp_path / "target.md").write_text(
         "# Real Heading\n\n```bash\n# Install dependencies\n```\n", encoding="utf-8"
