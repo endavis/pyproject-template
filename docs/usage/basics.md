@@ -792,7 +792,7 @@ uv run pre-commit install
 
 - Update docstrings when changing functions
 - Add examples for new features
-- Update CHANGELOG.md for notable changes
+- Leave CHANGELOG.md to `doit release`, which writes it from the commit messages
 - Keep README.md up to date
 
 ### Git Commits

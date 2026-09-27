@@ -156,7 +156,7 @@ Some of these are blocked in code as well as forbidden here — committing to `m
 **How to Handle:**
 1. Document in commit message with `BREAKING CHANGE:` footer
 2. Document in PR description with migration guide
-3. Update CHANGELOG.md
+3. Don't edit CHANGELOG.md: `doit release` writes it from the commit messages, footer included
 4. Breaking changes bump MINOR before 1.0 and MAJOR from 1.0 on: set `major_version_zero = false` in `[tool.commitizen]` before releasing 1.0 (`doit release` refuses 1.0 or later until you do)
 
 ## Tooling & Environment

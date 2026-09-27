@@ -198,6 +198,10 @@ class TestGetPrTemplate:
         result = get_pr_template()
         assert "## Checklist" in result
 
+    def test_asks_for_no_changelog_edit(self) -> None:
+        """`doit release` writes CHANGELOG.md, so every PR left that checkbox unticked (#890)."""
+        assert "CHANGELOG" not in get_pr_template()
+
     def test_caching_returns_same_instance(self) -> None:
         """Multiple calls should return cached result."""
         result1 = get_pr_template()
