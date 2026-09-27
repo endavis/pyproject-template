@@ -57,7 +57,7 @@ BLOCKED_WORKFLOW_COMMANDS = {
     ),
     ("doit", "release"): (
         "Releases must be run manually by the user, not by AI agents. "
-        "AI can help prepare (update changelog, verify CI) but not execute releases."
+        "AI can help prepare (check commit messages, verify CI) but not execute releases."
     ),
     ("doit", "release_tag"): "Releases must be run manually by the user, not by AI agents.",
 }

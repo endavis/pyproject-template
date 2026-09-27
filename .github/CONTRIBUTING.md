@@ -731,7 +731,6 @@ git remote set-url origin https://<token>@github.com/username/repo.git
 Before opening a release PR:
 
 - [ ] All CI checks pass on `main`
-- [ ] CHANGELOG.md is up to date (or will be auto-generated)
 - [ ] No uncommitted changes on your working tree
 - [ ] You have push access to the repository
 - [ ] PyPI/TestPyPI environments are configured in GitHub
