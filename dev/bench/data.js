@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790517544055,
+  "lastUpdate": 1790517691738,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15104,6 +15104,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 5.190828989450037e-7",
             "extra": "mean: 1.7353875722073357 usec\nrounds: 20084"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c084ef06e1807f3e1f56fa9a3053a68fe45dfdfd",
+          "message": "feat: add a perf-change skill so speedup claims come from a measured comparison (merges PR #887, addresses #836)\n\nThe project ships benchmarks, `doit benchmark_save` and\n`doit benchmark_compare`, but no procedure that runs them in the order that\nkeeps a speedup claim honest. The new skill runs them in this order:\n- write a benchmark first if none covers the path;\n- take a baseline immediately before the change;\n- profile with `cProfile`, sorted by `tottime`;\n- make the change;\n- compare, and paste the whole table into the PR.\n\nWithout that table, the PR carries no speedup figure. `doit check` must still\npass, because a faster wrong answer is a regression. The skill uses the\ncomparison as #840 left it, against the latest save.\n\n- `.claude/commands/perf-change.md` for Claude, and\n  `.agents/skills/perf-change/SKILL.md` for Codex, Antigravity and Copilot.\n- `tests/test_perf_change_skill.py` holds both bodies to the same steps in the\n  same order and the same benchmark, comparison and correctness sentences. It\n  also fails if either body pins the comparison to a specific saved run.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #836\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T15:01:00+01:00",
+          "tree_id": "dd4b6b209d9e989bd4c29a149b64341e47515da3",
+          "url": "https://github.com/endavis/pyproject-template/commit/c084ef06e1807f3e1f56fa9a3053a68fe45dfdfd"
+        },
+        "date": 1790517690684,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8288255.8155509345,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1469474510038289e-8",
+            "extra": "mean: 120.65264661881437 nsec\nrounds: 80174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8474559.346827736,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1818173650838388e-8",
+            "extra": "mean: 118.00023565524121 nsec\nrounds: 87628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5329232.056179871,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3664735475824267e-8",
+            "extra": "mean: 187.64429648740526 nsec\nrounds: 54633"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1733704.707725771,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7319112455274027e-7",
+            "extra": "mean: 576.7994950603636 nsec\nrounds: 64562"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 502565.81286796747,
+            "unit": "iter/sec",
+            "range": "stddev: 5.953830643445521e-7",
+            "extra": "mean: 1.9897891468051707 usec\nrounds: 50234"
           }
         ]
       }
