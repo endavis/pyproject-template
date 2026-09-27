@@ -816,33 +816,33 @@ Benchmark results are tracked historically using [benchmark-action/github-action
 
 ### How It Works
 
-The `benchmark.yml` workflow operates in two modes:
+The `benchmark.yml` workflow runs on three triggers:
 
 | Trigger | Behavior |
 |---------|----------|
-| **Push to `main`** | Runs benchmarks and commits results to the `gh-benchmarks` data branch for long-term tracking |
-| **Pull request** | Runs benchmarks and posts a comparison comment on the PR if the `gh-benchmarks` branch exists (no commit to data branch) |
-| **Manual dispatch** | Runs benchmarks and uploads artifact only |
+| **Push to `main`** | Runs the benchmarks, uploads the `benchmark-results` artifact, and stores the results on the `gh-benchmarks` data branch for long-term tracking |
+| **Pull request** | Runs the benchmarks and uploads the `benchmark-results` artifact. Nothing is stored, and nothing is posted on the PR |
+| **Manual dispatch** | Runs the benchmarks and uploads the artifact only |
 
-Only main branch results are stored to keep the historical data clean and consistent.
+Only pushes to `main` store results. The `store` job holds the workflow's only write permission (`contents: write`) and never runs for a pull request, so code from a PR never gets a write-capable token (#695).
 
 If `tests/benchmarks/` does not exist or contains no `test_*.py` files, the workflow skips all benchmark steps and finishes successfully. This allows downstream projects generated from this template to enable the workflow incrementally without CI failures before any benchmark tests are written.
 
 ### The `gh-benchmarks` Branch
 
-Benchmark data is stored in a dedicated `gh-benchmarks` branch, separate from the main codebase. This branch is auto-created by the benchmark action on the first push to `main` after the workflow is enabled. Until the branch exists, PR benchmark comparisons are skipped gracefully.
+Benchmark data is stored in a dedicated `gh-benchmarks` branch, separate from the main codebase. The `store` job's "Create benchmark data branch" step creates it, as an orphan branch with one empty commit, on the first push to `main` after the workflow is enabled.
 
 - **Data directory:** `dev/bench/` within the branch
 - **Format:** JSON files with benchmark metrics over time
 - **Purpose:** Serves as the data source for trend charts and regression detection
 
-### PR Comments
+### Pull Requests
 
-On every pull request, the benchmark action posts a comment comparing the PR's benchmark results against the latest stored baseline from `main`. This gives reviewers immediate visibility into performance impact.
+A pull request gets no benchmark comment or comparison. Its run uploads the `benchmark-results` artifact, kept for 90 days, which you can download from the workflow run to compare by hand. For a before-and-after number to put in a PR, use the local `doit benchmark_save` and `doit benchmark_compare` loop.
 
 ### Alert Threshold
 
-The alert threshold is set to `110%`, meaning the workflow flags a warning if any benchmark is more than 10% slower than the baseline. To adjust this threshold, edit the `alert-threshold` value in `.github/workflows/benchmark.yml`.
+The alert threshold is set to `110%`: an alert fires when a benchmark is more than 10% slower than the previous stored result. The check runs in the `store` job, so it applies only to pushes to `main`. With `comment-on-alert: true`, the action leaves an alert comment. `fail-on-alert` is not set, and it defaults to `false`, so an alert never fails the workflow. To adjust the threshold, edit the `alert-threshold` value in `.github/workflows/benchmark.yml`.
 
 ### GitHub Pages (Optional)
 
