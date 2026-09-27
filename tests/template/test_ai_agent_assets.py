@@ -140,6 +140,22 @@ def test_mutation_triage_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing mutation-triage file: {path}"
 
 
+def test_property_tests_exists_on_every_wired_surface() -> None:
+    """`property-tests` walks an agent through picking and pinning a Hypothesis property.
+
+    Same two-surface layout as `add-dependency`. It ships to downstream projects,
+    which is who writes property tests, so it is not in `cleanup.SETUP_FILES` (#831).
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "commands" / "property-tests.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "property-tests" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing property-tests file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [

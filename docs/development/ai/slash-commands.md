@@ -160,6 +160,14 @@ Turns a `doit mutate` survivor, or a `doit coverage` line marked `Missing`, into
 
 **Workflow position:** after `doit mutate` or `doit coverage` finds something worth a second look, before the change that produced it is finalized. **Design note:** both underlying tasks are informational — neither fails on a survivor or an uncovered line — so nothing but this command's own gates stops a survivor being declared equivalent with no reason, or "killed" by a test keyed to the mutated literal instead of real behavior. `tests/test_mutation_triage_skill.py` enforces that both bodies take the same six steps in the same order and carry the same four gate sentences in place.
 
+### `/property-tests <target> [property]`
+
+**Args:** the function or module to test, optionally followed by what property to check. **Sources:** `.claude/commands/property-tests.md` (Claude), `.agents/skills/property-tests/SKILL.md` (Codex, Antigravity, Copilot).
+
+Walks an agent through writing a Hypothesis property test: name the property first (round-trip, idempotence, invariant or oracle, or stop for an example-based test instead), build the strategy from types before reaching for `assume()` or `.filter()`, mark it `@pytest.mark.property`, and leave `deadline` and `max_examples` to the profiles in `tests/conftest.py` rather than a per-test `@settings(...)`. It also breaks the code under test on purpose to confirm the property actually fails, undoes just that break without touching the task's other changes, and -- whenever a property turns up a genuine failing input against the real code -- fixes the bug first and pins that input as `@example(...)`.
+
+**Workflow position:** mid-task, whenever new or changed code needs a property test rather than (or alongside) an example-based one. **Design note:** it defers to the `ci` and `default` profiles already configured in `tests/conftest.py` (#736) instead of restating their values, and its restore step undoes only the deliberate break so it never discards the task's own uncommitted work. A new test file that imports the package also needs adding to mutmut's test selection; see [Which Tests Run](../ci-cd-testing.md#which-tests-run). `tests/test_property_tests_skill.py` enforces that both bodies take the same steps in the same order and carry the same stop and prove-it-can-fail sentences.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -175,6 +183,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$template-migrate` is the standalone precursor: copied into a project that does not use the template yet, it plans the migration and writes it to `TEMPLATE_MIGRATION_PLAN.md`
 - `$add-dependency` prepares a new dependency for the user to approve and install, since the agent cannot run `uv add`, then settles its typing and runs the license and audit checks
 - `$mutation-triage` classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
+- `$property-tests` names the property a Hypothesis test asserts, builds the strategy from types, proves the test can fail against deliberately broken code, and pins the counterexample
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -195,6 +204,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `template-migrate` skill plans an existing project's move onto the template, changing nothing until the owner approves
 - The shared `add-dependency` skill prepares a new dependency for the user to approve and install, then settles its typing and runs the license and audit checks
 - The shared `mutation-triage` skill classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
+- The shared `property-tests` skill names the property a Hypothesis test asserts, builds the strategy from types, proves the test can fail against deliberately broken code, and pins the counterexample
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -254,9 +264,9 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 45 |
+| project entries Copilot lists | 46 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 28 |
+| from `.agents/skills/` | 29 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
@@ -264,8 +274,8 @@ Two reasons the number is one:
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
 - **Names collide and dedupe.** `add-dependency`, `checkpoint`, `ghi-finalize`, `multi-*`,
-  `mutation-triage`, `restore`, `template-migrate` and `template-sync` exist in `.agents/skills/`
-  as well, and Copilot keeps one entry per name.
+  `mutation-triage`, `property-tests`, `restore`, `template-migrate` and `template-sync` exist in
+  `.agents/skills/` as well, and Copilot keeps one entry per name.
 
 The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
 `.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`
