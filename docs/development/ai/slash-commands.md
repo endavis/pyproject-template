@@ -200,6 +200,14 @@ Walks an agent through a vulture finding before it deletes code, hides it, or le
 
 **Workflow position:** whenever `doit check` or `doit deadcode` reports a finding, or the user pastes one. **Design note:** every new `ignore_names` entry must carry a comment naming the reference vulture cannot see, the same shape as the entries already there. `tests/test_dead_code_triage_skill.py` enforces that both bodies take the same steps in the same order and carry the same early-exit and reason-comment gates word for word.
 
+### `/perf-change [target and why]`
+
+**Args:** the function or path to make faster, and why. **Sources:** `.claude/commands/perf-change.md` (Claude), `.agents/skills/perf-change/SKILL.md` (Codex, Antigravity, Copilot).
+
+Turns a performance change into a measured one instead of a claimed one. It confirms `tests/benchmarks/` covers the path being changed (writing a benchmark first if it does not), takes a baseline with `doit benchmark_save`, profiles with the standard library's `cProfile` read through `pstats`, makes the change, then compares with `doit benchmark_compare` and pastes the table into the PR. `doit check` must still pass — a faster wrong answer is a regression.
+
+**Workflow position:** mid-task, whenever the work is a performance change or a speedup claim needs backing. **Design note:** the local `doit benchmark_save` / change / `doit benchmark_compare` loop used to compare against a pinned first save regardless of how many baselines existed (`tools/doit/benchmark.py`); #840 made `--benchmark-compare` use the latest one instead, which is what makes running this loop as-is trustworthy. CI tracks its own benchmark history too (see [CI/CD and Testing — Benchmark Tracking](../ci-cd-testing.md#benchmark-tracking)), but only from pushes to `main` — the workflow's `store` job, the only one that writes history or can comment, is gated on `github.event_name == 'push'`. A PR gets no benchmark comparison from CI, so this loop's pasted table is the only before/after number the PR carries. `tests/test_perf_change_skill.py` enforces that both bodies take the same steps in the same order, carry the same benchmark, comparison and correctness gates word for word, and never tell the agent to pin the comparison to a specific saved run.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -221,6 +229,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
   floor across all seven settings in one commit
 - `$security-triage` fixes or justifies each bandit and pip-audit finding, and stops to ask before a `skips` entry or an ignored advisory
 - `$dead-code-triage` triages a `doit deadcode` finding against `[tool.vulture]` in `pyproject.toml` — unused import, unused variable, or unreachable code — before fixing it, adding a documented exception, or asking
+- `$perf-change` takes a measured baseline before a performance change, profiles with `cProfile`, and compares after, so a speedup claim is backed by a pasted table
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -247,6 +256,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
   then raises the floor across all seven settings in one commit
 - The shared `security-triage` skill fixes or justifies each bandit and pip-audit finding, and stops to ask before a `skips` entry or an ignored advisory
 - The shared `dead-code-triage` skill triages a `doit deadcode` finding against `[tool.vulture]` in `pyproject.toml` — unused import, unused variable, or unreachable code — before fixing it, adding a documented exception, or asking
+- The shared `perf-change` skill takes a measured baseline before a performance change, profiles with `cProfile`, and compares after, so a speedup claim is backed by a pasted table
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -306,9 +316,9 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 50 |
+| project entries Copilot lists | 51 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 33 |
+| from `.agents/skills/` | 34 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
@@ -316,9 +326,9 @@ Two reasons the number is one:
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
 - **Names collide and dedupe.** `add-dependency`, `checkpoint`, `dead-code-triage`, `deprecate-api`,
-  `ghi-finalize`, `multi-*`, `mutation-triage`, `property-tests`, `python-version-bump`, `restore`,
-  `security-triage`, `template-migrate` and `template-sync` exist in `.agents/skills/` as well, and
-  Copilot keeps one entry per name.
+  `ghi-finalize`, `multi-*`, `mutation-triage`, `perf-change`, `property-tests`,
+  `python-version-bump`, `restore`, `security-triage`, `template-migrate` and `template-sync` exist
+  in `.agents/skills/` as well, and Copilot keeps one entry per name.
 
 The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
 `.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`
