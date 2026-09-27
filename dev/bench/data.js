@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790501510465,
+  "lastUpdate": 1790502590529,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -14514,6 +14514,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.2718204646879394e-7",
             "extra": "mean: 1.524055397718458 usec\nrounds: 72512"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "56ad2af526f31ad152bc8041f302b8188f5bd87f",
+          "message": "chore: move [tool.mutmut] to the keys mutmut 3 reads (merges PR #874, addresses #839)\n\nmutmut 3 deprecates paths_to_mutate and tests_dir, which printed a\nwarning on every mutmut command, and reads no runner key at all, so the\npytest flags in it never reached pytest.\n\n- paths_to_mutate becomes source_paths, and tests_dir becomes\n  pytest_add_cli_args_test_selection.\n- Remove runner. mutmut already passes -x to pytest itself, and\n  --assert=plain moves to pytest_add_cli_args: on mutmut 3.8.0 it gave\n  the same result for every mutant and ran a little faster.\n- tests/test_mutmut_config.py fails if a deprecated or unread key comes\n  back.\n\nmutmut still mutates src/ and selects tests/. Its stats collection fails\nas it did before this change, which #873 tracks.\n\nAddresses #839\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T10:49:21+01:00",
+          "tree_id": "ba6d2277e05b65c149d5da0c070d1a14f5462490",
+          "url": "https://github.com/endavis/pyproject-template/commit/56ad2af526f31ad152bc8041f302b8188f5bd87f"
+        },
+        "date": 1790502589701,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8810515.23346043,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3630933600364039e-8",
+            "extra": "mean: 113.50074013858081 nsec\nrounds: 84876"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9018105.935961794,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0956312215348413e-8",
+            "extra": "mean: 110.88802982589367 nsec\nrounds: 88246"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5988728.195306706,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3399512742334238e-8",
+            "extra": "mean: 166.980361670728 nsec\nrounds: 58921"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1702962.6898083896,
+            "unit": "iter/sec",
+            "range": "stddev: 2.64694549908209e-7",
+            "extra": "mean: 587.2119254195263 nsec\nrounds: 67486"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 509641.7274079266,
+            "unit": "iter/sec",
+            "range": "stddev: 5.176967086568436e-7",
+            "extra": "mean: 1.9621627237747388 usec\nrounds: 59770"
           }
         ]
       }
