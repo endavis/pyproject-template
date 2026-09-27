@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790517388959,
+  "lastUpdate": 1790517544055,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15045,6 +15045,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.527976601027398e-7",
             "extra": "mean: 2.0861534070899417 usec\nrounds: 47827"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1df8a7330b00794ecd055cd8873928f3fab14ef6",
+          "message": "feat: add a dead-code-triage skill so vulture findings are triaged, not deleted or whitelisted by reflex (merges PR #886, addresses #835)\n\nAt this project's `min_confidence = 80`, vulture reports three kinds of\nfinding: unused imports, unused function arguments and unreachable code. The\nnew skill gives each kind its own check before anything is deleted:\n- an unused import may be a re-export, or a `TYPE_CHECKING` name used only in\n  a string annotation;\n- an unused argument may belong to an interface;\n- code after `return` may mean the statement before it exits too early.\n\nA new `ignore_names` entry must carry a comment naming the reference vulture\ncannot see.\n\n- `.claude/commands/dead-code-triage.md` for Claude, and\n  `.agents/skills/dead-code-triage/SKILL.md` for Codex, Antigravity and\n  Copilot.\n- `tests/test_dead_code_triage_skill.py` holds both bodies to the same steps in\n  the same order, and to the early-exit and reason-comment sentences word for\n  word.\n- `tests/template/test_ai_agent_assets.py` checks that every wired surface has\n  its file. The skill ships downstream, so it is not in `SETUP_FILES`.\n- slash-commands.md, AI_SETUP.md and `.copilot/README.md` document it. The\n  Copilot discovery table is re-measured with `copilot skill list`.\n\nAddresses #835\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T14:58:24+01:00",
+          "tree_id": "78be0e52cb1956f70eab6ef7245ad6ce4149b2f1",
+          "url": "https://github.com/endavis/pyproject-template/commit/1df8a7330b00794ecd055cd8873928f3fab14ef6"
+        },
+        "date": 1790517541856,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11088466.881986288,
+            "unit": "iter/sec",
+            "range": "stddev: 1.017617731790829e-8",
+            "extra": "mean: 90.18379282212086 nsec\nrounds: 99335"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11916538.07499856,
+            "unit": "iter/sec",
+            "range": "stddev: 1.028282915416199e-8",
+            "extra": "mean: 83.91698945669847 nsec\nrounds: 115049"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7047541.642005402,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2405430996588766e-8",
+            "extra": "mean: 141.8934503401454 nsec\nrounds: 70822"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1899250.664517899,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5230261444323524e-7",
+            "extra": "mean: 526.5234435254692 nsec\nrounds: 58289"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 576240.1529290915,
+            "unit": "iter/sec",
+            "range": "stddev: 5.190828989450037e-7",
+            "extra": "mean: 1.7353875722073357 usec\nrounds: 20084"
           }
         ]
       }
