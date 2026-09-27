@@ -168,6 +168,14 @@ Walks an agent through writing a Hypothesis property test: name the property fir
 
 **Workflow position:** mid-task, whenever new or changed code needs a property test rather than (or alongside) an example-based one. **Design note:** it defers to the `ci` and `default` profiles already configured in `tests/conftest.py` (#736) instead of restating their values, and its restore step undoes only the deliberate break so it never discards the task's own uncommitted work. A new test file that imports the package also needs adding to mutmut's test selection; see [Which Tests Run](../ci-cd-testing.md#which-tests-run). `tests/test_property_tests_skill.py` enforces that both bodies take the same steps in the same order and carry the same stop and prove-it-can-fail sentences.
 
+### `/deprecate-api deprecate <old-name> <new-name>` / `/deprecate-api remove <old-name>`
+
+**Args:** the phase (`deprecate` or `remove`) and the name or names it applies to. **Sources:** `.claude/commands/deprecate-api.md` (Claude), `.agents/skills/deprecate-api/SKILL.md` (Codex, Antigravity, Copilot).
+
+Retires a public name over two releases instead of breaking callers with no notice. In the `deprecate` phase it keeps the old name exported and routes it to the replacement, warns with `warnings.warn(..., DeprecationWarning, stacklevel=2)` — not `@warnings.deprecated`, since this template's floor (Python 3.12) predates it — requires a `pytest.warns` test in the same change, and documents the replacement in the docstring. In the `remove` phase, a later release, it refuses to delete the name until that deprecating release has already shipped, then deletes it and follows [AGENTS.md — Breaking Changes Policy](../../../AGENTS.md#breaking-changes-policy): a `BREAKING CHANGE:` footer and a migration guide in the PR description, never a hand-edited `CHANGELOG.md` or `pyproject.toml` version — both come from `doit release`.
+
+**Workflow position:** whenever a public name needs to change, in two separate PRs a release apart. **Design note:** pytest's own configuration (`--strict-config --strict-markers`, no `filterwarnings`) does not fail a test merely because code under test raises `DeprecationWarning`, so the `pytest.warns` test is the only thing that catches a shim that silently stops warning — measured against this project's own `tests/test_core.py`. `tests/test_deprecate_api_skill.py` enforces that both bodies take the same phases and steps in the same order and carry the same gate sentences, and that neither body's code examples use `@warnings.deprecated` or `@typing_extensions.deprecated`.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -184,6 +192,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$add-dependency` prepares a new dependency for the user to approve and install, since the agent cannot run `uv add`, then settles its typing and runs the license and audit checks
 - `$mutation-triage` classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
 - `$property-tests` names the property a Hypothesis test asserts, builds the strategy from types, proves the test can fail against deliberately broken code, and pins the counterexample
+- `$deprecate-api` warns callers off a public name in one release and only removes it in a later one, following the Breaking Changes Policy
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -205,6 +214,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `add-dependency` skill prepares a new dependency for the user to approve and install, then settles its typing and runs the license and audit checks
 - The shared `mutation-triage` skill classifies each `doit mutate` survivor or `doit coverage` gap in scope, writes behavior tests for the genuine ones, and re-runs them by name or pattern to prove each is killed
 - The shared `property-tests` skill names the property a Hypothesis test asserts, builds the strategy from types, proves the test can fail against deliberately broken code, and pins the counterexample
+- The shared `deprecate-api` skill warns callers off a public name in one release and only removes it in a later one, following the Breaking Changes Policy
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -264,18 +274,18 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 46 |
+| project entries Copilot lists | 47 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 29 |
+| from `.agents/skills/` | 30 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
 
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
-- **Names collide and dedupe.** `add-dependency`, `checkpoint`, `ghi-finalize`, `multi-*`,
-  `mutation-triage`, `property-tests`, `restore`, `template-migrate` and `template-sync` exist in
-  `.agents/skills/` as well, and Copilot keeps one entry per name.
+- **Names collide and dedupe.** `add-dependency`, `checkpoint`, `deprecate-api`, `ghi-finalize`,
+  `multi-*`, `mutation-triage`, `property-tests`, `restore`, `template-migrate` and `template-sync`
+  exist in `.agents/skills/` as well, and Copilot keeps one entry per name.
 
 The one entry is **`ghi-status`**, which has no `.agents/skills/` counterpart — so
 `.claude/commands/` discovery is not a leak here, it is the only thing that makes `/ghi-status`
