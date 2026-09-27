@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import ast
 import os
 import shlex
 import subprocess  # nosec B404 - test invokes bash deliberately to verify shell-snippet behaviour
@@ -185,6 +186,56 @@ class TestInstallCheckOrSkip:
         # The hint is included via shlex.quote(); whatever its quoted form is,
         # bash must echo back the original hint verbatim when the snippet runs.
         assert shlex.quote(hint) in snippet
+
+
+DOIT_DIR = Path(__file__).resolve().parents[2] / "tools" / "doit"
+
+
+def _install_hints() -> list[tuple[str, str | None]]:
+    """Return (file:line, hint) for every ``install_check_or_skip`` call in ``tools/doit``.
+
+    The hint is None when it is not a string literal, so the test can say so instead of
+    skipping a hint it cannot read.
+    """
+    found: list[tuple[str, str | None]] = []
+    for module in sorted(DOIT_DIR.glob("*.py")):
+        for node in ast.walk(ast.parse(module.read_text(encoding="utf-8"))):
+            if not (
+                isinstance(node, ast.Call)
+                and isinstance(node.func, ast.Name)
+                and node.func.id == "install_check_or_skip"
+            ):
+                continue
+            hints = node.args[1:2] + [kw.value for kw in node.keywords if kw.arg == "hint"]
+            hint = hints[0] if hints else None
+            value = hint.value if isinstance(hint, ast.Constant) else None
+            text = value if isinstance(value, str) else None
+            found.append((f"{module.name}:{node.lineno}", text))
+    return found
+
+
+class TestInstallHints:
+    """Every install hint in ``tools/doit`` names ``doit install_dev`` (#889).
+
+    The tools the hints ask for are in the ``dev`` and ``security`` extras, and ``uv sync``
+    uninstalls every extra it is not asked for. The hints said ``uv sync`` and
+    ``uv sync --extra security``, and following either one uninstalled ``doit``, the tool
+    that printed the hint.
+    """
+
+    def test_the_scan_finds_hints(self) -> None:
+        assert _install_hints(), f"no install_check_or_skip calls found in {DOIT_DIR}"
+
+    def test_every_hint_names_install_dev(self) -> None:
+        wrong = [
+            f"{where}: {hint!r}"
+            for where, hint in _install_hints()
+            if hint is None or not hint.endswith("Run: doit install_dev")
+        ]
+        assert not wrong, (
+            "these install hints do not end in 'Run: doit install_dev' "
+            "(None means the hint is not a string literal):\n  " + "\n  ".join(wrong)
+        )
 
 
 @pytest.mark.skipif(

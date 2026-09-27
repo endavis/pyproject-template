@@ -48,7 +48,7 @@ class TestGitTaskGates:
         action = task_commit()["actions"][0]
         assert isinstance(action, str)
         assert "uv pip show commitizen" in action
-        assert "commitizen not installed. Run: uv sync" in action
+        assert "commitizen not installed. Run: doit install_dev" in action
         assert "uv run cz commit" in action
         # Bug-fix invariant: the bare-swallow pattern must be gone.
         assert "|| echo 'commitizen not installed" not in action
@@ -57,7 +57,7 @@ class TestGitTaskGates:
         action = task_bump()["actions"][0]
         assert isinstance(action, str)
         assert "uv pip show commitizen" in action
-        assert "commitizen not installed. Run: uv sync" in action
+        assert "commitizen not installed. Run: doit install_dev" in action
         assert "uv run cz bump" in action
         assert "|| echo 'commitizen not installed" not in action
 
@@ -65,7 +65,7 @@ class TestGitTaskGates:
         action = task_changelog()["actions"][0]
         assert isinstance(action, str)
         assert "uv pip show commitizen" in action
-        assert "commitizen not installed. Run: uv sync" in action
+        assert "commitizen not installed. Run: doit install_dev" in action
         assert "uv run cz changelog" in action
         assert "|| echo 'commitizen not installed" not in action
 

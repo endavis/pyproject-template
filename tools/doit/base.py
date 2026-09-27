@@ -83,9 +83,9 @@ def install_check_or_skip(package: str, hint: str) -> str:
         package: The package name as known to ``uv pip show`` (e.g.
             ``"bandit"``, ``"commitizen"``, ``"cyclonedx-bom"``).
         hint: Human-readable install instruction printed when the package is
-            absent (e.g. ``"bandit not installed. Run: uv sync --extra
-            security"``). Shell-quoted via ``shlex.quote`` so embedded spaces
-            and special characters are safe.
+            absent (e.g. ``"bandit not installed. Run: doit install_dev"``).
+            Shell-quoted via ``shlex.quote`` so embedded spaces and special
+            characters are safe.
 
     Returns:
         A shell fragment ending with ``"; "`` suitable for prepending to the
