@@ -161,7 +161,9 @@ ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 minversion = "8.0"
-addopts = "--strict-config --strict-markers --benchmark-disable"
+# pytest-benchmark reads its settings only from these flags, never from a pyproject table (#879).
+# Disabled runs ignore them, so they apply only when a benchmark run adds --benchmark-enable.
+addopts = "--strict-config --strict-markers --benchmark-disable --benchmark-disable-gc --benchmark-warmup=on"
 testpaths = ["tests"]
 pythonpath = ["."]
 python_files = ["test_*.py"]
@@ -171,11 +173,6 @@ markers = [
     "benchmark: marks tests as performance benchmarks (deselect with '--benchmark-disable')",
     "property: marks tests as property-based tests (run with Hypothesis)",
 ]
-
-[tool.pytest-benchmark]
-disable_gc = true
-min_rounds = 5
-warmup = true
 
 [tool.coverage.run]
 branch = true

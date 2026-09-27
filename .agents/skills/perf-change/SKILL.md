@@ -105,12 +105,13 @@ done, hand off to the `ghi-finalize` skill.
 ## Notes
 
 - Runs are noisy on shared hardware. Run `uv run pytest --help` and check the current
-  `--benchmark-min-rounds` and `--benchmark-warmup` defaults before tuning either one.
-  `[tool.pytest-benchmark]` in `pyproject.toml` is not one of its sources — the installed plugin
-  reads only command-line flags, never that table (#879). If a comparison looks noisy, rerun `doit
+  `--benchmark-min-rounds` and `--benchmark-warmup` defaults before tuning either one. The
+  project's own settings are flags in `addopts` under `[tool.pytest.ini_options]` in
+  `pyproject.toml`: GC off and warmup on for every enabled run. The installed plugin reads only
+  command-line flags, never a pyproject table (#879). If a comparison looks noisy, rerun `doit
   benchmark_compare` first; for tighter control, run the pytest command from `tools/doit/benchmark.py`
-  directly with `--benchmark-min-rounds=<N>` or `--benchmark-warmup=on` appended, since the doit
-  tasks themselves take no extra flags.
+  directly with `--benchmark-min-rounds=<N>` appended, since the doit tasks themselves take no extra
+  flags.
 - CI tracks benchmark history separately (`docs/development/ci-cd-testing.md`, "Benchmark Tracking"),
   but only from pushes to `main` (`.github/workflows/benchmark.yml`'s `store` job is gated on
   `github.event_name == 'push'`). A PR gets no benchmark comparison from CI, so this skill's local
