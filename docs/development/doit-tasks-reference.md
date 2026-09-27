@@ -98,9 +98,9 @@ doit mutate
 
 **What it does:**
 - Introduces small changes (mutations) to source code
-- Runs the test suite against each mutation
-- Reports which mutations were killed (detected) vs survived (missed)
-- Prints a summary with the mutation score
+- Runs the tests that exercise `src/` against each mutation (see [Which Tests Run](ci-cd-testing.md#which-tests-run))
+- Records which mutations were killed (detected) vs survived (missed)
+- Lists the mutations the tests did not kill
 
 **Output:** Results are stored in the `mutants/` cache directory. Re-run `uv run mutmut results` at any time to re-display the text summary.
 

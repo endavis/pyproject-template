@@ -13,6 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
+      # As in ci.yml: no per-example deadline, so a slow runner cannot fail a
+      # property test on timing and stop the run.
+      HYPOTHESIS_PROFILE: ci
 
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -43,7 +46,14 @@ jobs:
         timeout-minutes: 120
         run: |
           mkdir -p tmp
-          uv run mutmut run > tmp/mutmut-run-raw.log 2>&1 || true
+          # Surviving mutants do not fail this step. mutmut exits non-zero only
+          # when it cannot test the mutants at all, as when its stats run fails.
+          # This line used to end in `|| true`, which kept the job green through
+          # months of runs that checked no mutant (#873).
+          if ! uv run mutmut run > tmp/mutmut-run-raw.log 2>&1; then
+            echo "::error::mutmut could not test the mutants. The Mutation results step prints its log."
+            exit 1
+          fi
 
       - name: Mutation results
         if: always()

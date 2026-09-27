@@ -28,7 +28,9 @@ from agent_roster import skip_if_absent
 REPO_ROOT = Path(__file__).resolve().parents[2]
 HOOK_PATH = REPO_ROOT / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
 CODEX_CONFIG = REPO_ROOT / ".codex" / "config.toml"
-SKIP_DIRS = {".git", "site", "tmp", ".venv", "__pycache__", "worktrees"}
+# Generated trees. `mutants/` is mutmut's copy of src/ and tests/, made by
+# `doit mutate`, so it holds this test file's own copy of the list (#873).
+SKIP_DIRS = {".git", "site", "tmp", ".venv", "__pycache__", "worktrees", "mutants"}
 SCANNED_SUFFIXES = {".py", ".toml", ".json", ".yaml", ".yml"}
 
 
