@@ -687,6 +687,10 @@ doit pr_merge --auto-close
 4. If `--auto-close` is set, closes each linked issue with a `Addressed in PR #XX` comment; otherwise prints the `gh issue close` commands as a reminder.
 5. If a linked worktree has the PR's branch checked out, deletes the branch itself and removes the
    worktree (see below)
+6. If it was run from the PR's base branch, fast-forwards that branch with
+   `git pull --ff-only origin <base>`. Run from the PR's branch instead,
+   `gh pr merge --delete-branch` switches to the base and pulls it. A pull that cannot fast-forward
+   is reported, not fatal: the PR has already merged
 
 The task does not check approvals or CI itself. GitHub refuses the merge when branch protection
 requires them and they are not met.
@@ -714,6 +718,7 @@ delete the branch. So when a linked worktree has the branch, the task merges wit
 - deletes the local branch if it still points at the commit the PR merged. A squash merge needs
   `git branch -D`, which would otherwise drop a commit that was never pushed
 - removes the directories under `worktrees/` that the worktree leaves empty
+- fast-forwards `main` in the main checkout, when that is where the task runs from
 
 Run it from the main checkout, and pass `--pr`: without it, the task merges the PR for the main
 checkout's own branch.
@@ -1140,7 +1145,7 @@ doit worktree --branch=feat/42-add-export
   checkout's `.venv`.
 - direnv users can run `direnv allow` in the worktree to switch the shell to its `.venv`.
 - Merge its PR from the main checkout with `uv run doit pr_merge --pr=<number>`, which removes the
-  worktree and its branch. See [`pr_merge`](#pr_merge). To remove a worktree without merging, run
+  worktree and its branch, then fast-forwards `main`. See [`pr_merge`](#pr_merge). To remove a worktree without merging, run
   `git worktree remove worktrees/<branch>` from the main checkout.
 
 `worktrees/` is gitignored and skipped by the repository-wide test walkers, so `doit check` in the

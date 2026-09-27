@@ -149,7 +149,7 @@ Step 7 changes: merge from the main checkout, and pass the PR number. Without `-
 uv run doit pr_merge --pr=<pr-number> --auto-close
 ```
 
-That merges the PR, closes issue 42, and removes the worktree and its branch. See [`pr_merge`](../doit-tasks-reference.md#pr_merge) for when it keeps them instead.
+That merges the PR, closes issue 42, removes the worktree and its branch, and fast-forwards the main checkout's `main`. See [`pr_merge`](../doit-tasks-reference.md#pr_merge) for when it keeps them instead.
 
 ## What each command produces
 

@@ -15,9 +15,11 @@ from tools.doit.github import (
     _PR_TITLE_PATTERN,
     _check_branch_up_to_date,
     _close_linked_issues,
+    _current_branch,
     _delete_remote_branch,
     _ensure_branch_pushed,
     _extract_linked_issues,
+    _fast_forward_base,
     _fetch_github_labels,
     _finish_branch_in_worktree,
     _format_merge_subject,
@@ -1800,6 +1802,16 @@ class TestGetDefaultBranch:
         assert "Assuming 'main'" in output
 
 
+@pytest.fixture(autouse=True)
+def _no_real_branch_lookup(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep every test away from a real `git pull` (#891).
+
+    `doit pr_merge` fast-forwards the checkout it starts on when that is the PR's
+    base. Unless a test says otherwise, the checkout is on no branch.
+    """
+    monkeypatch.setattr(github_mod, "_current_branch", lambda: None)
+
+
 def _merge_action() -> Callable[..., None]:
     """Return the `merge_pr` action that `doit pr_merge` runs."""
     action: Callable[..., None] = task_pr_merge()["actions"][0]
@@ -1838,6 +1850,48 @@ class TestMergePr:
         subject = cmd[cmd.index("--subject") + 1]
         assert "merges PR #42" in subject and "addresses #7" in subject
         assert "merged successfully" in capsys.readouterr().out
+
+    def test_fast_forwards_the_base_it_was_run_from(self) -> None:
+        """gh pulls the base only when it switches to it, so the task does it here (#891)."""
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName="main")),
+            patch("tools.doit.github._get_default_branch", return_value="main"),
+            patch("tools.doit.github._current_branch", return_value="main"),
+            patch("tools.doit.github._run_gh_with_retry"),
+            patch("tools.doit.github._fast_forward_base") as mock_ff,
+        ):
+            _merge_action()(pr="42")
+
+        assert mock_ff.call_args.args[0] == "main"
+
+    def test_leaves_the_base_to_gh_when_run_from_the_prs_branch(self) -> None:
+        """gh's --delete-branch switches to the base and pulls it itself."""
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName="main")),
+            patch("tools.doit.github._get_default_branch", return_value="main"),
+            patch("tools.doit.github._current_branch", return_value="feat/1-x"),
+            patch("tools.doit.github._run_gh_with_retry"),
+            patch("tools.doit.github._fast_forward_base") as mock_ff,
+        ):
+            _merge_action()(pr="42")
+
+        mock_ff.assert_not_called()
+
+    def test_a_failed_merge_pulls_nothing(self) -> None:
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName="main")),
+            patch("tools.doit.github._get_default_branch", return_value="main"),
+            patch("tools.doit.github._current_branch", return_value="main"),
+            patch(
+                "tools.doit.github._run_gh_with_retry",
+                side_effect=subprocess.CalledProcessError(1, ["gh"], stderr="not mergeable"),
+            ),
+            patch("tools.doit.github._fast_forward_base") as mock_ff,
+            pytest.raises(SystemExit),
+        ):
+            _merge_action()(pr="42")
+
+        mock_ff.assert_not_called()
 
     def test_missing_pr_info_exits(self) -> None:
         with (
@@ -2114,6 +2168,28 @@ class TestMergePrWithWorktree:
         assert "Cleanup after the merge failed: disk full" in out
         assert "Failed to merge PR" not in out
 
+    def test_fast_forwards_main_after_removing_the_worktree(self) -> None:
+        """Merged from the main checkout on `main`, which gh neither switches nor pulls (#891)."""
+        steps: list[str] = []
+        with (
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(baseRefName="main")),
+            patch("tools.doit.github._get_default_branch", return_value="main"),
+            patch("tools.doit.github.worktree_for_branch", return_value=self.WORKTREE),
+            patch("tools.doit.github._current_branch", return_value="main"),
+            patch("tools.doit.github._run_gh_with_retry"),
+            patch(
+                "tools.doit.github._finish_branch_in_worktree",
+                side_effect=lambda *_: steps.append("remove worktree"),
+            ),
+            patch(
+                "tools.doit.github._fast_forward_base",
+                side_effect=lambda *_: steps.append("fast-forward main"),
+            ),
+        ):
+            _merge_action()(pr="42")
+
+        assert steps == ["remove worktree", "fast-forward main"]
+
 
 class TestWorktreeHolding:
     def test_a_git_failure_leaves_the_branch_to_gh(self) -> None:
@@ -2177,6 +2253,63 @@ class TestFinishBranchInWorktree:
             _finish_branch_in_worktree(42, "feat/1-x", self.WORKTREE, console)
 
         assert "Permission denied" in console.file.getvalue()  # type: ignore[attr-defined]
+
+
+class TestCurrentBranch:
+    def test_returns_the_checked_out_branch(self, mock_subprocess: MagicMock) -> None:
+        mock_subprocess.register({("git", "branch", "--show-current"): {"stdout": "main\n"}})
+
+        assert _current_branch() == "main"
+
+    def test_a_detached_head_is_no_branch(self, mock_subprocess: MagicMock) -> None:
+        mock_subprocess.register({("git", "branch", "--show-current"): {"stdout": "\n"}})
+
+        assert _current_branch() is None
+
+    def test_a_git_failure_is_no_branch(self, mock_subprocess: MagicMock) -> None:
+        mock_subprocess.register(
+            {
+                ("git", "branch", "--show-current"): subprocess.CalledProcessError(
+                    128, ["git"], stderr="fatal: not a git repository"
+                )
+            }
+        )
+
+        assert _current_branch() is None
+
+
+class TestFastForwardBase:
+    """After the merge: the checkout the task ran from, when that is the PR's base (#891)."""
+
+    @staticmethod
+    def _console() -> Console:
+        return Console(file=io.StringIO(), width=200, color_system=None)
+
+    def test_pulls_the_base_fast_forward_only(self, mock_subprocess: MagicMock) -> None:
+        console = self._console()
+        mock_subprocess.register({("git", "pull"): {"stdout": ""}})
+
+        _fast_forward_base("main", console)
+
+        assert mock_subprocess.call_args.args[0] == ["git", "pull", "--ff-only", "origin", "main"]
+        assert "Fast-forwarded main" in console.file.getvalue()  # type: ignore[attr-defined]
+
+    def test_a_failed_pull_is_reported_not_raised(self, mock_subprocess: MagicMock) -> None:
+        """The PR has merged, so a pull that cannot fast-forward only warns."""
+        console = self._console()
+        mock_subprocess.register(
+            {
+                ("git", "pull"): subprocess.CalledProcessError(
+                    128, ["git"], stderr="fatal: Not possible to fast-forward, aborting."
+                )
+            }
+        )
+
+        _fast_forward_base("main", console)
+
+        out = console.file.getvalue()  # type: ignore[attr-defined]
+        assert "git pull --ff-only origin main" in out
+        assert "Not possible to fast-forward" in out
 
 
 class TestMergedHead:

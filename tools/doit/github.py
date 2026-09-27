@@ -917,6 +917,45 @@ def _finish_branch_in_worktree(
         console.print(f"[yellow]Cleanup after the merge failed: {e}[/yellow]")
 
 
+def _current_branch() -> str | None:
+    """Return the branch this checkout has checked out, or None when HEAD is detached."""
+    try:
+        result = subprocess.run(
+            ["git", "branch", "--show-current"],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, OSError):
+        return None
+    return result.stdout.strip() or None
+
+
+def _fast_forward_base(base: str, console: Console) -> None:
+    """Fast-forward this checkout's *base* branch to include the merge (#891).
+
+    ``gh pr merge --delete-branch`` pulls the base only when it switches to it
+    from the PR's branch. A checkout that is already on the base, which is where
+    a worktree's PR is merged from, is otherwise left behind. It never raises:
+    the PR has merged, so a failure here is reported, not fatal.
+    """
+    console.print()
+    try:
+        subprocess.run(
+            ["git", "pull", "--ff-only", "origin", base],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+    except (subprocess.CalledProcessError, OSError) as e:
+        detail = (getattr(e, "stderr", None) or "").strip() or str(e)
+        console.print(f"[yellow]Could not fast-forward {base}. Update it with:[/yellow]")
+        console.print(f"  git pull --ff-only origin {base}")
+        console.print(detail, style="yellow", markup=False)
+        return
+    console.print(f"[green]Fast-forwarded {base} to origin/{base}[/green]")
+
+
 def _check_branch_up_to_date(current_branch: str, console: Console, base: str = "main") -> None:
     """Abort PR creation if the current branch is behind ``origin/<base>``.
 
@@ -1132,6 +1171,11 @@ def task_pr_merge() -> dict[str, Any]:
         if delete_branch and worktree is None:
             cmd.append("--delete-branch")
 
+        # gh pulls the base only when --delete-branch switches to it from the PR's
+        # branch, so a checkout that starts on the base is fast-forwarded by the
+        # task after the merge (#891).
+        start_branch = _current_branch() if base else None
+
         # Execute merge
         console.print("\n[cyan]Merging...[/cyan]")
         try:
@@ -1184,6 +1228,8 @@ def task_pr_merge() -> dict[str, Any]:
         # reported as a failed merge.
         if worktree is not None:
             _finish_branch_in_worktree(pr_number, pr_info["headRefName"], worktree, console)
+        if base and start_branch == base:
+            _fast_forward_base(base, console)
 
     return {
         "actions": [merge_pr],

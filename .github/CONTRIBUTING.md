@@ -873,7 +873,8 @@ doit worktree --branch=feat/42-add-feature
 The worktree goes in `worktrees/feat/42-add-feature` (gitignored), with its own `.venv`. Inside it,
 run everything through `uv run` (`uv run doit check`, `uv run doit pr`) and never pass `--active`,
 which installs the worktree into the main checkout's `.venv`. Merge the PR from the main checkout
-with `uv run doit pr_merge --pr=<number>`, which then removes the worktree and its branch. See
+with `uv run doit pr_merge --pr=<number>`, which then removes the worktree and its branch and
+fast-forwards `main`. See
 [`doit worktree`](../docs/development/doit-tasks-reference.md#worktree).
 
 #### 3. **Commit:** Use Conventional Commits
@@ -989,6 +990,8 @@ The task:
 - When a linked worktree has the PR's branch checked out, deletes the branch itself and removes a
   worktree under `worktrees/`. Run it from the main checkout, with `--pr`. See
   [`pr_merge`](../docs/development/doit-tasks-reference.md#pr_merge)
+- Fast-forwards the base branch after the merge when it was run from that branch, which is where a
+  worktree's PR is merged from
 
 ### Architecture Decision Records (ADRs)
 
