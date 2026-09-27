@@ -46,7 +46,7 @@ def task_commit() -> dict[str, Any]:
         "actions": [
             install_check_or_skip(
                 "commitizen",
-                "commitizen not installed. Run: uv sync",
+                "commitizen not installed. Run: doit install_dev",
             )
             + "uv run cz commit"
         ],
@@ -60,7 +60,7 @@ def task_bump() -> dict[str, Any]:
         "actions": [
             install_check_or_skip(
                 "commitizen",
-                "commitizen not installed. Run: uv sync",
+                "commitizen not installed. Run: doit install_dev",
             )
             + "uv run cz bump"
         ],
@@ -74,7 +74,7 @@ def task_changelog() -> dict[str, Any]:
         "actions": [
             install_check_or_skip(
                 "commitizen",
-                "commitizen not installed. Run: uv sync",
+                "commitizen not installed. Run: doit install_dev",
             )
             + "uv run cz changelog"
         ],
