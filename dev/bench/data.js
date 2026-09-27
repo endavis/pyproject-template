@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790528939362,
+  "lastUpdate": 1790528954608,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15281,6 +15281,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.321666563901134e-7",
             "extra": "mean: 1.8812745676552802 usec\nrounds: 30772"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d1d793d39f01dcc2faac67693b0a984cb9c9b07b",
+          "message": "fix: move the benchmark settings into addopts, where pytest-benchmark reads them (merges PR #898, addresses #879)\n\npytest-benchmark reads its settings only from command-line flags. The\n`[tool.pytest-benchmark]` table in pyproject.toml was never read, so every\nbenchmark run had GC on and no warmup although the table said otherwise\n(#879).\n\n- pyproject.toml: `--benchmark-disable-gc --benchmark-warmup=on` join\n  `addopts`, and the table is gone. Its `min_rounds = 5` was already the\n  plugin's default. The normal suite runs with `--benchmark-disable`: the\n  plugin then calls each benchmark once and ignores both flags.\n- tests/test_benchmark_settings.py: runs one real benchmark through the\n  project's config and checks the recorded options. It also fails if the\n  dead table comes back. The child pytest gets this run's environment minus\n  PYTEST_XDIST_*, PYTEST_ADDOPTS and COV_CORE_*. Under xdist,\n  PYTEST_XDIST_WORKER makes pytest-benchmark disable itself and refuse\n  --benchmark-only.\n- The perf-change skill (both copies) called the table inert. It now says\n  where the settings live, and its contract test pins the new sentence.\n\nWarmup makes an enabled run longer: the benchmark suite took 4.5s before and\n8.3s after, one run each on this machine. CI's benchmark history will show a\nstep at this commit.\n\nAddresses #879\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T18:08:37+01:00",
+          "tree_id": "756768711e5cac3d670b187fe02be53945a85ee5",
+          "url": "https://github.com/endavis/pyproject-template/commit/d1d793d39f01dcc2faac67693b0a984cb9c9b07b"
+        },
+        "date": 1790528952879,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8745999.39665699,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0988460622138138e-8",
+            "extra": "mean: 114.33799096558742 nsec\nrounds: 90327"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8915629.21143084,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0804851497676561e-8",
+            "extra": "mean: 112.16258284024278 nsec\nrounds: 92166"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5956050.817774099,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4238734762039524e-8",
+            "extra": "mean: 167.8964855396786 nsec\nrounds: 61577"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2134290.388610765,
+            "unit": "iter/sec",
+            "range": "stddev: 7.246074074189817e-8",
+            "extra": "mean: 468.5398038319012 nsec\nrounds: 186186"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 536531.7003987009,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4575935037933033e-7",
+            "extra": "mean: 1.8638227699442402 usec\nrounds: 56456"
           }
         ]
       }
