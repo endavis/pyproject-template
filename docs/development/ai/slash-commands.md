@@ -192,6 +192,14 @@ Triages a `doit security` (bandit) or `doit audit` (pip-audit) finding instead o
 
 **Workflow position:** whenever `doit check`, `doit security` or `doit audit` reports a finding. **Design note:** bandit's `# nosec` convention and pip-audit's advisory handling were unwritten before this skill (#834); it is the policy, not an application of one. `tests/test_security_triage_skill.py` enforces that both bodies take the same steps in the same order and carry the bare-nosec, skips and ignore-vuln gates word for word.
 
+### `/dead-code-triage [finding]`
+
+**Args:** the finding to triage — a `doit deadcode` output line, or a file and line number; empty triages every finding `doit deadcode` reports. **Sources:** `.claude/commands/dead-code-triage.md` (Claude), `.agents/skills/dead-code-triage/SKILL.md` (Codex, Antigravity, Copilot).
+
+Walks an agent through a vulture finding before it deletes code, hides it, or leaves a bug in place. `doit check` runs `doit deadcode` as one of its `task_dep`, so a finding blocks the check, and vulture cannot tell a genuine dead import from one an interface, a framework, or the type checker still needs. It reads `[tool.vulture]` in `pyproject.toml` for the configured threshold and the existing `ignore_names`/`ignore_decorators` exceptions, then branches on the finding's kind: checking string annotations, re-exports and side-effect imports before deleting an unused import; whether a caller or framework imposes an argument's signature before removing or `_`-prefixing it; and whether the statement before unreachable code exits too early before deleting the code after it.
+
+**Workflow position:** whenever `doit check` or `doit deadcode` reports a finding, or the user pastes one. **Design note:** every new `ignore_names` entry must carry a comment naming the reference vulture cannot see, the same shape as the entries already there. `tests/test_dead_code_triage_skill.py` enforces that both bodies take the same steps in the same order and carry the same early-exit and reason-comment gates word for word.
+
 ## Codex
 
 Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
@@ -212,6 +220,7 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 - `$python-version-bump` adds a newest supported Python version, or asks first and then raises the
   floor across all seven settings in one commit
 - `$security-triage` fixes or justifies each bandit and pip-audit finding, and stops to ask before a `skips` entry or an ignored advisory
+- `$dead-code-triage` triages a `doit deadcode` finding against `[tool.vulture]` in `pyproject.toml` — unused import, unused variable, or unreachable code — before fixing it, adding a documented exception, or asking
 
 **Config and safety:** `.codex/config.toml` still configures approvals and hook wiring for Codex. The shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` applies to Codex, and the approval-policy deny rules remain a secondary defense layer.
 
@@ -237,6 +246,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `python-version-bump` skill adds a newest supported Python version, or asks first and
   then raises the floor across all seven settings in one commit
 - The shared `security-triage` skill fixes or justifies each bandit and pip-audit finding, and stops to ask before a `skips` entry or an ignored advisory
+- The shared `dead-code-triage` skill triages a `doit deadcode` finding against `[tool.vulture]` in `pyproject.toml` — unused import, unused variable, or unreachable code — before fixing it, adding a documented exception, or asking
 
 **Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
@@ -296,17 +306,17 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 49 |
+| project entries Copilot lists | 50 |
 | from `.github/skills/` | 16 |
-| from `.agents/skills/` | 32 |
+| from `.agents/skills/` | 33 |
 | **from `.claude/commands/`** | **1** |
 
 Two reasons the number is one:
 
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
   none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
-- **Names collide and dedupe.** `add-dependency`, `checkpoint`, `deprecate-api`, `ghi-finalize`,
-  `multi-*`, `mutation-triage`, `property-tests`, `python-version-bump`, `restore`,
+- **Names collide and dedupe.** `add-dependency`, `checkpoint`, `dead-code-triage`, `deprecate-api`,
+  `ghi-finalize`, `multi-*`, `mutation-triage`, `property-tests`, `python-version-bump`, `restore`,
   `security-triage`, `template-migrate` and `template-sync` exist in `.agents/skills/` as well, and
   Copilot keeps one entry per name.
 
