@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790536287239,
+  "lastUpdate": 1790536458065,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15635,6 +15635,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.807060730242154e-7",
             "extra": "mean: 1.940371355631536 usec\nrounds: 54248"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c96c51a06bc0a86e6fa6aab5410b836c7bc95449",
+          "message": "docs: say which uv sync to run for development, since plain uv sync uninstalls the dev tools (merges PR #904, addresses #889)\n\nThe development tools, `doit` included, are the `dev` and `security` extras, and `uv sync`\nuninstalls every extra it is not asked for. The docs told developers to run a plain `uv sync`,\n`uv sync --dev` or `uv sync --extra security`, and each removes tools the reader is about to use.\n\nDevelopment setup is now `uv sync --all-extras --dev` for the first sync, because `doit` is not\ninstalled until it runs, and `doit install_dev` for every sync after that. Each setup section says\nwhy plain `uv sync` is wrong for a developer.\n\n- Setup sections: README.md, README.template.md, CONTRIBUTING.md, development.md,\n  installation.md, new-project.md.\n- AGENTS.md's \"Sync dependencies\" row, changed in place per ADR-9018.\n- extensions.md: every example installs with `doit install_dev`.\n- The security extra: CONTRIBUTING.md, doit-tasks-reference.md, release-and-automation.md,\n  SECURITY.md, and both copies of the add-dependency and security-triage skills.\n- doit-tasks-reference.md: `install` says it uninstalls the extras; `install_dev` no longer\n  claims to install the pre-commit hooks.\n- release-and-automation.md: \"Installation Options\" gave `uv sync --dev`, which installs no dev\n  tools here, as the standard setup.\n- The post-merge and post-checkout hooks run `uv sync --all-extras --dev`; basics.md and\n  development.md said `uv sync`.\n- tests/test_docs_dev_sync.py: every fenced `uv sync` passes `--all-extras` unless allowlisted\n  as a runtime sync, and no line suggests `uv sync --extra security` except to say never.\n- tests/test_security_triage_skill.py: the install-fix pin follows the skill to\n  `doit install_dev`.\n\nAddresses #889\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T20:13:41+01:00",
+          "tree_id": "f5b01186fc9baa2f259c5eefcaae8c5944a9aea7",
+          "url": "https://github.com/endavis/pyproject-template/commit/c96c51a06bc0a86e6fa6aab5410b836c7bc95449"
+        },
+        "date": 1790536456914,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8648928.17365714,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1409538951893799e-8",
+            "extra": "mean: 115.6212631116298 nsec\nrounds: 88567"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8831643.11964982,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1428781312856485e-8",
+            "extra": "mean: 113.22921300738095 nsec\nrounds: 93546"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5826113.629109778,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7391955771877987e-8",
+            "extra": "mean: 171.6410052498064 nsec\nrounds: 59239"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2108195.6045619557,
+            "unit": "iter/sec",
+            "range": "stddev: 8.021493888762272e-8",
+            "extra": "mean: 474.3392870358353 nsec\nrounds: 184843"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 541710.2493370613,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8093327896532316e-7",
+            "extra": "mean: 1.8460053159854153 usec\nrounds: 56584"
           }
         ]
       }
