@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790536458065,
+  "lastUpdate": 1790536615265,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15694,6 +15694,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8093327896532316e-7",
             "extra": "mean: 1.8460053159854153 usec\nrounds: 56584"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9d5c8f8ab325868561f1002ca72d0715aacc83b8",
+          "message": "fix: make doit's install hints name doit install_dev, which keeps the dev tools (merges PR #905, addresses #889)\n\nThe hints told the user to run `uv sync` (commit, bump, changelog) or `uv sync --extra security`\n(audit, security, licenses, sbom). `uv sync` uninstalls every extra it is not asked for, so the\nfirst removed commitizen instead of installing it, and the second removed the `dev` extra, `doit`\nincluded, the tool that printed the hint.\n\n- Every hint now says `Run: doit install_dev`, which runs `uv sync --all-extras --dev`.\n- install_check_or_skip's docstring example uses the new hint.\n- The word-for-word hint assertions in test_doit_git.py and test_doit_security.py change with the\n  hints.\n- TestInstallHints scans tools/doit/ and fails on any install_check_or_skip hint that does not end\n  in `Run: doit install_dev`, or is not a string literal it can read.\n\nAddresses #889\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-27T20:16:16+01:00",
+          "tree_id": "498e14e2e05baed7e80b3a29e522a5d3f5762e1c",
+          "url": "https://github.com/endavis/pyproject-template/commit/9d5c8f8ab325868561f1002ca72d0715aacc83b8"
+        },
+        "date": 1790536613263,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7879900.160475802,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4719619565810794e-8",
+            "extra": "mean: 126.90516118666386 nsec\nrounds: 90082"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8900909.309354583,
+            "unit": "iter/sec",
+            "range": "stddev: 1.483370805061235e-8",
+            "extra": "mean: 112.34807200529846 nsec\nrounds: 91660"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5471473.398775631,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5113501272570907e-8",
+            "extra": "mean: 182.76612662025795 nsec\nrounds: 56168"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1833653.9558373396,
+            "unit": "iter/sec",
+            "range": "stddev: 2.361359565016716e-7",
+            "extra": "mean: 545.3591703148531 nsec\nrounds: 198060"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 529302.3843362523,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9353174417037148e-7",
+            "extra": "mean: 1.8892792278916417 usec\nrounds: 55329"
           }
         ]
       }
