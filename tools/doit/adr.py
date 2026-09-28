@@ -124,7 +124,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
 
     try:
         # Open editor
-        console.print(f"[dim]Opening {editor}...[/dim]")
+        console.print(verbatim(f"Opening {editor}...", "dim"))
         result = subprocess.run([editor, temp_path])
 
         if result.returncode != 0:

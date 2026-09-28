@@ -14,6 +14,7 @@ Addresses issue #527. ``TestWorktree`` covers ``doit worktree`` (#854).
 from __future__ import annotations
 
 import io
+import os
 import re
 import subprocess
 from collections.abc import Callable, Iterator
@@ -39,6 +40,17 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 
 # FORCE_COLOR makes Rich color captured output, and the codes split substrings such as `[x]`.
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
+
+# Directory names Rich mangled as markup (#920): it dropped `[x]`, crashed on `[/x]`, dropped the
+# backslash before `[1]` and turned `:memo:` into an emoji. Windows refuses `:` in a file name.
+_PATH_NAMES = [
+    "[x]",
+    "[/x]",
+    r"x\[1]",
+    pytest.param(
+        ":memo:", marks=pytest.mark.skipif(os.name == "nt", reason="Windows refuses : in a name")
+    ),
+]
 
 
 class TestGitTaskGates:
@@ -270,6 +282,34 @@ class TestWorktree:
 
         assert exc.value.code == 1
         assert f"Not a valid branch name: {name}" in _ANSI.sub("", capsys.readouterr().out)
+
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_prints_the_paths_verbatim(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        name: str,
+    ) -> None:
+        """The checkout's path is text, not markup (#920).
+
+        git and uv are mocked, so the path never has to exist, and `:memo:` works on Windows too.
+        """
+        monkeypatch.setenv("COLUMNS", "1000")  # a long tmp_path must not wrap
+        root = tmp_path / name
+        with (
+            patch("tools.doit.git._main_checkout", return_value=root),
+            patch("tools.doit.git.subprocess.run", side_effect=_fake_git()),
+            patch("tools.doit.git.run_streamed"),
+        ):
+            self._create(self.BRANCH)
+
+        lines = _ANSI.sub("", capsys.readouterr().out).splitlines()
+        path = root / "worktrees" / self.BRANCH
+        assert f"Created {path} on {self.BRANCH}, from origin/main." in lines
+        assert f"  cd {path}" in lines
+        assert f"  cd {root}" in lines
+        assert f"  git worktree remove {path}" in lines
 
     @pytest.mark.parametrize("name", ["../escape", "/tmp/escape", "feat/../../escape"])
     def test_git_rejects_names_that_would_leave_worktrees_dir(self, name: str) -> None:
@@ -566,3 +606,34 @@ class TestRemoveMergedWorktree:
         assert path.is_dir()
         assert _has_branch(main_checkout, self.BRANCH)
         assert "git worktree remove failed" in out
+
+    @pytest.mark.parametrize("name", _PATH_NAMES)
+    def test_prints_a_removed_path_verbatim(self, main_checkout: Path, name: str) -> None:
+        """The path is text, not markup (#920)."""
+        path, head = _add_worktree(main_checkout, self.BRANCH, main_checkout / "worktrees" / name)
+
+        out = _ANSI.sub("", self._remove(path, self.BRANCH, head))
+
+        assert not path.exists()
+        assert f"Removed worktree {path}" in out.splitlines()
+
+    @pytest.mark.parametrize("name", _PATH_NAMES)
+    def test_prints_a_kept_path_verbatim(self, main_checkout: Path, name: str) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH, main_checkout / "worktrees" / name)
+        (path / "notes.md").write_text("local\n", encoding="utf-8")
+
+        out = _ANSI.sub("", self._remove(path, self.BRANCH, head))
+
+        assert path.is_dir()
+        assert f"Left {path} in place." in out
+
+    @pytest.mark.parametrize("name", _PATH_NAMES)
+    def test_prints_a_path_outside_worktrees_dir_verbatim(
+        self, main_checkout: Path, tmp_path: Path, name: str
+    ) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH, tmp_path / name)
+
+        out = _ANSI.sub("", self._remove(path, self.BRANCH, head))
+
+        assert path.is_dir()
+        assert f"{self.BRANCH} is checked out in {path}, which" in out

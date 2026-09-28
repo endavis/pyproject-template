@@ -14,9 +14,10 @@ prints as is.
 
 The scan cannot tell outside text from a task's own values, so it looks for the forms #900 found:
 a command's ``stdout`` or ``stderr``, the variable an ``except ... as`` clause binds, and the names
-the tasks give commit subjects, PR titles and ``git status`` output. Paths, label names and the
-user's own flags are outside its scope (#900); each task's own tests cover its flags (#907). No task
-uses ``escape()``, so none can fall back on it.
+the tasks give commit subjects, PR titles and ``git status`` output. It also looks for the names
+they give paths, label data and ``$EDITOR`` (#920). It matches names, so a new name for such text
+has to be added to ``_OUTSIDE_TEXT``. The user's own flags are outside its scope; each task's own
+tests cover them (#907). No task uses ``escape()``, so none can fall back on it.
 """
 
 from __future__ import annotations
@@ -34,9 +35,12 @@ DOIT_DIR = Path(__file__).resolve().parents[2] / "tools" / "doit"
 _RENDERING_CALLS = frozenset({"print", "log", "rule", "Panel", "fit"})
 # Keyword arguments that Panel also renders.
 _RENDERED_KEYWORDS = frozenset({"title", "subtitle"})
-# The names the tasks give text they did not write.
+# The names the tasks give text they did not write: command output, commit subjects and PR titles
+# (#900), then paths, label data and $EDITOR (#920).
 _OUTSIDE_TEXT = frozenset(
     {"stdout", "stderr", "line", "commit", "status", "pr_title", "merge_subject"}
+    | {"path", "worktree", "root", "file", "full_path", "item", "bashrc", "zshrc", "editor"}
+    | {"bash_completion", "zsh_completion", "name", "entry", "cmd"}
 )
 
 
@@ -166,6 +170,10 @@ def test_no_task_uses_markup_escape() -> None:
         "console.print(escape(status))",
         'console.print(stderr, style="red", markup=False)',
         'console.print(Text.from_markup(f"[red]{stderr}[/red]"))',
+        # A path, a label name and a command built from them (#920).
+        'console.print(f"[green]Created {path} on {branch}.[/green]")',
+        'console.print(f"[dim]= no change[/dim] {name}")',
+        "console.print(f\"[red]Command failed: {' '.join(cmd)}[/red]\")",
     ],
 )
 def test_the_scan_flags_outside_text_not_verbatim(source: str) -> None:
@@ -191,7 +199,8 @@ def test_the_scan_flags_outside_text_not_verbatim(source: str) -> None:
         """,
         'console.print(Panel("body", title=verbatim(pr_title)))',
         'print(f"[OK] {stderr}")',
-        'console.print(f"[green]Created {path} on {branch}.[/green]")',
+        'console.print(verbatim(f"Created {path} on {branch}.", "green"))',
+        'console.print(Text.assemble(verbatim("= no change", "dim"), verbatim(f" {name}")))',
         """
         for e in entries:
             console.print(f"[dim]{e}[/dim]")

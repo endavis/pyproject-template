@@ -2,6 +2,7 @@
 
 import io
 import json
+import os
 import re
 import subprocess
 from collections.abc import Callable
@@ -33,10 +34,12 @@ from tools.doit.github import (
     _is_transient_gh_error,
     _load_labels_file,
     _merged_head,
+    _open_editor_with_template,
     _parse_markdown_sections,
     _read_body_file,
     _reconcile_labels,
     _run_gh_with_retry,
+    _run_label_cmd,
     _validate_issue_content,
     _worktree_holding,
     task_env_create,
@@ -704,6 +707,107 @@ class TestLabelsSync:
         output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
         assert f"Labels file not found: {Path(name)}" in output
 
+    @pytest.mark.parametrize(
+        "name",
+        [
+            "[x].yml",
+            "[/x].yml",
+            r"x\[1].yml",
+            pytest.param(
+                ":memo:.yml",
+                marks=pytest.mark.skipif(os.name == "nt", reason="Windows refuses : in a name"),
+            ),
+        ],
+    )
+    def test_prints_a_loaded_files_path_verbatim(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        mock_subprocess: MagicMock,
+        name: str,
+    ) -> None:
+        """A `--file` the task has read is still the user's text, not markup (#920).
+
+        #907 printed a missing one as text but left the path of one that loads as markup.
+        """
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("COLUMNS", "1000")
+        path = Path(name)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("", encoding="utf-8")
+        self._run_task(file=name)
+        path.write_text("- name: foo\n  color: aaa111\n", encoding="utf-8")
+        self._register_list(mock_subprocess, [])
+        self._run_task(file=name, dry_run=True)
+
+        out = _plain(capsys.readouterr().out)
+        assert f"No labels defined in {name}; nothing to sync." in out
+        assert f"Loaded 1 label(s) from {name}" in out
+
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_reconcile_prints_label_names_verbatim(self, name: str) -> None:
+        """A label name from the file or from GitHub is text, not markup (#920).
+
+        Rich dropped `[x]`, crashed on `[/x]`, dropped the backslash before `[1]` and turned
+        `:memo:` into an emoji.
+        """
+        desired = [
+            {"name": f"new {name}", "color": "aaa111", "description": ""},
+            {"name": f"same {name}", "color": "bbb222", "description": ""},
+            {"name": f"changed {name}", "color": "ccc333", "description": ""},
+        ]
+        current = {
+            f"same {name}": {"name": f"same {name}", "color": "bbb222", "description": ""},
+            f"changed {name}": {"name": f"changed {name}", "color": "999999", "description": ""},
+            f"extra {name}": {"name": f"extra {name}", "color": "111111", "description": ""},
+        }
+        lines: list[str] = []
+        for prune in (False, True):
+            console = self._make_console()
+            _reconcile_labels(desired, current, prune=prune, dry_run=True, console=console)
+            lines += _plain(console.file.getvalue()).splitlines()  # type: ignore[attr-defined]
+
+        assert f"+ would create new {name} (color=aaa111)" in lines
+        assert f"= no change same {name}" in lines
+        assert f"~ would update changed {name} (color=ccc333)" in lines
+        assert f"? skipped extra {name} (not in file; use --prune to delete)" in lines
+        assert f"- would delete extra {name}" in lines
+
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_labels_file_errors_print_the_entry_verbatim(self, tmp_path: Path, name: str) -> None:
+        """Each error that quotes a labels-file entry prints it as text (#920)."""
+        errors = {
+            f"- color: '{name}'\n": f"(entry: {{'color': {name!r}}})",
+            f"- name: '{name}'\n  color: 5\n": (
+                f"Labels file entry '{name}' has a non-string 'color' (got int)."
+            ),
+            f"- name: '{name}'\n  description: 5\n": (
+                f"Labels file entry '{name}' has a non-string 'description' (got int)."
+            ),
+        }
+        for body, message in errors.items():
+            console = self._make_console()
+            with pytest.raises(SystemExit):
+                _load_labels_file(self._labels_file(tmp_path, body), console)
+
+            assert message in _plain(console.file.getvalue())  # type: ignore[attr-defined]
+
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_a_failed_label_command_is_printed_verbatim(self, name: str) -> None:
+        """The command carries a label's name and description, which are text (#920)."""
+        cmd = ["gh", "label", "create", name, "--color", "aaa111", "--description", name]
+        console = self._make_console()
+        error = subprocess.CalledProcessError(1, cmd, stderr="HTTP 422")
+        with (
+            patch("tools.doit.github._run_gh_with_retry", side_effect=error),
+            pytest.raises(SystemExit),
+        ):
+            _run_label_cmd(cmd, console)
+
+        lines = _plain(console.file.getvalue()).splitlines()  # type: ignore[attr-defined]
+        assert f"Command failed: {' '.join(cmd)}" in lines
+
     def test_color_comparison_case_insensitive(
         self, tmp_path: Path, mock_subprocess: MagicMock
     ) -> None:
@@ -1025,6 +1129,27 @@ class TestTaskEnvCreate:
             "repos/acme/widgets/environments/pypi",
         ]
 
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_prints_the_name_verbatim(
+        self, mock_subprocess: MagicMock, capsys: pytest.CaptureFixture[str], name: str
+    ) -> None:
+        """`--name` is the user's text, not markup, created or already there (#920)."""
+        check = ("gh", "api", f"repos/acme/widgets/environments/{name}")
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                check: {"returncode": 1, "stderr": "HTTP 404"},
+                ("gh", "api", "-X", "PUT"): {},
+            }
+        )
+        self._action()(name=name)
+        mock_subprocess.register({check: {"returncode": 0}})
+        self._action()(name=name)
+
+        lines = _plain(capsys.readouterr().out).splitlines()
+        assert f"✓ Created environment '{name}' in acme/widgets" in lines
+        assert f"Environment '{name}' already exists in acme/widgets — skipped" in lines
+
 
 class TestTaskEnvList:
     """Tests for the ``env_list`` doit task."""
@@ -1067,6 +1192,23 @@ class TestTaskEnvList:
             c for c in mock_subprocess.call_args_list if c.args[0][:4] == ["gh", "api", "-X", "PUT"]
         ]
         assert put_calls == []
+
+    def test_prints_the_names_verbatim(
+        self, mock_subprocess: MagicMock, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Environment names come from GitHub: text, not markup (#920)."""
+        names = sorted(["[x]", "[/x]", r"x\[1]", ":memo:"])
+        mock_subprocess.register(
+            {
+                ("gh", "repo", "view"): {"stdout": "acme/widgets\n"},
+                ("gh", "api", "repos/acme/widgets/environments"): {"stdout": "\n".join(names)},
+            }
+        )
+
+        self._action()()
+
+        lines = _plain(capsys.readouterr().out).splitlines()
+        assert [line for line in lines if line.startswith("  • ")] == [f"  • {n}" for n in names]
 
 
 class TestTaskPublishSetup:
@@ -1244,6 +1386,28 @@ class TestRunGhWithRetry:
 
         assert result.stdout == "ok"
         sleep_mock.assert_not_called()
+
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_prints_the_retried_command_verbatim(
+        self,
+        mock_subprocess: MagicMock,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+        name: str,
+    ) -> None:
+        """The command can name an environment, which is the user's text, not markup (#920)."""
+        monkeypatch.setattr(github_mod.time, "sleep", MagicMock())
+        monkeypatch.setattr(github_mod.random, "uniform", lambda *_: 0.0)
+        monkeypatch.setenv("DOIT_GH_RETRIES", "1")
+        monkeypatch.setenv("COLUMNS", "1000")
+        error = subprocess.CalledProcessError(1, ["gh"], stderr="HTTP 502 Bad Gateway")
+        mock_subprocess.register({("gh", "api"): error})
+        path = f"repos/acme/widgets/environments/{name}"
+
+        with pytest.raises(subprocess.CalledProcessError):
+            _run_gh_with_retry(["gh", "api", path, "--silent"], check=True)
+
+        assert f"Retry 1/1: gh api {path} (transient:" in _plain(capsys.readouterr().out)
 
     def test_success_after_one_transient_retry(
         self, mock_subprocess: MagicMock, monkeypatch: pytest.MonkeyPatch
@@ -2432,6 +2596,17 @@ class TestFinishBranchInWorktree:
         mock_local.assert_not_called()
         assert "in place" in console.file.getvalue()  # type: ignore[attr-defined]
 
+    @pytest.mark.parametrize("name", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_an_unmerged_pr_prints_the_worktree_path_verbatim(self, name: str) -> None:
+        """The path is text, not markup (#920)."""
+        worktree = self.WORKTREE.parent / name
+        console = self._console()
+        with patch("tools.doit.github._merged_head", return_value=None):
+            _finish_branch_in_worktree(42, "feat/1-x", worktree, console)
+
+        out = _plain(console.file.getvalue())  # type: ignore[attr-defined]
+        assert f"Left feat/1-x and its worktree {worktree} in place." in out
+
     def test_a_merged_pr_deletes_its_branch_everywhere(self) -> None:
         console = self._console()
         with (
@@ -2457,6 +2632,26 @@ class TestFinishBranchInWorktree:
             _finish_branch_in_worktree(42, "feat/1-x", self.WORKTREE, console)
 
         assert "Permission denied" in console.file.getvalue()  # type: ignore[attr-defined]
+
+
+class TestOpenEditorWithTemplate:
+    """The issue and PR editor."""
+
+    @pytest.mark.parametrize(
+        "editor", ["/opt/[x]/vi", "/opt/[/x]/vi", r"C:\tools\[1]\vi.exe", "/opt/:memo:/vi"]
+    )
+    def test_prints_the_editor_verbatim(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], editor: str
+    ) -> None:
+        """`$EDITOR` is the user's text, not markup (#920). It fails here, so nothing is read."""
+        monkeypatch.setenv("COLUMNS", "1000")
+        with (
+            patch("tools.doit.github._get_editor", return_value=editor),
+            patch("tools.doit.github.subprocess.run", return_value=MagicMock(returncode=1)),
+        ):
+            assert _open_editor_with_template("body") is None
+
+        assert f"Opening {editor}..." in _plain(capsys.readouterr().out).splitlines()
 
 
 class TestCurrentBranch:

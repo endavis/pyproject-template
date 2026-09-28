@@ -208,8 +208,11 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
     managed = root / WORKTREES_DIR
     if not worktree.resolve().is_relative_to(managed.resolve()):
         console.print(
-            f"[yellow]{branch} is checked out in {worktree}, which `doit worktree` did not "
-            "create. Left the worktree and the branch in place.[/yellow]",
+            verbatim(
+                f"{branch} is checked out in {worktree}, which `doit worktree` did not "
+                "create. Left the worktree and the branch in place.",
+                "yellow",
+            ),
             soft_wrap=True,
         )
         return
@@ -224,8 +227,11 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
             )
         if leftovers:
             console.print(
-                f"[yellow]Left {worktree} in place. `git worktree remove` refuses modified and "
-                "untracked files, and deletes ignored ones:[/yellow]",
+                verbatim(
+                    f"Left {worktree} in place. `git worktree remove` refuses modified and "
+                    "untracked files, and deletes ignored ones:",
+                    "yellow",
+                ),
                 soft_wrap=True,
             )
             for line in leftovers:
@@ -252,7 +258,7 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
             soft_wrap=True,
         )
         return
-    console.print(f"[green]Removed worktree {worktree}[/green]", soft_wrap=True)
+    console.print(verbatim(f"Removed worktree {worktree}", "green"), soft_wrap=True)
     _remove_empty_parents(worktree, managed)
 
     if tip and tip == merged_head:
@@ -331,7 +337,7 @@ def task_worktree() -> dict[str, Any]:
         except subprocess.CalledProcessError as e:
             console.print(verbatim(f"git worktree add failed: {(e.stderr or '').strip()}", "red"))
             sys.exit(1)
-        console.print(f"[green]Created {path} on {branch}, from origin/main.[/green]")
+        console.print(verbatim(f"Created {path} on {branch}, from origin/main.", "green"))
 
         env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
         # base.py defaults UV_CACHE_DIR to a relative path. Resolved here, before
@@ -348,7 +354,7 @@ def task_worktree() -> dict[str, Any]:
 
         console.print()
         console.print("[bold]Work there through uv run, which uses the worktree's .venv:[/bold]")
-        console.print(f"  cd {path}")
+        console.print(verbatim(f"  cd {path}"))
         console.print("  uv run doit check")
         console.print(
             "[dim]Never pass --active: it installs the worktree into the main .venv.[/dim]"
@@ -356,10 +362,10 @@ def task_worktree() -> dict[str, Any]:
         console.print(
             "[bold]Merge its PR from the main checkout, which removes the worktree:[/bold]"
         )
-        console.print(f"  cd {root}")
+        console.print(verbatim(f"  cd {root}"))
         console.print("  uv run doit pr_merge --pr=<number>")
         console.print("[bold]To remove it without merging:[/bold]")
-        console.print(f"  git worktree remove {path}")
+        console.print(verbatim(f"  git worktree remove {path}"))
 
     return {
         "actions": [create_worktree],
