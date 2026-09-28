@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790605247743,
+  "lastUpdate": 1790627409818,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16225,6 +16225,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.902444193899458e-8",
             "extra": "mean: 983.5308616520947 nsec\nrounds: 104450"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "44c29410cbecc6f23c40842dadd4c5a92e133c30",
+          "message": "chore: show the killed count and mutation score in the weekly mutation run (merges PR #927, addresses #878)\n\nThe Mutation results step ran `mutmut results`, which leaves killed\nmutants out unless --all is true. Its summary and the uploaded\nmutmut-results.txt held only the mutants not killed, so the run gave no\nkilled count and no mutation score.\n\nThe step now runs `mutmut results --all true`. The log still lists only\nthe mutants not killed, then counts each status and prints the score as\nci-cd-testing.md defines it: killed mutants as a percentage of all\nmutants generated. The score and the counts also go to the run's step\nsummary, and the artifact lists every mutant. A run that lists no\nmutants prints no percentage.\n\nThe new tests run the step against a uv stub that answers as mutmut 3.8\ndoes. doit mutate is unchanged; ci-cd-testing.md now names\n`mutmut results --all true` for the full list locally.\n\nAddresses #878\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T21:29:28+01:00",
+          "tree_id": "6ec2be12987ba839543690905d9aa8bc38632adf",
+          "url": "https://github.com/endavis/pyproject-template/commit/44c29410cbecc6f23c40842dadd4c5a92e133c30"
+        },
+        "date": 1790627408590,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8007669.616991734,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3259526844938905e-8",
+            "extra": "mean: 124.8802770131859 nsec\nrounds: 84653"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8597109.865585199,
+            "unit": "iter/sec",
+            "range": "stddev: 1.558029792965513e-8",
+            "extra": "mean: 116.31815989732391 nsec\nrounds: 90408"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5814457.060505049,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8943132290085265e-8",
+            "extra": "mean: 171.98510361226042 nsec\nrounds: 58439"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2107245.5161975822,
+            "unit": "iter/sec",
+            "range": "stddev: 7.365850991516292e-8",
+            "extra": "mean: 474.5531511698026 nsec\nrounds: 185529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 523077.1740703843,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1246414460213434e-7",
+            "extra": "mean: 1.9117637885407741 usec\nrounds: 54422"
           }
         ]
       }
