@@ -361,6 +361,18 @@ def task_release() -> dict[str, Any]:
             )
             sys.exit(1)
 
+        # Validate increment value before anything is pulled or checked (#917). cz takes
+        # MAJOR, MINOR or PATCH, and the task upper-cases the value, so any case passes.
+        if increment.upper() not in {"", "MAJOR", "MINOR", "PATCH"}:
+            console.print(
+                verbatim(
+                    f"❌ Error: Invalid increment value '{increment}'. "
+                    "Allowed values: MAJOR, MINOR, PATCH, in any case (or empty to auto-detect).",
+                    "bold red",
+                )
+            )
+            sys.exit(1)
+
         # prerelease on a tagless repo silently produces a production version
         # because cz has no anchor to bump from. Refuse loudly instead.
         if prerelease and not _repo_has_version_tags():
