@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790592663209,
+  "lastUpdate": 1790594730954,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15871,6 +15871,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7806750805838052e-7",
             "extra": "mean: 1.8637961685808924 usec\nrounds: 55854"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "497548efee4a421afec01eebe60aebb648af2745",
+          "message": "docs: describe the PR-based release flow, a working Python-version fix, and ci.yml's real jobs (merges PR #916, addresses #906)\n\nREADME.template.md and docs/usage/basics.md described a release that\ntags and pushes from main, with doit release_dev for pre-releases.\nThere is no release_dev task. doit release opens a release PR, with\n--prerelease=alpha|beta|rc for TestPyPI, and doit release_tag tags\nmain after the PR merges. Both now say so. Their pre-release examples\nwere SemVer (v1.0.0-alpha.1). Commitizen writes PEP 440 (v1.0.1a0),\nand testpypi.yml's tag patterns match only PEP 440 pre-releases.\n\ndocs/deployment/development.md ran uv python use, which uv does not\nhave. The fix now checks what .venv runs with uv run --no-sync, then\ninstalls the pinned version with uv python install. Finally it\nrebuilds .venv with uv sync --all-extras --dev, which replaces a\n.venv built on another version.\n\nci-cd-testing.md showed code-quality and security job samples that\nci.yml does not have, with type checking marked continue-on-error. A\ntable of ci.yml's jobs replaces them, and tests/test_ci_jobs_doc.py\nchecks it against ci.yml. The Checks row no longer says the test job\nruns doit test; it calls pytest directly.\n\nAddresses #906\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T12:24:42+01:00",
+          "tree_id": "65bd7599b0fc77e91293da4796cabb315e7fb711",
+          "url": "https://github.com/endavis/pyproject-template/commit/497548efee4a421afec01eebe60aebb648af2745"
+        },
+        "date": 1790594728366,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8782031.733802237,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8772360201270827e-8",
+            "extra": "mean: 113.86886660304103 nsec\nrounds: 85310"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8965927.982647866,
+            "unit": "iter/sec",
+            "range": "stddev: 1.204348603687308e-8",
+            "extra": "mean: 111.53335181091592 nsec\nrounds: 93633"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5492517.748519477,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8629007453744343e-8",
+            "extra": "mean: 182.06586592634184 nsec\nrounds: 60057"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2087946.0477249164,
+            "unit": "iter/sec",
+            "range": "stddev: 8.06243767729524e-8",
+            "extra": "mean: 478.93957848653594 nsec\nrounds: 198847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 521760.80912648496,
+            "unit": "iter/sec",
+            "range": "stddev: 2.002903726539351e-7",
+            "extra": "mean: 1.9165870308928867 usec\nrounds: 55054"
           }
         ]
       }
