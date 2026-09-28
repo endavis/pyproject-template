@@ -136,7 +136,7 @@ uv run doit release --prerelease=rc
 **What it does:**
 
 1. ✅ Verifies you're on the `main` branch
-2. ✅ Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
+2. ✅ Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
 3. ✅ Checks for uncommitted changes
 4. ✅ Pulls latest changes from remote
 5. ✅ **Runs governance validations** (merge commit format, issue links)

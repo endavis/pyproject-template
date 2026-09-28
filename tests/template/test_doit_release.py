@@ -864,14 +864,14 @@ class TestCreateReleasePrValidation:
         with pytest.raises(SystemExit):
             action(prerelease="gamma")
 
-    @pytest.mark.parametrize("increment", ["[x]", "[/x]", r"x\[1]"])
-    def test_prints_a_bracketed_increment_verbatim(
+    @pytest.mark.parametrize("increment", ["major", "Minor", "PATCH"])
+    def test_accepts_an_increment_in_any_case(
         self, monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str], increment: str
     ) -> None:
-        """``--increment`` is printed before cz checks it, so it prints as text (#907).
+        """The task upper-cases ``--increment`` for cz, so any case passes the check (#917).
 
-        Escaped, it still lost the backslash before `[1]` (#914). An emoji shortcode can't
-        reach this line: the task upper-cases the value, and Rich's shortcodes are lowercase.
+        A rejected value is printed by the check itself; see
+        ``TestCreateReleasePrGuards.test_prints_a_rejected_increment_verbatim``.
 
         Here the helper returns a marker command instead of raising, so the flow
         passes the print and stops at the cz call.
@@ -1126,6 +1126,47 @@ class TestCreateReleasePrGuards:
 
         assert exc.value.code == 1
         assert f"Invalid prerelease value '{value}'" in _ANSI.sub("", capsys.readouterr().out)
+
+    @pytest.mark.parametrize("value", ["minr", "micro", "1", "major minor"])
+    def test_rejects_an_unknown_increment_value(self, value: str) -> None:
+        """cz takes only MAJOR, MINOR or PATCH, so the task stops before it pulls (#917).
+
+        It used to pull and run `doit check` first, and only cz's own parser caught the value.
+        """
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="main\n", returncode=0),
+            ) as mock_run,
+            patch("tools.doit.release.run_streamed") as mock_streamed,
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()(increment=value)
+
+        assert exc.value.code == 1
+        assert [c.args[0] for c in mock_run.call_args_list] == [["git", "branch", "--show-current"]]
+        mock_streamed.assert_not_called()
+
+    @pytest.mark.parametrize("value", ["[x]", "[/x]", r"x\[1]", ":memo:"])
+    def test_prints_a_rejected_increment_verbatim(
+        self, capsys: pytest.CaptureFixture[str], value: str
+    ) -> None:
+        """The value is text, not markup (#907), and keeps its backslash and `:memo:` (#914).
+
+        The check prints it as typed. Before #917 it reached the `Forcing ... version bump`
+        line instead, upper-cased.
+        """
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="main\n", returncode=0),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()(increment=value)
+
+        assert exc.value.code == 1
+        assert f"Invalid increment value '{value}'" in _ANSI.sub("", capsys.readouterr().out)
 
     @pytest.mark.parametrize("value", ["alpha", "beta", "rc"])
     def test_accepts_the_documented_prerelease_values(self, value: str) -> None:
