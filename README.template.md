@@ -101,30 +101,30 @@ This project uses automated versioning and releases powered by `commitizen` and 
 - **Single Source of Truth:** The Git tag is the definitive version. `pyproject.toml` and `_version.py` are generated at build time from tags (no manual edits).
 - **Versioning Scheme:**
     - **Production:** Standard SemVer (e.g., `v1.0.0`).
-    - **Development:** SemVer Pre-release (e.g., `v1.0.0-alpha.1`, `v1.0.0-beta.0`).
+    - **Pre-release:** PEP 440, as commitizen writes it (e.g., `v1.0.1a0`, `v1.0.1b0`, `v1.0.1rc0`).
 
 ### Creating a Release
 
-**Production Release (PyPI):**
+A release goes through a pull request. Run both steps from `main`.
+
+**1. Open the release PR:**
 ```bash
-doit release
+doit release                     # Production release (PyPI)
+doit release --prerelease=alpha  # Pre-release (TestPyPI): alpha, beta or rc
 ```
 This automated task will:
 1.  Calculate the next version based on conventional commits.
-2.  Update `CHANGELOG.md`, merging any pre-release entries (commitizen `--merge-prerelease`).
-3.  Create a git tag (e.g., `v1.0.0`).
-4.  Push commits and tags to GitHub, triggering the `release` workflow.
+2.  Create a `release/v<version>` branch.
+3.  Update `CHANGELOG.md` on it, merging any pre-release entries (commitizen `--merge-prerelease`).
+4.  Push the branch and open a PR titled `release: v<version>`.
 
-**Development/Pre-release (TestPyPI):**
+**2. After the PR merges, tag the release:**
 ```bash
-doit release_dev              # Defaults to alpha
-doit release_dev --type beta  # Specify type (alpha, beta, rc)
+doit release_tag
 ```
-This automated task will:
-1.  Bump the version to the next pre-release (e.g., `v1.0.0-alpha.1`).
-2.  Update `CHANGELOG.md` for the prerelease.
-3.  Create a prerelease git tag (e.g., `v1.0.0-alpha.1`).
-4.  Push to GitHub, triggering the `testpypi` workflow.
+This tags `main` with `v<version>` and pushes the tag:
+- A production tag (e.g., `v1.0.0`) triggers the `release` workflow, which publishes to TestPyPI and then PyPI.
+- A pre-release tag (e.g., `v1.0.1a0`) triggers the `testpypi` workflow.
 
 ### Environment Variables
 
@@ -182,8 +182,8 @@ doit fmt_pyproject # Format pyproject.toml with pyproject-fmt
 
 # Version Management (Commitizen)
 doit commit        # Interactive commit with conventional format
-doit release       # Production release (commitizen-driven)
-doit release_dev   # Pre-release/TestPyPI (commitizen-driven)
+doit release       # Open a release PR (--prerelease=alpha|beta|rc for TestPyPI)
+doit release_tag   # Tag main after the release PR merges
 
 # Documentation
 doit docs_serve    # Serve docs locally with live reload
