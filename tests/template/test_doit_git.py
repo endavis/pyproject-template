@@ -14,6 +14,7 @@ Addresses issue #527. ``TestWorktree`` covers ``doit worktree`` (#854).
 from __future__ import annotations
 
 import io
+import re
 import subprocess
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -35,6 +36,9 @@ from tools.doit.git import (
 )
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# FORCE_COLOR makes Rich color captured output, and the codes split substrings such as `[x]`.
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
 
 class TestGitTaskGates:
@@ -247,6 +251,22 @@ class TestWorktree:
         assert exc.value.code == 1
         assert [cmd[1] for cmd in self._cmds(mock_run)] == ["check-ref-format"]
         mock_sync.assert_not_called()
+
+    @pytest.mark.parametrize("name", ["feat/1-[x]", "feat/1-[/x]"])
+    def test_prints_a_rejected_name_verbatim(
+        self,
+        mocks: tuple[MagicMock, MagicMock],
+        capsys: pytest.CaptureFixture[str],
+        name: str,
+    ) -> None:
+        """The name is text, not markup: Rich would drop `[x]` and crash on `[/x]` (#907)."""
+        mock_run, _ = mocks
+        mock_run.side_effect = _fake_git(valid_name=False)
+        with pytest.raises(SystemExit) as exc:
+            self._create(name)
+
+        assert exc.value.code == 1
+        assert f"Not a valid branch name: {name}" in _ANSI.sub("", capsys.readouterr().out)
 
     @pytest.mark.parametrize("name", ["../escape", "/tmp/escape", "feat/../../escape"])
     def test_git_rejects_names_that_would_leave_worktrees_dir(self, name: str) -> None:

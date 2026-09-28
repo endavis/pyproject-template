@@ -858,6 +858,37 @@ class TestCreateReleasePrValidation:
         with pytest.raises(SystemExit):
             action(prerelease="gamma")
 
+    @pytest.mark.parametrize("increment", ["[x]", "[/x]"])
+    def test_prints_a_bracketed_increment_verbatim(
+        self, monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str], increment: str
+    ) -> None:
+        """``--increment`` is printed before cz checks it, so it prints as text (#907).
+
+        Here the helper returns a marker command instead of raising, so the flow
+        passes the print and stops at the cz call.
+        """
+        from tools.doit.release import task_release
+
+        self._patch_precz_subprocess_calls(monkeypatch)
+        monkeypatch.setattr("tools.doit.release._build_cz_get_next_cmd", lambda *_: ["cz-next"])
+
+        def run(
+            cmd: list[str], *_args: object, **_kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
+            if cmd == ["cz-next"]:
+                raise _ReachedCzBuild
+            stdout = "main\n" if cmd[:3] == ["git", "branch", "--show-current"] else ""
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+        monkeypatch.setattr("tools.doit.release.subprocess.run", run)
+        action = task_release()["actions"][0]
+
+        with pytest.raises(_ReachedCzBuild):
+            action(increment=increment)
+
+        out = _ANSI.sub("", capsys.readouterr().out)
+        assert f"Forcing {increment.upper()} version bump" in out
+
 
 class TestGetPypiNameFromPyproject:
     """Tests for ``_get_pypi_name_from_pyproject`` (issue #478).
@@ -1066,6 +1097,23 @@ class TestCreateReleasePrGuards:
             _release_action()(prerelease=value)
 
         assert exc.value.code == 1
+
+    @pytest.mark.parametrize("value", ["[x]", "[/x]"])
+    def test_prints_a_rejected_prerelease_verbatim(
+        self, capsys: pytest.CaptureFixture[str], value: str
+    ) -> None:
+        """The value is text, not markup: Rich would drop `[x]` and crash on `[/x]` (#907)."""
+        with (
+            patch(
+                "tools.doit.release.subprocess.run",
+                return_value=MagicMock(stdout="main\n", returncode=0),
+            ),
+            pytest.raises(SystemExit) as exc,
+        ):
+            _release_action()(prerelease=value)
+
+        assert exc.value.code == 1
+        assert f"Invalid prerelease value '{value}'" in _ANSI.sub("", capsys.readouterr().out)
 
     @pytest.mark.parametrize("value", ["alpha", "beta", "rc"])
     def test_accepts_the_documented_prerelease_values(self, value: str) -> None:

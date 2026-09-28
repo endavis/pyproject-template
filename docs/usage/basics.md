@@ -496,7 +496,7 @@ def task_generate_client():
 8. **Document Parameters**: If using params, document them clearly
 9. **Validate Inputs**: Check that required files/configs exist before running
 10. **Provide Feedback**: Use Rich console or simple prints to show progress
-11. **Escape Outside Text**: Rich reads text in square brackets, such as `[tool.x]`, as markup. It drops an unknown tag and raises `MarkupError` on one like `[/tmp]`. So pass text your task did not write, such as a command's output or an exception, through `rich.markup.escape()` before it goes into a markup string. `tests/template/test_doit_markup_escaping.py` checks `tools/doit/` for this.
+11. **Escape Outside Text**: Rich reads text in square brackets, such as `[tool.x]`, as markup. It drops an unknown tag and raises `MarkupError` on one like `[/tmp]`. So pass text your task did not write, such as a command's output, an exception or a flag value the user typed, through `rich.markup.escape()` before it goes into a markup string. `tests/template/test_doit_markup_escaping.py` checks `tools/doit/` for command output and exceptions; each task's own tests cover its flag values.
 
 ### Example: Complete Custom Task
 

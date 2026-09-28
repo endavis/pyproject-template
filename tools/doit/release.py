@@ -354,7 +354,7 @@ def task_release() -> dict[str, Any]:
         allowed_prerelease = {"", "alpha", "beta", "rc"}
         if prerelease not in allowed_prerelease:
             console.print(
-                f"[bold red]❌ Error: Invalid prerelease value '{prerelease}'. "
+                f"[bold red]❌ Error: Invalid prerelease value '{escape(prerelease)}'. "
                 f"Allowed values: alpha, beta, rc (or empty for a production release).[/bold red]"
             )
             sys.exit(1)
@@ -432,7 +432,7 @@ def task_release() -> dict[str, Any]:
         try:
             get_next_cmd = _build_cz_get_next_cmd(increment, prerelease)
             if increment:
-                console.print(f"[dim]Forcing {increment.upper()} version bump[/dim]")
+                console.print(f"[dim]Forcing {escape(increment.upper())} version bump[/dim]")
             if prerelease:
                 console.print(f"[dim]Pre-release type: {prerelease}[/dim]")
             result = subprocess.run(

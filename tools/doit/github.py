@@ -350,7 +350,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
 
     path = Path(file_path)
     if not path.exists():
-        console.print(f"[red]File not found: {file_path}[/red]")
+        console.print(f"[red]File not found: {escape(file_path)}[/red]")
         return None
 
     try:
@@ -386,7 +386,7 @@ def task_issue() -> dict[str, Any]:
         console.print()
         console.print(
             Panel.fit(
-                f"[bold cyan]Creating {type} Issue[/bold cyan]",
+                f"[bold cyan]Creating {escape(type)} Issue[/bold cyan]",
                 border_style="cyan",
             )
         )
@@ -1284,7 +1284,7 @@ def _load_labels_file(path: Path, console: Console) -> list[dict[str, str]]:
         List of ``{"name": str, "color": str, "description": str}`` dicts.
     """
     if not path.exists():
-        console.print(f"[red]Labels file not found: {path}[/red]")
+        console.print(f"[red]Labels file not found: {escape(str(path))}[/red]")
         sys.exit(1)
 
     try:
