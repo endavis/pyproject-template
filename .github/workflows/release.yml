@@ -17,7 +17,7 @@ jobs:
 
   build:
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -76,7 +76,7 @@ jobs:
   publish-testpypi:
     name: Publish to TestPyPI
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: testpypi
     permissions:
       id-token: write
@@ -97,7 +97,7 @@ jobs:
   publish:
     name: Publish to PyPI
     needs: publish-testpypi
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     environment: pypi
     permissions:
       id-token: write
@@ -117,7 +117,7 @@ jobs:
   github-release:
     name: Create GitHub Release
     needs: publish
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: write
     steps:

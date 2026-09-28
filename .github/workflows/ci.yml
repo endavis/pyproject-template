@@ -22,7 +22,7 @@ concurrency:
 
 jobs:
   setup:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       matrix: ${{ steps.set-matrix.outputs.matrix }}
       oldest: ${{ steps.pv.outputs.oldest }}
@@ -65,12 +65,12 @@ jobs:
               echo 'matrix={"include":[]}' >> $GITHUB_OUTPUT
             else
               echo "Middle versions: $versions"
-              echo "matrix={\"os\":[\"ubuntu-latest\",\"windows-latest\",\"macos-latest\"],\"python-version\":[$versions]}" >> $GITHUB_OUTPUT
+              echo "matrix={\"os\":[\"ubuntu-26.04\",\"windows-latest\",\"macos-latest\"],\"python-version\":[$versions]}" >> $GITHUB_OUTPUT
             fi
           else
             # Bookend versions (oldest + newest)
             echo "Bookend versions: $oldest, $newest"
-            echo "matrix={\"os\":[\"ubuntu-latest\",\"windows-latest\",\"macos-latest\"],\"python-version\":[\"$oldest\",\"$newest\"]}" >> $GITHUB_OUTPUT
+            echo "matrix={\"os\":[\"ubuntu-26.04\",\"windows-latest\",\"macos-latest\"],\"python-version\":[\"$oldest\",\"$newest\"]}" >> $GITHUB_OUTPUT
           fi
 
   test:
@@ -111,15 +111,15 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run tests with coverage
-        if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest'
+        if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-26.04'
         run: uv run pytest -n auto --cov --cov-report=xml:tmp/coverage.xml --cov-report=term -v --ignore=tests/benchmarks/
 
       - name: Run tests
-        if: "!(matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest')"
+        if: "!(matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-26.04')"
         run: uv run pytest -n auto -v --ignore=tests/benchmarks/
 
       - name: Upload coverage to Codecov
-        if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-latest'
+        if: matrix.python-version == needs.setup.outputs.newest && matrix.os == 'ubuntu-26.04'
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           files: ./tmp/coverage.xml
@@ -132,7 +132,7 @@ jobs:
   docs:
     needs: setup
     if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
 
@@ -164,7 +164,7 @@ jobs:
   lint:
     needs: setup
     if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
 
@@ -211,7 +211,7 @@ jobs:
   ci-complete:
     if: always()
     needs: [setup, test, lint, docs]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check CI status
         run: |

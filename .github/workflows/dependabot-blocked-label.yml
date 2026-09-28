@@ -11,7 +11,7 @@ permissions:
 jobs:
   handle-blocked-label:
     name: Handle blocking label
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: >-
       github.event_name == 'pull_request_target' &&
       github.event.action == 'labeled' &&

@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   mutate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
       # As in ci.yml: no per-example deadline, so a slow runner cannot fail a

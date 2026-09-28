@@ -15,7 +15,7 @@ concurrency:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     env:
       UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
 
@@ -48,7 +48,8 @@ jobs:
         run: uv run doit check
 
       - name: Open or update failure issue
-        if: failure()
+        # Trial branch only (#892): a dispatch from this branch must not open a "failed on main" issue.
+        if: failure() && github.ref == 'refs/heads/main'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}

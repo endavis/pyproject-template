@@ -9,7 +9,7 @@ jobs:
   require-label:
     permissions:
       contents: read
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check for ready-to-merge label
         run: |

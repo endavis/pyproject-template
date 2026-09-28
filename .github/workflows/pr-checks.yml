@@ -11,7 +11,7 @@ permissions:
 jobs:
   validate-pr-title:
     name: Validate PR Title Format
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check PR title follows conventional commits
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
@@ -40,7 +40,7 @@ jobs:
 
   validate-issue-link:
     name: Validate Issue Link
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -114,7 +114,7 @@ jobs:
 
   validate-pr-description:
     name: Validate PR Description
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check PR description completeness
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0

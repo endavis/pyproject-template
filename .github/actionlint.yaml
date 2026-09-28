@@ -1,0 +1,5 @@
+# Trial branch only (#892): actionlint v1.7.12 does not know the GitHub-hosted
+# ubuntu-26.04 label yet, and rejects every runs-on line that names it.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04

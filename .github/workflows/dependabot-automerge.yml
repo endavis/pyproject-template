@@ -19,7 +19,7 @@ concurrency:
 jobs:
   evaluate:
     name: Evaluate dependabot PR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     if: >-
       github.event_name == 'pull_request_target' &&
       github.actor == 'dependabot[bot]'
@@ -111,7 +111,7 @@ jobs:
 
   enable-automerge:
     name: Enable auto-merge
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: evaluate
     if: needs.evaluate.outputs.qualifies == 'true'
     env:
@@ -185,7 +185,7 @@ jobs:
 
   comment-skip:
     name: Comment skip reason
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: evaluate
     if: needs.evaluate.outputs.qualifies == 'false'
     steps:
