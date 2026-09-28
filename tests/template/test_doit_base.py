@@ -7,11 +7,13 @@ import os
 import shlex
 import subprocess  # nosec B404 - test invokes bash deliberately to verify shell-snippet behaviour
 import sys
+from io import StringIO
 from pathlib import Path
 
 import pytest
+from rich.console import Console
 
-from tools.doit.base import install_check_or_skip, optional_root_files
+from tools.doit.base import install_check_or_skip, optional_root_files, verbatim
 
 
 def _touch(tmp_path: Path, rel: str) -> Path:
@@ -314,3 +316,30 @@ class TestInstallCheckOrSkipShellBehavior:
         assert result.returncode != 0
         # The "not installed" hint must NOT appear when the failure is real.
         assert "not installed" not in result.stdout
+
+
+class TestVerbatim:
+    """Tests for the ``verbatim`` helper (#914)."""
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            r"C:\notes\[1].md",  # a backslash before a [ that opens no tag
+            r"C:\notes\[Draft].md",
+            "[/x] and [red]",  # tags
+            ":memo: :sparkles:",  # emoji shortcodes
+        ],
+    )
+    def test_prints_the_text_as_given(self, text: str) -> None:
+        # color_system=None: no ANSI codes, even when FORCE_COLOR is set.
+        console = Console(file=StringIO(), soft_wrap=True, color_system=None)
+
+        console.print(verbatim(text, "red"))
+
+        assert console.file.getvalue() == f"{text}\n"  # type: ignore[attr-defined]
+
+    def test_applies_the_style_to_the_whole_text(self) -> None:
+        text = verbatim("Stderr: [x]", "bold red")
+
+        assert text.plain == "Stderr: [x]"
+        assert text.style == "bold red"

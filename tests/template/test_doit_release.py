@@ -553,11 +553,16 @@ class TestValidateMergeCommits:
         assert validate_merge_commits(self._silent_console()) is False
 
     def test_prints_a_bracketed_subject_verbatim(self, monkeypatch: MonkeyPatch) -> None:
-        """A subject is text, not markup: `[/tmp]` crashed `doit release` here (#900)."""
+        """A subject is text, not markup: `[/tmp]` crashed `doit release` here (#900).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:sparkles:` into an emoji
+        (#914).
+        """
+        windows = r"def5678 :sparkles: read C:\notes\[1].md"
         _, fake = self._fake_run(
             describe_returncode=0,
             describe_stdout="v0.1.0\n",
-            log_stdout="abc1234 Merge [tool.x] from [/tmp] into main",
+            log_stdout=f"abc1234 Merge [tool.x] from [/tmp] into main\n{windows}",
         )
         monkeypatch.setattr("tools.doit.release.subprocess.run", fake)
         console = self._silent_console()
@@ -565,6 +570,7 @@ class TestValidateMergeCommits:
         assert validate_merge_commits(console) is False
         output = console.file.getvalue()  # type: ignore[attr-defined]
         assert "abc1234 Merge [tool.x] from [/tmp] into main" in output
+        assert windows in output
 
 
 class TestExtractNextVersionFromCzOutput:
@@ -858,11 +864,14 @@ class TestCreateReleasePrValidation:
         with pytest.raises(SystemExit):
             action(prerelease="gamma")
 
-    @pytest.mark.parametrize("increment", ["[x]", "[/x]"])
+    @pytest.mark.parametrize("increment", ["[x]", "[/x]", r"x\[1]"])
     def test_prints_a_bracketed_increment_verbatim(
         self, monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str], increment: str
     ) -> None:
         """``--increment`` is printed before cz checks it, so it prints as text (#907).
+
+        Escaped, it still lost the backslash before `[1]` (#914). An emoji shortcode can't
+        reach this line: the task upper-cases the value, and Rich's shortcodes are lowercase.
 
         Here the helper returns a marker command instead of raising, so the flow
         passes the print and stops at the cz call.
@@ -1098,11 +1107,14 @@ class TestCreateReleasePrGuards:
 
         assert exc.value.code == 1
 
-    @pytest.mark.parametrize("value", ["[x]", "[/x]"])
+    @pytest.mark.parametrize("value", ["[x]", "[/x]", r"rc\[1]", ":memo:"])
     def test_prints_a_rejected_prerelease_verbatim(
         self, capsys: pytest.CaptureFixture[str], value: str
     ) -> None:
-        """The value is text, not markup: Rich would drop `[x]` and crash on `[/x]` (#907)."""
+        """The value is text, not markup: Rich would drop `[x]` and crash on `[/x]` (#907).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:memo:` into an emoji (#914).
+        """
         with (
             patch(
                 "tools.doit.release.subprocess.run",
@@ -1132,8 +1144,13 @@ class TestCreateReleasePrGuards:
         assert exc.value.code == 1
 
     def test_prints_uncommitted_paths_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
-        """`git status -s` output is text, not markup: a `[/x]` path crashed this guard (#900)."""
-        status = "?? docs/[draft].md\n?? [/x]"
+        """`git status -s` output is text, not markup: a `[/x]` path crashed this guard (#900).
+
+        Escaped, it still lost a backslash before `[1]` and turned `:memo:` into an emoji (#914).
+        git quotes a path holding a backslash, and doubles the backslash.
+        """
+        quoted = r'?? "notes\\[1].md"'
+        status = f"?? docs/[draft].md\n?? [/x]\n{quoted}\n?? :memo:.md"
 
         def fake_run(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
             stdout = status if cmd[:3] == ["git", "status", "-s"] else "main\n"
@@ -1150,6 +1167,8 @@ class TestCreateReleasePrGuards:
         assert "Uncommitted changes detected" in out
         assert "?? docs/[draft].md" in out
         assert "?? [/x]" in out
+        assert quoted in out
+        assert "?? :memo:.md" in out
 
 
 class TestCreateReleaseTag:

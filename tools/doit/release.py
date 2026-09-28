@@ -11,9 +11,8 @@ from typing import TYPE_CHECKING, Any
 
 from doit.tools import title_with_actions
 from rich.console import Console
-from rich.markup import escape
 
-from .base import UV_CACHE_DIR, run_streamed
+from .base import UV_CACHE_DIR, run_streamed, verbatim
 
 if TYPE_CHECKING:
     from rich.console import Console as ConsoleType
@@ -48,7 +47,7 @@ def validate_merge_commits(console: "ConsoleType") -> bool:
         merge_commits = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
     except Exception as e:
-        console.print(f"[yellow]⚠ Could not check merge commits: {escape(str(e))}[/yellow]")
+        console.print(verbatim(f"⚠ Could not check merge commits: {e}", "yellow"))
         return True  # Don't block on this check
 
     if not merge_commits or merge_commits == [""]:
@@ -71,7 +70,7 @@ def validate_merge_commits(console: "ConsoleType") -> bool:
     if invalid_commits:
         console.print("[bold red]❌ Invalid merge commit format found:[/bold red]")
         for commit in invalid_commits:
-            console.print(f"  [red]{escape(commit)}[/red]")
+            console.print(verbatim(f"  {commit}", "red"))
         console.print("\n[yellow]Expected format:[/yellow]")
         console.print("  <type>: <subject> (merges PR #XX, addresses #YY)")
         console.print("  <type>: <subject> (merges PR #XX)")
@@ -108,7 +107,7 @@ def validate_issue_links(console: "ConsoleType") -> bool:
         commits = result.stdout.strip().split("\n") if result.stdout.strip() else []
 
     except Exception as e:
-        console.print(f"[yellow]⚠ Could not check issue links: {escape(str(e))}[/yellow]")
+        console.print(verbatim(f"⚠ Could not check issue links: {e}", "yellow"))
         return True  # Don't block on this check
 
     if not commits or commits == [""]:
@@ -134,7 +133,7 @@ def validate_issue_links(console: "ConsoleType") -> bool:
     if commits_without_issues:
         console.print("[bold yellow]⚠ Warning: Some commits don't reference issues:[/bold yellow]")
         for commit in commits_without_issues[:5]:  # Show first 5
-            console.print(f"  [yellow]{escape(commit)}[/yellow]")
+            console.print(verbatim(f"  {commit}", "yellow"))
         if len(commits_without_issues) > 5:
             console.print(f"  [dim]...and {len(commits_without_issues) - 5} more[/dim]")
         console.print("\n[dim]This is a warning only - release can continue.[/dim]")
@@ -354,8 +353,11 @@ def task_release() -> dict[str, Any]:
         allowed_prerelease = {"", "alpha", "beta", "rc"}
         if prerelease not in allowed_prerelease:
             console.print(
-                f"[bold red]❌ Error: Invalid prerelease value '{escape(prerelease)}'. "
-                f"Allowed values: alpha, beta, rc (or empty for a production release).[/bold red]"
+                verbatim(
+                    f"❌ Error: Invalid prerelease value '{prerelease}'. "
+                    "Allowed values: alpha, beta, rc (or empty for a production release).",
+                    "bold red",
+                )
             )
             sys.exit(1)
 
@@ -388,7 +390,7 @@ def task_release() -> dict[str, Any]:
         ).stdout.strip()
         if status:
             console.print("[bold red]❌ Error: Uncommitted changes detected.[/bold red]")
-            console.print(escape(status))
+            console.print(verbatim(status))
             sys.exit(1)
 
         # Pull latest changes
@@ -432,7 +434,7 @@ def task_release() -> dict[str, Any]:
         try:
             get_next_cmd = _build_cz_get_next_cmd(increment, prerelease)
             if increment:
-                console.print(f"[dim]Forcing {escape(increment.upper())} version bump[/dim]")
+                console.print(verbatim(f"Forcing {increment.upper()} version bump", "dim"))
             if prerelease:
                 console.print(f"[dim]Pre-release type: {prerelease}[/dim]")
             result = subprocess.run(
@@ -448,14 +450,14 @@ def task_release() -> dict[str, Any]:
                     "[bold red]❌ Could not extract a version from "
                     "cz bump --get-next output.[/bold red]"
                 )
-                console.print(f"[red]Stdout: {escape(result.stdout)}[/red]")
-                console.print(f"[red]Stderr: {escape(result.stderr)}[/red]")
+                console.print(verbatim(f"Stdout: {result.stdout}", "red"))
+                console.print(verbatim(f"Stderr: {result.stderr}", "red"))
                 sys.exit(1)
             console.print(f"[green]✓ Next version: {next_version}[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Failed to determine next version.[/bold red]")
-            console.print(f"[red]Stdout: {escape(e.stdout)}[/red]")
-            console.print(f"[red]Stderr: {escape(e.stderr)}[/red]")
+            console.print(verbatim(f"Stdout: {e.stdout}", "red"))
+            console.print(verbatim(f"Stderr: {e.stderr}", "red"))
             sys.exit(1)
 
         # commitizen applies major_version_zero at every version, so from 1.0 on it
@@ -486,7 +488,7 @@ def task_release() -> dict[str, Any]:
             console.print(f"[green]✓ Created branch {branch_name}[/green]")
         except subprocess.CalledProcessError as e:
             console.print(f"[bold red]❌ Failed to create branch {branch_name}.[/bold red]")
-            console.print(f"[red]Stderr: {escape(e.stderr)}[/red]")
+            console.print(verbatim(f"Stderr: {e.stderr}", "red"))
             sys.exit(1)
 
         # Update changelog
@@ -688,17 +690,17 @@ def task_release_tag() -> dict[str, Any]:
             version = _extract_version_from_release_pr(pr_title, branch_name)
             if version is None:
                 console.print("[bold red]❌ Could not extract version from PR.[/bold red]")
-                console.print(f"[yellow]PR title: {escape(pr_title)}[/yellow]")
+                console.print(verbatim(f"PR title: {pr_title}", "yellow"))
                 console.print(f"[yellow]Branch: {branch_name}[/yellow]")
                 sys.exit(1)
 
             tag_name = f"v{version}"
-            console.print(f"[green]✓ Found release PR: {escape(pr_title)}[/green]")
+            console.print(verbatim(f"✓ Found release PR: {pr_title}", "green"))
             console.print(f"[green]✓ Version to tag: {tag_name}[/green]")
 
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Failed to find release PR.[/bold red]")
-            console.print(f"[red]Stderr: {escape(e.stderr)}[/red]")
+            console.print(verbatim(f"Stderr: {e.stderr}", "red"))
             sys.exit(1)
 
         # Check if tag already exists
@@ -723,7 +725,7 @@ def task_release_tag() -> dict[str, Any]:
             console.print(f"[green]✓ Tag {tag_name} created.[/green]")
         except subprocess.CalledProcessError as e:
             console.print("[bold red]❌ Failed to create tag.[/bold red]")
-            console.print(f"[red]Stderr: {escape(e.stderr)}[/red]")
+            console.print(verbatim(f"Stderr: {e.stderr}", "red"))
             sys.exit(1)
 
         # Push tag

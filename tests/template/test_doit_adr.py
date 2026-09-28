@@ -463,13 +463,14 @@ class TestCreatedAdrFrontmatter:
 class TestReadBodyFile:
     """`doit adr --body-file` reads through its own `_read_body_file`."""
 
-    @pytest.mark.parametrize("name", ["[x].md", "[/x].md"])
+    @pytest.mark.parametrize("name", ["[x].md", "[/x].md", r"C:\notes\[1].md", ":memo:.md"])
     def test_missing_file_keeps_a_bracketed_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
     ) -> None:
         """The path is the user's `--body-file` value, text rather than markup (#907).
 
-        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
+        Relative to tmp_path, so the only backslash before a `[` is the one a name spells out.
+        A Windows path keeps it, and `:memo:` stays text (#914).
         """
         monkeypatch.chdir(tmp_path)
         # color_system=None: no ANSI codes, even when FORCE_COLOR is set.

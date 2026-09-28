@@ -252,14 +252,17 @@ class TestWorktree:
         assert [cmd[1] for cmd in self._cmds(mock_run)] == ["check-ref-format"]
         mock_sync.assert_not_called()
 
-    @pytest.mark.parametrize("name", ["feat/1-[x]", "feat/1-[/x]"])
+    @pytest.mark.parametrize("name", ["feat/1-[x]", "feat/1-[/x]", r"feat/1-\[1]", "feat/:memo:"])
     def test_prints_a_rejected_name_verbatim(
         self,
         mocks: tuple[MagicMock, MagicMock],
         capsys: pytest.CaptureFixture[str],
         name: str,
     ) -> None:
-        """The name is text, not markup: Rich would drop `[x]` and crash on `[/x]` (#907)."""
+        """The name is text, not markup: Rich would drop `[x]` and crash on `[/x]` (#907).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:memo:` into an emoji (#914).
+        """
         mock_run, _ = mocks
         mock_run.side_effect = _fake_git(valid_name=False)
         with pytest.raises(SystemExit) as exc:

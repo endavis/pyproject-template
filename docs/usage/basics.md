@@ -496,7 +496,7 @@ def task_generate_client():
 8. **Document Parameters**: If using params, document them clearly
 9. **Validate Inputs**: Check that required files/configs exist before running
 10. **Provide Feedback**: Use Rich console or simple prints to show progress
-11. **Escape Outside Text**: Rich reads text in square brackets, such as `[tool.x]`, as markup. It drops an unknown tag and raises `MarkupError` on one like `[/tmp]`. So pass text your task did not write, such as a command's output, an exception or a flag value the user typed, through `rich.markup.escape()` before it goes into a markup string. `tests/template/test_doit_markup_escaping.py` checks `tools/doit/` for command output and exceptions; each task's own tests cover its flag values.
+11. **Print Outside Text Verbatim**: Rich reads a string as markup and replaces emoji shortcodes in it. It drops an unknown tag such as `[tool.x]` and raises `MarkupError` on one like `[/tmp]`. It also drops a backslash before a `[` that opens no tag, and turns `:memo:` into an emoji. `rich.markup.escape()` stops only the tags. So pass text your task did not write, such as a command's output, an exception or a flag value the user typed, through `verbatim()` from `tools/doit/base.py`, as in `console.print(verbatim(f"Stderr: {stderr}", "red"))`. It returns a `rich.text.Text`, which Rich prints as is. `tests/template/test_doit_markup_escaping.py` checks `tools/doit/` for command output and exceptions, and rejects `escape()`. Each task's own tests cover its flag values.
 
 ### Example: Complete Custom Task
 

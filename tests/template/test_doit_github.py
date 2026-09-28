@@ -295,10 +295,15 @@ class TestCheckBranchUpToDate:
         assert "def5678" in output
 
     def test_prints_bracketed_subjects_verbatim(self, mock_subprocess: MagicMock) -> None:
-        """A subject is text, not markup: `[tool.x]` vanished and `[/tmp]` crashed (#900)."""
+        """A subject is text, not markup: `[tool.x]` vanished and `[/tmp]` crashed (#900).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:bug:` into an emoji (#914).
+        """
         console = self._make_console()
+        windows = r"0f1e2d3 fix: :bug: in C:\notes\[1].md"
         log_out = (
             "56ad2af chore: move [tool.mutmut] to the keys\nabc1234 fix: strip [/tmp] prefix\n"
+            f"{windows}\n"
         )
         mock_subprocess.register(
             {
@@ -314,6 +319,7 @@ class TestCheckBranchUpToDate:
         output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
         assert "56ad2af chore: move [tool.mutmut] to the keys" in output
         assert "abc1234 fix: strip [/tmp] prefix" in output
+        assert windows in output
 
     def test_default_base_is_main(self, mock_subprocess: MagicMock) -> None:
         mock_subprocess.register(
@@ -420,12 +426,17 @@ class TestEnsureBranchPushed:
         assert "remote rejected" in output
 
     def test_prints_gits_rejection_verbatim(self, mock_subprocess: MagicMock) -> None:
-        """git's `[rejected]` marker vanished from this error, and `[/x]` crashed it (#900)."""
+        """git's `[rejected]` marker vanished from this error, and `[/x]` crashed it (#900).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:x:` into an emoji (#914).
+        """
         console = self._make_console()
+        hook = r"remote: hook C:\hooks\[1].ps1 failed :x:"
         stderr = (
             "To github.com:o/r.git\n"
             " ! [rejected]        feat/x -> feat/x (non-fast-forward)\n"
             "remote: see [/docs/push-rules] for details\n"
+            f"{hook}\n"
         )
         mock_subprocess.register(
             {
@@ -444,6 +455,7 @@ class TestEnsureBranchPushed:
         output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
         assert "! [rejected]        feat/x -> feat/x (non-fast-forward)" in output
         assert "remote: see [/docs/push-rules] for details" in output
+        assert hook in output
 
     def test_no_push_flag_and_no_upstream_aborts(self, mock_subprocess: MagicMock) -> None:
         """no_push=True with missing upstream → SystemExit(1), no push."""
@@ -672,14 +684,15 @@ class TestLabelsSync:
         assert excinfo.value.code == 1
         mock_subprocess.assert_not_called()
 
-    @pytest.mark.parametrize("name", ["[x].yml", "[/x].yml"])
+    @pytest.mark.parametrize("name", ["[x].yml", "[/x].yml", r"C:\notes\[1].yml", ":memo:.yml"])
     def test_missing_file_keeps_a_bracketed_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
     ) -> None:
         """The path is the user's `--file` value, text rather than markup (#907).
 
-        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
-        The message shows `Path(name)`, which Windows spells with a backslash.
+        Relative to tmp_path, so the only backslash before a `[` is the one a name spells out.
+        A Windows path keeps it, and `:memo:` stays text (#914). The message shows `Path(name)`,
+        which Windows spells `[/x].yml` with a backslash.
         """
         monkeypatch.chdir(tmp_path)
         console = Console(file=io.StringIO(), soft_wrap=True)
@@ -1540,13 +1553,35 @@ class TestReadBodyFile:
         assert _read_body_file(str(folder), console) is None
         assert "[draft]" in _plain(console.file.getvalue())  # type: ignore[attr-defined]
 
-    @pytest.mark.parametrize("name", ["[x].md", "[/x].md"])
+    def test_error_keeps_backslashes_and_shortcodes(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """Escaped, the error dropped the backslash before `[1]` and replaced `:memo:` (#914).
+
+        `read_text` is patched to raise the message, so the test does not depend on the OS.
+        """
+        body = tmp_path / "body.md"
+        body.write_text("x", encoding="utf-8")
+        message = r"cannot read C:\notes\[1].md :memo:"
+
+        def fail(*_args: object, **_kwargs: object) -> str:
+            raise OSError(message)
+
+        monkeypatch.setattr(Path, "read_text", fail)
+        console = Console(file=io.StringIO(), soft_wrap=True)
+
+        assert _read_body_file(str(body), console) is None
+        output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
+        assert f"Error reading file: {message}" in output
+
+    @pytest.mark.parametrize("name", ["[x].md", "[/x].md", r"C:\notes\[1].md", ":memo:.md"])
     def test_missing_file_keeps_a_bracketed_path(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
     ) -> None:
         """The path is the user's `--body-file` value, text rather than markup (#907).
 
-        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
+        Relative to tmp_path, so the only backslash before a `[` is the one a name spells out.
+        A Windows path keeps it, and `:memo:` stays text (#914).
         """
         monkeypatch.chdir(tmp_path)
         console = Console(file=io.StringIO(), soft_wrap=True)
@@ -1611,11 +1646,11 @@ class TestCreateIssue:
 
         assert exc.value.code == 1
 
-    @pytest.mark.parametrize("issue_type", ["[x]", "[/x]"])
+    @pytest.mark.parametrize("issue_type", ["[x]", "[/x]", r"bug\[1]", ":bug:"])
     def test_prints_a_bracketed_type_verbatim(
         self, capsys: pytest.CaptureFixture[str], issue_type: str
     ) -> None:
-        """The opening panel prints `--type` before it is validated (#907)."""
+        """The opening panel prints `--type` before it is validated (#907, #914)."""
         with pytest.raises(SystemExit) as exc:
             _issue_action()(type=issue_type, title="x", body="## Problem\ncontent")
 
@@ -2179,21 +2214,24 @@ class TestMergePr:
 
         assert "stack" not in capsys.readouterr().out
 
-    def test_prints_a_bracketed_title_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
-        """Rich read `[tool.x]` as a markup tag and dropped it from every line (#893)."""
+    @pytest.mark.parametrize("title", ["fix: read [tool.x]", r"fix: :bug: C:\x\[1]"])
+    def test_prints_a_bracketed_title_verbatim(
+        self, capsys: pytest.CaptureFixture[str], title: str
+    ) -> None:
+        """Rich read `[tool.x]` as a markup tag and dropped it from every line (#893).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:bug:` into an emoji (#914).
+        """
         with (
-            patch(
-                "tools.doit.github._get_pr_info",
-                return_value=self._pr(title="fix: read [tool.x]"),
-            ),
+            patch("tools.doit.github._get_pr_info", return_value=self._pr(title=title)),
             patch("tools.doit.github._run_gh_with_retry"),
         ):
             _merge_action()(pr="42")
 
         out = _plain(capsys.readouterr().out)
-        assert "PR #42: fix: read [tool.x]" in out
-        assert "  fix: read [tool.x] (merges PR #42, addresses #7)" in out
-        assert "Commit: fix: read [tool.x] (merges PR #42, addresses #7)" in out
+        assert f"PR #42: {title}" in out
+        assert f"  {title} (merges PR #42, addresses #7)" in out
+        assert f"Commit: {title} (merges PR #42, addresses #7)" in out
 
     def test_a_closing_tag_in_the_title_does_not_stop_the_merge(
         self, capsys: pytest.CaptureFixture[str]
@@ -2211,22 +2249,28 @@ class TestMergePr:
         mock_gh.assert_called_once()
         assert "PR #42: fix: strip [/tmp] prefix" in _plain(capsys.readouterr().out)
 
-    def test_prints_gh_stderr_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
-        """gh's error text is printed as text, not parsed as markup (#893)."""
+    @pytest.mark.parametrize(
+        "stderr", ["refusing [/x]: not mergeable", r"refusing C:\x\[1]: :x: not mergeable"]
+    )
+    def test_prints_gh_stderr_verbatim(
+        self, capsys: pytest.CaptureFixture[str], stderr: str
+    ) -> None:
+        """gh's error text is printed as text, not parsed as markup (#893).
+
+        Escaped, it still lost the backslash before `[1]` and turned `:x:` into an emoji (#914).
+        """
         with (
             patch("tools.doit.github._get_pr_info", return_value=self._pr()),
             patch(
                 "tools.doit.github._run_gh_with_retry",
-                side_effect=subprocess.CalledProcessError(
-                    1, ["gh"], stderr="refusing [/x]: not mergeable"
-                ),
+                side_effect=subprocess.CalledProcessError(1, ["gh"], stderr=stderr),
             ),
             pytest.raises(SystemExit) as exc,
         ):
             _merge_action()(pr="42")
 
         assert exc.value.code == 1
-        assert "refusing [/x]: not mergeable" in _plain(capsys.readouterr().out)
+        assert stderr in _plain(capsys.readouterr().out)
 
 
 class TestMergePrWithWorktree:
