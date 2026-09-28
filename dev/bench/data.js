@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790536615265,
+  "lastUpdate": 1790590863743,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15753,6 +15753,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9353174417037148e-7",
             "extra": "mean: 1.8892792278916417 usec\nrounds: 55329"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "08f0db618b3dce9479a83f80a104eb18cc47cd90",
+          "message": "fix: print rejected or unvalidated flag values in doit tasks as text, not Rich markup (merges PR #908, addresses #907)\n\n* fix: print rejected or unvalidated flag values in doit tasks as text, not Rich markup\n\nSeven prints put a flag value the task had not accepted into Rich markup. A `[x]` in the value\nvanished from the message, and a `[/x]` raised MarkupError, so the task crashed instead of saying\nwhat it rejected:\n\n- doit worktree --branch, after git check-ref-format rejects it (git.py)\n- doit release --prerelease, after the allowlist rejects it, and --increment, printed before cz\n  checks it (release.py)\n- doit issue --type, printed in the opening panel before it is validated (github.py)\n- --body-file not found, for doit issue and doit pr (github.py) and doit adr (adr.py)\n- doit labels_sync --file not found (github.py)\n\nEach value now goes through rich.markup.escape(). Each site gets a test with `[x]` and `[/x]`;\nthe release tests run with subprocess mocked. basics.md's \"Escape Outside Text\" now names flag\nvalues, and says the #900 guard covers command output and exceptions, not flags.\n\nAddresses #907\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\n* test: use relative bracketed paths so the #907 tests pass on Windows\n\nThe body-file and labels-file tests built their path as tmp_path / name.\nOn Windows that puts a separator backslash before the `[`. Rich's render\ndrops a backslash before a `[` that doesn't start a tag, so the [/x]\ncases failed on windows-latest. The body-file message, for example,\nended in `...brac1[\\x].md`.\n\nEach test now runs from tmp_path with a relative name, so no backslash\nprecedes the `[`. The assertions check the whole message. The labels\ntest expects Path(name), which Windows spells `[\\x].yml`.\n\nThe dropped backslash is a limit of escape() itself, and it affects\n#900's sites too. It is filed as #914.\n\nAddresses #907\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T11:20:20+01:00",
+          "tree_id": "a597508789a775638199553cc5ef80c49dc33846",
+          "url": "https://github.com/endavis/pyproject-template/commit/08f0db618b3dce9479a83f80a104eb18cc47cd90"
+        },
+        "date": 1790590862884,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8840653.207317004,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1242793851398769e-8",
+            "extra": "mean: 113.11381371371357 nsec\nrounds: 91150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8832693.219235914,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5466317786611046e-8",
+            "extra": "mean: 113.21575143379728 nsec\nrounds: 92756"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5354748.870625391,
+            "unit": "iter/sec",
+            "range": "stddev: 4.0631946593273436e-8",
+            "extra": "mean: 186.75012109077832 nsec\nrounds: 55826"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2046013.067985313,
+            "unit": "iter/sec",
+            "range": "stddev: 7.635879477388684e-8",
+            "extra": "mean: 488.7554315499505 nsec\nrounds: 197629"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 520676.7209796062,
+            "unit": "iter/sec",
+            "range": "stddev: 1.68532247618122e-7",
+            "extra": "mean: 1.9205775094353947 usec\nrounds: 54574"
           }
         ]
       }
