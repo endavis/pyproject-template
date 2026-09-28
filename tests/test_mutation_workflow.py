@@ -1,4 +1,4 @@
-"""Tests for the mutation-testing workflow (#873).
+"""Tests for the mutation-testing workflow (#873, #878).
 
 The workflow ran ``uv run mutmut run > ... || true``. mutmut 3 exits non-zero
 only when it cannot test the mutants at all, never for surviving mutants, so
@@ -8,11 +8,16 @@ stopped while collecting stats, checked no mutant, and reported success.
 The step's script is run for real here, with ``uv`` replaced by a stub that
 exits with the status under test. The assertions are on what the step does,
 not on how its script is spelled.
+
+The results step is run the same way, against a stub that lists canned
+``mutmut results`` output. The run used to show only the surviving mutants,
+so it gave neither the killed count nor a mutation score (#878).
 """
 
 from __future__ import annotations
 
 import os
+import re
 import stat
 import subprocess
 import sys
@@ -47,32 +52,88 @@ def _steps() -> list[dict[str, Any]]:
     return steps
 
 
-def _mutmut_run_index() -> int:
-    """Return the index of the one step that runs ``mutmut run``."""
-    indexes = [i for i, step in enumerate(_steps()) if "mutmut run" in step.get("run", "")]
-    assert len(indexes) == 1, f"expected one step running `mutmut run`, found {len(indexes)}"
+def _step_index(command: str) -> int:
+    """Return the index of the one step whose script runs *command*."""
+    indexes = [i for i, step in enumerate(_steps()) if command in step.get("run", "")]
+    assert len(indexes) == 1, f"expected one step running `{command}`, found {len(indexes)}"
     return indexes[0]
 
 
-def _run_step(tmp_path: Path, *, mutmut_status: int) -> subprocess.CompletedProcess[str]:
-    """Run the mutmut step's script with a ``uv`` stub that exits *mutmut_status*."""
+def _mutmut_run_index() -> int:
+    """Return the index of the one step that runs ``mutmut run``."""
+    return _step_index("mutmut run")
+
+
+def _run_script(
+    tmp_path: Path, index: int, uv_stub: str, env: dict[str, str] | None = None
+) -> subprocess.CompletedProcess[str]:
+    """Run step *index*'s script with *uv_stub* as ``uv`` and *env* added to its environment."""
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     uv = bin_dir / "uv"
-    uv.write_text(
-        f"#!/bin/bash\necho 'stub mutmut output'\nexit {mutmut_status}\n", encoding="utf-8"
-    )
+    uv.write_text(uv_stub, encoding="utf-8")
     uv.chmod(uv.stat().st_mode | stat.S_IEXEC)
     script = tmp_path / "step.sh"
-    script.write_text(_steps()[_mutmut_run_index()]["run"], encoding="utf-8")
+    script.write_text(_steps()[index]["run"], encoding="utf-8")
     return subprocess.run(
         ["bash", "-e", str(script)],
         cwd=tmp_path,
-        env={"PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}"},
+        env={"PATH": f"{bin_dir}{os.pathsep}{os.environ['PATH']}", **(env or {})},
         capture_output=True,
         text=True,
         timeout=10,
     )
+
+
+def _run_step(tmp_path: Path, *, mutmut_status: int) -> subprocess.CompletedProcess[str]:
+    """Run the mutmut step's script with a ``uv`` stub that exits *mutmut_status*."""
+    stub = f"#!/bin/bash\necho 'stub mutmut output'\nexit {mutmut_status}\n"
+    return _run_script(tmp_path, _mutmut_run_index(), stub)
+
+
+# `uv run mutmut results [--all BOOLEAN]`, answered as mutmut 3.8 does: killed
+# mutants are left out unless --all is true.
+_RESULTS_STUB = """\
+#!/bin/bash
+[ "$1 $2 $3" = "run mutmut results" ] || { echo "unexpected: uv $*" >&2; exit 2; }
+shift 3
+case " $* " in
+  *" --all true "* | *" --all=true "*) cat "$STUB_RESULTS" ;;
+  *) grep -v ': killed$' "$STUB_RESULTS" ;;
+esac
+"""
+
+# 74 of 80 killed, as in #878's local run. Two of the rest have "no tests", a
+# status with a space in it.
+_MUTANTS = {"killed": 74, "survived": 4, "no tests": 2}
+
+
+def _results_lines(counts: dict[str, int]) -> list[str]:
+    """Return ``mutmut results --all true`` lines for *counts* mutants of each status."""
+    statuses = [status for status, count in counts.items() for _ in range(count)]
+    return [
+        f"    package_name.core.x_greet__mutmut_{n}: {status}"
+        for n, status in enumerate(statuses, start=1)
+    ]
+
+
+def _run_results_step(tmp_path: Path, lines: list[str]) -> subprocess.CompletedProcess[str]:
+    """Run the results step's script with a ``uv`` stub whose mutmut lists *lines*."""
+    listing = tmp_path / "listing.txt"
+    listing.write_text("".join(f"{line}\n" for line in lines), encoding="utf-8")
+    env = {
+        "STUB_RESULTS": str(listing),
+        "GITHUB_STEP_SUMMARY": str(tmp_path / "step-summary.md"),
+    }
+    return _run_script(tmp_path, _step_index("mutmut results"), _RESULTS_STUB, env)
+
+
+def _summary(result: subprocess.CompletedProcess[str]) -> str:
+    """Return the log from the step's summary heading on."""
+    assert result.returncode == 0, result.stdout + result.stderr
+    _, found, summary = result.stdout.partition("=== Summary ===")
+    assert found, f"no summary in the log:\n{result.stdout}"
+    return summary
 
 
 @needs_bash
@@ -111,3 +172,56 @@ def test_results_are_shown_and_uploaded_after_a_failure() -> None:
 def test_property_tests_run_without_a_deadline() -> None:
     """The ``ci`` profile in tests/conftest.py has no deadline, as ci.yml relies on."""
     assert _job().get("env", {}).get("HYPOTHESIS_PROFILE") == "ci"
+
+
+@needs_bash
+def test_the_summary_counts_the_killed_mutants_and_gives_the_score(tmp_path: Path) -> None:
+    """Run 36314365254 summarized its results as `6 survived`, with no killed count (#878)."""
+    summary = _summary(_run_results_step(tmp_path, _results_lines(_MUTANTS)))
+
+    assert re.search(r"^\s*74 killed$", summary, re.MULTILINE), summary
+    assert re.search(r"^\s*4 survived$", summary, re.MULTILINE), summary
+    assert re.search(r"^\s*2 no tests$", summary, re.MULTILINE), summary
+    assert re.search(r"Mutation score: 92\.5%", summary), summary
+
+
+@needs_bash
+def test_the_uploaded_results_list_every_mutant(tmp_path: Path) -> None:
+    """The artifact used to hold only the mutants the tests did not kill."""
+    lines = _results_lines(_MUTANTS)
+    _summary(_run_results_step(tmp_path, lines))
+    (upload,) = [step for step in _steps() if "upload-artifact" in step.get("uses", "")]
+
+    uploaded = tmp_path / upload["with"]["path"]
+    assert uploaded.read_text(encoding="utf-8").splitlines() == lines
+
+
+@needs_bash
+def test_the_log_lists_only_the_mutants_not_killed(tmp_path: Path) -> None:
+    """Triage works from the survivors (#830), and 74 killed lines would bury them."""
+    lines = _results_lines(_MUTANTS)
+    result = _run_results_step(tmp_path, lines)
+
+    assert result.returncode == 0, result.stdout + result.stderr
+    printed = set(result.stdout.splitlines())
+    assert {line for line in lines if not line.endswith(": killed")} <= printed
+    assert not {line for line in lines if line.endswith(": killed")} & printed
+
+
+@needs_bash
+def test_the_run_page_shows_the_score_and_the_counts(tmp_path: Path) -> None:
+    """The step summary carries them, so a reader need not open the log."""
+    _summary(_run_results_step(tmp_path, _results_lines(_MUTANTS)))
+    page = (tmp_path / "step-summary.md").read_text(encoding="utf-8")
+
+    rows = dict(re.findall(r"^\|\s*([a-z ]+?)\s*\|\s*(\d+)\s*\|$", page, re.MULTILINE))
+    assert rows == {"killed": "74", "survived": "4", "no tests": "2"}
+    assert re.search(r"Mutation score: 92\.5%", page), page
+
+
+@needs_bash
+def test_no_mutants_gives_no_score(tmp_path: Path) -> None:
+    """A run that lists no mutants must neither divide by zero nor report a percentage."""
+    summary = _summary(_run_results_step(tmp_path, []))
+
+    assert "%" not in summary

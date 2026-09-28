@@ -762,7 +762,12 @@ doit mutate
 
 # View text results again without re-running
 uv run mutmut results
+
+# List every mutant with its status, killed ones included
+uv run mutmut results --all true
 ```
+
+`uv run mutmut results`, the last action of `doit mutate`, lists only the mutants the tests did not kill. `--all true` adds the killed ones. Neither prints a mutation score. The weekly CI run works the score out from the full list (see [CI Schedule](#ci-schedule)).
 
 ### Which Tests Run
 
@@ -785,7 +790,9 @@ The **mutation score** is the percentage of mutants killed out of total mutants 
 
 Mutation testing runs weekly in CI (Sunday midnight UTC) via the `.github/workflows/mutation.yml` workflow. It is informational: it does not block merges, and surviving mutants do not fail it. A run that cannot test the mutants at all does fail, and its **Mutation results** step prints mutmut's log. Until #873 the workflow ignored mutmut's exit code, and it stayed green through months of runs that checked no mutant.
 
-Results are uploaded as the `mutmut-results.txt` artifact with 90-day retention. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
+The **Mutation results** step lists the mutants the tests did not kill, counts the mutants of each status and prints the mutation score. The counts and the score also appear in the run's summary, at the top of its page in the Actions tab, so you need not open the log. Until #878 the run showed only the surviving mutants, and gave no killed count or score.
+
+Results are uploaded as the `mutmut-results.txt` artifact with 90-day retention. It lists every mutant with its status, killed ones included. You can also trigger the workflow manually from the Actions tab using the `workflow_dispatch` event.
 
 ## Benchmark Tracking
 
