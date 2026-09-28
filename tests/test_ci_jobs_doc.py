@@ -1,8 +1,9 @@
-"""The Pipeline Jobs table in ci-cd-testing.md matches the jobs in ci.yml (#906).
+"""ci-cd-testing.md describes the CI that ci.yml runs (#906, #922).
 
-The section showed samples of a `code-quality` job and a `security` job, which `ci.yml` does not
-have, and marked type checking `continue-on-error`, which no step in `ci.yml` sets. This compares
-the table's jobs with `ci.yml`'s, and the `doit` tasks each row names with the ones its job runs.
+The Pipeline Jobs section showed samples of a `code-quality` job and a `security` job, which
+`ci.yml` does not have, and marked type checking `continue-on-error`, which no step in `ci.yml`
+sets. This compares the table's jobs with `ci.yml`'s, and the `doit` tasks each row names with the
+ones its job runs.
 """
 
 from __future__ import annotations
@@ -68,3 +69,12 @@ def test_row_names_the_doit_tasks_its_job_runs(job: str) -> None:
         f"The {job} row in {CI_DOC.name} names {sorted(ROWS[job])}, "
         f"but that job in ci.yml runs {sorted(runs)}"
     )
+
+
+def test_the_doc_does_not_suggest_making_a_check_non_blocking() -> None:
+    """The Mypy Type Errors entry suggested `continue-on-error: true` (#922).
+
+    It did not say whether the key went on the step or on the `lint` job, which also runs the
+    security scan and the dependency audit. No job or step in ci.yml sets it.
+    """
+    assert "continue-on-error" not in CI_DOC.read_text(encoding="utf-8")
