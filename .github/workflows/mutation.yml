@@ -70,10 +70,40 @@ jobs:
             echo "=== Mutation run log ==="
             cat tmp/mutmut-run.log
           fi
-          uv run mutmut results 2>/dev/null | tee tmp/mutmut-results.txt || true
+          # mutmut leaves killed mutants out of its results unless asked with
+          # --all, and without them the run cannot give a score (#878).
+          uv run mutmut results --all true > tmp/mutmut-results.txt 2>/dev/null || true
+          echo "=== Mutants not killed ==="
+          grep -v ': killed$' tmp/mutmut-results.txt || true
+          counts=$(awk -F': ' 'NF {print $NF}' tmp/mutmut-results.txt | sort | uniq -c | sort -rn)
+          total=$(grep -c . tmp/mutmut-results.txt || true)
+          killed=$(grep -c ': killed$' tmp/mutmut-results.txt || true)
+          # The score as docs/development/ci-cd-testing.md defines it: killed
+          # mutants as a percentage of all mutants generated.
+          if [ "$total" -gt 0 ]; then
+            score="$(awk -v k="$killed" -v t="$total" 'BEGIN { printf "%.1f%%", 100 * k / t }') (${killed} of ${total} mutants killed)"
+          else
+            score="none, as mutmut listed no mutants"
+          fi
           echo ""
           echo "=== Summary ==="
-          awk -F': ' '{print $NF}' tmp/mutmut-results.txt 2>/dev/null | sort | uniq -c | sort -rn || true
+          if [ -n "$counts" ]; then
+            echo "$counts"
+          fi
+          echo "Mutation score: ${score}"
+          {
+            echo "### Mutation testing"
+            echo ""
+            echo "Mutation score: ${score}"
+            if [ -n "$counts" ]; then
+              echo ""
+              echo "| Status | Mutants |"
+              echo "| :--- | ---: |"
+              echo "$counts" | while read -r count status; do
+                echo "| ${status} | ${count} |"
+              done
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload mutation results
         if: always()
