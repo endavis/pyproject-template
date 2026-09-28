@@ -393,14 +393,20 @@ doit check
 
 #### Wrong Python Version
 
-```bash
-# Check current version
-python --version
+The project pins its Python version in `.python-version`, and uv builds `.venv` on that version. `python --version` reports whichever `python` comes first on your `PATH`, which may not be the project's.
 
-# Use uv to manage Python
-uv python install 3.12
-uv python use 3.12
+```bash
+# Check the version .venv runs; --no-sync keeps uv from rebuilding it first
+uv run --no-sync python --version
+
+# Install the pinned version, if uv doesn't have it yet
+uv python install
+
+# Rebuild .venv on the pinned version, with the dev tools
+uv sync --all-extras --dev
 ```
+
+`uv sync` replaces a `.venv` built on a different version. `.python-version` is tracked, so change it only when the project moves to a new Python version.
 
 #### Dependency Conflicts
 

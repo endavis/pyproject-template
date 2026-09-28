@@ -113,7 +113,7 @@ installs, and it already does what a hand-rolled `tests.yml` would:
 | :--- | :--- |
 | **Matrix** | derived from `.github/python-versions.json` via `.github/actions/python-versions`, not hardcoded — so a version policy change moves one file |
 | **Platforms** | `ubuntu-latest`, `windows-latest`, `macos-latest` |
-| **Checks** | `doit` tasks (`format_check`, `lint`, `type_check`, `test`), so CI and a local run cannot diverge |
+| **Checks** | the `lint` and `docs` jobs run `doit` tasks, so CI and a local run cannot diverge; the `test` job calls `pytest` directly (see [Pipeline Jobs](#pipeline-jobs)) |
 | **Coverage** | `package_name` **and** `tools/`, gated by `fail_under` in `pyproject.toml` |
 | **Actions** | pinned to commit SHAs with a `# vX.Y.Z` comment (see [Action pinning](#action-pinning-and-workflow-permissions)) |
 
@@ -124,38 +124,17 @@ versions, raw `pytest` instead of `doit`, and mutable action tags this project's
 
 ### Pipeline Jobs
 
-#### Code Quality Job
+`ci.yml` runs these jobs. Read the file for their steps.
 
-```yaml
-code-quality:
-  runs-on: ubuntu-latest
-  steps:
-    # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
-    - name: Install dependencies
-      run: uv sync --all-extras --dev
-    - name: Format check
-      run: uv run doit format_check
-    - name: Lint check
-      run: uv run doit lint
-    - name: Type check
-      run: uv run doit type_check
-      continue-on-error: true
-```
+| Job | What it runs |
+| :--- | :--- |
+| `setup` | Builds the test matrix from `.github/python-versions.json` |
+| `test` | `pytest`, called directly, on each OS and Python version in the matrix. The newest Python on `ubuntu-latest` also measures coverage. |
+| `lint` | `doit format_check`, `doit lint`, `doit type_check`, `doit security`, `doit spell_check` and `doit audit`, on `ubuntu-latest`. A failure in any of them fails CI. |
+| `docs` | `doit docs_build`, described below |
+| `ci-complete` | Fails if any other job failed; a skipped job passes. It gives the run one result to require ([ADR-9013](../decisions/9013-python-version-support-policy.md)). |
 
-#### Security Scan Job
-
-```yaml
-security:
-  runs-on: ubuntu-latest
-  steps:
-    # checkout + uv setup, SHA-pinned — see .github/workflows/ci.yml
-    - name: Install security tools
-      run: uv sync --all-extras --dev
-    - name: Run security audit
-      run: uv run doit audit
-    - name: Run bandit scan
-      run: uv run doit security
-```
+`tests/test_ci_jobs_doc.py` checks this table against `ci.yml`: the same jobs, and the same `doit` tasks in each.
 
 #### Documentation Build Job
 

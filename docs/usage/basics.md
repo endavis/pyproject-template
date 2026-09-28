@@ -657,25 +657,34 @@ This builds the documentation and pushes to the `gh-pages` branch. Enable GitHub
 
 ### Creating a Release
 
+A release goes through a pull request:
+
 ```bash
-# Create release tag, changelog, and push (commitizen-powered)
+# Open a release PR (commitizen-powered)
 uv run doit release
+uv run doit release --prerelease=alpha   # a pre-release for TestPyPI: alpha, beta or rc
+
+# After the PR merges: tag main and push the tag
+uv run doit release_tag
 ```
 
 Notes:
 - Versions are derived from git tags via hatch-vcs; no manual edits to `pyproject.toml` or `_version.py` are required.
-- Use `v*` tags for production (e.g., `v1.0.0`) and prerelease `v*` tags for TestPyPI (e.g., `v1.0.0-alpha.1`). The `doit release` task runs commitizen to choose the next version, update CHANGELOG.md, and create/push the stable `v*` tag; for TestPyPI, run `uv run doit release_dev` to compute the next prerelease via commitizen, create the prerelease `v*` tag, and push.
+- Production tags look like `v1.0.0`. Pre-release tags use the PEP 440 form commitizen writes, such as `v1.0.1a0`, and publish to TestPyPI only.
 
-This will:
+`doit release` will:
 1. Verify you're on the main branch
 2. Check for uncommitted changes
 3. Pull latest changes
-4. Run all quality checks
-5. Use commitizen to update CHANGELOG.md (merging prerelease entries) and create the `v*` git tag
-6. Push the tag
-7. Trigger CI/CD to build and publish to PyPI
+4. Validate merge-commit format and issue links
+5. Run all quality checks
+6. Use commitizen to choose the next version
+7. Create a `release/v<version>` branch and update CHANGELOG.md on it (merging prerelease entries)
+8. Push the branch and open a PR titled `release: v<version>`
 
-The release workflow includes:
+After the PR merges, `doit release_tag` tags `main` with `v<version>` and pushes the tag, which triggers CI/CD to build and publish.
+
+The release workflow, which a production tag triggers, includes:
 - ✅ All CI checks (format, lint, type check, tests)
 - ✅ Build package artifacts
 - ✅ Publish to TestPyPI (for verification)
