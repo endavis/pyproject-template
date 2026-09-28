@@ -859,7 +859,6 @@ This step is optional and not required for the core tracking functionality.
 - Add proper type annotations
 - Use `# type: ignore[error-code]` sparingly with explanatory comments
 - Review mypy output for specific issues
-- Consider making mypy non-blocking initially (`continue-on-error: true`)
 
 ### Tests Fail in CI but Pass Locally
 
