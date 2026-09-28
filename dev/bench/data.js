@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790594730954,
+  "lastUpdate": 1790597282206,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15930,6 +15930,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.002903726539351e-7",
             "extra": "mean: 1.9165870308928867 usec\nrounds: 55054"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0f8b0f2a4a279f9b69069497734f449366d2b71c",
+          "message": "fix: reject an invalid doit release --increment before pulling or running checks (merges PR #918, addresses #917)\n\ndoit release validated --prerelease right after the branch check, but\nnever validated --increment. A bad value such as --increment=minr got\nthrough the uncommitted-changes check, git pull, the governance\nvalidations and a full doit check. Only commitizen's own parser\nrejected it, and the task printed \"Forcing MINR version bump\" first.\n\nThe task now checks --increment next to --prerelease. It accepts\nMAJOR, MINOR or PATCH in any case, since it upper-cases the value for\ncz, and an empty value still auto-detects. For anything else it prints\nthe value as typed and exits 1.\n\ntest_prints_a_bracketed_increment_verbatim fed bracketed values to the\n\"Forcing ... version bump\" line, which they no longer reach. As agreed\nwith the maintainer, it moved to the rejection message as\ntest_prints_a_rejected_increment_verbatim. A new test checks that\nmajor, Minor and PATCH still reach that line.\n\nAddresses #917\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T13:07:21+01:00",
+          "tree_id": "64a30489ab6e6d2afc5010194035d96de219fdb3",
+          "url": "https://github.com/endavis/pyproject-template/commit/0f8b0f2a4a279f9b69069497734f449366d2b71c"
+        },
+        "date": 1790597281107,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8871269.510310587,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3993484146457574e-8",
+            "extra": "mean: 112.72343815479344 nsec\nrounds: 90662"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8609981.29755761,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4561659976985303e-8",
+            "extra": "mean: 116.14427086893552 nsec\nrounds: 90745"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5378049.812714477,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2975538595080292e-8",
+            "extra": "mean: 185.94100739562833 nsec\nrounds: 55301"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1975083.9398391875,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4316566148494787e-7",
+            "extra": "mean: 506.30759525158226 nsec\nrounds: 182816"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 526478.0910968521,
+            "unit": "iter/sec",
+            "range": "stddev: 1.696216108026922e-7",
+            "extra": "mean: 1.899414271763187 usec\nrounds: 55298"
           }
         ]
       }
