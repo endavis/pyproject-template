@@ -9,9 +9,8 @@ from typing import Any
 
 from doit.tools import title_with_actions
 from rich.console import Console
-from rich.markup import escape
 
-from .base import install_check_or_skip, run_streamed
+from .base import install_check_or_skip, run_streamed, verbatim
 
 # Where `doit worktree` creates worktrees, relative to the main checkout. It is
 # gitignored and skipped by the repo-wide test walkers. Not under tmp/, which
@@ -230,12 +229,12 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
                 soft_wrap=True,
             )
             for line in leftovers:
-                console.print(f"  {line}", soft_wrap=True, markup=False)
+                console.print(verbatim(f"  {line}"), soft_wrap=True)
         console.print("[bold]To remove it, from the main checkout:[/bold]")
-        console.print(f"  cd {root}", soft_wrap=True, markup=False)
-        console.print(f"  git worktree remove {worktree}", soft_wrap=True, markup=False)
+        console.print(verbatim(f"  cd {root}"), soft_wrap=True)
+        console.print(verbatim(f"  git worktree remove {worktree}"), soft_wrap=True)
         if tip and tip == merged_head:
-            console.print(f"  git branch -D {branch}", soft_wrap=True, markup=False)
+            console.print(verbatim(f"  git branch -D {branch}"), soft_wrap=True)
         elif tip:
             _warn_branch_moved(branch, tip, merged_head, console)
         return
@@ -249,7 +248,7 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
         )
     except subprocess.CalledProcessError as e:
         console.print(
-            f"[yellow]git worktree remove failed: {escape((e.stderr or '').strip())}[/yellow]",
+            verbatim(f"git worktree remove failed: {(e.stderr or '').strip()}", "yellow"),
             soft_wrap=True,
         )
         return
@@ -304,7 +303,7 @@ def task_worktree() -> dict[str, Any]:
             check=False,
         )
         if valid.returncode != 0:
-            console.print(f"[red]Not a valid branch name: {escape(branch)}[/red]")
+            console.print(verbatim(f"Not a valid branch name: {branch}", "red"))
             sys.exit(1)
 
         root = _main_checkout()
@@ -319,9 +318,7 @@ def task_worktree() -> dict[str, Any]:
             )
         except subprocess.CalledProcessError as e:
             stderr = (e.stderr or "").strip()
-            console.print(
-                f"[yellow]Warning: `git fetch origin main` failed: {escape(stderr)}[/yellow]"
-            )
+            console.print(verbatim(f"Warning: `git fetch origin main` failed: {stderr}", "yellow"))
             console.print("[yellow]Branching from the last fetched origin/main.[/yellow]")
 
         try:
@@ -332,7 +329,7 @@ def task_worktree() -> dict[str, Any]:
                 check=True,
             )
         except subprocess.CalledProcessError as e:
-            console.print(f"[red]git worktree add failed: {escape((e.stderr or '').strip())}[/red]")
+            console.print(verbatim(f"git worktree add failed: {(e.stderr or '').strip()}", "red"))
             sys.exit(1)
         console.print(f"[green]Created {path} on {branch}, from origin/main.[/green]")
 

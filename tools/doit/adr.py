@@ -12,9 +12,9 @@ from typing import TYPE_CHECKING, Any
 
 from doit.tools import title_with_actions
 from rich.console import Console
-from rich.markup import escape
 from rich.panel import Panel
 
+from tools.doit.base import verbatim
 from tools.doit.templates import (
     ADR_EDITOR_HEADER,
     FRONTMATTER_PATTERN,
@@ -166,13 +166,13 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
     """
     path = Path(file_path)
     if not path.exists():
-        console.print(f"[red]File not found: {escape(file_path)}[/red]")
+        console.print(verbatim(f"File not found: {file_path}", "red"))
         return None
 
     try:
         return path.read_text(encoding="utf-8")
     except Exception as e:
-        console.print(f"[red]Error reading file: {escape(str(e))}[/red]")
+        console.print(verbatim(f"Error reading file: {e}", "red"))
         return None
 
 

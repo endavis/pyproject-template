@@ -9,6 +9,7 @@ from pathlib import Path
 
 from rich.console import Console
 from rich.panel import Panel
+from rich.text import Text
 
 # Configuration
 DOIT_CONFIG = {
@@ -32,6 +33,27 @@ def success_message() -> None:
         )
     )
     console.print()
+
+
+def verbatim(text: str, style: str = "") -> Text:
+    """Wrap text a task did not write, so the console prints it exactly as given.
+
+    Rich reads a ``str`` passed to ``console.print`` or ``Panel`` as markup, and replaces
+    emoji shortcodes such as ``:memo:``. ``rich.markup.escape()`` only stops a ``[`` from
+    opening a tag. Rich still drops a backslash before a ``[`` that does not open one, and
+    still replaces the shortcodes (#914). A ``Text`` is neither parsed nor replaced.
+
+    Use it for command output, exceptions, commit subjects, PR titles, and paths or flag
+    values from the user.
+
+    Args:
+        text: The text to print.
+        style: A Rich style for the whole text, such as ``"red"`` or ``"bold cyan"``.
+
+    Returns:
+        ``text`` as a ``Text`` with ``style``.
+    """
+    return Text(text, style=style)
 
 
 def optional_root_files(*names: str) -> str:
