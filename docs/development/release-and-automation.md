@@ -80,7 +80,8 @@ uv run doit release [--prerelease=alpha|beta|rc] [--increment=MAJOR|MINOR|PATCH]
 uv run doit release_tag
 ```
 
-Both commands must be run from `main` with a clean working tree.
+Both commands must be run from `main`. `doit release` also needs a clean
+working tree.
 `--prerelease` and `--increment` can be combined (e.g.
 `doit release --prerelease=alpha --increment=minor` forces a pre-release of
 the chosen bump type — see [issue #475](https://github.com/endavis/pyproject-template/issues/475)).

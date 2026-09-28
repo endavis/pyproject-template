@@ -907,14 +907,15 @@ doit release --prerelease=alpha --increment=minor  # 1.0.0 → 1.1.0a0
 ```
 
 **What it does:**
-1. Verifies you're on `main` with a clean working tree
-2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
-3. Pulls latest changes
-4. Runs governance validations (merge commit format, issue links)
-5. Runs all quality checks (`doit check`)
-6. Asks commitizen for the next version (`cz bump --get-next`)
-7. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
-8. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
+1. Verifies you're on `main`
+2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
+3. Checks for uncommitted changes
+4. Pulls latest changes
+5. Runs governance validations (merge commit format, issue links)
+6. Runs all quality checks (`doit check`)
+7. Asks commitizen for the next version (`cz bump --get-next`)
+8. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
+9. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
 
 **Options:**
 - `--increment`: Force `MAJOR`, `MINOR`, or `PATCH` bump (auto-detects if empty).

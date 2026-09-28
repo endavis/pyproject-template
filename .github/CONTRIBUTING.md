@@ -525,15 +525,16 @@ See [issue #475](https://github.com/endavis/pyproject-template/issues/475).
 
 **What `doit release` does:**
 
-1. Verifies you're on `main` with a clean working tree
-2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`)
-3. Pulls latest changes from remote
-4. Validates merge commit format (governance check)
-5. Validates issue links in commits
-6. Runs all checks (`doit check`)
-7. Determines the next version using commitizen (`cz bump --get-next`)
-8. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
-9. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
+1. Verifies you're on `main`
+2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
+3. Checks for uncommitted changes
+4. Pulls latest changes from remote
+5. Validates merge commit format (governance check)
+6. Validates issue links in commits
+7. Runs all checks (`doit check`)
+8. Determines the next version using commitizen (`cz bump --get-next`)
+9. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
+10. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
 
 **What `doit release_tag` does:**
 
