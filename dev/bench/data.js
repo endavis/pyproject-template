@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790604834400,
+  "lastUpdate": 1790604886805,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16048,6 +16048,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.494208979742748e-7",
             "extra": "mean: 1.389555645536222 usec\nrounds: 79771"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3bd9029975507daf60162d359ba941bd576ef34c",
+          "message": "fix: print paths and label names in doit tasks as text, not Rich markup (merges PR #924, addresses #920)\n\n#900 and #907 stopped the doit tasks from printing command output,\nexceptions, commit subjects, PR titles and flag values as markup, and\n#914 moved all of it through verbatim(). Paths and label data still\nreached Rich as markup inside f-strings. A [x] in them vanished, a [/x]\nraised MarkupError, a backslash before [ was dropped, and :memo:\nbecame an emoji.\n\nThese now print through verbatim(), or Text.assemble() where only part\nof the line is styled:\n\n- worktree and checkout paths in doit worktree and doit pr_merge;\n- the labels file path, label names, labels-file entries and the gh\n  label command built from them in doit labels_sync;\n- environment names in doit env_create and doit env_list, and the\n  command the gh retry message quotes, which can hold one;\n- $EDITOR in the issue, PR and ADR editors;\n- the paths doit cleanup removes, and the shell config and completion\n  script paths in doit completions_install.\n\nThe markup guard in test_doit_markup_escaping.py now also looks for\nthe names these values go by. Its example of a path it must pass is\nnow one it must flag.\n\nAddresses #920\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T15:14:05+01:00",
+          "tree_id": "b7153d470be95d698b7a3d9938de2a0b6a1e23b0",
+          "url": "https://github.com/endavis/pyproject-template/commit/3bd9029975507daf60162d359ba941bd576ef34c"
+        },
+        "date": 1790604885338,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8044986.496280802,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1886995156358455e-8",
+            "extra": "mean: 124.3010165973927 nsec\nrounds: 83809"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8521123.115969067,
+            "unit": "iter/sec",
+            "range": "stddev: 2.289856398405829e-8",
+            "extra": "mean: 117.35542209523335 nsec\nrounds: 92337"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5434438.125998688,
+            "unit": "iter/sec",
+            "range": "stddev: 4.1914000933030264e-8",
+            "extra": "mean: 184.0116635454801 nsec\nrounds: 58201"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2006086.249994017,
+            "unit": "iter/sec",
+            "range": "stddev: 8.132553969877527e-8",
+            "extra": "mean: 498.4830537585224 nsec\nrounds: 188680"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 514387.3603766121,
+            "unit": "iter/sec",
+            "range": "stddev: 2.894903959600278e-7",
+            "extra": "mean: 1.944060210320571 usec\nrounds: 54964"
           }
         ]
       }
