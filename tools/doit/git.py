@@ -304,7 +304,7 @@ def task_worktree() -> dict[str, Any]:
             check=False,
         )
         if valid.returncode != 0:
-            console.print(f"[red]Not a valid branch name: {branch}[/red]")
+            console.print(f"[red]Not a valid branch name: {escape(branch)}[/red]")
             sys.exit(1)
 
         root = _main_checkout()

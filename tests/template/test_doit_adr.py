@@ -8,12 +8,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
+from rich.console import Console
 
 from tools.doit import adr as adr_module
 from tools.doit.adr import (
     TEMPLATE_SERIES_FLOOR,
     _get_next_adr_number,
     _is_placeholder_content,
+    _read_body_file,
     _title_to_slug,
     _validate_adr_content,
 )
@@ -456,3 +458,22 @@ class TestCreatedAdrFrontmatter:
         assert meta["title"] == "ADR-9001: Use Redis"
         assert meta["description"] == "Cache in Redis"
         assert isinstance(meta["date"], date)
+
+
+class TestReadBodyFile:
+    """`doit adr --body-file` reads through its own `_read_body_file`."""
+
+    @pytest.mark.parametrize("name", ["[x].md", "[/x].md"])
+    def test_missing_file_keeps_a_bracketed_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+    ) -> None:
+        """The path is the user's `--body-file` value, text rather than markup (#907).
+
+        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
+        """
+        monkeypatch.chdir(tmp_path)
+        # color_system=None: no ANSI codes, even when FORCE_COLOR is set.
+        console = Console(file=StringIO(), soft_wrap=True, color_system=None)
+
+        assert _read_body_file(name, console) is None
+        assert f"File not found: {name}" in console.file.getvalue()  # type: ignore[attr-defined]

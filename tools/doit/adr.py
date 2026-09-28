@@ -166,7 +166,7 @@ def _read_body_file(file_path: str, console: "ConsoleType") -> str | None:
     """
     path = Path(file_path)
     if not path.exists():
-        console.print(f"[red]File not found: {file_path}[/red]")
+        console.print(f"[red]File not found: {escape(file_path)}[/red]")
         return None
 
     try:

@@ -672,6 +672,25 @@ class TestLabelsSync:
         assert excinfo.value.code == 1
         mock_subprocess.assert_not_called()
 
+    @pytest.mark.parametrize("name", ["[x].yml", "[/x].yml"])
+    def test_missing_file_keeps_a_bracketed_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+    ) -> None:
+        """The path is the user's `--file` value, text rather than markup (#907).
+
+        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
+        The message shows `Path(name)`, which Windows spells with a backslash.
+        """
+        monkeypatch.chdir(tmp_path)
+        console = Console(file=io.StringIO(), soft_wrap=True)
+
+        with pytest.raises(SystemExit) as excinfo:
+            _load_labels_file(Path(name), console)
+
+        assert excinfo.value.code == 1
+        output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
+        assert f"Labels file not found: {Path(name)}" in output
+
     def test_color_comparison_case_insensitive(
         self, tmp_path: Path, mock_subprocess: MagicMock
     ) -> None:
@@ -1521,6 +1540,21 @@ class TestReadBodyFile:
         assert _read_body_file(str(folder), console) is None
         assert "[draft]" in _plain(console.file.getvalue())  # type: ignore[attr-defined]
 
+    @pytest.mark.parametrize("name", ["[x].md", "[/x].md"])
+    def test_missing_file_keeps_a_bracketed_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+    ) -> None:
+        """The path is the user's `--body-file` value, text rather than markup (#907).
+
+        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
+        """
+        monkeypatch.chdir(tmp_path)
+        console = Console(file=io.StringIO(), soft_wrap=True)
+
+        assert _read_body_file(name, console) is None
+        output = _plain(console.file.getvalue())  # type: ignore[attr-defined]
+        assert f"File not found: {name}" in output
+
 
 def _issue_action() -> Callable[..., None]:
     """Return the `create_issue` action that `doit issue` runs."""
@@ -1576,6 +1610,17 @@ class TestCreateIssue:
             _issue_action()(type="not-a-type", title="x", body="## Problem\ncontent")
 
         assert exc.value.code == 1
+
+    @pytest.mark.parametrize("issue_type", ["[x]", "[/x]"])
+    def test_prints_a_bracketed_type_verbatim(
+        self, capsys: pytest.CaptureFixture[str], issue_type: str
+    ) -> None:
+        """The opening panel prints `--type` before it is validated (#907)."""
+        with pytest.raises(SystemExit) as exc:
+            _issue_action()(type=issue_type, title="x", body="## Problem\ncontent")
+
+        assert exc.value.code == 1
+        assert f"Creating {issue_type} Issue" in _plain(capsys.readouterr().out)
 
     def test_missing_body_file_exits(self, tmp_path: Path) -> None:
         with pytest.raises(SystemExit) as exc:
