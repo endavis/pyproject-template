@@ -464,10 +464,16 @@ class TestReadBodyFile:
     """`doit adr --body-file` reads through its own `_read_body_file`."""
 
     @pytest.mark.parametrize("name", ["[x].md", "[/x].md"])
-    def test_missing_file_keeps_a_bracketed_path(self, tmp_path: Path, name: str) -> None:
-        """The path is the user's `--body-file` value, text rather than markup (#907)."""
+    def test_missing_file_keeps_a_bracketed_path(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch, name: str
+    ) -> None:
+        """The path is the user's `--body-file` value, text rather than markup (#907).
+
+        Relative to tmp_path, so on Windows no separator backslash precedes the `[`.
+        """
+        monkeypatch.chdir(tmp_path)
         # color_system=None: no ANSI codes, even when FORCE_COLOR is set.
         console = Console(file=StringIO(), soft_wrap=True, color_system=None)
 
-        assert _read_body_file(str(tmp_path / name), console) is None
-        assert name in console.file.getvalue()  # type: ignore[attr-defined]
+        assert _read_body_file(name, console) is None
+        assert f"File not found: {name}" in console.file.getvalue()  # type: ignore[attr-defined]
