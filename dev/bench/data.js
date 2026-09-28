@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790604886805,
+  "lastUpdate": 1790605045863,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16107,6 +16107,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.894903959600278e-7",
             "extra": "mean: 1.944060210320571 usec\nrounds: 54964"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4a3512c669c93ce9948a7c4417c056a54e07e862",
+          "message": "docs: say only doit release needs a clean tree, and list its checks in code order (merges PR #925, addresses #921)\n\nrelease-and-automation.md said both release commands must be run with\na clean working tree. Only doit release checks it. doit release_tag\nchecks the branch and pulls.\n\nThe doit release step lists in CONTRIBUTING.md and\ndoit-tasks-reference.md put the clean-tree check first and left out\nthe --increment check. The task checks the branch, validates\n--prerelease and --increment, and only then checks the tree and pulls.\nBoth lists now follow that order, like the one in\nrelease-and-automation.md, and a test checks all three.\n\nAddresses #921\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T15:16:44+01:00",
+          "tree_id": "ac3eeb0cc26a75d050ef4893422dc4c96eeeb152",
+          "url": "https://github.com/endavis/pyproject-template/commit/4a3512c669c93ce9948a7c4417c056a54e07e862"
+        },
+        "date": 1790605044401,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11025420.590440946,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0287674771710621e-8",
+            "extra": "mean: 90.6994877698363 nsec\nrounds: 112957"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11122061.033999687,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5606733683889984e-8",
+            "extra": "mean: 89.91139294623909 nsec\nrounds: 116932"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7978010.248300029,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3070856636541212e-8",
+            "extra": "mean: 125.3445369054373 nsec\nrounds: 82197"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2693283.5777933095,
+            "unit": "iter/sec",
+            "range": "stddev: 5.812065419408712e-8",
+            "extra": "mean: 371.29398784636373 nsec\nrounds: 188751"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 681765.5735828973,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6828542542952475e-7",
+            "extra": "mean: 1.4667798415585558 usec\nrounds: 72203"
           }
         ]
       }
