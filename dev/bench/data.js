@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790597282206,
+  "lastUpdate": 1790604834400,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15989,6 +15989,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.696216108026922e-7",
             "extra": "mean: 1.899414271763187 usec\nrounds: 55298"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5dcc3b69e9804891a6755649e9f21c0a37f27d8f",
+          "message": "test: make the documented-prerelease test fail when the check rejects a value (merges PR #923, addresses #919)\n\ntest_accepts_the_documented_prerelease_values asserted only that the\naction exited 1. The mocked git status was not empty, so every run\nstopped at the uncommitted-changes check, which exits 1 just as a\nrejected value does. The test passed even when the prerelease check\nrejected alpha, beta and rc.\n\nThe mock now reports a clean tree, the tag check and the pull are\npatched, and the test asserts that the run reached the governance\ngate, which comes after the prerelease check.\n\nAddresses #919\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T15:11:17+01:00",
+          "tree_id": "1af6815af6e1b20c24f4238de4e147079ee2422b",
+          "url": "https://github.com/endavis/pyproject-template/commit/5dcc3b69e9804891a6755649e9f21c0a37f27d8f"
+        },
+        "date": 1790604831881,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12324561.428305442,
+            "unit": "iter/sec",
+            "range": "stddev: 8.259980485522003e-9",
+            "extra": "mean: 81.13878987233822 nsec\nrounds: 137250"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13165472.724463563,
+            "unit": "iter/sec",
+            "range": "stddev: 7.828750193449208e-9",
+            "extra": "mean: 75.9562547375788 nsec\nrounds: 120846"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8078341.779479399,
+            "unit": "iter/sec",
+            "range": "stddev: 1.592383025453323e-8",
+            "extra": "mean: 123.78778062351851 nsec\nrounds: 93319"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2889049.594069792,
+            "unit": "iter/sec",
+            "range": "stddev: 9.133335808876286e-8",
+            "extra": "mean: 346.1345911308169 nsec\nrounds: 187829"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 719654.5192071855,
+            "unit": "iter/sec",
+            "range": "stddev: 1.494208979742748e-7",
+            "extra": "mean: 1.389555645536222 usec\nrounds: 79771"
           }
         ]
       }
