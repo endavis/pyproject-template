@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790590863743,
+  "lastUpdate": 1790592663209,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -15812,6 +15812,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.68532247618122e-7",
             "extra": "mean: 1.9205775094353947 usec\nrounds: 54574"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "57b113a1baf1d67f543c821c8ee92e6beb04bae3",
+          "message": "fix: print outside text in doit tasks through verbatim(), so backslashes and emoji shortcodes survive (merges PR #915, addresses #914)\n\nescape() stopped Rich from reading a [ as a tag, but not the rest.\nRich still dropped a backslash before a [ that opens no tag, so\nC:\\notes\\[1].md printed as C:\\notes[1].md. It still replaced emoji\nshortcodes, so :sparkles: in a commit subject printed as an emoji.\nmarkup=False also stopped the tags and also still replaced the\nshortcodes.\n\nverbatim() in tools/doit/base.py wraps the text in a rich.text.Text,\nwhich Rich prints as is. Every escape() and markup=False site in\ntools/doit/ now goes through it. The merge panel joins two verbatim()\nparts with Text.assemble, so its header keeps its style. Rich no\nlonger highlights numbers inside these messages.\n\nThe guard in test_doit_markup_escaping.py now accepts only verbatim()\nfor outside text, and fails if a task module uses rich.markup.escape.\nIts examples of escape() and markup=False moved from passing to\nflagged. The behavioral tests from #893, #900 and #907 also take a\nbackslash before a [ and an emoji shortcode. docs/usage/basics.md\ndescribes the new form.\n\nAddresses #914\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T11:50:25+01:00",
+          "tree_id": "d1bd82d06f2746ad881bae06b4bc00cfa2cb36be",
+          "url": "https://github.com/endavis/pyproject-template/commit/57b113a1baf1d67f543c821c8ee92e6beb04bae3"
+        },
+        "date": 1790592661056,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8781597.322342942,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0228530443016083e-8",
+            "extra": "mean: 113.87449951225943 nsec\nrounds: 91241"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8716793.037287433,
+            "unit": "iter/sec",
+            "range": "stddev: 1.054025199132756e-8",
+            "extra": "mean: 114.72109016726051 nsec\nrounds: 91408"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5528018.960937337,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7848915823128194e-8",
+            "extra": "mean: 180.89662988971347 nsec\nrounds: 56648"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2103691.434274267,
+            "unit": "iter/sec",
+            "range": "stddev: 8.080349001650735e-8",
+            "extra": "mean: 475.35488508797437 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 536539.3581431209,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7806750805838052e-7",
+            "extra": "mean: 1.8637961685808924 usec\nrounds: 55854"
           }
         ]
       }
