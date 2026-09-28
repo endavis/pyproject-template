@@ -1170,19 +1170,28 @@ class TestCreateReleasePrGuards:
 
     @pytest.mark.parametrize("value", ["alpha", "beta", "rc"])
     def test_accepts_the_documented_prerelease_values(self, value: str) -> None:
-        """These must get past validation — a guard that rejects everything is useless."""
+        """These must get past validation — a guard that rejects everything is useless.
+
+        The run stops at the governance gate, after the clean-tree check and the pull. It used
+        to stop at the clean-tree check, which exits 1 just as a rejected value does, so the
+        test passed even when the prerelease check rejected all three values (#919).
+        """
+
+        def fake_run(cmd: list[str], *_args: object, **_kwargs: object) -> MagicMock:
+            stdout = "" if cmd[:3] == ["git", "status", "-s"] else "main\n"
+            return MagicMock(stdout=stdout, returncode=0)
+
         with (
-            patch(
-                "tools.doit.release.subprocess.run",
-                return_value=MagicMock(stdout="main\n", returncode=0),
-            ),
-            patch("tools.doit.release.validate_merge_commits", return_value=False),
+            patch("tools.doit.release.subprocess.run", side_effect=fake_run),
+            patch("tools.doit.release._repo_has_version_tags", return_value=True),
+            patch("tools.doit.release.run_streamed"),
+            patch("tools.doit.release.validate_merge_commits", return_value=False) as governance,
             pytest.raises(SystemExit) as exc,
         ):
             _release_action()(prerelease=value)
 
-        # Exits on the *later* validation gate, not the prerelease check.
         assert exc.value.code == 1
+        governance.assert_called_once()
 
     def test_prints_uncommitted_paths_verbatim(self, capsys: pytest.CaptureFixture[str]) -> None:
         """`git status -s` output is text, not markup: a `[/x]` path crashed this guard (#900).
