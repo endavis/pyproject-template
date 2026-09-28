@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790605045863,
+  "lastUpdate": 1790605247743,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16166,6 +16166,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6828542542952475e-7",
             "extra": "mean: 1.4667798415585558 usec\nrounds: 72203"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f2dd2ef5792203d895ec7d5467677c501760d20",
+          "message": "docs: drop the advice to make mypy non-blocking with continue-on-error (merges PR #926, addresses #922)\n\nThe Mypy Type Errors entry in ci-cd-testing.md suggested\ncontinue-on-error: true. ci.yml runs doit type_check as a blocking step\nof the lint job. The entry did not say whether the key belonged on that\nstep or on the job, which also runs the security scan and the\ndependency audit. The entry now lists only the fixes, and a test keeps\nthe suggestion out.\n\nAddresses #922\n\n\nClaude-Session: https://claude.ai/code/session_01T5BGEV9EbifCLXMKdZWZmA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-09-28T15:19:55+01:00",
+          "tree_id": "4e06365e709943d0583cd616ba4e6ebf914b8ee2",
+          "url": "https://github.com/endavis/pyproject-template/commit/8f2dd2ef5792203d895ec7d5467677c501760d20"
+        },
+        "date": 1790605245209,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18561429.580471627,
+            "unit": "iter/sec",
+            "range": "stddev: 5.218357317123869e-9",
+            "extra": "mean: 53.875160620822776 nsec\nrounds: 189826"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 18815952.958489884,
+            "unit": "iter/sec",
+            "range": "stddev: 4.479555145895469e-9",
+            "extra": "mean: 53.14639137364516 nsec\nrounds: 189144"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13291851.482897913,
+            "unit": "iter/sec",
+            "range": "stddev: 5.338816140898847e-9",
+            "extra": "mean: 75.23406361308352 nsec\nrounds: 135852"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4448361.885019679,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0432075323420982e-8",
+            "extra": "mean: 224.80185422134923 nsec\nrounds: 45658"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1016744.9126306429,
+            "unit": "iter/sec",
+            "range": "stddev: 7.902444193899458e-8",
+            "extra": "mean: 983.5308616520947 nsec\nrounds: 104450"
           }
         ]
       }
