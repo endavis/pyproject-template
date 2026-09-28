@@ -180,8 +180,11 @@ def _run_gh_with_retry(
             jitter = random.uniform(0, delay * 0.1)  # nosec B311
             total = delay + jitter
             console.print(
-                f"[yellow]Retry {attempt}/{retries}: {' '.join(cmd[:3])} "
-                f"(transient: {marker}, sleeping {total:.1f}s)[/yellow]"
+                verbatim(
+                    f"Retry {attempt}/{retries}: {' '.join(cmd[:3])} "
+                    f"(transient: {marker}, sleeping {total:.1f}s)",
+                    "yellow",
+                )
             )
             time.sleep(total)
 
@@ -224,7 +227,7 @@ def _open_editor_with_template(template: str, suffix: str = ".md") -> str | None
 
     try:
         # Open editor
-        console.print(f"[dim]Opening {editor}...[/dim]")
+        console.print(verbatim(f"Opening {editor}...", "dim"))
         result = subprocess.run([editor, temp_path])
 
         if result.returncode != 0:
@@ -906,7 +909,7 @@ def _finish_branch_in_worktree(
         merged_head = _merged_head(pr_number, console)
         if merged_head is None:
             console.print(
-                f"[yellow]Left {branch} and its worktree {worktree} in place.[/yellow]",
+                verbatim(f"Left {branch} and its worktree {worktree} in place.", "yellow"),
                 soft_wrap=True,
             )
             return
@@ -1301,24 +1304,31 @@ def _load_labels_file(path: Path, console: Console) -> list[dict[str, str]]:
     for index, entry in enumerate(raw):
         if not isinstance(entry, dict):
             console.print(
-                f"[red]Labels file entry #{index} must be a mapping, "
-                f"got {type(entry).__name__}.[/red]"
+                verbatim(
+                    f"Labels file entry #{index} must be a mapping, got {type(entry).__name__}.",
+                    "red",
+                )
             )
             sys.exit(1)
 
         name = entry.get("name")
         if not isinstance(name, str) or not name.strip():
             console.print(
-                f"[red]Labels file entry #{index} is missing a 'name' field "
-                f"(entry: {entry!r}).[/red]"
+                verbatim(
+                    f"Labels file entry #{index} is missing a 'name' field (entry: {entry!r}).",
+                    "red",
+                )
             )
             sys.exit(1)
 
         color_raw = entry.get("color", DEFAULT_LABEL_COLOR)
         if not isinstance(color_raw, str):
             console.print(
-                f"[red]Labels file entry '{name}' has a non-string 'color' "
-                f"(got {type(color_raw).__name__}).[/red]"
+                verbatim(
+                    f"Labels file entry '{name}' has a non-string 'color' "
+                    f"(got {type(color_raw).__name__}).",
+                    "red",
+                )
             )
             sys.exit(1)
 
@@ -1327,8 +1337,11 @@ def _load_labels_file(path: Path, console: Console) -> list[dict[str, str]]:
             description = ""
         if not isinstance(description, str):
             console.print(
-                f"[red]Labels file entry '{name}' has a non-string 'description' "
-                f"(got {type(description).__name__}).[/red]"
+                verbatim(
+                    f"Labels file entry '{name}' has a non-string 'description' "
+                    f"(got {type(description).__name__}).",
+                    "red",
+                )
             )
             sys.exit(1)
 
@@ -1429,7 +1442,11 @@ def _reconcile_labels(
 
         if existing is None:
             prefix = "would create" if dry_run else "created"
-            console.print(f"[green]+ {prefix}[/green] {name} (color={color})")
+            console.print(
+                Text.assemble(
+                    verbatim(f"+ {prefix}", "green"), verbatim(f" {name} (color={color})")
+                )
+            )
             counters["created"] += 1
             if not dry_run:
                 _run_label_cmd(
@@ -1448,12 +1465,14 @@ def _reconcile_labels(
             continue
 
         if existing["color"] == color and existing["description"] == description:
-            console.print(f"[dim]= no change[/dim] {name}")
+            console.print(Text.assemble(verbatim("= no change", "dim"), verbatim(f" {name}")))
             counters["unchanged"] += 1
             continue
 
         prefix = "would update" if dry_run else "updated"
-        console.print(f"[yellow]~ {prefix}[/yellow] {name} (color={color})")
+        console.print(
+            Text.assemble(verbatim(f"~ {prefix}", "yellow"), verbatim(f" {name} (color={color})"))
+        )
         counters["updated"] += 1
         if not dry_run:
             _run_label_cmd(
@@ -1474,12 +1493,17 @@ def _reconcile_labels(
     for name in extras:
         if prune:
             prefix = "would delete" if dry_run else "deleted"
-            console.print(f"[red]- {prefix}[/red] {name}")
+            console.print(Text.assemble(verbatim(f"- {prefix}", "red"), verbatim(f" {name}")))
             counters["deleted"] += 1
             if not dry_run:
                 _run_label_cmd(["gh", "label", "delete", name, "--yes"], console)
         else:
-            console.print(f"[dim]? skipped[/dim] {name} (not in file; use --prune to delete)")
+            console.print(
+                Text.assemble(
+                    verbatim("? skipped", "dim"),
+                    verbatim(f" {name} (not in file; use --prune to delete)"),
+                )
+            )
             counters["skipped"] += 1
 
     return counters
@@ -1496,7 +1520,7 @@ def _run_label_cmd(cmd: list[str], console: Console) -> None:
         _run_gh_with_retry(cmd, check=True, capture_output=True, text=True)
     except subprocess.CalledProcessError as e:
         stderr = (e.stderr or "").strip()
-        console.print(f"[red]Command failed: {' '.join(cmd)}[/red]")
+        console.print(verbatim(f"Command failed: {' '.join(cmd)}", "red"))
         console.print(verbatim(stderr, "red"))
         sys.exit(1)
 
@@ -1617,12 +1641,12 @@ def task_env_create() -> dict[str, Any]:
         repo_slug = _gh_repo_slug()
         if _gh_env_exists(repo_slug, name):
             console.print(
-                f"[dim]Environment '{name}' already exists in {repo_slug} — skipped[/dim]"
+                verbatim(f"Environment '{name}' already exists in {repo_slug} — skipped", "dim")
             )
             return
 
         _gh_env_create(repo_slug, name)
-        console.print(f"[green]✓ Created environment '{name}' in {repo_slug}[/green]")
+        console.print(verbatim(f"✓ Created environment '{name}' in {repo_slug}", "green"))
 
     return {
         "actions": [create],
@@ -1659,7 +1683,7 @@ def task_env_list() -> dict[str, Any]:
 
         console.print(f"[bold]Environments in {repo_slug}:[/bold]")
         for name in names:
-            console.print(f"  • {name}")
+            console.print(verbatim(f"  • {name}"))
 
     return {
         "actions": [list_envs],
@@ -1762,10 +1786,10 @@ def task_labels_sync() -> dict[str, Any]:
         try:
             desired = _load_labels_file(Path(file), console)
             if not desired:
-                console.print(f"[yellow]No labels defined in {file}; nothing to sync.[/yellow]")
+                console.print(verbatim(f"No labels defined in {file}; nothing to sync.", "yellow"))
                 return
 
-            console.print(f"[dim]Loaded {len(desired)} label(s) from {file}[/dim]")
+            console.print(verbatim(f"Loaded {len(desired)} label(s) from {file}", "dim"))
             current = _fetch_github_labels(console)
             console.print(f"[dim]Fetched {len(current)} label(s) from GitHub[/dim]")
             console.print()

@@ -1,5 +1,6 @@
 """Tests for adr.py doit tasks."""
 
+import re
 from datetime import date
 from io import StringIO
 from pathlib import Path
@@ -15,11 +16,15 @@ from tools.doit.adr import (
     TEMPLATE_SERIES_FLOOR,
     _get_next_adr_number,
     _is_placeholder_content,
+    _open_editor_with_template,
     _read_body_file,
     _title_to_slug,
     _validate_adr_content,
 )
 from tools.doit.templates import FRONTMATTER_PATTERN, get_adr_template
+
+# FORCE_COLOR makes Rich color captured output, and the codes split substrings such as `[x]`.
+_ANSI = re.compile(r"\x1b\[[0-9;]*m")
 
 
 class TestTitleToSlug:
@@ -478,3 +483,23 @@ class TestReadBodyFile:
 
         assert _read_body_file(name, console) is None
         assert f"File not found: {name}" in console.file.getvalue()  # type: ignore[attr-defined]
+
+
+class TestOpenEditorWithTemplate:
+    """The ADR editor."""
+
+    @pytest.mark.parametrize(
+        "editor", ["/opt/[x]/vi", "/opt/[/x]/vi", r"C:\tools\[1]\vi.exe", "/opt/:memo:/vi"]
+    )
+    def test_prints_the_editor_verbatim(
+        self, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], editor: str
+    ) -> None:
+        """`$EDITOR` is the user's text, not markup (#920). It fails here, so nothing is read."""
+        monkeypatch.setenv("COLUMNS", "1000")
+        with (
+            patch("tools.doit.adr._get_editor", return_value=editor),
+            patch("tools.doit.adr.subprocess.run", return_value=MagicMock(returncode=1)),
+        ):
+            assert _open_editor_with_template("body") is None
+
+        assert f"Opening {editor}..." in _ANSI.sub("", capsys.readouterr().out).splitlines()
