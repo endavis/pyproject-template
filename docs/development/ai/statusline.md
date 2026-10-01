@@ -162,7 +162,7 @@ Adjust `MAX_AGE` at the top of the script. To force a refresh: `rm ~/.cache/clau
 2. Check `jq` is installed: `which jq`
 3. Test manually: `echo '{}' | bash .claude/statusline-command.sh`
 
-### Statusline shows a "jq not installed" line / fields are blank
+### Blank fields or a jq not installed message
 
 The script printed `statusline: jq not installed (run: doit install_jq)` instead
 of rendering, or (before this guard existed) rendered with blank model/dir/context
@@ -276,8 +276,8 @@ will not reach it. To disable: `unset AGY_STATUSLINE_EXTRAS` and restart `agy`.
 to the process working directory. If `agy` launches it from outside the repo, git detection can't
 find the branch.
 
-**"jq not installed" line:** see [Statusline shows a "jq not installed" line / fields are
-blank](#statusline-shows-a-jq-not-installed-line--fields-are-blank) above — run `doit install_jq`.
+**"jq not installed" line:** see [Blank fields or a jq not installed
+message](#blank-fields-or-a-jq-not-installed-message) above — run `doit install_jq`.
 
 **Test manually:**
 
