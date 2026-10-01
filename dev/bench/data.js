@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790872215826,
+  "lastUpdate": 1790884573149,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16520,6 +16520,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8028563081463705e-7",
             "extra": "mean: 1.8876284790001268 usec\nrounds: 55332"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f9dc14a2486418aec3627ed921e21d1ac3bc9de",
+          "message": "chore: let the actionlint hook accept the ubuntu-26.04 runner label (merges PR #936, addresses #929)\n\nactionlint v1.7.12 (pinned in .pre-commit-config.yaml) rejects\nruns-on: ubuntu-26.04 as an unknown runner label (rhysd/actionlint#682\nis still open upstream). Declare it via self-hosted-runner.labels in\n.github/actionlint.yaml, the escape hatch actionlint's own error names,\nrather than disabling the check.\n\nVerified with a temp workflow file: the actionlint pre-commit hook\npasses (exit 0) with the config present and fails with\n\"label \\\"ubuntu-26.04\\\" is unknown ... [runner-label]\" (exit 1)\nwithout it. No workflow in this repo currently uses the label, and the\nhook runs only locally — no CI workflow runs actionlint.\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-01T20:55:21+01:00",
+          "tree_id": "f739e48dc232eb21ab2916cd641df23b184e0caf",
+          "url": "https://github.com/endavis/pyproject-template/commit/7f9dc14a2486418aec3627ed921e21d1ac3bc9de"
+        },
+        "date": 1790884571795,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7231917.379457198,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4843633763193258e-8",
+            "extra": "mean: 138.27591598883234 nsec\nrounds: 84084"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 7782940.943241048,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1786569527031402e-8",
+            "extra": "mean: 128.486134906167 nsec\nrounds: 88254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5663615.980368748,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4192297984222985e-8",
+            "extra": "mean: 176.5656434804557 nsec\nrounds: 57764"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2068368.886663999,
+            "unit": "iter/sec",
+            "range": "stddev: 9.028943356734548e-8",
+            "extra": "mean: 483.4727530701091 nsec\nrounds: 185186"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 527815.9139371713,
+            "unit": "iter/sec",
+            "range": "stddev: 1.625460125600467e-7",
+            "extra": "mean: 1.8945999421287536 usec\nrounds: 55298"
           }
         ]
       }
