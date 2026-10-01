@@ -34,6 +34,9 @@ jobs:
         with:
           version: "latest"
 
+      - name: Install dependencies
+        run: uv sync --all-extras --dev
+
       - name: Show resolved version
         run: |
           uv run python - <<'PY'
@@ -43,6 +46,9 @@ jobs:
 
       - name: Build artifacts
         run: uv build
+
+      - name: Check the built wheel
+        run: uv run doit wheel_check --dist=dist
 
       - name: Install security extras for SBOM generation
         run: uv sync --extra security

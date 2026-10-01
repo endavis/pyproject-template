@@ -213,6 +213,12 @@ uv run doit release_tag
 # --> Tag v0.2.0 pushed; publish workflow runs TestPyPI → PyPI
 ```
 
+Both publish workflows' `build` job runs `doit wheel_check --dist=dist` against the exact wheel
+that gets uploaded — installing it into a throwaway venv, importing it, and running every
+`[project.scripts]` entry with `--help` — so a packaging regression (missing module, broken entry
+point, missing `py.typed`) fails the build step rather than reaching PyPI. See
+[`wheel_check`](doit-tasks-reference.md#wheel_check).
+
 ## GitHub Environments & Trusted Publishing
 
 The release and TestPyPI publish workflows (`.github/workflows/release.yml`

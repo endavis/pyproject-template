@@ -250,7 +250,7 @@ doit check
 ```
 
 **What it does:**
-- Runs format check, lint, type check, security, spelling, and tests
+- Runs format check, lint, type check, security, spelling, a wheel smoke test, and tests
 - Stops on first failure
 
 **Task dependencies:**
@@ -259,6 +259,7 @@ doit check
 - `type_check`
 - `security` (if available)
 - `spell_check`
+- `wheel_check`
 - `test`
 
 ### `spell_check`
@@ -1249,6 +1250,30 @@ doit build
 ```bash
 uv build
 ```
+
+### `wheel_check`
+
+Install the built wheel into a throwaway venv and smoke-test it, so a packaging regression
+(missing module, broken entry point, missing `py.typed`) fails before it ships. Part of `doit check`.
+
+```bash
+# Build a fresh wheel and check it
+doit wheel_check
+
+# Check the single *.whl already in dist/ instead of rebuilding
+doit wheel_check --dist=dist
+```
+
+**What it does:**
+- Builds a wheel (or reuses the single `*.whl` in `--dist`)
+- Confirms `py.typed` is in the wheel
+- Installs it into an isolated venv and imports the package, confirming it was loaded from the
+  venv rather than the source tree
+- Runs every `[project.scripts]` entry with `--help`
+
+**Options:**
+- `--dist`: Directory with an already-built wheel to check (e.g. `dist`), instead of building a
+  fresh one. Fails if the directory has zero or more than one `*.whl`.
 
 ---
 
