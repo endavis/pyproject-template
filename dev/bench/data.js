@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790844127775,
+  "lastUpdate": 1790855328144,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16343,6 +16343,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6166109105016973e-7",
             "extra": "mean: 1.8672120352055839 usec\nrounds: 55670"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d7f796027a3aed0d6a9bbeaf7c2fc91e0883b84",
+          "message": "chore(deps): bump urllib3 and virtualenv to clear pip-audit findings (merges PR #932, addresses #931)\n\ndoit audit failed on main, which stopped doit check before the tests ran.\nBoth packages are indirect dependencies, so dependabot did not open PRs for\nthem. This upgrades only these two packages in uv.lock:\n\n- urllib3 2.7.0 -> 2.8.0 (via requests)\n- virtualenv 20.36.1 -> 21.14.2 (via pre-commit), which also brings\n  filelock 3.20.3 -> 4.0.8 and adds python-discovery 1.6.1\n\npyproject.toml is unchanged.\n\nAddresses #931\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-01T12:48:02+01:00",
+          "tree_id": "beaeef19a9a1cee3bdf5ffdd73089f88ba017ace",
+          "url": "https://github.com/endavis/pyproject-template/commit/3d7f796027a3aed0d6a9bbeaf7c2fc91e0883b84"
+        },
+        "date": 1790855326888,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8761494.520421674,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2840956667129575e-8",
+            "extra": "mean: 114.13577873833697 nsec\nrounds: 89767"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8505472.838778514,
+            "unit": "iter/sec",
+            "range": "stddev: 2.061600630974525e-8",
+            "extra": "mean: 117.57135893030632 nsec\nrounds: 93110"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5507118.825915383,
+            "unit": "iter/sec",
+            "range": "stddev: 4.4264139233859576e-8",
+            "extra": "mean: 181.5831529354702 nsec\nrounds: 58371"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2034355.4344190196,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1211868920508541e-7",
+            "extra": "mean: 491.55618683004855 nsec\nrounds: 198060"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 538212.7023496919,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1951349723009022e-7",
+            "extra": "mean: 1.8580014846068644 usec\nrounds: 56648"
           }
         ]
       }
