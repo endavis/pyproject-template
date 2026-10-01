@@ -150,7 +150,7 @@ Adjust `MAX_AGE` at the top of the script. To force a refresh: `rm ~/.cache/clau
 
 ## Requirements
 
-- `jq` - JSON processor (used for parsing Claude's input)
+- `jq` - JSON processor (used for parsing Claude's input). Install with `doit install_jq`.
 - `gh` - GitHub CLI (optional, for username display)
 - `git` - For branch and status information
 
@@ -161,6 +161,13 @@ Adjust `MAX_AGE` at the top of the script. To force a refresh: `rm ~/.cache/clau
 1. Ensure the script is executable: `chmod +x .claude/statusline-command.sh`
 2. Check `jq` is installed: `which jq`
 3. Test manually: `echo '{}' | bash .claude/statusline-command.sh`
+
+### Statusline shows a "jq not installed" line / fields are blank
+
+The script printed `statusline: jq not installed (run: doit install_jq)` instead
+of rendering, or (before this guard existed) rendered with blank model/dir/context
+fields. Either way, `jq` is missing from `PATH`. Run `doit install_jq` and open a
+new shell (or re-source your profile) so the updated `PATH` takes effect.
 
 ### Colors not displaying
 
@@ -253,7 +260,7 @@ will not reach it. To disable: `unset AGY_STATUSLINE_EXTRAS` and restart `agy`.
 ### Requirements
 
 - `bash` — shell runtime
-- `jq` — JSON processor (already required by the base Claude statusline)
+- `jq` — JSON processor (already required by the base Claude statusline). Install with `doit install_jq`.
 - `git` — for branch and status (computed locally; `agy` reports only `vcs.type`)
 - `gh` — GitHub CLI (optional, for the `@username` segment; the segment is
   dropped if `gh` is absent or its token is invalid)
@@ -268,6 +275,9 @@ will not reach it. To disable: `unset AGY_STATUSLINE_EXTRAS` and restart `agy`.
 **Branch / directory blank:** the script anchors on `.workspace.current_dir`/`.cwd`, falling back
 to the process working directory. If `agy` launches it from outside the repo, git detection can't
 find the branch.
+
+**"jq not installed" line:** see [Statusline shows a "jq not installed" line / fields are
+blank](#statusline-shows-a-jq-not-installed-line--fields-are-blank) above — run `doit install_jq`.
 
 **Test manually:**
 

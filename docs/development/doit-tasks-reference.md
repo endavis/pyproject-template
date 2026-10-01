@@ -41,7 +41,7 @@ doit <task_name>
 | [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync`, `env_create`, `env_list`, `publish_setup` | Issue, PR, and environment management |
 | [Release](#release-tasks) | `release`, `release_tag`, `publish` | Version and release management |
 | [Version](#version-tasks) | `bump`, `changelog` | Version bumping and changelog |
-| [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv`, `worktree` | Development environment |
+| [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv`, `install_jq`, `worktree` | Development environment |
 | [Maintenance](#maintenance-tasks) | `cleanup`, `template_clean` | Project cleanup |
 
 ---
@@ -1106,6 +1106,27 @@ direnv allow
 ```
 
 This task uses the reusable install_tools framework — see [install_tools framework](install-tools-framework.md) for adding more tools.
+
+### `install_jq`
+
+Install jq, the JSON processor the Claude and agy statusline scripts depend on.
+
+```bash
+doit install_jq
+```
+
+**What it does:**
+- Installs `jq` into `~/.local/bin` if not already on `PATH`
+- Downloads the Linux or macOS binary directly from the `jqlang/jq` GitHub
+  releases (not via brew, for cross-platform consistency with `install_gh`)
+- A second run prints `[OK] jq already installed` and exits
+
+Without `jq`, both statusline scripts print `statusline: jq not installed (run:
+doit install_jq)` instead of rendering — see
+[Statusline](ai/statusline.md#requirements).
+
+This task uses the reusable install_tools framework with a per-OS `url_template`
+— see [install_tools framework](install-tools-framework.md) for details.
 
 ### `commit`
 

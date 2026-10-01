@@ -32,6 +32,8 @@ case "$COLOR" in
     *)        C_ACCENT="$C_GRAY" ;;
 esac
 
+command -v jq >/dev/null 2>&1 || { printf 'statusline: jq not installed (run: doit install_jq)\n'; exit 0; }
+
 input=$(cat)
 
 # Extract agy-native fields in one jq pass; fall back to defaults on missing/invalid JSON.
