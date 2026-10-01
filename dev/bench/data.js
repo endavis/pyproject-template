@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790855328144,
+  "lastUpdate": 1790868077898,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16402,6 +16402,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.1951349723009022e-7",
             "extra": "mean: 1.8580014846068644 usec\nrounds: 56648"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "48a4805b2c6ad54d163b7c9fbfbf44195687eddd",
+          "message": "feat: add doit install_jq and make the statusline report a missing jq (merges PR #933, addresses #930)\n\n* feat: add doit install_jq and make the statusline report a missing jq\n\nThe Claude and agy statusline scripts need jq, but no doit task installed\nit. Without jq the statusline still rendered, with every field blank and\n\"jq: command not found\" on stderr, which Claude Code discards. The user\nsaw a statusline with missing fields and no explanation.\n\n- install_tools: url_template also accepts a per-OS dict keyed by\n  platform.system().lower(), like sha256 and extract_binaries. jq needs\n  this because its tag is jq-1.8.2 (not v1.8.2) and its macOS asset is\n  jq-macos-<arch> while {os} expands to darwin. The plain-string form is\n  unchanged.\n- doit install_jq: installs jq's release binary to ~/.local/bin on Linux\n  and macOS, or reports it already installed.\n- Both statusline scripts print \"statusline: jq not installed (run: doit\n  install_jq)\" and exit 0 when jq is missing.\n- Docs: statusline requirements and troubleshooting, doit tasks\n  reference, install-tools framework, and ADR-9015.\n\nAddresses #930\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\n* docs: fix the anchor link to the jq troubleshooting entry\n\nThe agy troubleshooting section linked to the new jq entry with a guessed\nanchor that mkdocs does not generate for a heading containing quotes and a\nslash, so the strict docs build failed. Rename the heading to plain words\nand point the link at its anchor.\n\nAddresses #930\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-01T16:20:30+01:00",
+          "tree_id": "e1b87ac0cc1ef4e3e045e88764fd393fc4027ee4",
+          "url": "https://github.com/endavis/pyproject-template/commit/48a4805b2c6ad54d163b7c9fbfbf44195687eddd"
+        },
+        "date": 1790868075611,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7960759.416689448,
+            "unit": "iter/sec",
+            "range": "stddev: 1.876001346055932e-8",
+            "extra": "mean: 125.61615640632672 nsec\nrounds: 82631"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8743031.080214724,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1986690767452258e-8",
+            "extra": "mean: 114.37680946405153 nsec\nrounds: 87490"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5239086.055252413,
+            "unit": "iter/sec",
+            "range": "stddev: 5.204048289920885e-8",
+            "extra": "mean: 190.87298613800323 nsec\nrounds: 59659"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2081851.7518031355,
+            "unit": "iter/sec",
+            "range": "stddev: 7.451852752942571e-8",
+            "extra": "mean: 480.3415993160315 nsec\nrounds: 199243"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 525496.9770038178,
+            "unit": "iter/sec",
+            "range": "stddev: 2.551177770968193e-7",
+            "extra": "mean: 1.9029605188247065 usec\nrounds: 55857"
           }
         ]
       }
