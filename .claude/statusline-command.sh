@@ -24,6 +24,8 @@ case "$COLOR" in
     *)        C_ACCENT="$C_GRAY" ;;  # gray: all same color
 esac
 
+command -v jq >/dev/null 2>&1 || { printf 'statusline: jq not installed (run: doit install_jq)\n'; exit 0; }
+
 input=$(cat)
 
 
