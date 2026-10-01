@@ -118,7 +118,8 @@ class TestTaskCheck:
         """``task_check`` must depend on every pre-PR quality/security task.
 
         ``deadcode`` joined the set in #700: it was defined as a task but never
-        gated, so unused imports in ``tools/`` accumulated unnoticed.
+        gated, so unused imports in ``tools/`` accumulated unnoticed. ``wheel_check``
+        joined in #837 so a packaging regression fails locally, not on PyPI.
         """
         task = task_check()
         assert set(task["task_dep"]) == {
@@ -129,6 +130,7 @@ class TestTaskCheck:
             "security",
             "audit",
             "spell_check",
+            "wheel_check",
             "test",
         }
 

@@ -208,6 +208,9 @@ jobs:
       - name: Run dependency audit
         run: uv run doit audit
 
+      - name: Check the built wheel
+        run: uv run doit wheel_check
+
   ci-complete:
     if: always()
     needs: [setup, test, lint, docs]

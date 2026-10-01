@@ -130,7 +130,7 @@ versions, raw `pytest` instead of `doit`, and mutable action tags this project's
 | :--- | :--- |
 | `setup` | Builds the test matrix from `.github/python-versions.json` |
 | `test` | `pytest`, called directly, on each OS and Python version in the matrix. The newest Python on `ubuntu-latest` also measures coverage. |
-| `lint` | `doit format_check`, `doit lint`, `doit type_check`, `doit security`, `doit spell_check` and `doit audit`, on `ubuntu-latest`. A failure in any of them fails CI. |
+| `lint` | `doit format_check`, `doit lint`, `doit type_check`, `doit security`, `doit spell_check`, `doit audit` and `doit wheel_check`, on `ubuntu-latest`. A failure in any of them fails CI. |
 | `docs` | `doit docs_build`, described below |
 | `ci-complete` | Fails if any other job failed; a skipped job passes. It gives the run one result to require ([ADR-9013](../decisions/9013-python-version-support-policy.md)). |
 
