@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790868077898,
+  "lastUpdate": 1790872215826,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16461,6 +16461,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.551177770968193e-7",
             "extra": "mean: 1.9029605188247065 usec\nrounds: 55857"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "80bc9f6dff0a7de7f5b71dd01ae8a1c7da13d8d4",
+          "message": "feat: install and run the built wheel before publishing (merges PR #935, addresses #837)\n\nAdds `doit wheel_check`: builds (or reuses) the wheel, installs it into a\nthrowaway uv venv, imports the package, and runs every console-script\nentry point with --help, so a packaging regression (missing module,\nbroken entry point, missing py.typed) fails before it reaches PyPI.\nWired into `doit check`, CI's lint job, and both publish workflows'\nbuild jobs against the exact uploaded wheel.\n\nAddresses #837\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-01T17:29:36+01:00",
+          "tree_id": "3bc65643bdc565217a0a158f77c09f2b051661c7",
+          "url": "https://github.com/endavis/pyproject-template/commit/80bc9f6dff0a7de7f5b71dd01ae8a1c7da13d8d4"
+        },
+        "date": 1790872214643,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8971145.6872742,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7116273778993292e-8",
+            "extra": "mean: 111.46848294064888 nsec\nrounds: 89278"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8827538.110521056,
+            "unit": "iter/sec",
+            "range": "stddev: 1.179341295712252e-8",
+            "extra": "mean: 113.28186720691185 nsec\nrounds: 93032"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5503113.400775743,
+            "unit": "iter/sec",
+            "range": "stddev: 1.766396857310497e-8",
+            "extra": "mean: 181.71531770707026 nsec\nrounds: 58576"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1999968.4517570813,
+            "unit": "iter/sec",
+            "range": "stddev: 7.81492993102174e-8",
+            "extra": "mean: 500.0078871851431 nsec\nrounds: 189790"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 529765.2642588324,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8028563081463705e-7",
+            "extra": "mean: 1.8876284790001268 usec\nrounds: 55332"
           }
         ]
       }
