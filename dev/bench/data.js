@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790884573149,
+  "lastUpdate": 1790935866538,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16579,6 +16579,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.625460125600467e-7",
             "extra": "mean: 1.8945999421287536 usec\nrounds: 55298"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e10989adec8992a5b0ce77af2e6a37e2a414b0aa",
+          "message": "chore: annotate examples/api so the ruff pre-commit hook passes, and lint examples/ in doit lint (merges PR #938, addresses #934)\n\nchore: annotate examples/api and lint examples/ in doit lint\n\nAdd type annotations in examples/api/ (route handlers, exception handlers,\ntest fixtures) to clear 72 ruff ANN errors that only the pre-commit hook\ncaught, since doit lint never covered examples/. Add an optional_root_dirs()\nhelper (sibling of optional_root_files) and wire it into doit lint, format,\nand format_check so examples/ is linted project-wide and CI catches\nregressions here too. Correct the stale \"Equivalent command\" blocks in\ndocs/development/doit-tasks-reference.md.\n\nAddresses #934\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-02T11:10:22+01:00",
+          "tree_id": "0908a9ec4f9fc940fc559ca574e0e87b03c388fb",
+          "url": "https://github.com/endavis/pyproject-template/commit/e10989adec8992a5b0ce77af2e6a37e2a414b0aa"
+        },
+        "date": 1790935864447,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8799603.11953623,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1001112165250142e-8",
+            "extra": "mean: 113.64148887350088 nsec\nrounds: 89880"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9100628.248866824,
+            "unit": "iter/sec",
+            "range": "stddev: 2.261458412302323e-8",
+            "extra": "mean: 109.882523783401 nsec\nrounds: 94287"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6096543.115172076,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4263084477990685e-8",
+            "extra": "mean: 164.02738094500867 nsec\nrounds: 67742"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2197251.0256653223,
+            "unit": "iter/sec",
+            "range": "stddev: 6.452403942772634e-8",
+            "extra": "mean: 455.11413503479986 nsec\nrounds: 190187"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 546585.5630539014,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7838086366004282e-7",
+            "extra": "mean: 1.8295397236852835 usec\nrounds: 56961"
           }
         ]
       }
