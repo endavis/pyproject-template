@@ -15,6 +15,8 @@ Run with:
 Visit http://localhost:8000/docs for Swagger UI.
 """
 
+from typing import Any
+
 from fastapi import FastAPI
 
 from examples.api.config import settings
@@ -40,12 +42,12 @@ def create_app() -> FastAPI:
     app.include_router(items.router, prefix="/items", tags=["items"])
 
     @app.get("/", tags=["health"])
-    def root():
+    def root() -> dict[str, Any]:
         """Health check endpoint."""
         return {"status": "ok", "app": settings.app_name, "version": settings.version}
 
     @app.get("/health", tags=["health"])
-    def health_check():
+    def health_check() -> dict[str, Any]:
         """Detailed health check."""
         return {
             "status": "healthy",

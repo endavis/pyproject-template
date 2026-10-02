@@ -186,9 +186,11 @@ doit format
 
 **Equivalent command:**
 ```bash
-uv run ruff format src/ tests/
-uv run ruff check --fix src/ tests/
+uv run ruff format src/ tests/ tools/ bootstrap.py examples/
+uv run ruff check --fix src/ tests/ tools/ bootstrap.py examples/
 ```
+`bootstrap.py` and `examples/` are appended only when present at the repo root — see
+`optional_root_files` / `optional_root_dirs` in `tools/doit/base.py`.
 
 ### `format_check`
 
@@ -204,8 +206,9 @@ doit format_check
 
 **Equivalent command:**
 ```bash
-uv run ruff format --check src/ tests/
+uv run ruff format --check src/ tests/ tools/ bootstrap.py examples/
 ```
+`bootstrap.py` and `examples/` are appended only when present at the repo root.
 
 ### `lint`
 
@@ -221,8 +224,9 @@ doit lint
 
 **Equivalent command:**
 ```bash
-uv run ruff check src/ tests/
+uv run ruff check src/ tests/ tools/ bootstrap.py examples/
 ```
+`bootstrap.py` and `examples/` are appended only when present at the repo root.
 
 ### `type_check`
 

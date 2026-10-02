@@ -6,6 +6,8 @@ This module demonstrates:
 - Multiple response types in OpenAPI
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Path, Query, status
 
 from examples.api.deps import Pagination
@@ -55,7 +57,7 @@ def list_items(
     owner_id: int | None = Query(None, description="Filter by owner ID"),
     min_price: float | None = Query(None, ge=0, description="Minimum price filter"),
     max_price: float | None = Query(None, ge=0, description="Maximum price filter"),
-):
+) -> list[dict[str, Any]]:
     """List items with pagination and optional filters."""
     items = list(_items_db.values())
 
@@ -79,7 +81,7 @@ def list_items(
     responses={404: {"model": ErrorResponse, "description": "Item not found"}},
     summary="Get an item by ID",
 )
-def get_item(item_id: int = Path(..., gt=0, description="The item ID")):
+def get_item(item_id: int = Path(..., gt=0, description="The item ID")) -> dict[str, Any]:
     """Get a specific item by ID."""
     if item_id not in _items_db:
         raise NotFoundError("Item", item_id)
@@ -95,7 +97,7 @@ def get_item(item_id: int = Path(..., gt=0, description="The item ID")):
 def create_item(
     item: ItemCreate,
     owner_id: int = Query(..., gt=0, description="ID of the item owner"),
-):
+) -> dict[str, Any]:
     """Create a new item.
 
     - **name**: Item name (1-100 characters)
@@ -128,7 +130,7 @@ def create_item(
 def update_item(
     item_id: int = Path(..., gt=0),
     item_update: ItemUpdate = ...,
-):
+) -> dict[str, Any]:
     """Update an existing item. Only provided fields are updated."""
     if item_id not in _items_db:
         raise NotFoundError("Item", item_id)
@@ -146,7 +148,7 @@ def update_item(
     responses={404: {"model": ErrorResponse, "description": "Item not found"}},
     summary="Delete an item",
 )
-def delete_item(item_id: int = Path(..., gt=0)):
+def delete_item(item_id: int = Path(..., gt=0)) -> None:
     """Delete an item."""
     if item_id not in _items_db:
         raise NotFoundError("Item", item_id)

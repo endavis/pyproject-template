@@ -54,6 +54,27 @@ class TestTaskLint:
         # Sanity check: the ruff invocation is still present.
         assert "ruff check" in action
 
+    def test_includes_examples_when_present(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "examples").mkdir()
+
+        task = task_lint()
+        action = task["actions"][0]
+        assert isinstance(action, str)
+        assert " examples/" in action
+
+    def test_excludes_examples_when_absent(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+
+        task = task_lint()
+        action = task["actions"][0]
+        assert isinstance(action, str)
+        assert "examples" not in action
+
 
 class TestTaskFormat:
     """``task_format`` has two actions (format + check --fix); both must behave the same."""
@@ -78,6 +99,27 @@ class TestTaskFormat:
         for action in task["actions"]:
             assert isinstance(action, str)
             assert "bootstrap.py" not in action
+
+    def test_both_actions_include_examples_when_present(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "examples").mkdir()
+
+        task = task_format()
+        for action in task["actions"]:
+            assert isinstance(action, str)
+            assert " examples/" in action
+
+    def test_both_actions_exclude_examples_when_absent(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+
+        task = task_format()
+        for action in task["actions"]:
+            assert isinstance(action, str)
+            assert "examples" not in action
 
 
 class TestTaskFormatCheck:
@@ -104,6 +146,27 @@ class TestTaskFormatCheck:
         assert isinstance(action, str)
         assert "bootstrap.py" not in action
         assert "ruff format --check" in action
+
+    def test_includes_examples_when_present(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        (tmp_path / "examples").mkdir()
+
+        task = task_format_check()
+        action = task["actions"][0]
+        assert isinstance(action, str)
+        assert " examples/" in action
+
+    def test_excludes_examples_when_absent(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+
+        task = task_format_check()
+        action = task["actions"][0]
+        assert isinstance(action, str)
+        assert "examples" not in action
 
 
 class TestTaskCheck:
