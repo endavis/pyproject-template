@@ -7,6 +7,8 @@ This module demonstrates:
 - Error handling
 """
 
+from typing import Any
+
 from fastapi import APIRouter, Path, status
 
 from examples.api.deps import APIKey, Pagination
@@ -29,7 +31,7 @@ _next_id = 3
     summary="List all users",
     description="Retrieve a paginated list of all users.",
 )
-def list_users(pagination: Pagination):
+def list_users(pagination: Pagination) -> list[dict[str, Any]]:
     """List users with pagination."""
     users = list(_users_db.values())
     skip = pagination["skip"]
@@ -43,7 +45,7 @@ def list_users(pagination: Pagination):
     responses={404: {"model": ErrorResponse, "description": "User not found"}},
     summary="Get a user by ID",
 )
-def get_user(user_id: int = Path(..., gt=0, description="The user ID")):
+def get_user(user_id: int = Path(..., gt=0, description="The user ID")) -> dict[str, Any]:
     """Get a specific user by their ID."""
     if user_id not in _users_db:
         raise NotFoundError("User", user_id)
@@ -57,7 +59,7 @@ def get_user(user_id: int = Path(..., gt=0, description="The user ID")):
     responses={409: {"model": ErrorResponse, "description": "Username already exists"}},
     summary="Create a new user",
 )
-def create_user(user: UserCreate):
+def create_user(user: UserCreate) -> dict[str, Any]:
     """Create a new user account.
 
     - **username**: Must be unique, 3-50 characters
@@ -92,7 +94,7 @@ def create_user(user: UserCreate):
 def update_user(
     user_id: int = Path(..., gt=0),
     user_update: UserUpdate = ...,
-):
+) -> dict[str, Any]:
     """Update an existing user. Only provided fields are updated."""
     if user_id not in _users_db:
         raise NotFoundError("User", user_id)
@@ -113,7 +115,7 @@ def update_user(
 def delete_user(
     user_id: int = Path(..., gt=0),
     api_key: APIKey = ...,  # Require authentication for delete
-):
+) -> None:
     """Delete a user (requires API key authentication)."""
     if user_id not in _users_db:
         raise NotFoundError("User", user_id)

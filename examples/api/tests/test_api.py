@@ -21,7 +21,7 @@ from examples.api.main import app
 
 
 @pytest.fixture
-def client():
+def client() -> TestClient:
     """Create a test client for the FastAPI app."""
     return TestClient(app)
 
@@ -29,7 +29,7 @@ def client():
 class TestHealthEndpoints:
     """Tests for health check endpoints."""
 
-    def test_root_returns_ok(self, client):
+    def test_root_returns_ok(self, client: TestClient) -> None:
         """Test the root endpoint returns status ok."""
         response = client.get("/")
         assert response.status_code == 200
@@ -38,7 +38,7 @@ class TestHealthEndpoints:
         assert "app" in data
         assert "version" in data
 
-    def test_health_check(self, client):
+    def test_health_check(self, client: TestClient) -> None:
         """Test the health check endpoint."""
         response = client.get("/health")
         assert response.status_code == 200
@@ -50,7 +50,7 @@ class TestHealthEndpoints:
 class TestUserEndpoints:
     """Tests for user CRUD endpoints."""
 
-    def test_list_users(self, client):
+    def test_list_users(self, client: TestClient) -> None:
         """Test listing users."""
         response = client.get("/users")
         assert response.status_code == 200
@@ -58,14 +58,14 @@ class TestUserEndpoints:
         assert isinstance(users, list)
         assert len(users) >= 2  # We have 2 default users
 
-    def test_list_users_with_pagination(self, client):
+    def test_list_users_with_pagination(self, client: TestClient) -> None:
         """Test listing users with pagination."""
         response = client.get("/users?skip=1&limit=1")
         assert response.status_code == 200
         users = response.json()
         assert len(users) == 1
 
-    def test_get_user(self, client):
+    def test_get_user(self, client: TestClient) -> None:
         """Test getting a single user."""
         response = client.get("/users/1")
         assert response.status_code == 200
@@ -74,14 +74,14 @@ class TestUserEndpoints:
         assert "username" in user
         assert "email" in user
 
-    def test_get_user_not_found(self, client):
+    def test_get_user_not_found(self, client: TestClient) -> None:
         """Test 404 when user doesn't exist."""
         response = client.get("/users/99999")
         assert response.status_code == 404
         data = response.json()
         assert data["error"] == "not_found"
 
-    def test_create_user(self, client):
+    def test_create_user(self, client: TestClient) -> None:
         """Test creating a new user."""
         response = client.post(
             "/users",
@@ -98,7 +98,7 @@ class TestUserEndpoints:
         assert "password" not in user  # Password should not be returned
         assert user["is_active"] is True
 
-    def test_create_user_invalid_email(self, client):
+    def test_create_user_invalid_email(self, client: TestClient) -> None:
         """Test validation error for invalid email."""
         response = client.post(
             "/users",
@@ -110,7 +110,7 @@ class TestUserEndpoints:
         )
         assert response.status_code == 422  # Validation error
 
-    def test_create_user_password_too_short(self, client):
+    def test_create_user_password_too_short(self, client: TestClient) -> None:
         """Test validation error for short password."""
         response = client.post(
             "/users",
@@ -122,7 +122,7 @@ class TestUserEndpoints:
         )
         assert response.status_code == 422
 
-    def test_create_user_duplicate_username(self, client):
+    def test_create_user_duplicate_username(self, client: TestClient) -> None:
         """Test conflict error for duplicate username."""
         # First create a user
         client.post(
@@ -146,29 +146,29 @@ class TestUserEndpoints:
         data = response.json()
         assert data["error"] == "conflict"
 
-    def test_update_user(self, client):
+    def test_update_user(self, client: TestClient) -> None:
         """Test updating a user."""
         response = client.patch("/users/1", json={"username": "updated_alice"})
         assert response.status_code == 200
         user = response.json()
         assert user["username"] == "updated_alice"
 
-    def test_update_user_not_found(self, client):
+    def test_update_user_not_found(self, client: TestClient) -> None:
         """Test 404 when updating non-existent user."""
         response = client.patch("/users/99999", json={"username": "ghost"})
         assert response.status_code == 404
 
-    def test_delete_user_requires_api_key(self, client):
+    def test_delete_user_requires_api_key(self, client: TestClient) -> None:
         """Test that delete requires API key."""
         response = client.delete("/users/2")
         assert response.status_code == 422  # Missing required header
 
-    def test_delete_user_invalid_api_key(self, client):
+    def test_delete_user_invalid_api_key(self, client: TestClient) -> None:
         """Test delete with invalid API key."""
         response = client.delete("/users/2", headers={"x-api-key": "invalid-key"})
         assert response.status_code == 401
 
-    def test_delete_user_with_valid_api_key(self, client):
+    def test_delete_user_with_valid_api_key(self, client: TestClient) -> None:
         """Test delete with valid API key."""
         # First create a user to delete
         create_response = client.post(
@@ -193,7 +193,7 @@ class TestUserEndpoints:
 class TestItemEndpoints:
     """Tests for item CRUD endpoints."""
 
-    def test_list_items(self, client):
+    def test_list_items(self, client: TestClient) -> None:
         """Test listing items."""
         response = client.get("/items")
         assert response.status_code == 200
@@ -201,7 +201,7 @@ class TestItemEndpoints:
         assert isinstance(items, list)
         assert len(items) >= 3  # We have 3 default items
 
-    def test_list_items_filter_by_owner(self, client):
+    def test_list_items_filter_by_owner(self, client: TestClient) -> None:
         """Test filtering items by owner."""
         response = client.get("/items?owner_id=1")
         assert response.status_code == 200
@@ -209,7 +209,7 @@ class TestItemEndpoints:
         for item in items:
             assert item["owner_id"] == 1
 
-    def test_list_items_filter_by_price(self, client):
+    def test_list_items_filter_by_price(self, client: TestClient) -> None:
         """Test filtering items by price range."""
         response = client.get("/items?min_price=25&max_price=40")
         assert response.status_code == 200
@@ -217,7 +217,7 @@ class TestItemEndpoints:
         for item in items:
             assert 25 <= item["price"] <= 40
 
-    def test_get_item(self, client):
+    def test_get_item(self, client: TestClient) -> None:
         """Test getting a single item."""
         response = client.get("/items/1")
         assert response.status_code == 200
@@ -226,12 +226,12 @@ class TestItemEndpoints:
         assert "name" in item
         assert "price" in item
 
-    def test_get_item_not_found(self, client):
+    def test_get_item_not_found(self, client: TestClient) -> None:
         """Test 404 when item doesn't exist."""
         response = client.get("/items/99999")
         assert response.status_code == 404
 
-    def test_create_item(self, client):
+    def test_create_item(self, client: TestClient) -> None:
         """Test creating a new item."""
         response = client.post(
             "/items?owner_id=1",
@@ -248,7 +248,7 @@ class TestItemEndpoints:
         assert item["price"] == 99.99
         assert item["owner_id"] == 1
 
-    def test_create_item_minimal(self, client):
+    def test_create_item_minimal(self, client: TestClient) -> None:
         """Test creating item with only required fields."""
         response = client.post(
             "/items?owner_id=2",
@@ -262,7 +262,7 @@ class TestItemEndpoints:
         assert item["name"] == "Minimal Item"
         assert item["quantity"] == 0  # Default value
 
-    def test_create_item_invalid_price(self, client):
+    def test_create_item_invalid_price(self, client: TestClient) -> None:
         """Test validation error for invalid price."""
         response = client.post(
             "/items?owner_id=1",
@@ -273,14 +273,14 @@ class TestItemEndpoints:
         )
         assert response.status_code == 422
 
-    def test_update_item(self, client):
+    def test_update_item(self, client: TestClient) -> None:
         """Test updating an item."""
         response = client.patch("/items/1", json={"price": 34.99})
         assert response.status_code == 200
         item = response.json()
         assert item["price"] == 34.99
 
-    def test_delete_item(self, client):
+    def test_delete_item(self, client: TestClient) -> None:
         """Test deleting an item."""
         # First create an item to delete
         create_response = client.post(
@@ -301,7 +301,7 @@ class TestItemEndpoints:
 class TestOpenAPIDocumentation:
     """Tests for OpenAPI documentation endpoints."""
 
-    def test_openapi_schema_available(self, client):
+    def test_openapi_schema_available(self, client: TestClient) -> None:
         """Test that OpenAPI schema is available."""
         response = client.get("/openapi.json")
         assert response.status_code == 200
@@ -310,13 +310,13 @@ class TestOpenAPIDocumentation:
         assert "paths" in schema
         assert "info" in schema
 
-    def test_swagger_ui_available(self, client):
+    def test_swagger_ui_available(self, client: TestClient) -> None:
         """Test that Swagger UI is available in debug mode."""
         response = client.get("/docs")
         assert response.status_code == 200
         assert "swagger" in response.text.lower()
 
-    def test_redoc_available(self, client):
+    def test_redoc_available(self, client: TestClient) -> None:
         """Test that ReDoc is available in debug mode."""
         response = client.get("/redoc")
         assert response.status_code == 200
