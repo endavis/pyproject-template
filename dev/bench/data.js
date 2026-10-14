@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791982219752,
+  "lastUpdate": 1791982688022,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16756,6 +16756,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5558193934807672e-7",
             "extra": "mean: 1.0119844519417542 usec\nrounds: 104341"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5b8307d53c54e55df78ecacc8975b30003a30b2d",
+          "message": "ci: run every lint check after a failure and add deadcode (merges PR #955, addresses #952)\n\nThe lint job ran each check as a step with no `if:`, so one failing check\nskipped every check after it and a PR saw one failure per push. Each check\nnow runs unless the run was cancelled or the install failed. The job also\ngains a `doit deadcode` step: `deadcode` was in `task_check` but in no CI job.\n\nAddresses #952\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-14T13:57:22+01:00",
+          "tree_id": "73ab7b6d702e996b8189831124e74668efee7741",
+          "url": "https://github.com/endavis/pyproject-template/commit/5b8307d53c54e55df78ecacc8975b30003a30b2d"
+        },
+        "date": 1791982686700,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16970651.326763332,
+            "unit": "iter/sec",
+            "range": "stddev: 6.522640437932861e-9",
+            "extra": "mean: 58.92525753699057 nsec\nrounds: 175470"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 17059530.63369363,
+            "unit": "iter/sec",
+            "range": "stddev: 6.641145935680586e-9",
+            "extra": "mean: 58.618259873160746 nsec\nrounds: 175809"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11400005.23416348,
+            "unit": "iter/sec",
+            "range": "stddev: 3.3103740813193154e-8",
+            "extra": "mean: 87.71925797044416 nsec\nrounds: 118176"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4121307.319275471,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6184601342837844e-8",
+            "extra": "mean: 242.6414539199665 nsec\nrounds: 42382"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 911809.047413952,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1910975594871061e-7",
+            "extra": "mean: 1.0967208571094713 usec\nrounds: 94644"
           }
         ]
       }
