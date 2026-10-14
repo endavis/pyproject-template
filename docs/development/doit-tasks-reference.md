@@ -1269,7 +1269,9 @@ doit wheel_check --dist=dist
 ```
 
 **What it does:**
-- Builds a wheel (or reuses the single `*.whl` in `--dist`)
+- Builds a wheel (or reuses the single `*.whl` in `--dist`). It builds from a temporary clone of
+  the working tree, uncommitted changes included, so the version hook rewrites the clone's
+  `_version.py` and not the one in `src/`
 - Confirms `py.typed` is in the wheel
 - Installs it into an isolated venv and imports the package, confirming it was loaded from the
   venv rather than the source tree
