@@ -188,27 +188,41 @@ jobs:
             ${{ runner.os }}-uv-
 
       - name: Install dependencies
+        id: install
         run: uv sync --all-extras --dev
 
+      # Each check runs whether or not the one before it failed, so a PR shows
+      # every failing check at once instead of one per push (#952).
       - name: Check code formatting
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit format_check
 
       - name: Run linting
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit lint
 
       - name: Run type checking
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit type_check
 
+      - name: Find dead code
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
+        run: uv run doit deadcode
+
       - name: Run security scan
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit security
 
       - name: Run spell check
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit spell_check
 
       - name: Run dependency audit
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit audit
 
       - name: Check the built wheel
+        if: ${{ !cancelled() && steps.install.outcome == 'success' }}
         run: uv run doit wheel_check
 
   ci-complete:
