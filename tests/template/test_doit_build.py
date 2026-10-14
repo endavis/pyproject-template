@@ -27,6 +27,7 @@ from tools.doit.build import (
     _import_name,
     _missing_py_typed,
     _scripts,
+    _snapshot_source_tree,
     _venv_python,
     _venv_script,
 )
@@ -106,6 +107,34 @@ def _build_wheel(
     return whl_path
 
 
+def _git(repo: Path, *args: str) -> str:
+    """Run ``git`` in ``repo`` with a fixed identity and no signing; return stdout."""
+    result = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
+        [
+            "git",
+            "-c",
+            "user.name=Test",
+            "-c",
+            "user.email=test@example.com",
+            "-c",
+            "commit.gpgsign=false",
+            *args,
+        ],
+        capture_output=True,
+        text=True,
+        check=True,
+        cwd=repo,
+    )
+    return result.stdout
+
+
+def _init_repo(repo: Path) -> None:
+    """Make ``repo`` a git repository with its current files committed."""
+    _git(repo, "init", "--quiet")
+    _git(repo, "add", "--all")
+    _git(repo, "commit", "--quiet", "--allow-empty", "-m", "init")
+
+
 class TestCheckWheelIntegration:
     """`_check_wheel` against real, synthetic wheels (slow: real `uv venv`/install)."""
 
@@ -164,6 +193,7 @@ class TestCheckWheelBuildsWhenNoDistGiven:
     ) -> None:
         monkeypatch.chdir(tmp_path)
         _write_pyproject(tmp_path, scripts={"foo-cli": "foo_pkg.cli:main"})
+        _init_repo(tmp_path)
         real_run = build_mod.subprocess.run
 
         def fake_run(
@@ -190,10 +220,20 @@ class TestCheckWheelBuildsWhenNoDistGiven:
     ) -> None:
         monkeypatch.chdir(tmp_path)
         _write_pyproject(tmp_path)
+        _init_repo(tmp_path)
+        real_run = build_mod.subprocess.run
 
-        def fake_run(cmd: list[str], **_kwargs: object) -> subprocess.CompletedProcess[str]:
+        def fake_run(
+            cmd: list[str],
+            capture_output: bool = False,
+            text: bool = False,
+            check: bool = False,
+            cwd: Path | None = None,
+        ) -> subprocess.CompletedProcess[str]:
             if cmd[:2] == ["uv", "build"]:
                 return subprocess.CompletedProcess(cmd, 1, "", "boom")
+            if cmd[0] == "git":
+                return real_run(cmd, capture_output=capture_output, text=text, check=check, cwd=cwd)
             raise AssertionError(f"unexpected cmd: {cmd}")
 
         monkeypatch.setattr(build_mod.subprocess, "run", fake_run)
@@ -203,6 +243,129 @@ class TestCheckWheelBuildsWhenNoDistGiven:
         assert len(failures) == 1
         assert "uv build --wheel" in failures[0]
         assert "boom" in failures[0]
+
+    def test_builds_from_snapshot_not_source_tree(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The build runs in a snapshot, so its version hook cannot rewrite `src/` (#937)."""
+        monkeypatch.chdir(tmp_path)
+        _write_pyproject(tmp_path, scripts={"foo-cli": "foo_pkg.cli:main"})
+        (tmp_path / ".gitignore").write_text("_version.py\n", encoding="utf-8")
+        version_file = tmp_path / "src" / "foo_pkg" / "_version.py"
+        version_file.parent.mkdir(parents=True)
+        version_file.write_text("__version__ = 'old'\n", encoding="utf-8")
+        _init_repo(tmp_path)
+        real_run = build_mod.subprocess.run
+        build_cwds: list[Path] = []
+
+        def fake_run(
+            cmd: list[str],
+            capture_output: bool = False,
+            text: bool = False,
+            check: bool = False,
+            cwd: Path | None = None,
+        ) -> subprocess.CompletedProcess[str]:
+            if cmd[:2] == ["uv", "build"]:
+                assert cwd is not None
+                build_cwds.append(cwd)
+                # Stand in for hatch-vcs: rewrite the version file where the build runs.
+                (cwd / "src" / "foo_pkg").mkdir(parents=True, exist_ok=True)
+                (cwd / "src" / "foo_pkg" / "_version.py").write_text(
+                    "__version__ = 'new'\n", encoding="utf-8"
+                )
+                out_dir = Path(cmd[cmd.index("--out-dir") + 1])
+                _build_wheel(out_dir, entry_points={"foo-cli": "foo_pkg.cli:main"})
+                return subprocess.CompletedProcess(cmd, 0, "", "")
+            return real_run(cmd, capture_output=capture_output, text=text, check=check, cwd=cwd)
+
+        monkeypatch.setattr(build_mod.subprocess, "run", fake_run)
+
+        failures = _check_wheel("")
+
+        assert failures == []
+        assert len(build_cwds) == 1
+        assert build_cwds[0].resolve() != tmp_path.resolve()
+        assert version_file.read_text(encoding="utf-8") == "__version__ = 'old'\n"
+
+    def test_not_a_git_repo_is_reported(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.chdir(tmp_path)
+        _write_pyproject(tmp_path)
+        monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+
+        failures = _check_wheel("")
+
+        assert len(failures) == 1
+        assert "could not snapshot the source tree" in failures[0]
+
+
+class TestSnapshotSourceTree:
+    """`_snapshot_source_tree` copies the working tree into a clone at the same commit."""
+
+    def _make_repo(self, root: Path) -> Path:
+        repo = root / "repo"
+        repo.mkdir()
+        (repo / ".gitignore").write_text("ignored.txt\n", encoding="utf-8")
+        (repo / "tracked.txt").write_text("committed\n", encoding="utf-8")
+        (repo / "deleted.txt").write_text("gone soon\n", encoding="utf-8")
+        (repo / "pkg").mkdir()
+        (repo / "pkg" / "mod.py").write_text("x = 1\n", encoding="utf-8")
+        _init_repo(repo)
+        return repo
+
+    def test_copies_working_tree_state(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        repo = self._make_repo(tmp_path)
+        (repo / "tracked.txt").write_text("edited\n", encoding="utf-8")
+        (repo / "untracked.txt").write_text("new\n", encoding="utf-8")
+        (repo / "ignored.txt").write_text("secret\n", encoding="utf-8")
+        (repo / "deleted.txt").unlink()
+        monkeypatch.chdir(repo)
+        dest = tmp_path / "snapshot"
+
+        _snapshot_source_tree(dest)
+
+        assert (dest / "tracked.txt").read_text(encoding="utf-8") == "edited\n"
+        assert (dest / "untracked.txt").read_text(encoding="utf-8") == "new\n"
+        assert (dest / "pkg" / "mod.py").read_text(encoding="utf-8") == "x = 1\n"
+        assert not (dest / "ignored.txt").exists()
+        assert not (dest / "deleted.txt").exists()
+
+    def test_snapshot_is_at_source_head(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        repo = self._make_repo(tmp_path)
+        _git(repo, "tag", "v1.2.3")
+        monkeypatch.chdir(repo)
+        dest = tmp_path / "snapshot"
+
+        _snapshot_source_tree(dest)
+
+        assert _git(dest, "rev-parse", "HEAD") == _git(repo, "rev-parse", "HEAD")
+        assert _git(dest, "describe", "--tags").strip() == "v1.2.3"
+        assert _git(dest, "status", "--porcelain", "--untracked-files=no") == ""
+
+    def test_source_index_is_not_written(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        repo = self._make_repo(tmp_path)
+        (repo / "tracked.txt").write_text("edited\n", encoding="utf-8")
+        index = repo / ".git" / "index"
+        before = index.read_bytes()
+        monkeypatch.chdir(repo)
+
+        _snapshot_source_tree(tmp_path / "snapshot")
+
+        assert index.read_bytes() == before
+
+    def test_not_a_git_repo_raises(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+
+        with pytest.raises(ValueError, match="git rev-parse HEAD"):
+            _snapshot_source_tree(tmp_path / "snapshot")
 
 
 class TestImportName:

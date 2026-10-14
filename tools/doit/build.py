@@ -2,6 +2,7 @@
 
 import os
 import platform
+import shutil
 import subprocess  # nosec B404 - subprocess is required to build/install/run the wheel
 import sys
 import tempfile
@@ -122,6 +123,53 @@ def _venv_script(venv_dir: Path, name: str) -> Path:
     return venv_dir / "bin" / name
 
 
+def _git(args: list[str], cwd: Path | None = None) -> str:
+    """Run ``git`` with ``args`` and return its stdout.
+
+    Raises ``ValueError`` naming the command and its output on a non-zero exit.
+    """
+    result = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
+        ["git", *args],
+        capture_output=True,
+        text=True,
+        check=False,
+        cwd=cwd,
+    )
+    if result.returncode != 0:
+        raise ValueError(f"`git {' '.join(args)}` failed:\n{result.stdout}{result.stderr}")
+    return result.stdout
+
+
+def _snapshot_source_tree(dest: Path) -> None:
+    """Copy the working tree into ``dest`` as a git repository at the same commit.
+
+    Building in place lets the build backend's version hook rewrite generated,
+    gitignored files in the source tree (hatch-vcs rewrites
+    ``src/<pkg>/_version.py``), which leaves them out of step with the editable
+    install's metadata (issue #937). Building from this snapshot sends those
+    writes to ``dest`` instead.
+
+    ``dest`` is a ``--shared`` clone so the VCS version is computed from the
+    same commit and tags, overlaid with every tracked and untracked,
+    non-ignored file from the working tree so uncommitted changes are built.
+    Nothing in the source repository, its index included, is written.
+
+    Raises ``ValueError`` if any ``git`` command fails.
+    """
+    head = _git(["rev-parse", "HEAD"]).strip()
+    _git(["clone", "--quiet", "--shared", "--no-checkout", ".", str(dest)])
+    listing = _git(["ls-files", "-z", "--cached", "--others", "--exclude-standard"])
+    for name in filter(None, listing.split("\0")):
+        src = Path(name)
+        # --cached lists tracked files deleted from disk; submodules are directories.
+        if not (src.is_symlink() or src.is_file()):
+            continue
+        target = dest / name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(src, target, follow_symlinks=False)
+    _git(["reset", "--quiet", head], cwd=dest)
+
+
 def _check_wheel(dist: str) -> list[str]:
     """Build (or reuse) a wheel, install it in a throwaway venv, and smoke-test it.
 
@@ -149,11 +197,17 @@ def _check_wheel(dist: str) -> list[str]:
         else:
             dist_dir = tmp_dir / "dist"
             dist_dir.mkdir()
+            source_dir = tmp_dir / "source"
+            try:
+                _snapshot_source_tree(source_dir)
+            except ValueError as exc:
+                return [f"could not snapshot the source tree to build from: {exc}"]
             build_result = subprocess.run(  # nosec B603 B607 - fixed argv, no shell
                 ["uv", "build", "--wheel", "--out-dir", str(dist_dir)],
                 capture_output=True,
                 text=True,
                 check=False,
+                cwd=source_dir,
             )
             if build_result.returncode != 0:
                 return [f"`uv build --wheel` failed:\n{build_result.stdout}{build_result.stderr}"]
@@ -256,7 +310,8 @@ def task_wheel_check() -> dict[str, Any]:
     the package, runs every ``[project.scripts]`` entry with ``--help``, and
     confirms ``py.typed`` shipped in the wheel — so a packaging regression
     (missing module, broken entry point, missing ``py.typed``) fails before it
-    reaches PyPI. See issue #837.
+    reaches PyPI. See issue #837. A fresh wheel is built from a snapshot of the
+    working tree so the build never writes into the source tree (issue #937).
 
     Options:
         --dist: Directory containing an already-built wheel to check (e.g.
