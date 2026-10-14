@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1790935866538,
+  "lastUpdate": 1791980786798,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16638,6 +16638,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7838086366004282e-7",
             "extra": "mean: 1.8295397236852835 usec\nrounds: 56961"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ed8665c6649661681cde18a3077f2aab8bae9f19",
+          "message": "fix: build the wheel_check wheel from a snapshot so _version.py is not rewritten (merges PR #953, addresses #937)\n\n`doit wheel_check` ran `uv build --wheel` in the source tree. The hatch-vcs\nversion hook rewrote the gitignored src/package_name/_version.py, which then\ndisagreed with the editable install's .dist-info and failed\ntest_version_option after every new commit.\n\nBuild from a `git clone --shared` of the repo reset to HEAD, overlaid with\nthe working tree's tracked and untracked, non-ignored files. The version is\ncomputed from the same commit and tags, and nothing in the source tree or\nits index is written. --dist runs are unchanged.\n\nAddresses #937\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-14T13:25:30+01:00",
+          "tree_id": "2f4d85475e41499a923531b636c3c0de2af8da9e",
+          "url": "https://github.com/endavis/pyproject-template/commit/ed8665c6649661681cde18a3077f2aab8bae9f19"
+        },
+        "date": 1791980785733,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8747597.93104129,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7462913292537934e-8",
+            "extra": "mean: 114.31709686283705 nsec\nrounds: 90943"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9198064.443048045,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6367681823121752e-8",
+            "extra": "mean: 108.71852509750639 nsec\nrounds: 97220"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6538732.914531308,
+            "unit": "iter/sec",
+            "range": "stddev: 1.48495841815883e-8",
+            "extra": "mean: 152.93482897545132 nsec\nrounds: 68762"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2207742.434684939,
+            "unit": "iter/sec",
+            "range": "stddev: 7.024704549501602e-8",
+            "extra": "mean: 452.9513879379263 nsec\nrounds: 189790"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 549760.4961113913,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6461400151860794e-7",
+            "extra": "mean: 1.8189739115001489 usec\nrounds: 56316"
           }
         ]
       }
