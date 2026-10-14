@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791980786798,
+  "lastUpdate": 1791982219752,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16697,6 +16697,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6461400151860794e-7",
             "extra": "mean: 1.8189739115001489 usec\nrounds: 56316"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "91d4fa6ed60069cd8af2077b441648dabe023de0",
+          "message": "fix: run the daily check with --continue and name each failing task (merges PR #954, addresses #952)\n\n`doit check` stops at the first failing task, so every task after it never\nran and a second failure stayed hidden behind the first. The daily check now\nruns `doit --continue check`, saves the output, and lists each failing task\n(from doit's `TaskFailed`/`TaskError` lines) in the issue body and in each\n\"Still failing\" comment. The hand-written task list in the body, which had\nfallen behind `task_check`, is gone.\n\nAddresses #952\n\n\nClaude-Session: https://claude.ai/code/session_01LWn2sd2QGNfVGVPETdZvCM\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-14T13:49:32+01:00",
+          "tree_id": "80ee85f60750e4c45130cab99ed46180c6d762ed",
+          "url": "https://github.com/endavis/pyproject-template/commit/91d4fa6ed60069cd8af2077b441648dabe023de0"
+        },
+        "date": 1791982218996,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18648900.59985762,
+            "unit": "iter/sec",
+            "range": "stddev: 5.254960863600118e-9",
+            "extra": "mean: 53.62246394340452 nsec\nrounds: 190187"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 18938521.50244964,
+            "unit": "iter/sec",
+            "range": "stddev: 5.211997163604517e-9",
+            "extra": "mean: 52.80243232665513 nsec\nrounds: 189144"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12903687.525717253,
+            "unit": "iter/sec",
+            "range": "stddev: 6.419070972019841e-9",
+            "extra": "mean: 77.49722689789134 nsec\nrounds: 130702"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4548547.102844704,
+            "unit": "iter/sec",
+            "range": "stddev: 1.180537525935932e-8",
+            "extra": "mean: 219.85042198960426 nsec\nrounds: 46186"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 988157.4742390963,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5558193934807672e-7",
+            "extra": "mean: 1.0119844519417542 usec\nrounds: 104341"
           }
         ]
       }
