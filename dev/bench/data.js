@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792315119980,
+  "lastUpdate": 1792318035054,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16874,6 +16874,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6290748111100718e-7",
             "extra": "mean: 1.9333300751836988 usec\nrounds: 54131"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6de6b8232b574883815985c54c9147d7031f2ae5",
+          "message": "fix: read the FETCH_HEAD mtime with one stat form so GNU stat output does not leak (merges PR #962, addresses #960)\n\nBoth statuslines read the FETCH_HEAD mtime with\n`$(stat -f %m f 2>/dev/null || stat -c %Y f 2>/dev/null)`. On Linux, GNU\n`stat -f` means \"filesystem status\": it exits 1 but still prints\nfilesystem info to stdout, so the capture held that text plus the mtime,\nthe age arithmetic failed, and the branch line lost its\n\"(N files uncommitted, synced ...)\" suffix.\n\nProbe for BSD stat first and run exactly one form, as claude-usage.sh\nalready does. Applied to .claude/statusline-command.sh and\ntools/statusline/agy-statusline.sh.\n\nAddresses #960\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-18T11:06:26+01:00",
+          "tree_id": "5b46d260e7bec83909777a9b5b5a1b9ec09c79e6",
+          "url": "https://github.com/endavis/pyproject-template/commit/6de6b8232b574883815985c54c9147d7031f2ae5"
+        },
+        "date": 1792318034353,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8270332.794883578,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3234947414864626e-8",
+            "extra": "mean: 120.91411854897153 nsec\nrounds: 83459"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8700433.833154043,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3093771680728988e-8",
+            "extra": "mean: 114.93679731111574 nsec\nrounds: 92082"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5392787.882788792,
+            "unit": "iter/sec",
+            "range": "stddev: 2.785859171222032e-8",
+            "extra": "mean: 185.43284507657407 nsec\nrounds: 56712"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2056609.918812005,
+            "unit": "iter/sec",
+            "range": "stddev: 9.456056404150382e-8",
+            "extra": "mean: 486.2370792112328 nsec\nrounds: 197629"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 522341.0296005075,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0113758108286132e-7",
+            "extra": "mean: 1.9144580711279977 usec\nrounds: 54633"
           }
         ]
       }
