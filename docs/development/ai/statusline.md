@@ -119,7 +119,8 @@ export CLAUDE_USAGE_STATUSLINE=1
 ```
 
 Restart Claude Code. The statusline appends `5h:N%@HHMM wk:N%@aaa-HHMM` to the model/context line.
-Times are shown in your local timezone.
+Times are shown in your local timezone. A bucket with no active window shows `--` in place of its
+reset time (e.g. `5h:0%@--` after the 5-hour window expires and before your next prompt opens one).
 To disable temporarily: `unset CLAUDE_USAGE_STATUSLINE` and restart Claude Code.
 
 Example output (helper segment is the trailing portion of the third line):
