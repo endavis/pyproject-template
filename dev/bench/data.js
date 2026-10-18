@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1791982688022,
+  "lastUpdate": 1792315119980,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16815,6 +16815,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1910975594871061e-7",
             "extra": "mean: 1.0967208571094713 usec\nrounds: 94644"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "16f5f899da88a82af5ae3800e1362efdbe23cb47",
+          "message": "fix: show the usage gauges when a bucket has no active window (merges PR #961, addresses #959)\n\nThe usage API returns resets_at: null for a bucket with no active window,\ne.g. after the 5-hour window expires and before the next prompt opens one.\nparse_usage required every resets_at to be non-null, printed ?, and the\nstatusline dropped the whole segment, hiding the valid weekly gauge too.\n\nA present-but-null resets_at now shows -- for that gauge's time. A missing\nresets_at key still fails as a schema change.\n\nAddresses #959\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-18T10:17:56+01:00",
+          "tree_id": "17120cc1c33e8cae411ed9ad4d0d14e20b44655b",
+          "url": "https://github.com/endavis/pyproject-template/commit/16f5f899da88a82af5ae3800e1362efdbe23cb47"
+        },
+        "date": 1792315119167,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8721034.195767095,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1882853287531191e-8",
+            "extra": "mean: 114.6652997284849 nsec\nrounds: 89848"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8720458.772775041,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1704580987297595e-8",
+            "extra": "mean: 114.67286596457105 nsec\nrounds: 91819"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5656755.267297861,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6775190922818925e-8",
+            "extra": "mean: 176.77978854434045 nsec\nrounds: 58405"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2089237.942742516,
+            "unit": "iter/sec",
+            "range": "stddev: 6.998484998143461e-8",
+            "extra": "mean: 478.6434228201469 nsec\nrounds: 182482"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 517242.2509927506,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6290748111100718e-7",
+            "extra": "mean: 1.9333300751836988 usec\nrounds: 54131"
           }
         ]
       }
