@@ -183,6 +183,8 @@ class TestTaskCheck:
         ``deadcode`` joined the set in #700: it was defined as a task but never
         gated, so unused imports in ``tools/`` accumulated unnoticed. ``wheel_check``
         joined in #837 so a packaging regression fails locally, not on PyPI.
+        ``docs_build`` joined in #974 so a strict-mode docs build failure (e.g. a
+        page missing from mkdocs ``nav``) fails locally, not only in CI.
         """
         task = task_check()
         assert set(task["task_dep"]) == {
@@ -194,8 +196,17 @@ class TestTaskCheck:
             "audit",
             "spell_check",
             "wheel_check",
+            "docs_build",
             "test",
         }
+
+    def test_check_gates_on_docs_build(self) -> None:
+        """``docs_build`` must run as part of ``doit check``, not just on demand.
+
+        Before #974, ``doit check`` could pass locally while the strict mkdocs
+        build failed in CI (e.g. a new ADR missing from the ``nav`` config).
+        """
+        assert "docs_build" in task_check()["task_dep"]
 
 
 class TestTaskTypeCheck:

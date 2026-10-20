@@ -254,7 +254,7 @@ doit check
 ```
 
 **What it does:**
-- Runs format check, lint, type check, security, spelling, a wheel smoke test, and tests
+- Runs format check, lint, type check, security, spelling, a wheel smoke test, a strict docs build, and tests
 - Stops on first failure
 
 **Task dependencies:**
@@ -264,6 +264,7 @@ doit check
 - `security` (if available)
 - `spell_check`
 - `wheel_check`
+- `docs_build`
 - `test`
 
 ### `spell_check`
