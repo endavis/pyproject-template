@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792505436122,
+  "lastUpdate": 1792509010504,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17110,6 +17110,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.6449320745370086e-7",
             "extra": "mean: 1.9200731693568496 usec\nrounds: 54967"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "834ffd943911f0d14574d523dd08016163a551e0",
+          "message": "refactor: make the multi-* workflows agent-portable shared skills (merges PR #979, addresses #975)\n\nmulti-plan, multi-review and multi-adversarial-review are now written once\nin .agents/skills/ and generated for Claude by doit skills_sync. Each names\nthe CLI running it as \"you\" and calls the other agents through a table of\nCLI invocations that a contract test pins to cross-agent-delegation.md.\nmulti-plan reuses implement-issue's Planner brief (its plans drop the\n\"Risks and Considerations\" section). Both review skills carry the exact\nread-only sentence from the workflow contract.\n\nDeletes the .claude/commands/multi-*.md copies and the unread\n.copilot/commands/multi-*.md copies. Slash names are unchanged.\n\nAddresses #975\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-20T16:09:09+01:00",
+          "tree_id": "fce202a93f4f983947903c9b6c08beaf2aed37cd",
+          "url": "https://github.com/endavis/pyproject-template/commit/834ffd943911f0d14574d523dd08016163a551e0"
+        },
+        "date": 1792509009463,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10936288.60792795,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0510383678716842e-8",
+            "extra": "mean: 91.43869879906777 nsec\nrounds: 115916"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11204347.085224638,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7037241463086362e-8",
+            "extra": "mean: 89.25107303385101 nsec\nrounds: 121478"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6433602.709575832,
+            "unit": "iter/sec",
+            "range": "stddev: 3.471773294731512e-8",
+            "extra": "mean: 155.43390618627896 nsec\nrounds: 71013"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2400313.87133448,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1270839579646423e-7",
+            "extra": "mean: 416.61218224099974 nsec\nrounds: 194780"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 624104.6839311994,
+            "unit": "iter/sec",
+            "range": "stddev: 2.645917088695748e-7",
+            "extra": "mean: 1.602295297162421 usec\nrounds: 70702"
           }
         ]
       }
