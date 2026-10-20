@@ -56,10 +56,10 @@ Present a status summary and suggest what to do next:
 
 | State | Suggestion |
 | :--- | :--- |
-| On feature branch, no plan comment | Start planning the issue (the current agent's plan workflow) |
-| On feature branch, plan exists, no code changes | Start implementing the issue (the current agent's implement workflow) |
-| On feature branch, code changes, not committed | Review changes, then run the `ghi-finalize` skill to commit and create a PR |
-| On feature branch, committed, no PR | Run the `ghi-finalize` skill to create the PR |
+| On feature branch, no plan comment, no code changes | Say "implement issue N" — it decides whether to plan first |
+| On feature branch, plan exists, no code changes | Say "implement issue N" to resume — it reuses the existing plan comment |
+| On feature branch, code changes, not committed | Say "implement issue N" to resume, or commit and open a PR per `.github/CONTRIBUTING.md` |
+| On feature branch, committed, no PR | Say "implement issue N" to resume, or open a PR per `.github/CONTRIBUTING.md` |
 | On feature branch, PR exists (open) | PR is open — waiting for review/merge |
 | On feature branch, PR exists (merged) | Close the issue: `gh issue close <N> --comment "Addressed in PR #<PR>"` |
 | Issue is already closed | Work complete — switch back to `main` |
@@ -76,5 +76,6 @@ Present a status summary and suggest what to do next:
 - **PR:** None
 
 ## Suggested next step
-Run the `ghi-finalize` skill to commit your changes and create a PR.
+Say "implement issue 245" to resume — it will pick up the uncommitted changes, run `doit check`,
+commit, push, and open the PR.
 ```

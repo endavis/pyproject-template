@@ -74,6 +74,8 @@ ALLOWED: dict[str, str] = {
     "/tmp/pr-body.md": "the 'wrong' half of the temp-file example",
     # Declared as future work.
     ".agents/skills.json": "Antigravity-side suppression, documented as planned",
+    # Removed by #976; named in the ADR and consumer notes as what no longer exists.
+    ".claude/commands/ghi-finalize.md": "historical reference to a file removed by #976",
 }
 
 
