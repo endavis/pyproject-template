@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792495648444,
+  "lastUpdate": 1792504874795,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16992,6 +16992,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1297890475862349e-7",
             "extra": "mean: 1.429524229365065 usec\nrounds: 73089"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "367ff94272d11bc612de4dbbd6b563256b568c85",
+          "message": "feat: one implement-issue skill that takes an issue to a green PR (merges PR #977, addresses #976)\n\nAdd a shared implement-issue skill (.agents/skills/, generated for Claude by\ndoit skills_sync). On \"implement issue N\" it creates the branch, decides\nwhether a plan is needed (needs-adr, >3 files or a new module, or competing\napproaches), plans in a subagent and posts the plan to the issue, codes in a\nsubagent, validates with doit check and doit docs_build, commits, opens the\nPR with doit pr, and fixes CI (at most 3 rounds) until require-label is the\nonly failing check. It stops on any ask-first trigger and never adds\nready-to-merge, merges, or closes the issue. \"with <agent>\" hands only the\ncoding step to that agent's CLI.\n\nAGENTS.md gains an exception to Summary Before Commit: \"implement issue X\"\nauthorizes commit, push and PR on that issue's branch. Agent presence\nmarkers in tests/agent_roster.py move from *-plan to *-review. ADR-9024\nrecords the decision.\n\nAddresses #976\n\nBREAKING CHANGE: /claude:plan, /claude:implement and /ghi-finalize are\nremoved, along with every agent's plan and implement skills and bridges\n(codex-, copilot-, antigravity- and delegate-*-plan/implement). Say\n\"implement issue N\" instead; review and adversarial-review are unchanged.\nSee docs/template/consumer-notes.md for migration.\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-20T15:00:28+01:00",
+          "tree_id": "ae198f10e34ed56da62a32ddbe02f1c87b57db62",
+          "url": "https://github.com/endavis/pyproject-template/commit/367ff94272d11bc612de4dbbd6b563256b568c85"
+        },
+        "date": 1792504873768,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11273656.64289225,
+            "unit": "iter/sec",
+            "range": "stddev: 9.996082313897371e-9",
+            "extra": "mean: 88.70236443030879 nsec\nrounds: 119403"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11899463.08476346,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0174730294832523e-8",
+            "extra": "mean: 84.03740512296217 nsec\nrounds: 128403"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7177631.693746162,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3363455086644952e-8",
+            "extra": "mean: 139.32172096142736 nsec\nrounds: 80763"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2591750.690434898,
+            "unit": "iter/sec",
+            "range": "stddev: 5.5729467474171455e-8",
+            "extra": "mean: 385.8395808248822 nsec\nrounds: 182516"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 637231.6243725534,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7779816700635848e-7",
+            "extra": "mean: 1.5692880920413272 usec\nrounds: 72145"
           }
         ]
       }
