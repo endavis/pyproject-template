@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792504874795,
+  "lastUpdate": 1792505436122,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17051,6 +17051,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7779816700635848e-7",
             "extra": "mean: 1.5692880920413272 usec\nrounds: 72145"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "364b26e6fa3472ed3a8abff26258194daf55d49b",
+          "message": "fix: run the strict docs build in doit check (merges PR #978, addresses #974)\n\ndoit check now depends on docs_build (mkdocs build --strict), so a page\nmissing from the mkdocs nav, a broken link, or any other strict-mode\nwarning fails locally instead of only in CI. The build adds about 1.7s.\n\nThe CI lint-job test now excludes docs_build the same way it excludes test,\nsince the docs job already runs it, and a new test pins that the docs job\ndoes.\n\nAddresses #974\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-20T15:09:42+01:00",
+          "tree_id": "80193738dc1ce44dead7a6ca3e985c7ae6ace7e1",
+          "url": "https://github.com/endavis/pyproject-template/commit/364b26e6fa3472ed3a8abff26258194daf55d49b"
+        },
+        "date": 1792505434944,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8583021.613964919,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2967420535758343e-8",
+            "extra": "mean: 116.50908560837831 nsec\nrounds: 88496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8836930.193043938,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2297513502709567e-8",
+            "extra": "mean: 113.16146876289216 nsec\nrounds: 92166"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5333273.863245892,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6233186149033287e-8",
+            "extra": "mean: 187.502090768575 nsec\nrounds: 54248"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2085435.645897327,
+            "unit": "iter/sec",
+            "range": "stddev: 8.258177519798152e-8",
+            "extra": "mean: 479.51611547798075 nsec\nrounds: 184843"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 520813.48563136347,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6449320745370086e-7",
+            "extra": "mean: 1.9200731693568496 usec\nrounds: 54967"
           }
         ]
       }
