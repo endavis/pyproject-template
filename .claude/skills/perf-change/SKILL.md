@@ -1,16 +1,21 @@
+---
+name: perf-change
+description: Use when optimizing performance-sensitive code, when asked to make something faster, or before claiming a speedup for a change. Takes a measured baseline with `doit benchmark_save`, profiles with the standard library's cProfile to find where the time goes, makes the change, then compares with `doit benchmark_compare` and pastes the table into the PR. Requires a benchmark for the changed path in `tests/benchmarks/` before optimizing it, and `doit check` to pass, since a faster wrong answer is a regression.
+---
+
 # Perf Change
 
 Change performance-sensitive code with a measured baseline, a profile, and a pasted comparison —
 never a speedup claimed from reading the code.
 
-Argument: `$ARGUMENTS` — the function or path to make faster, and why (what's slow, or where it came
-from: a profile, a user report, a benchmark trend). If it is empty, ask the user what needs to be
-faster and why before doing anything else.
+The function or path to make faster, and why (what's slow, or where it came from: a profile, a user
+report, a benchmark trend), come from the user's request or the task that needs it. If neither says,
+ask what needs to be faster and why before doing anything else.
 
 This project ships `tests/benchmarks/`, `doit benchmark`, `doit benchmark_save`, `doit
 benchmark_compare`, and a benchmark-tracking CI workflow — none of it measures anything unless you run
-it, in the order that keeps a claimed speedup honest. `.claude/rules/verified-claims.md` exists to stop
-exactly the failure this command is for: an agent reporting a speedup it never measured.
+it, in the order that keeps a claimed speedup honest. The `verified-claims` skill exists to stop
+exactly the failure this skill is for: an agent reporting a speedup it never measured.
 
 ## Instructions
 
@@ -55,11 +60,11 @@ Find out where the time actually goes, with the standard library's `cProfile`, a
 output with `pstats`:
 
 ```bash
-mkdir -p tmp/agents/claude
-uv run python -m cProfile -o tmp/agents/claude/perf-<n>-profile.stats \
+mkdir -p tmp/agents/<agent>
+uv run python -m cProfile -o tmp/agents/<agent>/perf-<n>-profile.stats \
   -m pytest tests/benchmarks/<file>.py --benchmark-enable --benchmark-only -q -p no:randomly
-uv run python -c "import pstats; pstats.Stats('tmp/agents/claude/perf-<n>-profile.stats').sort_stats('tottime').print_stats(20)"
-rm tmp/agents/claude/perf-<n>-profile.stats
+uv run python -c "import pstats; pstats.Stats('tmp/agents/<agent>/perf-<n>-profile.stats').sort_stats('tottime').print_stats(20)"
+rm tmp/agents/<agent>/perf-<n>-profile.stats
 ```
 
 Sort by `tottime` (self time), not `cumulative`: cumulative is dominated by pytest's own call stack
@@ -95,7 +100,7 @@ Stop and report the failure instead.
 
 Carry the comparison table, what Step 3 found, and what Step 4 changed into the PR description; a
 reviewer should not have to re-run the benchmark to see whether the change helped. When the task is
-done, hand off to `/ghi-finalize`.
+done, hand off to the `ghi-finalize` skill.
 
 ## Notes
 
@@ -109,7 +114,7 @@ done, hand off to `/ghi-finalize`.
   flags.
 - CI tracks benchmark history separately (`docs/development/ci-cd-testing.md`, "Benchmark Tracking"),
   but only from pushes to `main` (`.github/workflows/benchmark.yml`'s `store` job is gated on
-  `github.event_name == 'push'`). A PR gets no benchmark comparison from CI, so this command's local
+  `github.event_name == 'push'`). A PR gets no benchmark comparison from CI, so this skill's local
   table is the only before/after number the PR carries.
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them when
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them when
   the task is done.

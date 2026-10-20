@@ -1,21 +1,25 @@
+---
+name: mutation-triage
+description: Use when `doit mutate` (mutmut) reports a surviving mutant, or `doit coverage` marks a line or branch Missing, and you need to decide whether it is an equivalent mutant, a missing assertion, an untested branch, or a real bug — then turn genuine gaps into behavior tests and prove each named mutant is killed.
+---
+
 # Mutation Triage
 
 Turn surviving mutants and uncovered lines into behavior tests, or a documented reason they need
 none.
 
-Argument: `$ARGUMENTS` — optional scope: a dotted module path or a file under `src/` to triage (for
-example `<package>.<module>` or `src/<package>/<module>.py`), optionally followed by specific mutant
-names you already know survived. Empty means every survivor from the latest run.
+The scope — a dotted module path, a file under `src/`, or specific mutant names already known to
+survive — comes from the user's request or the task at hand. Empty means every survivor from the
+latest run.
 
 `doit mutate` runs mutation testing informationally: surviving mutants do not fail it, locally or in
 the weekly workflow (`.github/workflows/mutation.yml`). That silence is the trap — a survivor is a
 question nothing forces anyone to answer. The quick, wrong answers are a test that asserts on the
 mutated expression just to kill it, and a survivor declared equivalent with no argument for why; both
-report success while proving nothing. This command replaces the quick answer with the slow one.
+report success while proving nothing. This skill replaces the quick answer with the slow one.
 
 Before Step 1, read the "## Mutation Testing" section in `docs/development/ci-cd-testing.md`. It is
-the policy this command applies; where the two disagree, the policy wins and this command is out of
-date.
+the policy this skill applies; where the two disagree, the policy wins and this skill is out of date.
 
 ## Instructions
 
@@ -114,4 +118,4 @@ guarantee a mutant there dies, so re-running is still how you know a new test re
 - Triage the survivors and uncovered lines that belong to the code the current task already touches.
   One you notice elsewhere is a separate task, not scope creep to fold in here.
 - Once every survivor and uncovered line in scope is classified, and every test you added is proven
-  against what it targeted and passes `doit check`, hand off to `/ghi-finalize`.
+  against what it targeted and passes `doit check`, hand off to the `ghi-finalize` skill.

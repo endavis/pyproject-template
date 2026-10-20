@@ -1,14 +1,19 @@
+---
+name: python-version-bump
+description: Use when a task needs to change which Python versions this project supports -- adding a newest version to .github/python-versions.json plus a classifier, or raising the floor (requires-python) and dropping the oldest version. Reads the seven places the supported range is declared, adds a newest version non-destructively, or asks the user before raising the floor and then changes all seven settings together, regenerates uv.lock, applies the UP rewrites doit lint reports, and runs doit check.
+---
+
 # Python Version Bump
 
 Move the supported Python range in either direction: add a newest version, or raise the floor and
 drop the oldest.
 
-Argument: `$ARGUMENTS` — the direction and the version, e.g. `newest 3.15` or `floor 3.13`. If empty,
-ask the user which direction, and which version, before doing anything else.
+The direction and the version come from the user's request or from the task that needs it. If
+neither says, ask the user which direction, and which version, before doing anything else.
 
 Read `docs/development/ci-cd-testing.md` and find "## Python Version Support Policy" before Step 1.
-It is the policy this command applies; where the two disagree, the policy wins and this command is
-out of date.
+It is the policy this skill applies; where the two disagree, the policy wins and this skill is out
+of date.
 
 ## Instructions
 
@@ -71,7 +76,7 @@ Purely additive — nothing to ask permission for.
 No `uv lock` needed here — `requires-python` does not move, and a classifier addition alone leaves
 `uv lock --check` at exit 0. Every PR already runs the bookend versions (`oldest` and the new
 `newest`); the `full-matrix` label on a PR additionally runs the middle versions once, per the "CI
-Matrix Strategy" this command's policy section describes. That is the user's call, not a step here.
+Matrix Strategy" this skill's policy section describes. That is the user's call, not a step here.
 
 ### Step 3: Raise the floor — ask first
 
@@ -79,7 +84,7 @@ Matrix Strategy" this command's policy section describes. That is the user's cal
 that decision belongs to the user, not to you. Wait for an explicit yes before Step 4.
 
 Ask two more things in that same message, not a follow-up one. First, whether the commit should
-carry a `BREAKING CHANGE:` footer: neither AGENTS.md's Breaking Changes Policy nor this command's
+carry a `BREAKING CHANGE:` footer: neither AGENTS.md's Breaking Changes Policy nor this skill's
 policy section names dropping a Python version, so it is not a foregone conclusion, and the footer
 changes what `doit release`'s automatic bump produces next: while `[tool.commitizen]` has
 `major_version_zero = true`, it's a MINOR bump, and `doit release` refuses to release 1.0 or
@@ -90,7 +95,7 @@ generates it from commit history.
 Second, whether they want the latest release that still supports the old floor tagged, per the
 policy section's "Deprecation Process" (e.g. `v1.2.3-py310-final`). That names a release that
 already exists, not one this commit creates — creating and pushing the tag is the user's to do,
-not this command's.
+not this skill's.
 
 ### Step 4: Change all seven settings in one commit
 
@@ -131,7 +136,7 @@ Five things follow from raising the floor, and none of them are optional:
 ## Notes
 
 - Steps 2 and 3–6 are independent. A single invocation does one direction; doing both means running
-  this command twice, ordinarily newest-version first since it is the simpler, non-breaking half.
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them
+  this skill twice, ordinarily newest-version first since it is the simpler, non-breaking half.
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them
   when the task is done.
-- When the task is done, hand off to `/ghi-finalize`.
+- When the task is done, hand off to the `ghi-finalize` skill.

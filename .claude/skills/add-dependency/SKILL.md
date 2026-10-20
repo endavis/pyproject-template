@@ -1,18 +1,23 @@
+---
+name: add-dependency
+description: Use when a task needs a third-party Python package that is not a dependency yet, when the user asks to add or install a package or library, or when `uv add` is blocked by the dangerous-command hook. Rules out the standard library and existing dependencies, places the package in runtime dependencies or the dev or security extra, vets its license, maintenance and typing, hands the user the exact `uv add` command to run, then settles typing and runs `doit licenses`, `doit audit` and `doit check`.
+---
+
 # Add Dependency
 
 Add a third-party package to this project: justified, placed, vetted, handed to the user to install,
 then typed and checked.
 
-Argument: `$ARGUMENTS` — the package the task needs, optionally followed by what it is for. If it is
-empty, ask the user what the task needs before doing anything else.
+The package, and what it is for, come from the user's request or from the task that needs it. If
+neither says, ask the user what the task needs before doing anything else.
 
 You cannot run `uv add`. The dangerous-command hook blocks it for every agent, in every form, and
-that is deliberate: a new dependency is the user's decision. This command does everything around
-that one step — it prepares the decision, hands the user the exact command, and finishes the work
-once they have run it.
+that is deliberate: a new dependency is the user's decision. This skill does everything around that
+one step — it prepares the decision, hands the user the exact command, and finishes the work once
+they have run it.
 
 Before Step 1, read `.github/CONTRIBUTING.md` and locate the "## Dependencies" section. It is the
-policy this command applies; where the two disagree, the policy wins and this command is out of date.
+policy this skill applies; where the two disagree, the policy wins and this skill is out of date.
 
 ## Instructions
 
@@ -32,7 +37,7 @@ Then look for something that already covers it:
 user what you used and why no new package was needed.
 
 A package that is installed only because something else depends on it is not an existing dependency.
-If the code imports it, it needs its own entry, and it goes through this command.
+If the code imports it, it needs its own entry, and it goes through this skill.
 
 ### Step 2: Place it
 
@@ -168,8 +173,8 @@ The justification belongs in the PR description, not only in this conversation: 
 ruled out, the table the package went into, and what Step 3 found. A reviewer should not have to ask
 why the project now depends on it.
 
-When the task is done, hand off to `/ghi-finalize`, and make sure the PR body it drafts carries this
-record.
+When the task is done, hand off to the `ghi-finalize` skill, and make sure the PR body it drafts
+carries this record.
 
 ## Notes
 
@@ -177,5 +182,5 @@ record.
   the code that imports it. `pyproject.toml` and `uv.lock` change together; commit them together.
 - Needing several packages: run Steps 1 to 3 for each, then ask about all of them in one Step 4
   message.
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them when
-  the task is done.
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them
+  when the task is done.

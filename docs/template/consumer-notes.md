@@ -59,6 +59,25 @@ where an implicit trust assumption should not be extended. See
 
 ## Needs a one-off action
 
+### Thirteen Claude commands moved to shared skills
+
+**Who.** Any project that customized a file under `.claude/commands/`: `add-dependency.md`, `checkpoint.md`,
+`restore.md`, `template-sync.md`, `template-migrate.md`, `mutation-triage.md`, `property-tests.md`,
+`deprecate-api.md`, `python-version-bump.md`, `security-triage.md`, `dead-code-triage.md`,
+`perf-change.md` or `ghi-status.md` by hand.
+
+**What changed.** These 13 files are gone from `.claude/commands/`. Each is now written once, in
+`.agents/skills/<name>/SKILL.md`, and a new `doit skills_sync` task generates the Claude copy at
+`.claude/skills/<name>/SKILL.md` — byte-identical to the source, with no Claude-only frontmatter so
+Claude can auto-invoke it the same way Codex, Antigravity and Copilot do. The slash names are
+unchanged: `/add-dependency` and the rest still work in Claude, now as skills.
+
+**The fix.** Move any local customization into `.agents/skills/<name>/SKILL.md`, then run
+`doit skills_sync` to regenerate the Claude copy. Do not hand-edit the file under
+`.claude/skills/` — the sync task, and `doit skills_sync --check`, treat it as generated output and
+will overwrite or flag it. `ghi-finalize` and the `multi-*` orchestrators are unaffected; they stay
+in `.claude/commands/` for now.
+
 ### Give every document under `docs/` frontmatter
 
 **Who.** Every project with a document under `docs/` that has no frontmatter block, or has one that

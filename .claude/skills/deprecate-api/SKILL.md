@@ -1,15 +1,23 @@
+---
+name: deprecate-api
+description: Use when a public name in this package's API needs to be retired without breaking
+  callers first — the user asks to deprecate, rename, replace or remove a public function, class or
+  constant, or work on an issue calls for warning callers off an old name before deleting it. Warns
+  with `warnings.warn(..., DeprecationWarning, stacklevel=2)`, requires a `pytest.warns` test, and
+  only removes the name in a later release, following the Breaking Changes Policy.
+---
+
 # Deprecate API
 
 A public name should never disappear without warning, and a warning should never run forever. This
-command runs the two halves of that promise as separate phases, in order, normally releases apart.
+skill runs the two halves of that promise as separate phases, in order, normally releases apart.
 
-Argument: `$ARGUMENTS` — `deprecate <old-name> <new-name>` to warn callers off `<old-name>` in favor of
-`<new-name>`, or `remove <old-name>` once its deprecating release has already shipped. If it does not
-name a phase and the name or names involved, ask the user before doing anything else.
+The phase (`deprecate` or `remove`) and the name or names involved come from the user's request or
+from the task that needs it. If neither says, ask the user which phase before doing anything else.
 
 Before Step 1, read `AGENTS.md` and locate the "## Breaking Changes Policy" section. It says what
-counts as breaking and what a breaking change must document; this command makes that policy executable
-for retiring one public name. Where the two disagree, the policy wins and this command is out of date.
+counts as breaking and what a breaking change must document; this skill makes that policy executable
+for retiring one public name. Where the two disagree, the policy wins and this skill is out of date.
 
 ## Instructions
 
@@ -140,8 +148,8 @@ default, that footer bumps MINOR, which is right while the project is on 0.x, an
 refuses to release 1.0 or later until the setting is `false` (#881); with `false`, it bumps MAJOR.
 The agent tells the user which applies. Do not edit `pyproject.toml` to change it.
 
-When the task is done, hand off to `/ghi-finalize`, and make sure the PR body it drafts carries the
-migration guide.
+When the task is done, hand off to the `ghi-finalize` skill, and make sure the PR body it drafts
+carries the migration guide.
 
 ## Notes
 
@@ -149,5 +157,5 @@ migration guide.
   drafting both, but Step 5 must refuse to run until Phase 1 has actually shipped.
 - Deprecating several names for one release: run Steps 1 to 4 for each in the same PR if they share
   it. Keep every Phase 2 removal in its own PR regardless.
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them when
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them when
   the task is done.

@@ -17,11 +17,11 @@ the questions, and the review gate.
 
 Use this skill when the user wants to pull upstream template improvements into this project.
 
-Expected prompt shape:
+Expected request shape:
 
-- `$template-sync upgrade this project to the latest template`
-- `$template-sync sync with pyproject-template`
-- `$template-sync sync to v2.2.0`
+- "upgrade this project to the latest template"
+- "sync with pyproject-template"
+- "sync to v2.2.0"
 
 The user may supply an optional template ref (tag, branch, or commit SHA) to sync *to*. Default is
 `main`. An older ref takes a large backlog one step at a time.

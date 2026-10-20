@@ -1,10 +1,15 @@
+---
+name: ghi-status
+description: Use when the user wants to know where they are in the issue workflow for this repository, or asks what their status is or what to do next. Inspects the current git state, the branch's linked issue, its plan comment, uncommitted changes, unpushed commits, and open PRs, then reports a status summary and suggests the next step. Read-only; makes no changes.
+---
+
 # Where Am I
 
 Assess the current workflow state and suggest the next step.
 
 ## Instructions
 
-Gather information about the current state and determine where the user is in the issue lifecycle. This command takes no arguments — it inspects the environment.
+This skill takes no arguments — it inspects the environment.
 
 ### Step 1: Check git state
 
@@ -20,7 +25,7 @@ Based on the branch name, determine the workflow state:
 
 **If on `main`:**
 - No active work in progress
-- Suggest: "Start with `/<currentai>:plan <N>` to plan an issue, or create one with `doit issue`"
+- Suggest: start planning an issue (the current agent's plan workflow), or create one with `doit issue`
 
 **If on a feature branch (e.g., `feat/245-description`):**
 1. Extract the issue number from the branch name
@@ -51,10 +56,10 @@ Present a status summary and suggest what to do next:
 
 | State | Suggestion |
 | :--- | :--- |
-| On feature branch, no plan comment | Run `/<currentai>:plan <N>` to create a plan |
-| On feature branch, plan exists, no code changes | Run `/<currentai>:implement <N>` to start implementation |
-| On feature branch, code changes, not committed | Review changes, then run `/ghi-finalize` to commit and create PR |
-| On feature branch, committed, no PR | Run `/ghi-finalize` to create the PR |
+| On feature branch, no plan comment | Start planning the issue (the current agent's plan workflow) |
+| On feature branch, plan exists, no code changes | Start implementing the issue (the current agent's implement workflow) |
+| On feature branch, code changes, not committed | Review changes, then run the `ghi-finalize` skill to commit and create a PR |
+| On feature branch, committed, no PR | Run the `ghi-finalize` skill to create the PR |
 | On feature branch, PR exists (open) | PR is open — waiting for review/merge |
 | On feature branch, PR exists (merged) | Close the issue: `gh issue close <N> --comment "Addressed in PR #<PR>"` |
 | Issue is already closed | Work complete — switch back to `main` |
@@ -71,5 +76,5 @@ Present a status summary and suggest what to do next:
 - **PR:** None
 
 ## Suggested next step
-Run `/ghi-finalize` to commit your changes and create a PR.
+Run the `ghi-finalize` skill to commit your changes and create a PR.
 ```

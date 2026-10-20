@@ -1,20 +1,37 @@
+---
+name: template-migrate
+description: Use when the user wants to migrate or convert an existing Python project to pyproject-template, adopt the template in a project that does not use it yet, or asks what migrating would involve. Reads the repository, fetches the template's documentation over HTTP, asks the owner what the repository cannot answer, and writes a migration plan to TEMPLATE_MIGRATION_PLAN.md. Changes nothing until the plan is approved.
+---
+
 # Template Migrate
 
-Plan this project's migration onto [`pyproject-template`](https://github.com/endavis/pyproject-template).
+Plan this project's migration onto `pyproject-template`
+(https://github.com/endavis/pyproject-template).
 
-**This command plans. It does not migrate.** It reads your repository, fetches the template's own
-documentation, asks you what the repository cannot tell it, and writes a migration plan to
-`TEMPLATE_MIGRATION_PLAN.md`. Nothing in your project changes until you have read that plan and said
-to proceed.
+**This skill plans. It does not migrate.** It reads the repository, fetches the template's own
+documentation, asks the owner what the repository cannot tell it, and writes a migration plan to
+`TEMPLATE_MIGRATION_PLAN.md`. Nothing in the project changes until the owner has read that plan and
+said to proceed.
 
 That split is deliberate. An automated migrator existed in the template once and was deleted
 (endavis/pyproject-template#783) because it did the one mechanical step destructively while leaving
 every judgement step untouched — which package is *the* package, how imports break moving to a
-`src/` layout, which of your dependencies survive the merge. Those are the steps that need a plan,
-and they are the ones this command exists for.
+`src/` layout, which dependencies survive the merge. Those are the steps that need a plan, and they
+are the ones this skill exists for.
 
-Argument: `$ARGUMENTS` — optional template ref (tag, branch, or commit SHA) to plan against.
-Default is `main`.
+## When to use
+
+Use this skill when the user wants to bring an existing Python project onto the template, or wants
+to know what that would involve.
+
+Expected request shape:
+
+- "plan our migration to pyproject-template"
+- "what would it take to adopt this template here?"
+- "plan the migration against v2.2.0"
+
+The user may supply an optional template ref (tag, branch, or commit SHA) to plan against. Default
+is `main`.
 
 ## Standalone
 
@@ -47,8 +64,8 @@ already migrated.
    ```bash
    ls -d tools/pyproject_template .config/pyproject_template 2>/dev/null
    ```
-   If either exists, this project already uses the template. Stop and tell the user to run
-   `/template-sync` instead — that is the command for upgrading a project that has already
+   If either exists, this project already uses the template. Stop and tell the user to use the
+   `template-sync` skill instead — that is the one for upgrading a project that has already
    migrated.
 
 3. **A git repository with a clean tree.**
@@ -64,7 +81,7 @@ Resolve the ref to a commit before fetching anything, so the plan records exactl
 against and can be reproduced later:
 
 ```bash
-REF="${ARGUMENTS:-main}"
+REF="${REF:-main}"
 TEMPLATE_SHA=$(curl -sSL -H "Accept: application/vnd.github.sha" \
   "https://api.github.com/repos/endavis/pyproject-template/commits/$REF")
 echo "$TEMPLATE_SHA"
@@ -220,8 +237,8 @@ Requirements for the plan body:
   on Windows.
 
 **Stop here.** Do not change a single file until the owner has read the plan and told you to
-proceed. The plan is the deliverable; migrating without it is the failure mode this command exists
-to prevent.
+proceed. The plan is the deliverable; migrating without it is the failure mode this skill exists to
+prevent.
 
 ### Step 7: Report
 
@@ -251,4 +268,4 @@ moved or a dependency did not survive the merge. Fix the cause.
 - A migration that has to be argued for is a migration that should not happen yet. If the inventory
   says this project has good CI, a working release process and no packaging problems, say so in the
   plan rather than making the case for change.
-- After migrating, `/template-sync` is the command for keeping up to date.
+- After migrating, the `template-sync` skill is the one for keeping up to date.

@@ -29,15 +29,18 @@ installed first.
 
 ```bash
 # Claude Code
-mkdir -p .claude/commands && curl -sSL \
-  https://raw.githubusercontent.com/endavis/pyproject-template/main/.claude/commands/template-migrate.md \
-  -o .claude/commands/template-migrate.md
+mkdir -p .claude/skills/template-migrate && curl -sSL \
+  https://raw.githubusercontent.com/endavis/pyproject-template/main/.agents/skills/template-migrate/SKILL.md \
+  -o .claude/skills/template-migrate/SKILL.md
 
 # Codex, Antigravity, or Copilot
 mkdir -p .agents/skills/template-migrate && curl -sSL \
   https://raw.githubusercontent.com/endavis/pyproject-template/main/.agents/skills/template-migrate/SKILL.md \
   -o .agents/skills/template-migrate/SKILL.md
 ```
+
+Both commands fetch the same file: `.agents/skills/` is the one source, and Claude's copy is
+byte-identical to it.
 
 Then `/template-migrate` (Claude, Copilot), `$template-migrate` (Codex), or just describe the task
 (Antigravity). See
