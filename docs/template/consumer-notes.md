@@ -19,6 +19,38 @@ Read it after `bootstrap.py --sync` and before adopting drift. It is also linked
 
 ## Breaking
 
+### `/claude:plan`, `/claude:implement`, `/ghi-finalize` and the per-agent plan/implement matrix are gone
+
+**What changed.** The three-step chain — `/<ai>:plan`, `/<ai>:implement`, `/ghi-finalize` — and the
+28-file per-agent plan/implement matrix (`.claude/commands/{claude,codex,copilot,antigravity}/{plan,implement}.md`,
+`.github/skills/*-{plan,implement}/`, `.agents/skills/{codex,antigravity}-{plan,implement}/`,
+`.agents/skills/delegate-*-{plan,implement}/`) are all removed, along with `.claude/commands/ghi-finalize.md`
+and `.agents/skills/ghi-finalize/`. One shared skill, `implement-issue`
+(`.agents/skills/implement-issue/SKILL.md`, generated for Claude by `doit skills_sync`), replaces
+all of it: say "implement issue N" and it decides whether to plan, posts the plan without an
+approval wait, implements with tests, validates, commits, pushes, opens the PR, and fixes CI for up
+to 3 rounds.
+
+**Who breaks.** Any project or script invoking `/claude:plan`, `/claude:implement`, `/ghi-finalize`,
+or any host's `plan`/`implement` self-action or cross-agent bridge (`$codex-plan`, `/copilot-implement`,
+`antigravity-plan`, `delegate-*-plan`, `delegate-*-implement`, and so on). Any customization of one
+of those files is lost — there is nothing left to move it into, since the replacement is a single
+behavior, not a per-agent file.
+
+**What it looks like.** The commands and skills simply no longer exist; a host will report it does
+not recognize the slash command or skill name.
+
+**The fix.** Use "implement issue N" (or "implement issue N with \<agent\>" to hand the coding step
+to a specific agent) instead of the old three-step chain. `tests/agent_roster.py`'s presence markers
+moved from each agent's `*-plan` directory to its `*-review` directory — if you keyed any local
+tooling off the old marker paths, update it to `*-review`.
+
+**Why it is not optional.** The old chain required two separate approval waits (plan, then commit)
+and carried 28 nearly-identical files across four agents. `implement-issue` collapses both the
+approval waits and the duplication; see
+[ADR-9024](../decisions/9024-one-implement-issue-skill-takes-an-issue-to-a-green-pr.md) and
+[Cross-Agent Delegation Matrix](../development/ai/cross-agent-delegation.md).
+
 ### `install_tools` requires `sha256` for untrusted hosts
 
 **What changed.** A download from any host outside `IMPLICITLY_TRUSTED_HOSTS` — `github.com`,
@@ -75,8 +107,9 @@ unchanged: `/add-dependency` and the rest still work in Claude, now as skills.
 **The fix.** Move any local customization into `.agents/skills/<name>/SKILL.md`, then run
 `doit skills_sync` to regenerate the Claude copy. Do not hand-edit the file under
 `.claude/skills/` — the sync task, and `doit skills_sync --check`, treat it as generated output and
-will overwrite or flag it. `ghi-finalize` and the `multi-*` orchestrators are unaffected; they stay
-in `.claude/commands/` for now.
+will overwrite or flag it. The `multi-*` orchestrators are unaffected; they stay in
+`.claude/commands/` for now. `ghi-finalize` was removed in a later change — see
+[the entry above about the plan/implement matrix](#claudeplan-claudeimplement-ghi-finalize-and-the-per-agent-planimplement-matrix-are-gone).
 
 ### Give every document under `docs/` frontmatter
 

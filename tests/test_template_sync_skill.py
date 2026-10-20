@@ -56,7 +56,7 @@ CONTRACT: tuple[tuple[str, str], ...] = (
     ("pre-commit reinstall", "doit pre_commit_install"),
     ("validation command", "doit check"),
     ("never edit a failing test", "Never edit a test to make it pass"),
-    ("finalize handoff", "ghi-finalize"),
+    ("finalize handoff", "implement-issue"),
 )
 
 # The identical sentence both bodies must carry, so the gate cannot be reworded

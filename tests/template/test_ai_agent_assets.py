@@ -15,11 +15,9 @@ def test_codex_workflow_skills_exist() -> None:
     skip_if_absent("codex")
 
     skill_paths = [
-        REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "codex-review" / "SKILL.md",
         REPO_ROOT / ".agents" / "skills" / "codex-adversarial-review" / "SKILL.md",
-        REPO_ROOT / ".agents" / "skills" / "ghi-finalize" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "implement-issue" / "SKILL.md",
     ]
 
     for skill_path in skill_paths:
@@ -47,13 +45,14 @@ def test_multi_orchestrator_files_exist() -> None:
 
 
 def test_self_action_grid_exists() -> None:
-    """Every wired agent has its four self-action files.
+    """Every wired agent has its self-action files.
 
-    The template wires four agents x four actions = 16 files. The grid is built
-    from the agents this project keeps rather than pinned at the template's
-    roster (#690).
+    Plan and implement are no longer per-agent self-action files — they are
+    replaced by the single shared `implement-issue` skill (#976). The grid is
+    built from the agents this project keeps rather than pinned at the
+    template's roster (#690).
     """
-    actions = ("plan", "implement", "review", "adversarial-review")
+    actions = ("review", "adversarial-review")
     # Where each host keeps its self-action files. Copilot uses .github/skills/
     # rather than .claude/skills/ — see tests/test_delegation_matrix.py
     # ::_expected_path for why.
@@ -251,6 +250,36 @@ def test_retired_self_action_aliases_are_removed() -> None:
         assert not path.exists(), f"Retired self-action file should not exist: {path}"
 
 
+def test_retired_plan_implement_matrix_is_removed() -> None:
+    """The per-agent plan/implement matrix and ghi-finalize are gone (#976).
+
+    Replaced by the single shared `implement-issue` skill, which plans
+    conditionally and drives an issue to an open PR in one run.
+    """
+    removed = [
+        REPO_ROOT / ".claude" / "commands" / "ghi-finalize.md",
+        REPO_ROOT / ".agents" / "skills" / "ghi-finalize" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "codex-implement" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "antigravity-plan" / "SKILL.md",
+        REPO_ROOT / ".agents" / "skills" / "antigravity-implement" / "SKILL.md",
+    ]
+    for target in ("claude", "codex", "copilot", "antigravity"):
+        for action in ("plan", "implement"):
+            removed.append(REPO_ROOT / ".claude" / "commands" / target / f"{action}.md")
+    for target in ("claude", "codex", "copilot", "antigravity"):
+        for action in ("plan", "implement"):
+            removed.append(REPO_ROOT / ".github" / "skills" / f"{target}-{action}" / "SKILL.md")
+    for target in ("claude", "codex", "copilot", "antigravity"):
+        for action in ("plan", "implement"):
+            removed.append(
+                REPO_ROOT / ".agents" / "skills" / f"delegate-{target}-{action}" / "SKILL.md"
+            )
+
+    for path in removed:
+        assert not path.exists(), f"Retired plan/implement matrix file should not exist: {path}"
+
+
 def test_retired_dual_agent_files_are_removed() -> None:
     """The old hardcoded dual-agent commands should be gone, replaced by multi-* orchestrators."""
     removed = [
@@ -307,7 +336,7 @@ def test_ai_setup_documents_codex_skills_workflow() -> None:
     content = (REPO_ROOT / "docs" / "development" / "AI_SETUP.md").read_text(encoding="utf-8")
 
     assert ".agents/skills" in content
-    assert "$codex-plan" in content
+    assert "$codex-review" in content
     assert "shared dangerous-command hook" in content
 
 
@@ -319,7 +348,7 @@ def test_slash_commands_doc_mentions_codex_skills_instead_of_custom_commands() -
 
     assert "repo-scoped skills" in content
     assert "/skills" in content
-    assert "$codex-implement" in content
+    assert "$codex-review" in content
 
 
 def test_enforcement_principles_document_codex_hook_support() -> None:
@@ -336,7 +365,7 @@ def test_antigravity_workflow_skills_exist() -> None:
     """Antigravity self-action skills should be present in the shared .agents/skills directory."""
     skip_if_absent("antigravity")
 
-    for action in ("plan", "implement", "review", "adversarial-review"):
+    for action in ("review", "adversarial-review"):
         skill_path = REPO_ROOT / ".agents" / "skills" / f"antigravity-{action}" / "SKILL.md"
         assert skill_path.exists(), f"Missing Antigravity skill: {skill_path}"
 

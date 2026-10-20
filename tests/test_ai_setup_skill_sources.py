@@ -50,7 +50,7 @@ def test_every_credited_command_has_a_skill() -> None:
 
 def test_the_scan_finds_the_credits() -> None:
     """A rewording that the patterns no longer match must fail here, not pass unchecked."""
-    assert "ghi-finalize" in _credited_commands(AI_SETUP.read_text(encoding="utf-8"))
+    assert "implement-issue" in _credited_commands(AI_SETUP.read_text(encoding="utf-8"))
 
 
 def test_the_scan_detects_the_line_this_fixed() -> None:

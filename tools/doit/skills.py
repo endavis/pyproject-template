@@ -38,6 +38,7 @@ SHARED_SKILLS: tuple[str, ...] = (
     "dead-code-triage",
     "perf-change",
     "ghi-status",
+    "implement-issue",
 )
 
 # The marker that means Claude Code is wired in this project. Mirrors

@@ -165,6 +165,7 @@ nav:
       - ADR-9021 Dependent PRs: decisions/9021-a-pr-may-target-the-unmerged-branch-it-builds-on.md
       - ADR-9022 Worktrees: decisions/9022-worktrees-live-in-worktrees-each-with-its-own-environment.md
       - ADR-9023 Shared skills: decisions/9023-shared-workflow-skills-live-in-agents-skills-generated-for-claude.md
+      - ADR-9024 Implement-issue skill: decisions/9024-one-implement-issue-skill-takes-an-issue-to-a-green-pr.md
   - Reference:
       - API Reference: reference/api.md
   - Examples:

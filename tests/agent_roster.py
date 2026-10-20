@@ -14,6 +14,11 @@ Presence is keyed on each agent's *self-action skill directory* rather than its
 config root, because `.agents/` is shared: both Codex and Antigravity read it,
 so its existence cannot distinguish them.
 
+The markers point at each agent's `review` skill, not `plan` — `plan` and
+`implement` were removed as per-agent self-action files when the shared
+`implement-issue` skill replaced them (#976); `review` and
+`adversarial-review` are the self-action files every agent still carries.
+
 Not a test module — pytest does not collect it (the filename does not match
 ``test_*.py``).
 """
@@ -32,9 +37,9 @@ ALL_AGENTS: tuple[str, ...] = ("claude", "codex", "copilot", "antigravity")
 # not do.
 _PRESENCE_MARKERS: dict[str, Path] = {
     "claude": REPO_ROOT / ".claude" / "commands" / "claude",
-    "codex": REPO_ROOT / ".agents" / "skills" / "codex-plan",
-    "copilot": REPO_ROOT / ".github" / "skills" / "copilot-plan",
-    "antigravity": REPO_ROOT / ".agents" / "skills" / "antigravity-plan",
+    "codex": REPO_ROOT / ".agents" / "skills" / "codex-review",
+    "copilot": REPO_ROOT / ".github" / "skills" / "copilot-review",
+    "antigravity": REPO_ROOT / ".agents" / "skills" / "antigravity-review",
 }
 
 
