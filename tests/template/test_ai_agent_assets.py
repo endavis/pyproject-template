@@ -27,17 +27,16 @@ def test_codex_workflow_skills_exist() -> None:
 def test_multi_orchestrator_files_exist() -> None:
     """multi-* orchestrators exist for every host this project wires.
 
-    The template wires all four hosts (9 files); a project that keeps fewer is
-    checked against the hosts it kept (#690).
+    Each orchestrator is a single shared skill, written once in `.agents/skills/`
+    (read directly by Codex, Antigravity, and Copilot) and generated for Claude at
+    `.claude/skills/` by `doit skills_sync` (#975). A project that keeps fewer
+    hosts is checked against the hosts it kept (#690).
     """
     actions = ("plan", "review", "adversarial-review")
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths += [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
-    if agent_is_present("copilot"):
-        paths += [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
-    # Codex and Antigravity share the .agents/skills/ orchestrators.
-    if agent_is_present("codex") or agent_is_present("antigravity"):
+        paths += [REPO_ROOT / ".claude" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
+    if agent_is_present("codex") or agent_is_present("antigravity") or agent_is_present("copilot"):
         paths += [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
 
     for path in paths:
@@ -495,9 +494,9 @@ def test_multi_orchestrators_recognize_antigravity() -> None:
     actions = ("plan", "review", "adversarial-review")
     multi_files: list[Path] = []
     if agent_is_present("claude"):
-        multi_files += [REPO_ROOT / ".claude" / "commands" / f"multi-{a}.md" for a in actions]
-    if agent_is_present("copilot"):
-        multi_files += [REPO_ROOT / ".copilot" / "commands" / f"multi-{a}.md" for a in actions]
+        multi_files += [
+            REPO_ROOT / ".claude" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions
+        ]
     multi_files += [REPO_ROOT / ".agents" / "skills" / f"multi-{a}" / "SKILL.md" for a in actions]
 
     for f in multi_files:

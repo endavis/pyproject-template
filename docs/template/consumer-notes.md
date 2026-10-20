@@ -91,6 +91,26 @@ where an implicit trust assumption should not be extended. See
 
 ## Needs a one-off action
 
+### `multi-plan`, `multi-review` and `multi-adversarial-review` moved to shared skills
+
+**Who.** Any project that customized `.claude/commands/multi-{plan,review,adversarial-review}.md` or
+`.copilot/commands/multi-{plan,review,adversarial-review}.md` (the latter was dead — Copilot never
+read it) by hand.
+
+**What changed.** These files are gone. Each orchestrator is now written once, in
+`.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md`, and `doit skills_sync` generates
+the Claude copy at `.claude/skills/multi-{plan,review,adversarial-review}/SKILL.md` — the same
+mechanism the other 14 shared workflow skills already used. Each file previously hardcoded one
+agent as the one running inline ("if `codex` is in the agent list (self)"); it now says "the entry
+in the table that matches the CLI running this skill is you," so the same file works unmodified from
+any of the four hosts. `multi-plan` also changed its plan format: it now runs `implement-issue`'s
+Planner brief for every agent instead of its own inline planning steps, which drops the old
+`### Risks and Considerations` section from the posted plans.
+
+**The fix.** Move any local customization into the three `.agents/skills/multi-*/SKILL.md` files,
+then run `doit skills_sync` to regenerate the Claude copies. The slash names are unchanged:
+`/multi-plan`, `/multi-review`, `/multi-adversarial-review` still work in Claude, now as skills.
+
 ### Thirteen Claude commands moved to shared skills
 
 **Who.** Any project that customized a file under `.claude/commands/`: `add-dependency.md`, `checkpoint.md`,
@@ -107,9 +127,10 @@ unchanged: `/add-dependency` and the rest still work in Claude, now as skills.
 **The fix.** Move any local customization into `.agents/skills/<name>/SKILL.md`, then run
 `doit skills_sync` to regenerate the Claude copy. Do not hand-edit the file under
 `.claude/skills/` — the sync task, and `doit skills_sync --check`, treat it as generated output and
-will overwrite or flag it. The `multi-*` orchestrators are unaffected; they stay in
-`.claude/commands/` for now. `ghi-finalize` was removed in a later change — see
+will overwrite or flag it. `ghi-finalize` was removed in a later change — see
 [the entry above about the plan/implement matrix](#claudeplan-claudeimplement-ghi-finalize-and-the-per-agent-planimplement-matrix-are-gone).
+The `multi-*` orchestrators moved out of `.claude/commands/` too, in a later change — see
+[the entry above about them](#multi-plan-multi-review-and-multi-adversarial-review-moved-to-shared-skills).
 
 ### Give every document under `docs/` frontmatter
 

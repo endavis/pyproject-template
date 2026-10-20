@@ -39,6 +39,9 @@ SHARED_SKILLS: tuple[str, ...] = (
     "perf-change",
     "ghi-status",
     "implement-issue",
+    "multi-plan",
+    "multi-review",
+    "multi-adversarial-review",
 )
 
 # The marker that means Claude Code is wired in this project. Mirrors
