@@ -24,16 +24,18 @@ Claude by `doit skills_sync`.**
    `python-version-bump`, `security-triage`, `dead-code-triage`, `perf-change`) plus `ghi-status`
    are written once, with `name:`/`description:` frontmatter and no Claude-only instructions, so
    Claude can auto-invoke each one from its `description:` the same way Codex, Antigravity and
-   Copilot already do.
+   Copilot already do. `implement-issue` joined this list in ADR-9024, as `SHARED_SKILLS` entry
+   fourteen, after it replaced the per-agent plan/implement matrix and `ghi-finalize`.
 2. `doit skills_sync` copies each source, byte for byte, to `.claude/skills/<name>/SKILL.md` — the
    path Claude Code reads (Claude Code 2.1.304 does not read `.agents/skills/`). The task runs only
    when the project wires Claude Code, using the same presence marker as `tests/agent_roster.py`.
    `doit skills_sync --check` reports drift and exits non-zero instead of writing anything.
 3. The 13 corresponding `.claude/commands/<name>.md` files are deleted. The Claude slash names are
    unchanged: `/add-dependency` and the rest still work, now as skills.
-4. `ghi-finalize`, `multi-plan`, `multi-review` and `multi-adversarial-review` are explicitly out of
-   scope: each is written around the agent running it, and a follow-up issue tracks making them
-   agent-portable too.
+4. `multi-plan`, `multi-review` and `multi-adversarial-review` are explicitly out of scope: each is
+   written around the agent running it, and a follow-up issue tracks making them agent-portable
+   too. `ghi-finalize` was out of scope here for the same reason, but ADR-9024 later removed it
+   entirely rather than merging it — it is not "agent-portable", it does not exist any more.
 
 ## Rationale
 
@@ -77,8 +79,13 @@ side effect of this one.
 ## Related Issues
 
 - Issue #972: make `.agents/skills/` the single source for shared workflow skills
+- Issue #976: `implement-issue` joins `SHARED_SKILLS`, replacing the per-agent plan/implement matrix
+  and `ghi-finalize`
 
 ## Related Documentation
+
+- [ADR-9024](9024-one-implement-issue-skill-takes-an-issue-to-a-green-pr.md) — the skill that
+  removed `ghi-finalize` and added `implement-issue` to this list
 
 - [Slash Commands and Workflows](../development/ai/slash-commands.md) — the shared-skills section,
   and the per-command source references

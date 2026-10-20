@@ -73,8 +73,10 @@ the others.
   `main`, skip hooks, or apply the `ready-to-merge` label.
 - **A shared safety hook** blocks dangerous commands for every agent, and fails *closed* — a hook
   that cannot evaluate a command denies it rather than allowing it.
-- **Cross-agent delegation.** `/claude:plan`, `$codex-implement`, `/copilot-review`, and the
-  `/multi-*` orchestrators that fan a task out to several agents and synthesize the results.
+- **"Implement issue N" takes an issue to an open PR.** One shared skill plans when needed, codes,
+  tests, commits, pushes, opens the PR, and fixes CI for up to 3 rounds.
+- **Cross-agent delegation.** `/claude:review`, `$codex-adversarial-review`, `/copilot-review`, and
+  the `/multi-*` orchestrators that fan a task out to several agents and synthesize the results.
 
 📖 [AI Agent Setup](docs/development/AI_SETUP.md) ·
 [First 5 Minutes](docs/development/ai/first-5-minutes.md) ·

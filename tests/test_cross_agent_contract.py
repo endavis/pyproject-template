@@ -1,20 +1,23 @@
 """The cross-agent workflow files must agree, not merely exist.
 
 `test_delegation_matrix.py` checks that every command/skill file is present.
-Presence is not agreement: the files encode a shared workflow contract — the plan
-comment header, the branch-name pattern, the finalize handoff — that lets a user
-switch agents mid-workflow without losing state. Until now nothing checked that
-they still said the same things, so the contract held only by manual discipline
-across 74 files (#692).
+Presence is not agreement: the files encode a shared workflow contract that lets
+a user switch agents mid-workflow without losing state. Until #692 nothing
+checked that they still said the same things, so the contract held only by
+manual discipline across dozens of files.
+
+`plan`, `implement` and the `ghi-finalize` handoff were per-agent matrix files
+until #976 replaced them with the single shared `implement-issue` skill
+(`.agents/skills/implement-issue/SKILL.md`, generated for Claude by `doit
+skills_sync`). Its contract is checked directly against that one source rather
+than per-agent, since there is only one file to agree with itself.
 
 The contract itself is documented in
 ``docs/development/ai/cross-agent-delegation.md``; this module is its enforcement.
 When the two disagree, the doc is the specification and this file is the bug.
 
 Per-agent exemptions are declared in `EXEMPTIONS` with a reason, because uniform
-prose is not the goal — agreement on the contract is. Claude's `implement`
-command legitimately omits `doit check` because it delegates to
-`.claude/agents/implement-worker.md`, which runs it.
+prose is not the goal — agreement on the contract is.
 
 Assertions are scoped to the agents a project actually wires, following the
 convention in `tests/agent_roster.py` (#690).
@@ -39,25 +42,15 @@ SELF_ACTION_LAYOUTS = {
     ),
 }
 
-# The finalize step is host-agnostic: Claude has its own copy, and every other
-# host reaches the `.agents/skills/` one (Copilot reads that directory too).
-FINALIZE_FILES = (
-    REPO_ROOT / ".claude" / "commands" / "ghi-finalize.md",
-    REPO_ROOT / ".agents" / "skills" / "ghi-finalize" / "SKILL.md",
-)
+# The single shared implement-issue skill source. Its generated Claude copy is
+# asserted byte-identical by tests/template/test_skills_sync.py, so checking
+# the source here is sufficient.
+IMPLEMENT_ISSUE_FILE = REPO_ROOT / ".agents" / "skills" / "implement-issue" / "SKILL.md"
 
 # Contract elements, by the action whose files must carry them. Each entry is
 # (label, substring). Substrings rather than regexes: the contract is a literal
 # string the agents must reproduce, so a literal check is the honest test.
 CONTRACT = {
-    "plan": [
-        ("plan-comment header", "Implementation Plan for"),
-    ],
-    "implement": [
-        ("branch-name pattern", "<type>/"),
-        ("validation command", "doit check"),
-        ("finalize handoff", "ghi-finalize"),
-    ],
     "review": [
         ("read-only constraint", "**Read-only.**"),
     ],
@@ -66,14 +59,20 @@ CONTRACT = {
     ],
 }
 
+# implement-issue carries its own contract — one shared file, not one per agent.
+IMPLEMENT_ISSUE_CONTRACT: list[tuple[str, str]] = [
+    ("plan-comment header", "Implementation Plan for"),
+    ("branch-name pattern", "<type>/"),
+    ("validation command", "doit check"),
+    ("docs validation command", "doit docs_build"),
+    ("pr command", "doit pr"),
+    ("issue reference", "Addresses #"),
+    ("merge-gate check", "require-label"),
+]
+
 # (action, agent) pairs that legitimately omit an element, with the reason.
 # An exemption is a documented architectural difference, not a licence to drift.
-EXEMPTIONS: dict[tuple[str, str, str], str] = {
-    ("implement", "claude", "validation command"): (
-        "Claude delegates implementation to .claude/agents/implement-worker.md, "
-        "which runs `doit check` itself"
-    ),
-}
+EXEMPTIONS: dict[tuple[str, str, str], str] = {}
 
 # The identical sentence every review file must carry, so the constraint cannot
 # be reworded into something weaker on one surface.
@@ -141,25 +140,32 @@ def test_read_only_constraint_is_worded_identically() -> None:
     )
 
 
-def test_finalize_files_carry_the_issue_reference_contract() -> None:
-    """`Addresses #` lives in the finalize step, which is what opens the PR.
+def test_implement_issue_file_carries_its_contract() -> None:
+    """The shared `implement-issue` skill carries every literal the workflow promises.
 
-    Asserted here rather than on `implement` because no implement file opens a
-    PR — a distinction #692 originally had the other way round.
+    There is one source file (`.agents/skills/implement-issue/SKILL.md`); its
+    generated Claude copy is asserted byte-identical to it by
+    `tests/template/test_skills_sync.py`, so checking the source is sufficient.
     """
-    missing = [
-        str(path.relative_to(REPO_ROOT))
-        for path in FINALIZE_FILES
-        if path.is_file() and "Addresses #" not in path.read_text(encoding="utf-8")
-    ]
-    assert not missing, f"finalize files missing the 'Addresses #' contract: {missing}"
-
-
-def test_at_least_one_finalize_file_exists() -> None:
-    """Guard the check above against silently passing on an empty set."""
-    assert any(path.is_file() for path in FINALIZE_FILES), (
-        "no ghi-finalize file found; the contract check above would be vacuous"
+    assert IMPLEMENT_ISSUE_FILE.is_file(), (
+        f"missing implement-issue skill: {IMPLEMENT_ISSUE_FILE.relative_to(REPO_ROOT)}"
     )
+    text = IMPLEMENT_ISSUE_FILE.read_text(encoding="utf-8")
+    missing = [
+        f"{label} ({needle!r})" for label, needle in IMPLEMENT_ISSUE_CONTRACT if needle not in text
+    ]
+    assert not missing, f"implement-issue skill is missing: {missing}"
+
+
+def test_implement_issue_forbids_merge_actions() -> None:
+    """implement-issue must say it never applies ready-to-merge, merges, or closes the issue.
+
+    Those stay the user's decisions (ADR-9006's merge gate is unchanged by #976).
+    """
+    text = IMPLEMENT_ISSUE_FILE.read_text(encoding="utf-8")
+    assert "ready-to-merge" in text
+    assert "never merges" in text or "never merge" in text
+    assert "closes the issue" in text or "close the issue" in text
 
 
 def test_the_contract_scanner_detects_a_violation() -> None:
@@ -177,22 +183,6 @@ def test_the_contract_scanner_detects_a_violation() -> None:
             f"scanner found {len(violations)} of {len(elements)} missing elements "
             f"for {action!r}; the needles are too weak to assert on"
         )
-
-
-def test_declared_exemptions_actually_suppress() -> None:
-    """An exemption must change the outcome, or it is decoration.
-
-    Claude's implement file is exempt from `doit check`; the same empty text
-    scored against Copilot must therefore yield one more violation.
-    """
-    empty = "an unrelated document with none of the contract in it"
-    claude = _contract_violations("implement", "claude", empty)
-    copilot = _contract_violations("implement", "copilot", empty)
-
-    assert len(claude) == len(copilot) - 1, (
-        "the Claude implement exemption did not suppress anything; "
-        f"claude={claude} copilot={copilot}"
-    )
 
 
 def test_exemptions_are_real_and_documented() -> None:

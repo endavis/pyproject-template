@@ -14,43 +14,79 @@ tags:
 
 ## Purpose
 
-This page documents the slash commands this template ships — self-action, multi-agent and `ghi-finalize` under `.claude/commands/`; the shared workflow skills (`ghi-status`, `checkpoint`/`restore`, `template-sync`, `template-migrate`, `add-dependency`, `mutation-triage`, `property-tests`, `deprecate-api`, `python-version-bump`, `security-triage`, `dead-code-triage`, `perf-change`) written once under `.agents/skills/` and generated for Claude under `.claude/skills/` by `doit skills_sync` — and the single-agent and multi-agent workflows built on top of them. It is written for contributors who want to understand or extend the workflow, and for AI agents that need to know which command to run at each stage of the issue lifecycle.
+This page documents the slash commands this template ships — the shared `implement-issue` skill
+that drives an issue to an open PR, self-action and multi-agent review commands under
+`.claude/commands/`; the shared workflow skills (`implement-issue`, `ghi-status`,
+`checkpoint`/`restore`, `template-sync`, `template-migrate`, `add-dependency`, `mutation-triage`,
+`property-tests`, `deprecate-api`, `python-version-bump`, `security-triage`, `dead-code-triage`,
+`perf-change`) written once under `.agents/skills/` and generated for Claude under `.claude/skills/`
+by `doit skills_sync` — and the single-agent and multi-agent workflows built on top of them. It is
+written for contributors who want to understand or extend the workflow, and for AI agents that need
+to know which command to run at each stage of the issue lifecycle.
 
 ## Workflows
 
 ### Single-agent workflow
 
-The default Claude flow takes an issue from unplanned to closed. Each step produces an artifact the next step expects.
+The default flow takes an issue from unplanned to an open PR in one run. Each step produces an
+artifact the next step expects.
 
-1. **`/<currentai>:plan <n>`** (e.g. `/claude:plan <n>`) — the host agent enters plan mode in the main conversation, reads project rules, explores the codebase, drafts a plan, and iterates with the user until approved. On approval the plan is posted as a comment on issue `#n` with the header `## Implementation Plan for #<n>: <title>`. The next step expects this comment to exist.
-2. **User review of the plan** — read the comment, discuss revisions in chat, re-run `/<currentai>:plan` if needed.
-3. **`/<currentai>:implement <n>`** (e.g. `/claude:implement <n>`) — the host agent verifies the plan comment exists, creates a branch (`<type>/<n>-<short-description>`) off fresh `main`, then spawns a subagent (Task tool) that reads `AGENTS.md`, fetches the plan, implements files and tests, and runs `doit check`. The main context receives only the summary. The artifact is an uncommitted working tree on the feature branch.
-4. **User review of the changes** — inspect the diff and discuss fixes directly in chat; no command is needed for fix-ups.
-5. **`/ghi-finalize`** — the host agent detects the branch and issue, spawns a finalization subagent that updates docs/ADRs as needed, runs `doit check`, and drafts a commit message and PR body. The main context presents the drafts and waits for explicit user approval before staging, committing, and creating the PR via `doit pr`. The artifact is an open PR referencing `Addresses #<n>`.
-6. **User-driven merge** — the user reviews the PR, adds the `ready-to-merge` label, and merges via `doit pr_merge` (or the web UI). This step is never automated.
-7. **Close the issue** — after the PR merges, run `doit pr_merge --auto-close` (or `gh issue close <n>`) to close the linked issue and post a closing comment.
+1. **"Implement issue \<n\>"** (natural language, any host) — the `implement-issue` skill decides
+   whether to plan first (`needs-adr`, more than about three files, or more than one reasonable
+   approach), posts a plan comment with the header `## Implementation Plan for #<n>: <title>` when
+   it does (no approval wait), then implements the change with tests in a subagent, runs `doit
+   check` and `doit docs_build`, commits with `git commit` in the CONTRIBUTING format, pushes, and
+   opens the PR with `doit pr` (`Addresses #<n>`). It then watches `gh pr checks` and fixes any
+   failing job other than `require-label` for up to 3 rounds, stopping and reporting whatever is
+   still red after that. See [`implement-issue`](#implement-issue-n) below.
+2. **(Optional) "implement issue \<n\> with \<agent\>"** — hands only the coding step to `<agent>`'s
+   CLI; every other step (deciding whether to plan, committing, opening the PR, fixing CI) still
+   runs in the host that received the request.
+3. **User review of the PR** — inspect the diff on GitHub, optionally run `/<currentai>:review` or
+   `/multi-review` for a second opinion, and discuss fixes directly in chat; no command is needed
+   for fix-ups (the skill is not re-run for small corrections — just edit, `doit check`, commit, and
+   push).
+4. **User-driven merge** — the user reviews the PR, adds the `ready-to-merge` label, and merges via
+   `doit pr_merge` (or the web UI). This step is never automated — `implement-issue` never applies
+   the label or merges.
+5. **Close the issue** — after the PR merges, run `doit pr_merge --auto-close` (or `gh issue close
+   <n>`) to close the linked issue and post a closing comment.
 
 ### Multi-agent workflow
 
-The multi-agent flow replaces the planning and (optionally) review steps with orchestrated calls that spawn any combination of agents in **isolated contexts**. The design intent is that no agent can bias another: each generates its output without seeing the others' work, and the orchestrating agent in the main conversation posts all raw outputs plus a synthesis.
+The multi-agent flow adds orchestrated review calls that spawn any combination of agents in
+**isolated contexts**, on top of the PR `implement-issue` already opened. The design intent is that
+no agent can bias another: each generates its output without seeing the others' work, and the
+orchestrating agent in the main conversation posts all raw outputs plus a synthesis.
 
-Each agent's output is posted as a separate comment. The orchestrator is the only agent that writes to GitHub — all other agents run in non-interactive mode and emit to stdout only.
+Each agent's output is posted as a separate comment. The orchestrator is the only agent that writes
+to GitHub — all other agents run in non-interactive mode and emit to stdout only.
 
-1. **`/multi-plan <ais...> <n>`** — takes a list of agent names (e.g. `claude codex`) and an issue number. Each listed agent independently generates a plan in an isolated context; all plans are posted as separate issue comments. The orchestrating agent synthesizes a combined plan, reviews it with the user, and posts the approved synthesized plan.
-2. **`/<currentai>:implement <n>`** — same as the single-agent flow. The synthesized plan comment is the input.
-3. **`/multi-review <ais...>`** — takes a list of agent names. Each listed agent independently reviews the current branch's PR; all reviews are posted as separate PR comments. The orchestrating agent synthesizes findings into a combined verdict. A user-approval gate precedes the synthesis post.
-4. **`/multi-adversarial-review <ais...>`** — takes a list of agent names. Each listed agent independently challenges the current changes; all adversarial reviews are synthesized. If a PR exists the synthesis is posted; otherwise it appears in-conversation only. A user-approval gate precedes posting.
-5. **`/ghi-finalize`**, merge, and **`doit pr_merge --auto-close`** — same as the single-agent flow.
+1. **"Implement issue \<n\>"** — same as the single-agent flow; produces the open PR these commands
+   review.
+2. **`/multi-review <ais...>`** — takes a list of agent names. Each listed agent independently
+   reviews the current branch's PR; all reviews are posted as separate PR comments. The orchestrating
+   agent synthesizes findings into a combined verdict. A user-approval gate precedes the synthesis
+   post.
+3. **`/multi-adversarial-review <ais...>`** — takes a list of agent names. Each listed agent
+   independently challenges the current changes; all adversarial reviews are synthesized. If a PR
+   exists the synthesis is posted; otherwise it appears in-conversation only. A user-approval gate
+   precedes posting.
+4. **Merge** and **`doit pr_merge --auto-close`** — same as the single-agent flow.
+
+`/multi-plan` still exists (unchanged by #976 — see #975) for the rare case of wanting independent
+plans from several agents synthesized into one before `implement-issue` runs; each listed agent's
+own plan skill no longer exists, so it falls back to inline planning per agent.
 
 ### Diagnostic command
 
-**`/ghi-status`** can be invoked at any point. It inspects the current branch, issue state, plan comment, uncommitted changes, unpushed commits, and open PRs, then reports a status summary and the suggested next command. It has no side effects.
+**`/ghi-status`** can be invoked at any point. It inspects the current branch, issue state, plan comment, uncommitted changes, unpushed commits, and open PRs, then reports a status summary and the suggested next command (typically "implement issue N"). It has no side effects.
 
 ## Shared workflow skills: one source, generated for Claude
 
-Thirteen workflow skills — `ghi-status`, `checkpoint`, `restore`, `template-sync`, `template-migrate`, `add-dependency`, `mutation-triage`, `property-tests`, `deprecate-api`, `python-version-bump`, `security-triage`, `dead-code-triage`, `perf-change` — are written once, in `.agents/skills/<name>/SKILL.md`, with no Claude-only frontmatter so Claude can auto-invoke them from their `description:` the same way Codex, Antigravity and Copilot do. **Edit only the `.agents/skills/` copy.** `doit skills_sync` then copies each one, byte for byte, to `.claude/skills/<name>/SKILL.md` — the path Claude Code reads (verified against Claude Code 2.1.304, which does not read `.agents/skills/`). The task runs only when this project wires Claude Code; `doit skills_sync --check` reports drift and exits non-zero instead of writing anything, and `tests/template/test_skills_sync.py` enforces that the generated copies never drift from source in this repo.
+Fourteen workflow skills — `implement-issue`, `ghi-status`, `checkpoint`, `restore`, `template-sync`, `template-migrate`, `add-dependency`, `mutation-triage`, `property-tests`, `deprecate-api`, `python-version-bump`, `security-triage`, `dead-code-triage`, `perf-change` — are written once, in `.agents/skills/<name>/SKILL.md`, with no Claude-only frontmatter so Claude can auto-invoke them from their `description:` the same way Codex, Antigravity and Copilot do. **Edit only the `.agents/skills/` copy.** `doit skills_sync` then copies each one, byte for byte, to `.claude/skills/<name>/SKILL.md` — the path Claude Code reads (verified against Claude Code 2.1.304, which does not read `.agents/skills/`). The task runs only when this project wires Claude Code; `doit skills_sync --check` reports drift and exits non-zero instead of writing anything, and `tests/template/test_skills_sync.py` enforces that the generated copies never drift from source in this repo.
 
-The slash names are unchanged for Claude users: `/add-dependency` and the rest still work, now as skills rather than single-file commands. `ghi-finalize`, `multi-plan`, `multi-review` and `multi-adversarial-review` are not part of this merge — each is written around the agent running it, and a follow-up issue tracks making them agent-portable too.
+The slash names are unchanged for Claude users: `/add-dependency` and the rest still work, now as skills rather than single-file commands. `multi-plan`, `multi-review` and `multi-adversarial-review` are not part of this merge — each is written around the agent running it, and a follow-up issue tracks making them agent-portable too. `ghi-finalize` and the per-agent `plan`/`implement` matrix are gone entirely, replaced by `implement-issue` (#976).
 
 ## Command reference
 
@@ -60,37 +96,25 @@ Entries are alphabetical. Each one names the command, its arguments, what it doe
 
 **Args:** optional focus area. **Sources:** `.claude/commands/claude/adversarial-review.md`, `.agents/skills/codex-adversarial-review/SKILL.md` (self-action); `.claude/commands/<target>/adversarial-review.md`, `.github/skills/<target>-adversarial-review/SKILL.md` (cross-agent delegation). Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
 
-Runs an adversarial review using the host agent (self-action) or delegates to a target agent (cross-agent). The review is read-only: it pressure-tests design choices, hidden assumptions, tradeoffs, alternatives, and failure modes. The host agent presents findings in the format Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering. If a PR exists, the user is asked whether to post the review as a PR comment. **Workflow position:** optional adversarial challenge before `/ghi-finalize`. **Design note:** in the self-action form, the host agent does the review work itself; no external CLI is invoked.
+Runs an adversarial review using the host agent (self-action) or delegates to a target agent (cross-agent). The review is read-only: it pressure-tests design choices, hidden assumptions, tradeoffs, alternatives, and failure modes. The host agent presents findings in the format Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering. If a PR exists, the user is asked whether to post the review as a PR comment. **Workflow position:** optional adversarial challenge on the PR `implement issue N` opened. **Design note:** in the self-action form, the host agent does the review work itself; no external CLI is invoked.
 
-### `/<ai>:implement <n>` (Copilot: `/<ai>-implement <n>`)
+### implement issue N
 
-**Args:** issue number. **Sources:** `.claude/commands/claude/implement.md`, `.agents/skills/codex-implement/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/implement.md`, `.github/skills/<target>-implement/SKILL.md`. Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
+**Args:** issue number, optionally followed by `with <agent>` to delegate only the coding step. **Sources:** `.agents/skills/implement-issue/SKILL.md` (Codex, Antigravity, Copilot, and the source Claude's copy is generated from); `.claude/skills/implement-issue/SKILL.md` (Claude, generated by `doit skills_sync`); `.claude/agents/implement-worker.md` (Claude's Coder-brief subagent).
 
-Validates that the issue is open and that a plan comment exists (otherwise instructs the user to run `/<currentai>:plan <n>` first). Checks the current branch: if already on `<type>/<n>-*` it resumes work on that branch, otherwise it checks out `main`, pulls, and creates a new branch. For Claude, it then spawns the custom `implement-worker` subagent (defined in `.claude/agents/implement-worker.md`) that reads `AGENTS.md` and `.claude/CLAUDE.md`, fetches the plan via `gh api`, implements files and tests, and runs `doit check`. For Copilot, implementation runs inline in the main conversation. For Codex, the `$codex-implement` skill implements inline in the Codex session. **Workflow position:** after plan exists, before `/ghi-finalize`.
-
-### `/<ai>:plan <n>` (Copilot: `/<ai>-plan <n>`)
-
-**Args:** issue number. **Sources:** `.claude/commands/claude/plan.md`, `.agents/skills/codex-plan/SKILL.md` (self-action); cross-agent delegation files under `.claude/commands/<target>/plan.md`, `.github/skills/<target>-plan/SKILL.md`. Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
-
-Runs in the main conversation context (not a subagent) so the user can ask questions and refine the plan interactively. For Claude, enters plan mode. Validates the issue, warns if a plan comment already exists, reads `AGENTS.md`, fetches issue details, explores the codebase, and drafts a plan with the standard sections (Overview, Files to Create/Modify, Test Plan, Documentation, Validation). Iterates until the user approves, then posts the approved plan as an issue comment. **Workflow position:** first step of the single-agent workflow. **Design note:** Claude uses the `<ai>:<action>` naming convention. Copilot uses `<ai>-<action>` (hyphen) because skill names cannot contain colons; Codex uses `$<ai>-<action>` and `$delegate-<ai>-<action>`.
+Takes an open issue to an open PR in one run, replacing the former `/<ai>:plan` → `/<ai>:implement` → `/ghi-finalize` chain. Validates the issue is open, creates or resumes the branch `<type>/<n>-<short-description>` from a label→type mapping, decides whether to post a plan first (`needs-adr`, more than about three files, or more than one reasonable approach — otherwise the issue body is the spec), implements with tests in a subagent (the Coder brief; Claude's is `implement-worker`), runs `doit check` and `doit docs_build`, commits with `git commit` in the CONTRIBUTING format, pushes, and opens the PR with `doit pr` (`Addresses #<n>`). It then watches `gh pr checks` and fixes any job other than `require-label` for up to 3 rounds, stopping to report whatever is still red after that. **Workflow position:** first and only step of the single-agent workflow before PR review. **Design note:** there is no approval wait for the plan or the commit — the trade is explicit, and the skill never applies `ready-to-merge`, merges, or closes the issue. See [Cross-Agent Delegation Matrix — plan and implement are no longer part of this matrix](cross-agent-delegation.md) for why this replaced the per-agent matrix.
 
 ### `/<ai>:review [focus]` (Copilot: `/<ai>-review`)
 
 **Args:** optional focus area. **Sources:** `.claude/commands/claude/review.md`, `.agents/skills/codex-review/SKILL.md` (self-action); `.claude/commands/<target>/review.md`, `.github/skills/<target>-review/SKILL.md` (cross-agent delegation). Copilot uses skill names instead of slash commands (see [Copilot section](#copilot) below).
 
-Runs a PR review using the host agent (self-action) or delegates to a target agent (cross-agent). Gets the PR diff and branch context, reads project standards, evaluates correctness, style, testing, security, documentation, architecture, and breaking changes. Presents findings in the format Summary / Findings (Critical / Suggestions / Positive) / Verdict. The user is asked whether to post the review as a PR comment before posting. **Workflow position:** after `/claude:implement`, before `/ghi-finalize`.
-
-### `/ghi-finalize`
-
-**Args:** none. **Source:** `.claude/commands/ghi-finalize.md`.
-
-Operates on the current feature branch, assuming implementation and review are complete. In the main context it detects the branch, extracts the issue number from the branch name, fetches issue details, and checks for uncommitted changes. It then spawns a general-purpose subagent that reads `AGENTS.md`, `.github/CONTRIBUTING.md`, and `.github/pull_request_template.md`, reviews changed files for doc/ADR updates, runs `doit check`, and drafts a commit message plus a PR body written to a temp file. The main context then presents the drafts to the user, waits for explicit approval, stages files, commits, and creates the PR via `doit pr --title=... --body-file=...`. **Workflow position:** after implementation and review. **Design note:** will not commit or create the PR without explicit user confirmation; stops if run on `main`.
+Runs a PR review using the host agent (self-action) or delegates to a target agent (cross-agent). Gets the PR diff and branch context, reads project standards, evaluates correctness, style, testing, security, documentation, architecture, and breaking changes. Presents findings in the format Summary / Findings (Critical / Suggestions / Positive) / Verdict. The user is asked whether to post the review as a PR comment before posting. **Workflow position:** after `implement issue N` opens the PR.
 
 ### `/multi-adversarial-review <ais...>`
 
 **Args:** one or more agent names (`claude`, `copilot`, `codex`, `antigravity`). **Sources:** `.claude/commands/multi-adversarial-review.md`, `.copilot/commands/multi-adversarial-review.md`, `.agents/skills/multi-adversarial-review/SKILL.md`.
 
-Runs each listed agent in an isolated context to independently challenge the current uncommitted changes and the current branch vs `main`. Each agent outputs an adversarial review (Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering); all reviews are synthesized into a combined challenge with consensus and per-agent-only findings. A user-approval gate precedes posting. If a PR exists the synthesis is posted as a PR comment; otherwise it is presented in-conversation only. **Workflow position:** optional adversarial challenge before `/ghi-finalize`. **Design note:** no agent sees any other agent's output while drafting; every non-self agent runs in non-interactive mode and writes only to stdout.
+Runs each listed agent in an isolated context to independently challenge the current uncommitted changes and the current branch vs `main`. Each agent outputs an adversarial review (Direction Critique / Hidden Assumptions / Failure Modes / Alternatives Worth Considering); all reviews are synthesized into a combined challenge with consensus and per-agent-only findings. A user-approval gate precedes posting. If a PR exists the synthesis is posted as a PR comment; otherwise it is presented in-conversation only. **Workflow position:** optional adversarial challenge on the PR `implement issue N` opened. **Design note:** no agent sees any other agent's output while drafting; every non-self agent runs in non-interactive mode and writes only to stdout.
 
 ### `/multi-plan <ais...> <issue#>`
 
@@ -102,7 +126,7 @@ Validates the issue, warns if plan comments already exist, then generates indepe
 
 **Args:** one or more agent names (`claude`, `copilot`, `codex`, `antigravity`). **Sources:** `.claude/commands/multi-review.md`, `.copilot/commands/multi-review.md`, `.agents/skills/multi-review/SKILL.md`.
 
-Verifies a PR exists for the current branch, warns if reviews already exist, then generates independent code reviews from each listed agent in isolated contexts. Posts each review as a separate PR comment, synthesizes findings into a combined verdict (consensus findings, per-agent-only findings, combined verdict). A user-approval gate precedes the synthesis post. **Workflow position:** after `/<currentai>:implement`, before `/ghi-finalize`, in the multi-agent workflow. **Design note:** same isolation guarantee as `/multi-plan` — no reviewer sees another's output; the synthesis is posted after all raw reviews so readers can audit it against the sources.
+Verifies a PR exists for the current branch, warns if reviews already exist, then generates independent code reviews from each listed agent in isolated contexts. Posts each review as a separate PR comment, synthesizes findings into a combined verdict (consensus findings, per-agent-only findings, combined verdict). A user-approval gate precedes the synthesis post. **Workflow position:** after `implement issue N` opens the PR, in the multi-agent workflow. **Design note:** same isolation guarantee as `/multi-plan` — no reviewer sees another's output; the synthesis is posted after all raw reviews so readers can audit it against the sources.
 
 ### `/ghi-status`
 
@@ -124,7 +148,7 @@ Pause-and-resume helpers for long-running workstreams. `/checkpoint` writes a pa
 
 **Args:** optional template ref (tag, branch, or commit SHA) to sync *to*; defaults to `main`. **Sources:** `.agents/skills/template-sync/SKILL.md` (Codex, Antigravity, Copilot), `.claude/skills/template-sync/SKILL.md` (Claude, generated by `doit skills_sync`).
 
-Upgrades a downstream project to the latest `pyproject-template`. Refuses to run in the template repo itself. Opens a tracking issue and branch, refreshes the management suite with `bootstrap.py --sync` **before** running `manage.py check` (a stale drift checker misreports drift), triages the diff into adopt / skip / merge-by-hand, batches every open judgment call into one round of questions to the user, then posts the result as a plan comment on the issue under the header `## Sync Plan for #<n>: <ref>` and **stops for the repo admin to approve**. Only after approval does it apply, validate with `doit check`, mark the sync point, and hand off to `/ghi-finalize`. **Workflow position:** any time, independent of the issue lifecycle. **Design note:** the plan gate is the point of the command — a sync applied first and explained afterwards is a record, not a decision the admin got to make. `tests/test_template_sync_skill.py` enforces that both bodies carry the same gate sentence and that the gate precedes the apply step.
+Upgrades a downstream project to the latest `pyproject-template`. Refuses to run in the template repo itself. Opens a tracking issue and branch, refreshes the management suite with `bootstrap.py --sync` **before** running `manage.py check` (a stale drift checker misreports drift), triages the diff into adopt / skip / merge-by-hand, batches every open judgment call into one round of questions to the user, then posts the result as a plan comment on the issue under the header `## Sync Plan for #<n>: <ref>` and **stops for the repo admin to approve**. Only after approval does it apply, validate with `doit check`, mark the sync point, and return to the `implement-issue` run, or commit and open a PR per `.github/CONTRIBUTING.md`. **Workflow position:** any time, independent of the issue lifecycle. **Design note:** the plan gate is the point of the command — a sync applied first and explained afterwards is a record, not a decision the admin got to make. `tests/test_template_sync_skill.py` enforces that both bodies carry the same gate sentence and that the gate precedes the apply step.
 
 This command drives the tooling documented in [Template Management](../../template/manage.md) and the procedure in [AI Sync Checklist](../../template/ai-sync-checklist.md); it replaces neither. Read the checklist when a step is ambiguous.
 
@@ -218,15 +242,13 @@ Turns a performance change into a measured one instead of a claimed one. It conf
 
 ## Codex
 
-Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$codex-plan`, `$codex-implement`, and `$ghi-finalize`.
+Codex does not use repo-defined slash commands in this template. Instead, the Codex workflow is provided through **repo-scoped skills** under `.agents/skills/`, which Codex can invoke through its built-in `/skills` browser or explicit mentions such as `$implement-issue`, `$codex-review`, and `$ghi-status`.
 
-**Workflow coverage:** the checked-in Codex skills cover planning, implementation, review, adversarial review, and finalization through PR creation. They preserve the same repo artifact contract used by the Claude flow:
+**Workflow coverage:** the checked-in Codex skills cover taking an issue to a PR, review, and adversarial review. They preserve the same repo artifact contract used by the Claude flow:
 
-- `$codex-plan` posts the approved plan comment with the header `## Implementation Plan for #<n>: <title>`
-- `$codex-implement` creates or resumes the issue branch and finishes with `doit check`
+- `$implement-issue` (shared skill) decides whether to plan, posts a plan comment with the header `## Implementation Plan for #<n>: <title>` when it does, creates or resumes the issue branch, implements with tests, finishes with `doit check` and `doit docs_build`, commits, pushes, opens the PR with `doit pr`, and fixes CI for up to 3 rounds
 - `$codex-review` reviews the current branch's PR and posts findings after user approval
 - `$codex-adversarial-review` runs an adversarial challenge review
-- `$ghi-finalize` drafts the commit and PR artifacts and uses `doit pr` after explicit approval
 - `$ghi-status` inspects the current branch, issue, plan comment, uncommitted changes and PR state, and suggests the next step — read-only, no side effects
 - `$template-sync` upgrades the project to the latest template, posting a plan on the tracking issue for the admin to approve before applying anything
 - `$template-migrate` is the standalone precursor: copied into a project that does not use the template yet, it plans the migration and writes it to `TEMPLATE_MIGRATION_PLAN.md`
@@ -248,13 +270,11 @@ Codex does not use repo-defined slash commands in this template. Instead, the Co
 
 Antigravity (`agy`) does not use repo-defined slash commands in this template. Instead, the Antigravity workflow is provided through **repo-scoped skills** under `.agents/skills/` (the same directory and `SKILL.md` format Codex uses), which `agy` activates by matching your request against each skill's `description:` frontmatter — there is no slash or `$` prefix.
 
-**Workflow coverage:** the checked-in Antigravity skills cover planning, implementation, review, and adversarial review. They preserve the same repo artifact contract used by the Claude flow:
+**Workflow coverage:** the checked-in Antigravity skills cover taking an issue to a PR, review, and adversarial review. They preserve the same repo artifact contract used by the Claude flow:
 
-- `antigravity-plan` posts the approved plan comment with the header `## Implementation Plan for #<n>: <title>`
-- `antigravity-implement` creates or resumes the issue branch and finishes with `doit check`
+- The shared `implement-issue` skill decides whether to plan, posts a plan comment with the header `## Implementation Plan for #<n>: <title>` when it does, creates or resumes the issue branch, implements with tests, finishes with `doit check` and `doit docs_build`, commits, pushes, opens the PR with `doit pr`, and fixes CI for up to 3 rounds
 - `antigravity-review` reviews the current branch's PR and posts findings after user approval
 - `antigravity-adversarial-review` runs an adversarial challenge review
-- The shared `ghi-finalize` skill (from `.agents/skills/`) drafts the commit and PR artifacts
 - The shared `ghi-status` skill inspects the current branch, issue, plan comment, uncommitted changes and PR state, and suggests the next step — read-only, no side effects
 - The shared `template-sync` skill (from `.agents/skills/`) upgrades the project to the latest template behind an admin review gate
 - The shared `template-migrate` skill plans an existing project's move onto the template, changing nothing until the owner approves
@@ -299,20 +319,12 @@ Because skill names are derived from their directory name and **cannot contain c
 ```json
 {
   "disabledSkills": [
-    "delegate-claude-plan",
-    "delegate-claude-implement",
     "delegate-claude-review",
     "delegate-claude-adversarial-review",
-    "delegate-codex-plan",
-    "delegate-codex-implement",
     "delegate-codex-review",
     "delegate-codex-adversarial-review",
-    "delegate-copilot-plan",
-    "delegate-copilot-implement",
     "delegate-copilot-review",
     "delegate-copilot-adversarial-review",
-    "delegate-antigravity-plan",
-    "delegate-antigravity-implement",
     "delegate-antigravity-review",
     "delegate-antigravity-adversarial-review"
   ]
@@ -326,22 +338,22 @@ question is closed (#757). Run `copilot skill list` from the repo root to reprod
 
 | | |
 | :--- | ---: |
-| project entries Copilot lists | 51 |
-| from `.github/skills/` | 16 |
-| from `.agents/skills/` | 35 |
+| project entries Copilot lists | 35 |
+| from `.github/skills/` | 8 |
+| from `.agents/skills/` | 31 |
 | **from `.claude/commands/`** | **0** |
 
 Two reasons the number is zero:
 
 - **Discovery is not recursive.** Only top-level `*.md` files in `.claude/commands/` are read, so
-  none of the 16 nested `<target>/<action>.md` bridge files surface in Copilot.
-- **Names collide and dedupe.** Every remaining top-level file — `ghi-finalize.md`, `multi-plan.md`,
-  `multi-review.md`, `multi-adversarial-review.md` — has a same-named entry in `.agents/skills/`
-  (the 12 near-identical workflow skills plus `ghi-status` moved there in #972), and Copilot keeps
-  one entry per name.
+  none of the 8 nested `<target>/<action>.md` bridge files surface in Copilot.
+- **Names collide and dedupe.** Every remaining top-level file — `multi-plan.md`,
+  `multi-review.md`, `multi-adversarial-review.md` — has a same-named entry in `.agents/skills/`,
+  and Copilot keeps one entry per name.
 
-The same dedup shadows eight `.agents/skills/` entries — the `antigravity-*` and `codex-*`
-self-action skills — behind the same-named Copilot bridges in `.github/skills/`. That is the
+The same dedup shadows four `.agents/skills/` entries — the `antigravity-*` and `codex-*`
+self-action `review`/`adversarial-review` skills — behind the same-named Copilot bridges in
+`.github/skills/`. That is the
 desired outcome for a Copilot session, but it depends on precedence rather than on anything the
 repo declares, so check `copilot skill list` after renaming a skill.
 
@@ -353,17 +365,17 @@ rather than checked.
 
 ## Adding a new slash command
 
-**If the workflow should run the same way under every agent** (Claude, Codex, Antigravity, Copilot), it belongs with the shared skills in [Shared workflow skills: one source, generated for Claude](#shared-workflow-skills-one-source-generated-for-claude): write `.agents/skills/<name>/SKILL.md` with `name:`/`description:` frontmatter and no Claude-only instructions, run `doit skills_sync` to generate its `.claude/skills/<name>/SKILL.md` copy, and add it to `SHARED_SKILLS` in `tools/doit/skills.py`. The rest of this section is for a command written around one specific agent (the way `ghi-finalize` and the `multi-*` orchestrators are), not a shared one.
+**If the workflow should run the same way under every agent** (Claude, Codex, Antigravity, Copilot), it belongs with the shared skills in [Shared workflow skills: one source, generated for Claude](#shared-workflow-skills-one-source-generated-for-claude): write `.agents/skills/<name>/SKILL.md` with `name:`/`description:` frontmatter and no Claude-only instructions, run `doit skills_sync` to generate its `.claude/skills/<name>/SKILL.md` copy, and add it to `SHARED_SKILLS` in `tools/doit/skills.py`. The rest of this section is for a command written around one specific agent (the way the `multi-*` orchestrators are), not a shared one.
 
 1. **Pick the location.** Claude commands live in `.claude/commands/<name>.md` and become `/<name>` in Claude Code. Copilot CLI discovers **skills** only from `skills/` directories (`.github/skills/`, `.agents/skills/`, `.claude/skills/`) — never from `commands/`, though it does load single-file commands from `.claude/commands/` by a separate mechanism. To expose a Copilot-only command, author it as `.github/skills/<name>/SKILL.md` (with YAML frontmatter) — `.github/skills/` is the only Copilot project skill path that Claude does **not** also read. The slash name becomes `/<name>` because skill names cannot contain colons.
 2. **Use the CLI file format** — not the `docs/` frontmatter format. Start with a top-level `# Title` heading, follow with a one-line description (which may include the `$ARGUMENTS` placeholder if the command takes arguments), then a `## Instructions` section containing the step-by-step body. **Do not add YAML frontmatter.** The CLIs expect plain markdown; frontmatter would appear verbatim in the rendered prompt.
-3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For a command that takes no arguments (like `/ghi-finalize`), omit the placeholder.
-4. **Decide: subagent or main context?** Delegate to a general-purpose subagent via the Task tool when the command does heavy codebase exploration, writes files, or runs long commands whose output would bloat the main conversation — `.claude/commands/claude/implement.md` is the canonical example. Run in the main context when the user needs to interact step by step (plan mode, iteration, explicit approvals) — `.claude/commands/claude/plan.md` is the canonical example.
+3. **Use `$ARGUMENTS` for inputs.** When the user invokes `/<command> foo bar`, every `$ARGUMENTS` occurrence in the file is substituted with `foo bar` before the command body is sent to the model. For a command that takes no arguments, omit the placeholder.
+4. **Decide: subagent or main context?** Delegate to a general-purpose subagent via the Task tool when the command does heavy codebase exploration, writes files, or runs long commands whose output would bloat the main conversation — the `implement-issue` skill's Planner and Coder briefs are the canonical example (`.agents/skills/implement-issue/SKILL.md`). Run in the main context when the user needs to interact step by step and the step has no approval wait of its own — `.claude/commands/claude/review.md` is the canonical example.
 5. **Update this document** when you add or remove a command. The command reference section should list every file under `.claude/commands/`, and every shared skill under `.agents/skills/`.
 
 ## Cross-agent delegation matrix
 
-This template ships a `<target>:<action>` matrix where `<target>` can be **the same agent** (self-action) or **any of the other three** (cross-agent delegation). Self-action (`/claude:plan`, etc.) and cross-agent delegation (`/codex:plan` from Claude, etc.) share the same `<ai>:<action>` naming convention. The full design — convention, file layout, prefix mapping (`/foo` vs `$foo` for Codex), Hybrid C runtime behavior, and the `.agents/skills/` ↔ Copilot conflict mitigation — is documented separately:
+This template ships a `<target>:<action>` matrix for `review` and `adversarial-review`, where `<target>` can be **the same agent** (self-action) or **any of the other three** (cross-agent delegation). Self-action (`/claude:review`, etc.) and cross-agent delegation (`/codex:review` from Claude, etc.) share the same `<ai>:<action>` naming convention. Planning and implementation are not part of this matrix — they run through the single shared `implement-issue` skill instead (see [implement issue N](#implement-issue-n) above). The full design — convention, file layout, prefix mapping (`/foo` vs `$foo` for Codex), Hybrid C runtime behavior, and the `.agents/skills/` ↔ Copilot conflict mitigation — is documented separately:
 
 → See [Cross-Agent Delegation Matrix](cross-agent-delegation.md).
 
@@ -371,14 +383,18 @@ Quick reference:
 
 ```text
 # In Claude Code (colon separator):
-/<target>:<action> [args]      # e.g. /codex:plan 42, /antigravity:adversarial-review
+/<target>:<action> [args]      # e.g. /codex:review, /antigravity:adversarial-review
 
 # In Copilot CLI (hyphen separator — skill names cannot contain colons):
-/<target>-<action> [args]      # e.g. /codex-plan 42, /antigravity-adversarial-review
+/<target>-<action> [args]      # e.g. /codex-review, /antigravity-adversarial-review
 
 # In Codex CLI (skills, not slash commands; hyphen separator):
-$<target>-<action> [args]              # self-action: $codex-plan 42
-$delegate-<target>-<action> [args]     # cross-agent: $delegate-claude-implement 42
+$<target>-<action> [args]              # self-action: $codex-review
+$delegate-<target>-<action> [args]     # cross-agent: $delegate-claude-review
+
+# Anywhere, to take an issue to a PR:
+implement issue 42                     # natural language, not a slash/$ command
+implement issue 42 with codex          # delegates only the coding step to Codex
 ```
 
 ## See also

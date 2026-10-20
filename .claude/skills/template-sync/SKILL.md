@@ -247,7 +247,7 @@ before moving on.
 Report against the plan, not from memory: what was adopted, what was skipped, where you deviated
 and why, the `doit check` result, and the old and new template SHAs.
 
-Then hand off to the `ghi-finalize` skill, which drafts the commit and PR and waits for approval.
+Then return to the `implement-issue` run, or commit and open a PR per `.github/CONTRIBUTING.md`.
 The commit message should list the upstream changes taken:
 
 ```
