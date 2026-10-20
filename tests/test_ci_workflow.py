@@ -188,16 +188,21 @@ class TestLintJob:
     """The lint job runs each check and reports every failing one (#952)."""
 
     def test_lint_runs_every_check_but_test(self) -> None:
-        """Every task ``doit check`` runs is run in CI; ``test`` has its own job.
+        """Every ``doit check`` task runs in CI; ``test`` and ``docs_build`` have own jobs.
 
         ``deadcode`` was in ``task_check`` but in no CI job, so a PR could add
         dead code that only the daily check caught.
         """
         from tools.doit.quality import task_check
 
-        expected = set(task_check()["task_dep"]) - {"test"}
+        expected = set(task_check()["task_dep"]) - {"test", "docs_build"}
         run = {step["run"].split("doit ", 1)[1].split()[0] for step in _lint_check_steps()}
         assert run == expected
+
+    def test_docs_job_runs_docs_build(self) -> None:
+        """``docs_build`` is left out of the lint job only because the docs job runs it (#974)."""
+        steps: list[dict[str, Any]] = _load_workflow()["jobs"]["docs"]["steps"]
+        assert any("doit docs_build" in step.get("run", "") for step in steps)
 
     def test_each_check_runs_after_an_earlier_failure(self) -> None:
         """A failing check must not skip the checks after it."""
