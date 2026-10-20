@@ -12,6 +12,14 @@ until #976 replaced them with the single shared `implement-issue` skill
 skills_sync`). Its contract is checked directly against that one source rather
 than per-agent, since there is only one file to agree with itself.
 
+The three `multi-*` orchestrators used to hardcode one agent as the one running
+inline (`(self)`) and carry their own copy of the non-interactive invocation
+table per host, until #975 rewrote each as a single shared skill
+(`.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md`, generated
+for Claude the same way) that identifies "self" generically: "the entry in the
+table that matches the CLI running this skill is you." Their contract is
+checked the same way `implement-issue`'s is — against the one shared source.
+
 The contract itself is documented in
 ``docs/development/ai/cross-agent-delegation.md``; this module is its enforcement.
 When the two disagree, the doc is the specification and this file is the bug.
@@ -46,6 +54,34 @@ SELF_ACTION_LAYOUTS = {
 # asserted byte-identical by tests/template/test_skills_sync.py, so checking
 # the source here is sufficient.
 IMPLEMENT_ISSUE_FILE = REPO_ROOT / ".agents" / "skills" / "implement-issue" / "SKILL.md"
+
+# The three shared multi-* orchestrator sources. Same reasoning as
+# IMPLEMENT_ISSUE_FILE: each has one generated Claude copy, asserted
+# byte-identical by tests/template/test_skills_sync.py, so checking the source
+# is sufficient.
+MULTI_AGENT_FILES: dict[str, Path] = {
+    "multi-plan": REPO_ROOT / ".agents" / "skills" / "multi-plan" / "SKILL.md",
+    "multi-review": REPO_ROOT / ".agents" / "skills" / "multi-review" / "SKILL.md",
+    "multi-adversarial-review": (
+        REPO_ROOT / ".agents" / "skills" / "multi-adversarial-review" / "SKILL.md"
+    ),
+}
+
+# The non-interactive invocation each CLI needs, copied verbatim from
+# docs/development/ai/cross-agent-delegation.md's "Non-interactive flags per
+# CLI" table. test_non_interactive_invocations_match_the_doc keeps this copy
+# honest against that doc.
+NON_INTERACTIVE_INVOCATIONS: dict[str, str] = {
+    "claude": "claude -p '<prompt>'",
+    "codex": "codex -a never --dangerously-bypass-hook-trust exec '<prompt>'",
+    "copilot": "copilot --allow-all -p '<prompt>'",
+    "antigravity": (
+        "agy -p '<prompt>' --dangerously-skip-permissions "
+        '--add-dir "$(git rev-parse --show-toplevel)"'
+    ),
+}
+
+CROSS_AGENT_DELEGATION_DOC = REPO_ROOT / "docs" / "development" / "ai" / "cross-agent-delegation.md"
 
 # Contract elements, by the action whose files must carry them. Each entry is
 # (label, substring). Substrings rather than regexes: the contract is a literal
@@ -202,3 +238,78 @@ def test_exemptions_are_real_and_documented() -> None:
             stale.append(f"({action}, {agent}, {label}) — the file now carries {needle!r}")
 
     assert not stale, f"these exemptions are no longer needed and should be removed: {stale}"
+
+
+# --- multi-* orchestrator contract (#975) ---
+
+
+def test_non_interactive_invocations_match_the_doc() -> None:
+    """NON_INTERACTIVE_INVOCATIONS must still match cross-agent-delegation.md.
+
+    That doc is the specification (see module docstring); if this copy drifts
+    from it, this test — not the doc — is the bug to fix.
+    """
+    doc_text = CROSS_AGENT_DELEGATION_DOC.read_text(encoding="utf-8")
+    missing = [
+        f"{agent}: {invocation!r}"
+        for agent, invocation in NON_INTERACTIVE_INVOCATIONS.items()
+        if invocation not in doc_text
+    ]
+    assert not missing, (
+        f"these invocations no longer match {CROSS_AGENT_DELEGATION_DOC.relative_to(REPO_ROOT)}: "
+        f"{missing}"
+    )
+
+
+def test_multi_agent_files_carry_every_invocation() -> None:
+    """Each multi-* skill's invocation table must carry all four CLIs' commands verbatim.
+
+    A headless run can't reliably go and read cross-agent-delegation.md mid-skill
+    (see module docstring), so each multi-* file carries its own copy of the
+    table — this is what keeps that copy from drifting.
+    """
+    missing: list[str] = []
+    for name, path in MULTI_AGENT_FILES.items():
+        if not path.is_file():
+            missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
+            continue
+        text = path.read_text(encoding="utf-8")
+        for agent, invocation in NON_INTERACTIVE_INVOCATIONS.items():
+            if invocation not in text:
+                missing.append(f"{name} is missing the {agent} invocation ({invocation!r})")
+
+    assert not missing, "multi-* invocation table violations:\n  " + "\n  ".join(missing)
+
+
+def test_multi_agent_files_do_not_hardcode_a_self_agent() -> None:
+    """No multi-* file may hardcode one agent as the one running inline.
+
+    The old per-agent files each had a branch like "If `codex` is in the agent
+    list (self):". The shared file replaces that with "the entry in the table
+    that matches the CLI running this skill is you" — see the module docstring.
+    """
+    hardcoded = [
+        name
+        for name, path in MULTI_AGENT_FILES.items()
+        if path.is_file() and "(self)" in path.read_text(encoding="utf-8")
+    ]
+    assert not hardcoded, (
+        f"these multi-* files hardcode an agent as (self), which only one CLI can be: {hardcoded}"
+    )
+
+
+def test_multi_review_files_carry_the_read_only_sentence() -> None:
+    """`multi-review` and `multi-adversarial-review` must carry READ_ONLY_SENTENCE verbatim.
+
+    They used to only paraphrase it; a paraphrase drifts into a weaker version,
+    the same failure mode `test_read_only_constraint_is_worded_identically`
+    guards against for the self-action files.
+    """
+    divergent = [
+        name
+        for name in ("multi-review", "multi-adversarial-review")
+        if READ_ONLY_SENTENCE not in MULTI_AGENT_FILES[name].read_text(encoding="utf-8")
+    ]
+    assert not divergent, (
+        f"these multi-* files do not carry the exact read-only sentence: {divergent}"
+    )

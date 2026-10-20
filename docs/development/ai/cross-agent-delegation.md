@@ -204,10 +204,7 @@ In addition to the 1-to-1 delegation matrix above, this template ships three N-t
 | `/multi-review <ais...>` | agent list | Each listed agent independently reviews the current PR; reviews posted as separate comments; synthesis posted after user approval. |
 | `/multi-adversarial-review <ais...>` | agent list | Each listed agent independently challenges the current changes; synthesis posted to PR (if exists) after user approval. |
 
-Each command is available for all four hosts:
-- Claude: `.claude/commands/multi-{plan,review,adversarial-review}.md`
-- Copilot: `.copilot/commands/multi-{plan,review,adversarial-review}.md`
-- Codex: `.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md`
+Each is a single shared skill, written once in `.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md` (read directly by Codex, Antigravity, and Copilot) and generated for Claude at `.claude/skills/multi-{plan,review,adversarial-review}/SKILL.md` by `doit skills_sync` — the same mechanism the other 14 shared workflow skills use. Each file says which agent is running it the same way: "the entry in the table that matches the CLI running this skill is you," so the file does not hardcode one agent as the default.
 
 ## Out of scope (v1)
 

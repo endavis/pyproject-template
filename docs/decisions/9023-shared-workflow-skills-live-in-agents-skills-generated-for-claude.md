@@ -25,17 +25,21 @@ Claude by `doit skills_sync`.**
    are written once, with `name:`/`description:` frontmatter and no Claude-only instructions, so
    Claude can auto-invoke each one from its `description:` the same way Codex, Antigravity and
    Copilot already do. `implement-issue` joined this list in ADR-9024, as `SHARED_SKILLS` entry
-   fourteen, after it replaced the per-agent plan/implement matrix and `ghi-finalize`.
+   fourteen, after it replaced the per-agent plan/implement matrix and `ghi-finalize`. The three
+   `multi-*` orchestrators (`multi-plan`, `multi-review`, `multi-adversarial-review`) joined in #975
+   as entries fifteen through seventeen, once each could be rewritten to say "the entry in the
+   table that matches the CLI running this skill is you" instead of hardcoding one agent as self.
 2. `doit skills_sync` copies each source, byte for byte, to `.claude/skills/<name>/SKILL.md` — the
    path Claude Code reads (Claude Code 2.1.304 does not read `.agents/skills/`). The task runs only
    when the project wires Claude Code, using the same presence marker as `tests/agent_roster.py`.
    `doit skills_sync --check` reports drift and exits non-zero instead of writing anything.
 3. The 13 corresponding `.claude/commands/<name>.md` files are deleted. The Claude slash names are
    unchanged: `/add-dependency` and the rest still work, now as skills.
-4. `multi-plan`, `multi-review` and `multi-adversarial-review` are explicitly out of scope: each is
-   written around the agent running it, and a follow-up issue tracks making them agent-portable
-   too. `ghi-finalize` was out of scope here for the same reason, but ADR-9024 later removed it
-   entirely rather than merging it — it is not "agent-portable", it does not exist any more.
+4. `ghi-finalize` was out of scope here because it was written around the agent running it the same
+   way the `multi-*` orchestrators originally were; ADR-9024 later removed it entirely rather than
+   merging it — it is not "agent-portable", it does not exist any more. The `multi-*` orchestrators
+   themselves moved from out of scope to in scope in #975, once each could say which CLI is running
+   it without hardcoding an agent as self (see Decision 1 above).
 
 ## Rationale
 
@@ -55,10 +59,12 @@ Copilot reads both `.agents/skills/` and `.claude/skills/` for a skill of this n
 `.agents/skills/` when both exist (Copilot CLI 1.0.100) — so the generated Claude copy does not
 create a second, possibly-stale entry in a Copilot session.
 
-`ghi-finalize` and the `multi-*` orchestrators stay as they are because each is written around the
-mechanics of the agent running it (which CLI to shell out to, how it posts to GitHub) in a way the
-12 merged workflows are not. Folding them in now would have meant solving that problem as a
-side effect of this one.
+`ghi-finalize` stayed out of scope, and the `multi-*` orchestrators stayed out of scope at the time,
+because each was written around the mechanics of the agent running it (which CLI to shell out to,
+how it posts to GitHub) in a way the 12 merged workflows were not. Folding them in then would have
+meant solving that problem as a side effect of this one. #975 later solved it directly for the
+`multi-*` files — "the entry in the table that matches the CLI running this skill is you" replaces
+the hardcoded self-agent branch — which is what let them join `SHARED_SKILLS` too.
 
 ## Consequences
 
@@ -81,6 +87,7 @@ side effect of this one.
 - Issue #972: make `.agents/skills/` the single source for shared workflow skills
 - Issue #976: `implement-issue` joins `SHARED_SKILLS`, replacing the per-agent plan/implement matrix
   and `ghi-finalize`
+- Issue #975: the `multi-*` orchestrators join `SHARED_SKILLS`, rewritten to be agent-portable
 
 ## Related Documentation
 
