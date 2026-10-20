@@ -73,14 +73,14 @@ def test_self_action_grid_exists() -> None:
 def test_template_sync_exists_on_every_wired_surface() -> None:
     """`template-sync` is the entry point to the template upgrade, on every host.
 
-    Claude reads `.claude/commands/`; Codex, Antigravity and Copilot all read
-    `.agents/skills/` (Copilot additionally picks the Claude file up as a
-    single-file command, #757). There is no `.copilot/commands/` copy because
-    that path is never loaded — see `.copilot/README.md`.
+    `.agents/skills/` is the source Codex, Antigravity and Copilot read; Claude
+    reads `.claude/skills/`, generated from it byte for byte by `doit
+    skills_sync` (#972). There is no `.copilot/commands/` copy because that
+    path is never loaded — see `.copilot/README.md`.
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "template-sync.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "template-sync" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "template-sync" / "SKILL.md")
 
@@ -97,7 +97,7 @@ def test_template_migrate_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "template-migrate.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "template-migrate" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "template-migrate" / "SKILL.md")
 
@@ -113,7 +113,7 @@ def test_add_dependency_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "add-dependency.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "add-dependency" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "add-dependency" / "SKILL.md")
 
@@ -132,7 +132,7 @@ def test_mutation_triage_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "mutation-triage.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "mutation-triage" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "mutation-triage" / "SKILL.md")
 
@@ -148,7 +148,7 @@ def test_property_tests_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "property-tests.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "property-tests" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "property-tests" / "SKILL.md")
 
@@ -164,7 +164,7 @@ def test_deprecate_api_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "deprecate-api.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "deprecate-api" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "deprecate-api" / "SKILL.md")
 
@@ -180,7 +180,7 @@ def test_python_version_bump_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "python-version-bump.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "python-version-bump" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "python-version-bump" / "SKILL.md")
 
@@ -196,7 +196,7 @@ def test_security_triage_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "security-triage.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "security-triage" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "security-triage" / "SKILL.md")
 
@@ -213,7 +213,7 @@ def test_dead_code_triage_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "dead-code-triage.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "dead-code-triage" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "dead-code-triage" / "SKILL.md")
 
@@ -229,7 +229,7 @@ def test_perf_change_exists_on_every_wired_surface() -> None:
     """
     paths: list[Path] = []
     if agent_is_present("claude"):
-        paths.append(REPO_ROOT / ".claude" / "commands" / "perf-change.md")
+        paths.append(REPO_ROOT / ".claude" / "skills" / "perf-change" / "SKILL.md")
     if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
         paths.append(REPO_ROOT / ".agents" / "skills" / "perf-change" / "SKILL.md")
 

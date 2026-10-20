@@ -36,6 +36,7 @@ INSTRUCTION_GLOBS = (
     ".claude/CLAUDE.md",
     "AGENTS.md",
     ".claude/commands/**/*.md",
+    ".claude/skills/*/SKILL.md",
     ".claude/agents/*.md",
     ".github/skills/*/SKILL.md",
     ".agents/skills/*/SKILL.md",
@@ -251,7 +252,11 @@ def test_referenced_commands_exist() -> None:
     for path in REPO_ROOT.glob(".claude/commands/**/*.md"):
         rel = path.relative_to(REPO_ROOT / ".claude" / "commands").with_suffix("")
         known.add(rel.as_posix().replace("/", ":"))
-    for pattern in (".github/skills/*/SKILL.md", ".agents/skills/*/SKILL.md"):
+    for pattern in (
+        ".github/skills/*/SKILL.md",
+        ".agents/skills/*/SKILL.md",
+        ".claude/skills/*/SKILL.md",
+    ):
         known |= {p.parent.name for p in REPO_ROOT.glob(pattern)}
     for path in REPO_ROOT.glob(".copilot/commands/*.md"):
         known.add(path.stem)

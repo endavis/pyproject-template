@@ -1,13 +1,18 @@
+---
+name: property-tests
+description: Use when writing a Hypothesis property-based test, when a test already uses `@given` or Hypothesis `st.` strategies, or when asked to add property test coverage for a function or module. Names the property being asserted (round-trip, idempotence, invariant or oracle) before building a strategy from types, marks the test `@pytest.mark.property`, proves it can fail against deliberately broken code, and pins the counterexample as `@example(...)`. Stops and recommends an example-based test when no property fits.
+---
+
 # Property Tests
 
 Write a Hypothesis property test for a function or module: a property named up front, a strategy
 built from types, and proof -- against deliberately broken code -- that the test can actually fail.
 
-Argument: `$ARGUMENTS` -- the function or module to test, optionally followed by what property to
-check. If it is empty, ask the user what it should cover before doing anything else.
+The function or module to test, and what property to check, come from the user's request or from the
+task at hand. If neither says, ask before doing anything else.
 
 A property test that only checks a call does not raise, or that restates the implementation under a
-different name, passes forever and finds nothing. This command keeps the judgment calls that prevent
+different name, passes forever and finds nothing. This skill keeps the judgment calls that prevent
 that explicit, instead of leaving them to be skipped under deadline pressure.
 
 ## Instructions
@@ -95,5 +100,5 @@ first failure and report it. Never edit a test to make it pass.
 
 ## Notes
 
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them when
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them when
   the task is done.

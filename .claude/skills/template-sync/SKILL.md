@@ -1,3 +1,8 @@
+---
+name: template-sync
+description: Use when the user wants to upgrade this project to the latest pyproject-template, sync with upstream template changes, or adopt template improvements. Refreshes the management suite, runs the drift check, triages the diff into a plan posted on a tracking issue for the repo admin to review, applies what is approved, validates with `doit check`, and records the new sync point.
+---
+
 # Template Sync
 
 Upgrade this project to the latest `pyproject-template`.
@@ -5,14 +10,23 @@ Upgrade this project to the latest `pyproject-template`.
 Drives the sync tooling end to end: refreshes the management suite, runs the drift check, triages
 the diff into a plan the repo admin reviews, applies what they approve, validates, and records the
 new sync point. It does not reimplement any of that machinery — `bootstrap.py --sync`,
-`manage.py check`, `manage.py sync` and `doit check` do the work. This command supplies the
-ordering, the questions, and the review gate.
+`manage.py check`, `manage.py sync` and `doit check` do the work. This skill supplies the ordering,
+the questions, and the review gate.
 
-Argument: `$ARGUMENTS` — optional template ref (tag, branch, or commit SHA) to sync *to*. Default
-is `main`. Pass an older ref to take a large backlog one step at a time.
+## When to use
 
-The full reference is [`docs/template/ai-sync-checklist.md`](../../docs/template/ai-sync-checklist.md);
-read it if any step here is ambiguous.
+Use this skill when the user wants to pull upstream template improvements into this project.
+
+Expected request shape:
+
+- "upgrade this project to the latest template"
+- "sync with pyproject-template"
+- "sync to v2.2.0"
+
+The user may supply an optional template ref (tag, branch, or commit SHA) to sync *to*. Default is
+`main`. An older ref takes a large backlog one step at a time.
+
+The full reference is `docs/template/ai-sync-checklist.md`; read it if any step here is ambiguous.
 
 ## Instructions
 
@@ -35,14 +49,13 @@ read it if any step here is ambiguous.
 3. **Confirm the current state passes** with `doit check`. A failure that predates the sync must be
    understood before you add a hundred changed files on top of it. Stop and report if it fails.
 
-4. **Read [`docs/template/consumer-notes.md`](../../docs/template/consumer-notes.md)** — the
-   breaking changes and one-off actions that arrive through this path. Note which apply before
-   adopting anything. If the project has no copy of that file yet, read it from the template you
-   download in Step 3.
+4. **Read `docs/template/consumer-notes.md`** — the breaking changes and one-off actions that
+   arrive through this path. Note which apply before adopting anything. If the project has no copy
+   of that file yet, read it from the template you download in Step 3.
 
 ### Step 2: Open the tracking issue and branch
 
-Per `AGENTS.md` (Issue → Branch → Commit → PR):
+Per `AGENTS.md` (Issue -> Branch -> Commit -> PR):
 
 ```bash
 git checkout main && git pull
@@ -76,7 +89,7 @@ values and correct them before continuing.
 python tools/pyproject_template/manage.py --yes check
 ```
 
-To sync to a specific ref instead of `main` (`$ARGUMENTS`, when given):
+To sync to a specific ref instead of `main`, when the user named one:
 
 ```bash
 python tools/pyproject_template/manage.py --yes check --template-version <ref>
@@ -157,7 +170,7 @@ questions" is a finding the admin should see.
 Write the triage up as a plan and post it as a comment on the issue from Step 2:
 
 ```bash
-gh issue comment <issue#> --body-file=tmp/agents/claude/sync-plan-<issue#>.md
+gh issue comment <issue#> --body-file=tmp/agents/<agent>/sync-plan-<issue#>.md
 ```
 
 The comment opens with the header, so the plan is findable and a second run can detect it:
@@ -234,8 +247,8 @@ before moving on.
 Report against the plan, not from memory: what was adopted, what was skipped, where you deviated
 and why, the `doit check` result, and the old and new template SHAs.
 
-Then hand off to `/ghi-finalize`, which drafts the commit and PR and waits for approval. The commit
-message should list the upstream changes taken:
+Then hand off to the `ghi-finalize` skill, which drafts the commit and PR and waits for approval.
+The commit message should list the upstream changes taken:
 
 ```
 chore: synchronize with pyproject-template
@@ -254,5 +267,5 @@ Syncs the following template improvements:
   That separation is deliberate; keep it.
 - Do not delete files merely because the template lacks them. **Extra** is the expected category for
   everything this project actually does.
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them
   when the task is done.

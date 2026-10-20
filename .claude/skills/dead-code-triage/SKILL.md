@@ -1,19 +1,28 @@
+---
+name: dead-code-triage
+description: Use when `doit check` or `doit deadcode` reports a vulture finding — an unused import,
+  an unused variable (an unused function argument), or unreachable code — and you need to decide
+  whether to fix it, add a documented `ignore_names` exception, or ask, rather than deleting or
+  whitelisting it by reflex. Checks `[tool.vulture]` in `pyproject.toml` for the configured threshold
+  and existing exceptions before touching any code.
+---
+
 # Dead Code Triage
 
 Decide what a vulture finding means before deleting code, hiding it, or leaving a bug in place.
 
-Argument: `$ARGUMENTS` — the finding to triage: a `doit deadcode` output line, or a file and line
-number. If empty, run `doit deadcode` yourself and triage every finding it reports, one at a time.
+The finding comes from the user's request or from `doit check`'s output. If neither says which one,
+run `doit deadcode` yourself and triage every finding it reports, one at a time.
 
 `doit check` runs `doit deadcode` as one of its `task_dep` (`tools/doit/quality.py`), so a vulture
 finding blocks the check. Deleting the flagged code or adding it to `ignore_names` by reflex is
-exactly the failure this command exists to stop: some findings are real dead code, and some are code
+exactly the failure this skill exists to stop: some findings are real dead code, and some are code
 an interface, a framework, or the type checker still needs.
 
 Before Step 1, read `[tool.vulture]` in `pyproject.toml`. It holds `min_confidence`, the `paths`
 vulture scans, and `ignore_names`/`ignore_decorators` — the exceptions already agreed on, each with a
-comment saying why. It is the configuration this command applies; where the two disagree, the config
-wins and this command is out of date.
+comment saying why. It is the configuration this skill applies; where the two disagree, the config
+wins and this skill is out of date.
 
 ## Instructions
 
@@ -97,5 +106,5 @@ finishing.
 
 - One finding can need a code change and a config change together — make both in the same pass, not
   two.
-- Write scratch files to `tmp/agents/claude/` with the issue number in the name, and delete them when
-  the task is done.
+- Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them
+  when the task is done.
