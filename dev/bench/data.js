@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792318035054,
+  "lastUpdate": 1792495648444,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -16933,6 +16933,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.0113758108286132e-7",
             "extra": "mean: 1.9144580711279977 usec\nrounds: 54633"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bde2345f1ce0546e247d4033a97a4fa39a1fb16d",
+          "message": "refactor: make .agents/skills the single source for shared workflow skills (merges PR #973, addresses #972)\n\n* refactor: make .agents/skills the single source for shared workflow skills\n\nGenerate the 13 shared .claude/skills/<name>/SKILL.md copies from .agents/skills/\nvia a new `doit skills_sync` task, and delete the superseded .claude/commands/*.md\nfiles. Claude slash names are unchanged.\n\nMerge decisions where the two prior copies disagreed:\n- checkpoint/restore: kept the .agents copy's \"When to use\" section, genericized\n  its Codex-specific wording.\n- template-sync/template-migrate: dropped $-prefixed invocation examples.\n- template-migrate: kept REF=\"${REF:-main}\" from .agents -- the Claude copy's\n  ${ARGUMENTS:-main} conflated Claude's argument placeholder with a shell\n  variable (behavioral fix).\n\nAddresses #972\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* docs: add ADR-9023 to the mkdocs nav\n\nThe strict docs build rejects pages missing from nav; doit adr does not\nadd the entry and doit check does not run docs_build (tracked in #974).\n\nAddresses #972\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-20T12:26:31+01:00",
+          "tree_id": "145df0192c3253aefe872d117d3959fc1063d0ab",
+          "url": "https://github.com/endavis/pyproject-template/commit/bde2345f1ce0546e247d4033a97a4fa39a1fb16d"
+        },
+        "date": 1792495647657,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11450948.412623966,
+            "unit": "iter/sec",
+            "range": "stddev: 9.676103660366255e-9",
+            "extra": "mean: 87.32901100991438 nsec\nrounds: 115714"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11561548.009137684,
+            "unit": "iter/sec",
+            "range": "stddev: 8.221342127168113e-9",
+            "extra": "mean: 86.49360788102499 nsec\nrounds: 120744"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8080244.878638383,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0992445318709062e-8",
+            "extra": "mean: 123.75862551439306 nsec\nrounds: 81907"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2940145.090911629,
+            "unit": "iter/sec",
+            "range": "stddev: 4.361173860791931e-8",
+            "extra": "mean: 340.1192693146777 nsec\nrounds: 190913"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 699533.4387890425,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1297890475862349e-7",
+            "extra": "mean: 1.429524229365065 usec\nrounds: 73089"
           }
         ]
       }
