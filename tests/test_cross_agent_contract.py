@@ -98,6 +98,20 @@ HEADLESS_CODEX_HOST_SENTENCE = (
     "limits](../../../docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits)."
 )
 
+# The mechanical self-removal rule each multi-* skill's Step 0 must carry verbatim.
+# Replaces the old inference-based "identify which CLI you are" instruction, which
+# a headless Codex host got wrong once in three attempts (#975 run 6): it reviewed
+# inline as `codex` *and* also spawned a nested `codex … exec` call for the same
+# slot. Filtering the agent list is a deterministic operation on Step 0's parse
+# result, not a judgment call that can misfire (#986). Agent-name-agnostic by
+# construction, so it can never special-case one CLI — see
+# test_multi_agent_files_do_not_hardcode_a_self_agent.
+SELF_REMOVAL_SENTENCE = (
+    "Then remove your own name — the CLI running this skill — from the agent list. Every later "
+    "step uses only the agents that remain: you never call your own CLI. If no agent remains, "
+    "tell the user and stop."
+)
+
 # Files that must carry HEADLESS_CODEX_HOST_SENTENCE verbatim — the three
 # shared multi-* skills plus the shared implement-issue skill.
 HEADLESS_CODEX_HOST_FILES: dict[str, Path] = {
@@ -359,6 +373,25 @@ def test_multi_agent_files_do_not_hardcode_a_self_agent() -> None:
     assert not hardcoded, (
         f"these multi-* files hardcode an agent as (self), which only one CLI can be: {hardcoded}"
     )
+
+
+def test_multi_agent_files_remove_self_before_delegating() -> None:
+    """Every multi-* skill's Step 0 must carry SELF_REMOVAL_SENTENCE verbatim.
+
+    A paraphrase per file reopens exactly the drift
+    `test_multi_agent_files_do_not_hardcode_a_self_agent` guards against: whichever
+    host is driving ends up following whichever version of the rule its own file
+    happens to carry (#986).
+    """
+    missing: list[str] = []
+    for name, path in MULTI_AGENT_FILES.items():
+        if not path.is_file():
+            missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
+            continue
+        if SELF_REMOVAL_SENTENCE not in path.read_text(encoding="utf-8"):
+            missing.append(f"{name} is missing SELF_REMOVAL_SENTENCE")
+
+    assert not missing, "self-removal sentence violations:\n  " + "\n  ".join(missing)
 
 
 def test_multi_review_files_carry_the_read_only_sentence() -> None:
