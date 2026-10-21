@@ -77,8 +77,14 @@ GH_STANDALONE_SENTENCE = (
     "Run every `gh` command as its own standalone shell command, never chained with "
     "other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex "
     "allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no "
-    "network access."
+    "network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, "
+    "then stop."
 )
+
+# The host half of the DELEGATION-ERROR marker: without it, a delegated run that
+# reached no GitHub data still prints a confident plan or review, and nothing
+# flags it — #980's original symptom.
+DELEGATION_ERROR_CHECK = "treat output containing `DELEGATION-ERROR:` as a failed run"
 
 # The non-interactive invocation each CLI needs, copied verbatim from
 # docs/development/ai/cross-agent-delegation.md's "Non-interactive flags per
@@ -374,3 +380,19 @@ def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
             missing.append(f"{name}: a codex exec line does not end in < /dev/null")
 
     assert not missing, "Codex bridge file violations:\n  " + "\n  ".join(missing)
+
+
+def test_codex_hosts_check_for_the_delegation_error_marker() -> None:
+    """Every file that hands Codex a prompt must also check its output for the marker.
+
+    GH_STANDALONE_SENTENCE tells Codex to print `DELEGATION-ERROR:` when a `gh`
+    call fails; this is the other half, so the calling agent reports a failed run
+    instead of summarizing output built on no data (#980).
+    """
+    files = {**MULTI_AGENT_FILES, **CODEX_BRIDGE_FILES}
+    missing = [
+        name
+        for name, path in files.items()
+        if DELEGATION_ERROR_CHECK not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, f"these files never check for DELEGATION-ERROR: {missing}"

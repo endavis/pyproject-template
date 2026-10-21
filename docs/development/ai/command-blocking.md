@@ -306,7 +306,12 @@ patterns are refused exactly as before.
 `.codex/rules/gh.rules` allows only the read-only subcommands delegated runs use: `gh pr
 {view,diff,checks,list}` and `gh issue {view,list}`. Everything else — `gh pr comment`, `gh api`
 (which writes with `-X`/`-f`), `gh pr merge` — matches no rule and stays in the sandbox, where it has
-no network, so a delegated Codex run cannot write to GitHub. Check a change to the file with
+no network, so GitHub writes from a delegated Codex run get no network path. That narrows the
+normal path; it does not guarantee that a delegated run can't write. A rule matches its prefix with
+any arguments after it, and the `PreToolUse` hook is a guardrail, not a security boundary
+([ADR-9019](../../decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md)).
+A guarantee needs a credential boundary, such as a token scoped for delegated runs. Check a change
+to the file with
 `codex execpolicy check --rules .codex/rules/gh.rules gh pr view 1`;
 `tests/template/test_ai_agent_assets.py` does the same for both sides of the line.
 

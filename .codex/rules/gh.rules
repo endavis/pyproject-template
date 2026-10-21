@@ -10,8 +10,11 @@
 #
 # Only the read-only subcommands delegated runs actually use are allowed. Every
 # other `gh` call — `gh pr comment`, `gh api` (which writes with -X/-f),
-# `gh pr merge` — matches nothing here and stays in the sandbox, so a delegated
-# run cannot write to GitHub. The PreToolUse hook still runs before all of them.
+# `gh pr merge` — matches nothing here and stays in the sandbox, so GitHub
+# writes get no network path. That narrows the normal path; it is not a
+# guarantee. A rule matches a prefix with any arguments after it, and the
+# PreToolUse hook that runs before every command is a guardrail, not a
+# security boundary (ADR-9019).
 #
 # A rule only matches when `gh` is the exec'd prefix. Chained with `;`, `&&`,
 # `|`, or any other command, the exec'd prefix is the shell, so nothing here
