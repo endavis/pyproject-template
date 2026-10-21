@@ -207,6 +207,21 @@ request path and was removed with it; read the workflow artifact instead.
 GitHub Actions are SHA-pinned, so dependabot now proposes `from 6.3.0 to 7.0.0` rather than
 major-to-major `from 6 to 7`. The pin is the point — review the SHA, not only the version.
 
+### Delegated agent prompts read a pre-fetched file instead of calling `gh`
+
+A new `doit delegation_context` task (`tools/doit/github.py`) fetches an issue's or PR's GitHub data
+once — `--kind=issue` writes `issue.json`/`comments.json`; `--kind=pr` writes `pr.json`/`diff.txt` —
+and writes it under `tmp/agents/<host>/<task>-<n>/`. `implement-issue`'s Planner and Coder briefs,
+`multi-plan`'s and `multi-review`'s per-agent delegated prompt, and the six Codex review/adversarial-
+review bridge files now read those files instead of running `gh issue view`/`gh pr view`/`gh pr
+diff` themselves, so a delegated agent no longer needs its own GitHub network access. No command,
+flag, or file was removed — the prompt text and the six bridge files changed what they say, and the
+new task is additive. If you customized any of those skill files downstream, re-apply your
+customization on top of the context-file convention rather than the old inline `gh` calls. See
+[`doit-tasks-reference.md` — `delegation_context`](../development/doit-tasks-reference.md#delegation_context)
+and [Cross-Agent Delegation Matrix — Context-file
+convention](../development/ai/cross-agent-delegation.md#context-file-convention).
+
 ## Adding to this page
 
 An entry belongs here when a downstream project would be **surprised** by the change: it breaks a

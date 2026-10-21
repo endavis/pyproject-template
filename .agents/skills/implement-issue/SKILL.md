@@ -54,8 +54,15 @@ gh api repos/{owner}/{repo}/issues/<n>/comments --jq '.[] | select(.body | test(
 
 ### Step 3: Plan (subagent)
 
+Fetch the context the Planner brief reads, so the brief never has to call `gh` itself:
+
+```bash
+doit delegation_context --kind=issue --n=<n> --out=tmp/agents/<host>/implement-issue-<n>/
+```
+
 Run the **Planner brief** below in a subagent, using the host's subagent tool (see
-[Per-host subagent notes](#per-host-subagent-notes)). Post what it returns with:
+[Per-host subagent notes](#per-host-subagent-notes)), telling it the context directory above. Post
+what it returns with:
 
 ```bash
 gh issue comment <n> --body "<plan>"
@@ -65,12 +72,21 @@ There is no approval wait — the plan is posted, not proposed.
 
 ### Step 4: Code (subagent, or delegated)
 
-Run the **Coder brief** below in a subagent. When the user says **"implement issue N with
-\<agent\>"**, run the Coder brief through that agent's CLI instead, using the non-interactive
-invocation for that host documented in
-[cross-agent-delegation.md — Non-interactive flags per CLI](../../../docs/development/ai/cross-agent-delegation.md#non-interactive-flags-per-cli).
-"With \<agent\>" hands off only this step; every other step still runs in the host that received
-"implement issue N".
+Re-fetch the context into the same directory — Step 3 posted a comment since the last fetch, so
+`comments.json` needs to pick it up:
+
+```bash
+doit delegation_context --kind=issue --n=<n> --out=tmp/agents/<host>/implement-issue-<n>/
+```
+
+Run the **Coder brief** below in a subagent, telling it the context directory above. When the user
+says **"implement issue N with \<agent\>"**, run the Coder brief through that agent's CLI instead,
+using the non-interactive invocation for that host documented in
+[cross-agent-delegation.md — Non-interactive flags per CLI](../../../docs/development/ai/cross-agent-delegation.md#non-interactive-flags-per-cli)
+— the delegated agent reads the context directory instead of calling `gh` itself, so the invocation
+needs no `gh`-specific guidance. "With \<agent\>" hands off only this step; every other step still
+runs in the host that received "implement issue N". Delete
+`tmp/agents/<host>/implement-issue-<n>/` once this step returns; it has served its purpose.
 
 ### Step 5: Check the work
 
@@ -123,8 +139,11 @@ Give this to the planning subagent, with the issue number:
 
 1. Read `AGENTS.md` and `.claude/CLAUDE.md` (or the host's equivalent) for workflow, conventions, and
    the mandatory test requirement.
-2. Fetch the issue: `gh issue view <n> --json title,body,labels,assignees`. Check `needs-adr` and
-   any related ADRs in `docs/decisions/`.
+2. Read the issue from `<context-dir>/issue.json` (title/body/labels/assignees) — the caller fetched
+   it with `doit delegation_context --kind=issue --n=<n> --out=<context-dir>` before invoking this
+   brief, so there is no `gh` call to make here. If `<context-dir>/issue.json` is missing or
+   unreadable, print `DELEGATION-ERROR:` and stop. Check `needs-adr` and any related ADRs in
+   `docs/decisions/`.
 3. Explore the codebase for the files, modules, and tests the change touches, and the existing
    patterns in that area. If more than one approach is reasonable, pick one and say why in the plan
    rather than leaving it open — nothing downstream can ask the user.
@@ -160,10 +179,12 @@ name, and any issue-specific notes:
 
 1. Read `AGENTS.md` and the host's agent-specific instructions file for workflow, conventions, code
    style, and the mandatory test requirement.
-2. Fetch the plan comment (the most recent one matching `Implementation Plan for`) via `gh issue
-   view <n> --json comments`. If there is none, use the issue body as the spec. (Not `gh api`: a
-   delegated Codex run may only reach GitHub through the read-only subcommands in
-   `.codex/rules/gh.rules`.)
+2. Read `<context-dir>/comments.json` for the most recent comment matching `Implementation Plan
+   for` — the caller fetched it with `doit delegation_context --kind=issue --n=<n>
+   --out=<context-dir>` before invoking this brief, re-fetched after the Planner brief posted its
+   plan so the comment is already there. If there is none, read `<context-dir>/issue.json` for the
+   issue body and use that as the spec instead. If `<context-dir>/comments.json` is missing or
+   unreadable, print `DELEGATION-ERROR:` and stop.
 3. Implement the plan (or the issue): create and edit files, follow existing patterns, and write
    tests — this is mandatory whenever there is code to test, with no exceptions for "small" changes.
    All new code is type-annotated for mypy strict mode.
@@ -197,6 +218,7 @@ run the brief in the session itself instead of failing the step.
 ## See also
 
 - [Cross-Agent Delegation Matrix](../../../docs/development/ai/cross-agent-delegation.md) — the
-  workflow contract this skill's literals satisfy, and the non-interactive invocation per host.
+  workflow contract this skill's literals satisfy, the non-interactive invocation per host, and the
+  `doit delegation_context` context-file convention Steps 3–4 use.
 - [Slash Commands and Workflows](../../../docs/development/ai/slash-commands.md) — command reference.
 - `.claude/agents/implement-worker.md` — Claude's Coder-brief subagent definition.

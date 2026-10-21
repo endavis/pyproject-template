@@ -128,22 +128,56 @@ Each bridge invokes the target CLI in headless mode. Each CLI requires a flag to
 | Target | Invocation | Why |
 | :--- | :--- | :--- |
 | Claude Code | `claude -p '<prompt>'` | `-p` runs headless. No additional approval-bypass flag needed for the typical tool surface. |
-| Codex CLI | ``codex -a never --dangerously-bypass-hook-trust exec 'Run every `gh` command as its own standalone shell command, never chained with other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, then stop. <prompt>' < /dev/null`` | `-a never` (`--ask-for-approval never`) prevents Codex from asking the (absent) user before running shell commands. Without it, every tool call in the delegated session is denied. The prompt must also open with the standalone-`gh` requirement (`GH_STANDALONE_SENTENCE`): `.codex/rules/gh.rules` allow-rules a standalone `gh` prefix, but a `gh` chained into another command falls back into the sandbox, which has no network at all (#980). The trailing `< /dev/null` stops `codex exec` waiting forever on stdin when the caller's stdin is a pipe or socket (#980). |
+| Codex CLI | `codex -a never --dangerously-bypass-hook-trust exec '<prompt>' < /dev/null` | `-a never` (`--ask-for-approval never`) prevents Codex from asking the (absent) user before running shell commands. Without it, every tool call in the delegated session is denied. The trailing `< /dev/null` stops `codex exec` waiting forever on stdin when the caller's stdin is a pipe or socket (#980). The prompt no longer needs `gh`-chaining guidance (`GH_STANDALONE_SENTENCE`, pre-#985): the host now pre-fetches any GitHub data the delegated prompt needs with `doit delegation_context` and writes it to files under `tmp/agents/<host>/<task>-<n>/`, so `<prompt>` reads those instead of calling `gh` itself — see [Context-file convention](#context-file-convention) below. |
 | Copilot CLI | `copilot --allow-all -p '<prompt>'` | `--allow-all` enables all permissions (equivalent to `--allow-all-tools --allow-all-paths --allow-all-urls`). Without it, Copilot prompts for path or URL access mid-session, which the absent user can't answer. **Order matters:** `--allow-all` must precede `-p`, since `-p <text>` consumes its argument and would otherwise grab the next flag. |
 | Antigravity CLI | `agy -p '<prompt>' --dangerously-skip-permissions --add-dir "$(git rev-parse --show-toplevel)"` | `-p` runs headless; `--dangerously-skip-permissions` auto-approves tool calls the absent user can't confirm. `--add-dir <repo-root>` is **required** so `agy` treats the repo as an active workspace and loads `.agents/` (skills + the shared dangerous-command hook) — a headless `agy -p` otherwise falls back to its own home workspace and ignores the repo's `.agents/`. The safety hook's stdout `{"decision":"deny"}` still hard-blocks dangerous commands even under `--dangerously-skip-permissions`. |
 
 These flags are intentional: in delegated invocations, the human is at the *source* agent and not at the target's prompt. Approval prompts in the target session can never be answered, so they must be bypassed. The source agent retains full visibility through captured stdout and can stop the chain at any point.
 
-**`GH_STANDALONE_SENTENCE`** is the literal sentence embedded in the Codex row above. It carries one
-requirement — never chain `gh` with another command — and it is asserted byte-identical, the same
-way `READ_ONLY_SENTENCE` is, across every surface that hands Codex a non-interactive prompt:
-`tests/test_cross_agent_contract.py`'s `NON_INTERACTIVE_INVOCATIONS["codex"]`, the three `multi-*`
-skills' Codex row, and the six Codex bridge files that carry a concrete (not `<prompt>`-templated)
-exec string (`.agents/skills/delegate-codex-{review,adversarial-review}/SKILL.md`,
-`.github/skills/codex-{review,adversarial-review}/SKILL.md`,
-`.claude/commands/codex/{review,adversarial-review}.md`). See `.codex/rules/gh.rules` for the
-allow-rule side of this fix, and [Command Blocking — Codex CLI](command-blocking.md#codex-cli) for
-the measured sandbox-network facts (#980).
+### Context-file convention
+
+Before #985, every non-interactive invocation handed to Codex opened with a literal sentence
+(`GH_STANDALONE_SENTENCE`) telling it to run every `gh` command standalone, never chained — because
+`.codex/rules/gh.rules` only allow-rules a standalone `gh` prefix, and a `gh` chained into another
+command falls back into the sandbox, which has no network at all (#980). That sentence is gone now:
+instead of asking each delegated agent (Codex or otherwise) to fetch its own GitHub data, the
+**host** — the CLI that received the user's command, which already has a trusted, un-sandboxed
+`gh` — fetches it first, with the `doit delegation_context` task:
+
+```bash
+doit delegation_context --kind=issue --n=<n> --out=tmp/agents/<host>/<task>-<n>/
+doit delegation_context --kind=pr --n=<n> --out=tmp/agents/<host>/<task>-<n>/
+```
+
+`--kind=issue` writes `issue.json` (number/title/body/labels/assignees) and `comments.json`
+(`{"comments": [...]}}`); `--kind=pr` writes `pr.json`
+(number/title/body/baseRefName/headRefName) and `diff.txt` (the PR's diff). A missing or
+inaccessible issue/PR aborts the task with a clear error — never a silent empty file. See
+[`doit-tasks-reference.md` — `delegation_context`](../doit-tasks-reference.md#delegation_context)
+for the full reference.
+
+By convention the output directory is `tmp/agents/<host>/<task>-<n>/` (for example
+`tmp/agents/claude/multi-review-123/`), per `AGENTS.md`'s temp-file convention. The delegated
+prompt is told to read the files in that directory instead of calling `gh`, and to print
+`DELEGATION-ERROR:` and stop if the directory or a file in it is missing or unreadable — the
+`DELEGATION_ERROR_CHECK` half of the contract (below) is unchanged, only what triggers the marker
+is: a missing context file, not a failed `gh` call. The orchestrating skill that created the
+directory deletes it once every delegated agent (or subagent) using it has returned.
+
+This removes `gh` from every delegated prompt this template ships: `implement-issue`'s Planner and
+Coder briefs, `multi-plan`'s and `multi-review`'s per-agent delegated prompt, and the six Codex
+bridge files, which now give Codex only git-based inline steps (`.agents/skills/delegate-codex-
+{review,adversarial-review}/SKILL.md`, `.github/skills/codex-{review,adversarial-review}/SKILL.md`,
+`.claude/commands/codex/{review,adversarial-review}.md`) — Hybrid C's old "activate
+`$codex-review`/`$codex-adversarial-review` if available" fallback, which could still reach `gh pr
+view`/`gh pr diff` from inside the delegated session, is gone along with it. `tests/test_cross_
+agent_contract.py`'s `GH_COMMAND_PATTERN` asserts none of these delegated prompts invokes `gh`.
+
+`.codex/rules/gh.rules` is **unchanged** by this — it still serves a headless Codex *host*'s own
+reads (its own `gh issue view`/`gh pr view` in Step 1 of `multi-review`/`multi-plan`, and the
+Planner brief when Codex itself is the host, run directly in the host's own session, not delegated)
+— see [Headless Codex host limits](#headless-codex-host-limits) below and [Command Blocking — Codex
+CLI](command-blocking.md#codex-cli) for the measured sandbox-network facts (#980).
 
 ## Headless Codex host limits
 
@@ -186,8 +220,8 @@ inference the model could occasionally misjudge, not a step it executed determin
 delegation call is made, so what follows (own part inline, delegate to everyone the filtered list
 still names) is a filter over Step 0's parse result rather than a judgment call (#986). The sentence
 is pinned byte-identical across the three skills by
-`tests/test_cross_agent_contract.py`'s `SELF_REMOVAL_SENTENCE`, the same way `GH_STANDALONE_SENTENCE`
-and `HEADLESS_CODEX_HOST_SENTENCE` are.
+`tests/test_cross_agent_contract.py`'s `SELF_REMOVAL_SENTENCE`, the same way
+`HEADLESS_CODEX_HOST_SENTENCE` and `READ_ONLY_SENTENCE` are.
 
 **Supported stance.** Codex hosts `multi-*` and `implement-issue … with <agent>` interactively, where
 it can ask the user to approve the write step or the delegation. A headless Codex host supports
@@ -202,6 +236,11 @@ Each command body is a prompt that the source agent reads. The body tells the so
 
 1. **Asks the target to activate its existing self-action command if available** (`/claude:review`, `$codex-adversarial-review`, etc.).
 2. **Falls back to an inline workflow** (steps the target should follow if the self-action command isn't available or doesn't activate in non-interactive mode).
+
+**Exception: the Codex bridges** (`delegate-codex-*`, `.github/skills/codex-*`,
+`.claude/commands/codex/*`) hand Codex only the inline path. Its self-action skills reach `gh pr
+view`/`gh pr diff`, and delegated prompts carry no `gh` command — see [Context-file
+convention](#context-file-convention) (#985).
 
 This dual-path design — Hybrid C — works regardless of whether each CLI's non-interactive mode resolves slash commands or skill mentions. If resolution works, the target uses its existing solo command and stays consistent with self-action behavior. If it doesn't, the target falls through to the inline steps and still does the right thing.
 

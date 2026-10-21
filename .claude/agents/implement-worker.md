@@ -3,8 +3,9 @@ name: implement-worker
 description: >-
   Performs the coding step of the implement-issue skill after the branch exists
   (and a plan comment, when one was made). Runs the skill's Coder brief: reads
-  project rules, fetches the plan (or the issue body), edits files, writes
-  tests, and runs `doit check`.
+  project rules, reads the plan (or the issue body) from the context directory
+  the parent wrote with `doit delegation_context`, edits files, writes tests,
+  and runs `doit check`.
   Do NOT invoke directly — the implement-issue skill drives this subagent.
 tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite
 permissionMode: default
@@ -18,7 +19,10 @@ it is the one source for what this subagent does; this file only wires it into C
 
 The parent prompt will provide:
 
-- The **issue number** (so you can fetch the plan, when one exists).
+- The **issue number**.
+- The **context directory** the parent filled with `doit delegation_context --kind=issue` —
+  `issue.json` and `comments.json`, where you find the plan (the most recent `Implementation Plan
+  for` comment) or, without one, the issue body. Read it; do not call `gh`.
 - The **branch name** (for context only — you will not switch branches).
 - Any **issue-specific notes** or scope clarifications.
 
@@ -32,4 +36,5 @@ The parent prompt will provide:
 - **All new code must be type-annotated** (mypy strict mode is enforced by `doit check`).
 
 See the Coder brief in `.agents/skills/implement-issue/SKILL.md` for the full step list (read the
-rules, fetch the plan or issue body, implement with tests, run `doit check`, return a summary).
+rules, read the plan or issue body from the context directory, implement with tests, run `doit
+check`, return a summary).

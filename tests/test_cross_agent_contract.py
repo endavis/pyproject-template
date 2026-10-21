@@ -33,6 +33,7 @@ convention in `tests/agent_roster.py` (#690).
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 import pytest
@@ -67,23 +68,20 @@ MULTI_AGENT_FILES: dict[str, Path] = {
     ),
 }
 
-# The one sentence that makes Codex run every `gh` command as its own standalone
-# shell command. The exec-policy allow rule in `.codex/rules/gh.rules` only
-# matches when `gh` is the exec'd prefix — chained with `;`, `&&`, or a pipe, the
-# exec'd prefix is the shell instead, and the call falls back into the sandbox,
-# which has no network at all (#980). Asserted byte-identical everywhere a
-# non-interactive prompt reaches Codex, the same way READ_ONLY_SENTENCE is.
-GH_STANDALONE_SENTENCE = (
-    "Run every `gh` command as its own standalone shell command, never chained with "
-    "other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex "
-    "allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no "
-    "network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, "
-    "then stop."
-)
+# A `gh` subcommand invocation, the thing a delegated prompt must no longer contain (#985):
+# the host now pre-fetches any GitHub data a delegated agent needs with `doit
+# delegation_context` and writes it to files under `tmp/agents/<host>/<task>-<n>/`, so the
+# delegated prompt reads those instead of shelling out to `gh` itself. Matches `gh`
+# followed by any subcommand (`gh issue`, `gh run`, `gh release`, ...) — not a bare
+# mention of `gh` in prose, which several prompts carry when telling the agent NOT
+# to run it (the closing backtick in "`gh` itself" keeps that from matching).
+GH_COMMAND_PATTERN = re.compile(r"\bgh [a-z][a-z-]*\b")
 
 # The host half of the DELEGATION-ERROR marker: without it, a delegated run that
 # reached no GitHub data still prints a confident plan or review, and nothing
-# flags it — #980's original symptom.
+# flags it — #980's original symptom. Repurposed by #985 from "a `gh` call failed"
+# to "the pre-fetched context file was missing or unreadable", since a delegated
+# prompt no longer calls `gh` to fail in the first place.
 DELEGATION_ERROR_CHECK = "treat output containing `DELEGATION-ERROR:` as a failed run"
 
 # The sentence that tells a headless Codex host it cannot do GitHub writes or
@@ -125,10 +123,7 @@ HEADLESS_CODEX_HOST_FILES: dict[str, Path] = {
 # honest against that doc.
 NON_INTERACTIVE_INVOCATIONS: dict[str, str] = {
     "claude": "claude -p '<prompt>'",
-    "codex": (
-        "codex -a never --dangerously-bypass-hook-trust exec "
-        f"'{GH_STANDALONE_SENTENCE} <prompt>' < /dev/null"
-    ),
+    "codex": "codex -a never --dangerously-bypass-hook-trust exec '<prompt>' < /dev/null",
     "copilot": "copilot --allow-all -p '<prompt>'",
     "antigravity": (
         "agy -p '<prompt>' --dangerously-skip-permissions "
@@ -137,10 +132,11 @@ NON_INTERACTIVE_INVOCATIONS: dict[str, str] = {
 }
 
 # The six Codex bridge files that carry a *concrete* (not `<prompt>`-templated)
-# exec string rather than a copy of NON_INTERACTIVE_INVOCATIONS["codex"] — Hybrid
-# C's "activate $codex-review/$codex-adversarial-review if available" fallback can
-# still reach `gh pr view`/`gh pr diff` (#980), so each needs
-# GH_STANDALONE_SENTENCE prepended by hand.
+# exec string rather than a copy of NON_INTERACTIVE_INVOCATIONS["codex"]. Until
+# #985 these inlined Hybrid C's "activate $codex-review/$codex-adversarial-review
+# if available" fallback, which could still reach `gh pr view`/`gh pr diff`
+# (#980); they now give Codex only the git-based inline steps, so there is no
+# `gh` call left to guard and no self-action preference to inline.
 CODEX_BRIDGE_FILES: dict[str, Path] = {
     "delegate-codex-review": (
         REPO_ROOT / ".agents" / "skills" / "delegate-codex-review" / "SKILL.md"
@@ -281,6 +277,26 @@ def test_implement_issue_forbids_merge_actions() -> None:
     assert "closes the issue" in text or "close the issue" in text
 
 
+def test_implement_issue_briefs_hand_no_gh_command() -> None:
+    """The Planner and Coder briefs must read context files rather than call `gh` (#985).
+
+    Both briefs run as a subagent, or get handed to a delegated agent's CLI; their caller
+    (`implement-issue` itself, or `multi-plan`) fetches the issue with `doit
+    delegation_context` first. The surrounding skill (Step 1's precondition check, Step 3's
+    `gh issue comment`) still calls `gh` directly — it runs in the host, not delegated — so
+    this is scoped to the two brief sections only.
+    """
+    text = IMPLEMENT_ISSUE_FILE.read_text(encoding="utf-8")
+    planner_start = text.index("## Planner brief")
+    coder_start = text.index("## Coder brief")
+    per_host_start = text.index("## Per-host subagent notes")
+    planner_brief = text[planner_start:coder_start]
+    coder_brief = text[coder_start:per_host_start]
+
+    assert not GH_COMMAND_PATTERN.search(planner_brief), "Planner brief still invokes gh"
+    assert not GH_COMMAND_PATTERN.search(coder_brief), "Coder brief still invokes gh"
+
+
 def test_the_contract_scanner_detects_a_violation() -> None:
     """Feeding the checker a file with none of the contract must flag every element.
 
@@ -411,13 +427,28 @@ def test_multi_review_files_carry_the_read_only_sentence() -> None:
     )
 
 
-def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
-    """The six Codex bridge files must carry the sentence and close Codex's stdin.
+def _exec_prompt(line: str) -> str | None:
+    """Extract the single-quoted prompt from a `codex ... exec '...' < /dev/null` line.
 
-    Hybrid C's "activate $codex-review/$codex-adversarial-review if available"
-    fallback can still reach `gh pr view`/`gh pr diff` from inside a headless
-    Codex session, so these bridges need the standalone-`gh` requirement
-    prepended to their inline prompt, not just a link to the doc (#980).
+    Returns ``None`` if *line* does not have the expected shape, so a caller can
+    distinguish "no prompt found" from "empty prompt".
+    """
+    marker = "trust exec '"
+    start = line.find(marker)
+    if start == -1:
+        return None
+    start += len(marker)
+    end = line.rfind("' < /dev/null")
+    if end == -1 or end < start:
+        return None
+    return line[start:end]
+
+
+def test_codex_bridge_files_close_stdin() -> None:
+    """The six Codex bridge files' exec line must still close Codex's stdin (#980).
+
+    `codex exec` waits forever on stdin otherwise, when the caller's own stdin is a
+    pipe or socket rather than a terminal.
     """
     missing: list[str] = []
     for name, path in CODEX_BRIDGE_FILES.items():
@@ -425,8 +456,6 @@ def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
             missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
             continue
         text = path.read_text(encoding="utf-8")
-        if GH_STANDALONE_SENTENCE not in text:
-            missing.append(f"{name} is missing GH_STANDALONE_SENTENCE")
         exec_lines = [line for line in text.splitlines() if "trust exec '" in line]
         if not exec_lines or not all(line.endswith("' < /dev/null") for line in exec_lines):
             missing.append(f"{name}: a codex exec line does not end in < /dev/null")
@@ -434,12 +463,32 @@ def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
     assert not missing, "Codex bridge file violations:\n  " + "\n  ".join(missing)
 
 
+def test_codex_bridge_files_hand_codex_no_gh_command() -> None:
+    """The six Codex bridge files' delegated prompt must never invoke `gh` (#985).
+
+    The host no longer needs Codex to fetch its own GitHub data for these two
+    actions — the inline steps are git-only — so there is nothing left for
+    Hybrid C's old self-action-skill fallback (which did call `gh`) to guard.
+    """
+    violations: list[str] = []
+    for name, path in CODEX_BRIDGE_FILES.items():
+        if not path.is_file():
+            continue
+        for line in path.read_text(encoding="utf-8").splitlines():
+            prompt = _exec_prompt(line)
+            if prompt is not None and GH_COMMAND_PATTERN.search(prompt):
+                violations.append(name)
+
+    assert not violations, f"these bridge files still hand Codex a gh command: {violations}"
+
+
 def test_codex_hosts_check_for_the_delegation_error_marker() -> None:
     """Every file that hands Codex a prompt must also check its output for the marker.
 
-    GH_STANDALONE_SENTENCE tells Codex to print `DELEGATION-ERROR:` when a `gh`
-    call fails; this is the other half, so the calling agent reports a failed run
-    instead of summarizing output built on no data (#980).
+    Each delegated prompt tells its target to print `DELEGATION-ERROR:` when its
+    pre-fetched context file is missing or unreadable (#985, was "when a `gh` call
+    fails" before it); this is the other half, so the calling agent reports a
+    failed run instead of summarizing output built on no data (#980).
     """
     files = {**MULTI_AGENT_FILES, **CODEX_BRIDGE_FILES}
     missing = [
@@ -450,12 +499,32 @@ def test_codex_hosts_check_for_the_delegation_error_marker() -> None:
     assert not missing, f"these files never check for DELEGATION-ERROR: {missing}"
 
 
+def test_multi_agent_delegated_prompts_hand_no_gh_command() -> None:
+    """Every multi-* skill's delegated (blockquoted) prompt must never invoke `gh` (#985).
+
+    Step 3 of `multi-plan`/`multi-review` now fetches GitHub data once with `doit
+    delegation_context` before delegating; the blockquoted prompt each hands to the
+    other agents must read the resulting context directory rather than call `gh`
+    itself. `multi-adversarial-review`'s prompt never needed `gh` in the first
+    place and is asserted here too, so it cannot regress.
+    """
+    violations: list[str] = []
+    for name, path in MULTI_AGENT_FILES.items():
+        if not path.is_file():
+            continue
+        text = path.read_text(encoding="utf-8")
+        prompt = "\n".join(line[2:] for line in text.splitlines() if line.startswith("> "))
+        if GH_COMMAND_PATTERN.search(prompt):
+            violations.append(name)
+
+    assert not violations, f"these multi-* delegated prompts still invoke gh: {violations}"
+
+
 def test_headless_codex_host_files_carry_the_limit_sentence() -> None:
     """implement-issue and the three multi-* skills must carry the headless-Codex-host sentence.
 
     Without a shared literal, the limitation could be worded differently (or dropped) in one
-    skill and not the others — the same drift risk GH_STANDALONE_SENTENCE and READ_ONLY_SENTENCE
-    guard against (#984).
+    skill and not the others — the same drift risk READ_ONLY_SENTENCE guards against (#984).
     """
     missing: list[str] = []
     for name, path in HEADLESS_CODEX_HOST_FILES.items():
@@ -466,3 +535,11 @@ def test_headless_codex_host_files_carry_the_limit_sentence() -> None:
             missing.append(f"{name} is missing HEADLESS_CODEX_HOST_SENTENCE")
 
     assert not missing, "headless-Codex-host sentence violations:\n  " + "\n  ".join(missing)
+
+
+def test_gh_command_pattern_catches_any_subcommand_but_not_prose() -> None:
+    """The no-`gh` tests are only as strong as this pattern (#985 review)."""
+    for command in ("gh issue view 1", "gh run list", "gh release create", "gh secret set X"):
+        assert GH_COMMAND_PATTERN.search(command), command
+    for prose in ("instead of running `gh`.", "rather than calling `gh` itself"):
+        assert not GH_COMMAND_PATTERN.search(prose), prose
