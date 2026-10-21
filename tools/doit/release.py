@@ -334,22 +334,22 @@ def _version_provider_is_scm() -> bool:
 
 
 def _changelog_is_handwritten_enabled() -> bool:
-    """Return ``True`` if ``[tool.commitizen].update_changelog_on_bump`` is explicitly ``false``.
+    """Return ``True`` unless ``[tool.commitizen].update_changelog_on_bump`` is ``true``.
 
-    The template sets it to ``true``, so ``create_release_pr`` runs ``cz changelog
-    --incremental`` and never takes the hand-written rename path. A downstream project that
-    writes ``CHANGELOG.md`` by hand under a ``## [Unreleased]`` heading opts in by setting
-    the key to ``false`` — the same key commitizen itself reads to decide whether to write
-    the changelog on a bump. Reads the file in the current directory. A missing or
-    unreadable file, or a missing key, counts as generated (``False``) so a project that
-    hasn't configured commitizen at all keeps today's behaviour (#971).
+    The template sets it to ``true``, so ``create_release_pr`` generates the changelog and
+    never takes the hand-written rename path. Any other value, including a missing key,
+    means the changelog is written by hand under ``## [Unreleased]``. A missing key counts
+    as hand-written because that is commitizen's own default for it (``False``): a project
+    that never set the key gets the rename, or a clear abort, rather than ``cz changelog``
+    overwriting entries it wrote by hand (#971). Reads the file in the current directory;
+    a missing or unreadable file counts as generated, since there is no config to go by.
     """
     try:
         with Path("pyproject.toml").open("rb") as f:
             data = tomllib.load(f)
     except (tomllib.TOMLDecodeError, OSError):
         return False
-    return data.get("tool", {}).get("commitizen", {}).get("update_changelog_on_bump") is False
+    return data.get("tool", {}).get("commitizen", {}).get("update_changelog_on_bump") is not True
 
 
 def _version_files_from_pyproject() -> list[str]:
@@ -383,13 +383,44 @@ _UNRELEASED_HEADING = re.compile(r"^## \[Unreleased\][ \t]*$", re.MULTILINE)
 _NEXT_HEADING = re.compile(r"^## ", re.MULTILINE)
 
 
+def _check_handwritten_changelog() -> tuple[str, re.Match[str]]:
+    """Return ``CHANGELOG.md``'s text and its ``## [Unreleased]`` heading, or raise.
+
+    Read-only, so ``create_release_pr`` runs it before creating the release branch: a
+    changelog that cannot be released aborts with nothing to clean up (#971).
+
+    Raises:
+        ChangelogFormatError: ``CHANGELOG.md`` is missing, has no ``## [Unreleased]``
+            heading, or the heading's section (everything up to the next ``## `` heading,
+            or EOF) has no non-blank lines.
+    """
+    try:
+        text = Path("CHANGELOG.md").read_text(encoding="utf-8")
+    except OSError as e:
+        raise ChangelogFormatError(f"Cannot read CHANGELOG.md: {e}") from e
+
+    match = _UNRELEASED_HEADING.search(text)
+    if match is None:
+        raise ChangelogFormatError(
+            "CHANGELOG.md has no '## [Unreleased]' heading — cannot bump a hand-written changelog."
+        )
+
+    next_heading = _NEXT_HEADING.search(text, match.end())
+    section_end = next_heading.start() if next_heading else len(text)
+    if not any(line.strip() for line in text[match.end() : section_end].splitlines()):
+        raise ChangelogFormatError(
+            "CHANGELOG.md's '## [Unreleased]' section is empty — nothing to release."
+        )
+    return text, match
+
+
 def _bump_handwritten_changelog(next_version: str) -> None:
     """Rename ``## [Unreleased]`` to ``## [<next_version>] - <date>`` in ``CHANGELOG.md``.
 
-    Used by ``create_release_pr`` instead of ``cz changelog --incremental`` when
-    ``update_changelog_on_bump`` is explicitly ``false`` (#971): the project writes its own
-    changelog entries under ``## [Unreleased]`` by hand, Keep a Changelog style, and the
-    generated changelog would discard them (measured against gnome-connection-manager,
+    Used by ``create_release_pr`` instead of ``cz changelog --incremental`` when the
+    changelog is hand-written (see ``_changelog_is_handwritten_enabled``, #971): the
+    project writes its own entries under ``## [Unreleased]``, Keep a Changelog style, and
+    the generated changelog would discard them (measured against gnome-connection-manager,
     endavis/gnome-connection-manager#291 — 119 lines added, 353 removed, every hand-written
     entry gone).
 
@@ -401,32 +432,13 @@ def _bump_handwritten_changelog(next_version: str) -> None:
         next_version: The bare version string (no leading ``v``) to put in the new heading.
 
     Raises:
-        ChangelogFormatError: ``CHANGELOG.md`` has no ``## [Unreleased]`` heading, or the
-            heading's section (everything up to the next ``## `` heading, or EOF) has no
-            non-blank lines.
+        ChangelogFormatError: as ``_check_handwritten_changelog``.
     """
-    path = Path("CHANGELOG.md")
-    text = path.read_text(encoding="utf-8")
-
-    match = _UNRELEASED_HEADING.search(text)
-    if match is None:
-        raise ChangelogFormatError(
-            "CHANGELOG.md has no '## [Unreleased]' heading — cannot bump a hand-written changelog."
-        )
-
-    section_start = match.end()
-    next_heading = _NEXT_HEADING.search(text, section_start)
-    section_end = next_heading.start() if next_heading else len(text)
-    section_body = text[section_start:section_end]
-    if not any(line.strip() for line in section_body.splitlines()):
-        raise ChangelogFormatError(
-            "CHANGELOG.md's '## [Unreleased]' section is empty — nothing to release."
-        )
-
+    text, match = _check_handwritten_changelog()
     today = date.today().isoformat()
     new_heading = f"## [Unreleased]\n\n## [{next_version}] - {today}"
     new_text = text[: match.start()] + new_heading + text[match.end() :]
-    path.write_text(new_text, encoding="utf-8")
+    Path("CHANGELOG.md").write_text(new_text, encoding="utf-8")
 
 
 def _abort_release_branch(branch_name: str) -> None:
@@ -455,14 +467,17 @@ def task_release() -> dict[str, Any]:
     reviewer merges the PR, run ``doit release_tag`` to tag ``main`` and
     trigger the publish workflow.
 
-    Two behaviours are opt-in and do nothing under the template's own config (#971):
+    Two ``[tool.commitizen]`` keys shape the release PR; neither changes anything under
+    the template's own config (#971):
 
-    - When ``[tool.commitizen].version_provider`` is not ``"scm"``, it also runs
-      ``cz bump --files-only`` and ``uv lock`` on the release branch, and commits the
-      version files and ``uv.lock`` alongside ``CHANGELOG.md``.
-    - When ``[tool.commitizen].update_changelog_on_bump`` is explicitly ``false``, it
-      renames the hand-written ``## [Unreleased]`` section instead of running
-      ``cz changelog --incremental``.
+    - When ``version_provider`` is not ``"scm"``, it also runs ``cz bump --files-only``
+      and ``uv lock`` on the release branch, and commits the version files and
+      ``uv.lock`` alongside ``CHANGELOG.md``.
+    - When ``update_changelog_on_bump`` is not ``true`` (missing counts, as it does for
+      commitizen), it renames the hand-written ``## [Unreleased]`` section instead of
+      generating the changelog.
+
+    ``--issue=N`` writes ``Addresses #N`` into the PR body.
 
     CLI params (see the ``params`` entry in the returned dict): ``--prerelease``
     alone uses conventional-commit hints; ``--increment`` alone forces a bump
@@ -472,7 +487,7 @@ def task_release() -> dict[str, Any]:
     was wrong.
     """
 
-    def create_release_pr(increment: str = "", prerelease: str = "") -> None:
+    def create_release_pr(increment: str = "", prerelease: str = "", issue: str = "") -> None:
         console = Console()
         console.print("=" * 70)
         console.print("[bold green]Starting PR-based release process...[/bold green]")
@@ -500,6 +515,19 @@ def task_release() -> dict[str, Any]:
                 verbatim(
                     f"❌ Error: Invalid prerelease value '{prerelease}'. "
                     "Allowed values: alpha, beta, rc (or empty for a production release).",
+                    "bold red",
+                )
+            )
+            sys.exit(1)
+
+        # Validate the release issue: a number, written into the body as "Addresses #N"
+        # so the issue-link check and `doit pr_merge` both find it (#971).
+        issue = issue.strip().lstrip("#")
+        if issue and not issue.isdigit():
+            console.print(
+                verbatim(
+                    f"❌ Error: Invalid issue value '{issue}'. "
+                    "Pass an issue number, e.g. --issue=42.",
                     "bold red",
                 )
             )
@@ -631,6 +659,21 @@ def task_release() -> dict[str, Any]:
             )
             sys.exit(1)
 
+        # Check a hand-written changelog before the branch exists, so a changelog that
+        # cannot be released aborts with nothing to clean up (#971).
+        is_handwritten_changelog = _changelog_is_handwritten_enabled()
+        if is_handwritten_changelog:
+            try:
+                _check_handwritten_changelog()
+            except ChangelogFormatError as e:
+                console.print(verbatim(f"❌ {e}", "bold red"))
+                console.print(
+                    "[yellow]update_changelog_on_bump is not true in \\[tool.commitizen], so "
+                    "the changelog is treated as hand-written. Set it to true to generate it "
+                    "instead.[/yellow]"
+                )
+                sys.exit(1)
+
         # Create release branch
         branch_name = f"release/v{next_version}"
         console.print(f"\n[cyan]Creating branch {branch_name}...[/cyan]")
@@ -666,10 +709,13 @@ def task_release() -> dict[str, Any]:
                 _abort_release_branch(branch_name)
                 sys.exit(1)
 
-        # Update changelog: either the generated form (template default) or, when the
-        # project opts in, rename the hand-written "## [Unreleased]" section (#971).
+        # Update changelog: rename the hand-written "## [Unreleased]" section, or generate
+        # it (template default). With a static version and a generated changelog, the bump
+        # above already wrote it — commitizen honours update_changelog_on_bump even with
+        # --files-only — and `cz changelog --incremental` would then exit 16, finding the
+        # new version's heading with no tag behind it (#971).
         console.print("\n[cyan]Updating CHANGELOG.md...[/cyan]")
-        if _changelog_is_handwritten_enabled():
+        if is_handwritten_changelog:
             try:
                 _bump_handwritten_changelog(next_version)
                 console.print("[green]✓ CHANGELOG.md updated.[/green]")
@@ -677,6 +723,8 @@ def task_release() -> dict[str, Any]:
                 console.print(verbatim(f"❌ {e}", "bold red"))
                 _abort_release_branch(branch_name)
                 sys.exit(1)
+        elif is_static_version:
+            console.print("[green]✓ CHANGELOG.md written by the version bump.[/green]")
         else:
             try:
                 changelog_cmd = ["uv", "run", "cz", "changelog", "--incremental"]
@@ -729,9 +777,21 @@ def task_release() -> dict[str, Any]:
         console.print("\n[cyan]Creating pull request...[/cyan]")
         try:
             pr_title = f"release: v{next_version}"
+            related_issue = f"\n## Related Issue\nAddresses #{issue}\n" if issue else ""
+            changes = [f"- Updated CHANGELOG.md for v{next_version}"]
+            if is_static_version:
+                changes += [f"- Bumped the version to {next_version} in pyproject.toml"]
+                changes += [f"- Bumped the version in {path}" for path in version_files]
+                changes += ["- Updated uv.lock"]
+            changes_made = "\n".join(changes)
+            # Only a project that has a release workflow gets one triggered by the tag.
+            if Path(".github/workflows/release.yml").exists():
+                after_merge = "to create the version tag\nand trigger the release workflow."
+            else:
+                after_merge = "to create and push the version tag."
             pr_body = f"""## Description
 Release v{next_version}
-
+{related_issue}
 ## Type of Change
 - [ ] Bug fix (non-breaking change which fixes an issue)
 - [ ] New feature (non-breaking change which adds functionality)
@@ -740,7 +800,7 @@ Release v{next_version}
 - [x] Release
 
 ## Changes Made
-- Updated CHANGELOG.md for v{next_version}
+{changes_made}
 
 ## Testing
 - [ ] All existing tests pass
@@ -749,8 +809,7 @@ Release v{next_version}
 - [x] My changes generate no new warnings
 
 ## Additional Notes
-After this PR is merged, run `doit release_tag` to create the version tag
-and trigger the release workflow.
+After this PR is merged, run `doit release_tag` {after_merge}
 """
             # Use gh CLI directly since we're in a non-interactive context
             run_streamed(
@@ -792,6 +851,12 @@ and trigger the release workflow.
                 "long": "prerelease",
                 "default": "",
                 "help": "Pre-release type (alpha, beta, rc). Empty for a production release.",
+            },
+            {
+                "name": "issue",
+                "long": "issue",
+                "default": "",
+                "help": "Release issue number, written into the PR body as 'Addresses #N'.",
             },
         ],
         "title": title_with_actions,

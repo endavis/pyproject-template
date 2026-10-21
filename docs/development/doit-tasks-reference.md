@@ -955,7 +955,7 @@ doit release --prerelease=alpha --increment=minor  # 1.0.0 → 1.1.0a0
 
 **What it does:**
 1. Verifies you're on `main`
-2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
+2. Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`), `--issue` (must be empty or a number) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
 3. Checks for uncommitted changes
 4. Pulls latest changes
 5. Runs governance validations (merge commit format, issue links)
@@ -964,7 +964,7 @@ doit release --prerelease=alpha --increment=minor  # 1.0.0 → 1.1.0a0
 8. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
 9. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
 
-A downstream project with a static version or a hand-written changelog opts into two more
+A project with a static version or a hand-written changelog gets two more
 steps here — see [Release Automation — Downstream opt-ins](release-and-automation.md#downstream-opt-ins-static-version-and-hand-written-changelog).
 
 **Options:**
@@ -972,6 +972,8 @@ steps here — see [Release Automation — Downstream opt-ins](release-and-autom
 - `--prerelease`: `alpha`, `beta`, or `rc`. Empty means a production release.
   Can be combined with `--increment` to force a pre-release of a specific
   bump type (see [issue #475](https://github.com/endavis/pyproject-template/issues/475)).
+- `--issue`: Release issue number. Writes `Addresses #N` into the PR body, so `doit pr_merge`
+  records it in the merge commit.
 
 **Requirements:**
 - Must be on `main` branch

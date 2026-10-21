@@ -86,8 +86,9 @@ class TestChangelogIsHandwrittenEnabled:
         [
             ("[tool.commitizen]\nupdate_changelog_on_bump = false\n", True),
             ("[tool.commitizen]\nupdate_changelog_on_bump = true\n", False),
-            ('[tool.commitizen]\nname = "cz_conventional_commits"\n', False),
-            ('[project]\nname = "my-pkg"\n', False),
+            # A missing key is commitizen's default, False, so it counts as hand-written.
+            ('[tool.commitizen]\nname = "cz_conventional_commits"\n', True),
+            ('[project]\nname = "my-pkg"\n', True),
         ],
     )
     def test_reads_the_setting(
@@ -1527,6 +1528,7 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
         tmp_path: Path,
         pyproject: str,
         changelog: str | None = None,
+        fail_on: list[str] | None = None,
     ) -> tuple[list[list[str]], list[list[str]]]:
         """Write real config/changelog files into ``tmp_path`` and fake the subprocess layer.
 
@@ -1546,6 +1548,8 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
             cmd: list[str], *_args: object, **_kwargs: object
         ) -> subprocess.CompletedProcess[str]:
             subprocess_calls.append(cmd)
+            if fail_on is not None and cmd[: len(fail_on)] == fail_on:
+                raise subprocess.CalledProcessError(1, cmd)
             if cmd[:3] == ["git", "branch", "--show-current"]:
                 stdout = "main\n"
             elif cmd[:3] == ["git", "status", "-s"]:
@@ -1631,11 +1635,13 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
         git_add_calls = [c for c in subprocess_calls if c[:2] == ["git", "add"]]
         assert git_add_calls == [["git", "add", "CHANGELOG.md"]]
 
-    def test_handwritten_changelog_abort_cleans_up_the_branch(
+    def test_handwritten_changelog_check_aborts_before_the_branch_exists(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        """Criterion 4: a missing/empty Unreleased section aborts and cleans up the branch."""
-        pyproject = "[tool.commitizen]\nupdate_changelog_on_bump = false\n"
+        """A missing/empty Unreleased section aborts before any branch or bump is made."""
+        pyproject = (
+            '[tool.commitizen]\nversion_provider = "pep621"\nupdate_changelog_on_bump = false\n'
+        )
         empty_changelog = "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-01-01\n\n- x\n"
         subprocess_calls, streamed_calls = self._patch(
             monkeypatch, tmp_path, pyproject, changelog=empty_changelog
@@ -1645,25 +1651,47 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
             _release_action()()
 
         assert exc.value.code == 1
-        branch_name = f"release/v{self._NEXT_VERSION}"
-        assert ["git", "checkout", "main"] in subprocess_calls
-        assert ["git", "branch", "-D", branch_name] in subprocess_calls
-        assert not any(cmd[:2] == ["git", "add"] for cmd in subprocess_calls)
-        assert not any(cmd[:2] == ["git", "push"] for cmd in streamed_calls)
+        assert not any(cmd[:3] == ["git", "checkout", "-b"] for cmd in subprocess_calls)
+        assert not any("--files-only" in cmd for cmd in streamed_calls)
+        assert (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8") == empty_changelog
+
+    def test_a_missing_key_is_treated_as_handwritten(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """Commitizen's default for the key is False, so no key means hand-written."""
+        _subprocess_calls, streamed_calls = self._patch(
+            monkeypatch, tmp_path, '[tool.commitizen]\nname = "cz_conventional_commits"\n'
+        )
+
+        _release_action()()
+
+        assert not any(cmd[-3:] == ["cz", "changelog", "--incremental"] for cmd in streamed_calls)
+        result = (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8")
+        assert f"## [{self._NEXT_VERSION}] - {date.today().isoformat()}" in result
+
+    def test_static_version_with_generated_changelog_skips_cz_changelog(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """The bump already wrote the changelog; ``cz changelog --incremental`` would exit 16."""
+        pyproject = (
+            '[tool.commitizen]\nversion_provider = "pep621"\nupdate_changelog_on_bump = true\n'
+        )
+        _subprocess_calls, streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        _release_action()()
+
+        assert any("--files-only" in cmd for cmd in streamed_calls)
+        assert not any(cmd[-3:] == ["cz", "changelog", "--incremental"] for cmd in streamed_calls)
 
     def test_abort_after_a_version_bump_discards_it_before_leaving_the_branch(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
     ) -> None:
-        """Both opt-ins on, changelog check fails after the version files were bumped.
-
-        Without a restore, ``git checkout main`` carries the bumped files onto ``main``.
-        """
+        """A failure after the bump must not carry the bumped files onto ``main``."""
         pyproject = (
             '[tool.commitizen]\nversion_provider = "pep621"\nupdate_changelog_on_bump = false\n'
         )
-        empty_changelog = "# Changelog\n\n## [Unreleased]\n\n## [0.1.0] - 2026-01-01\n\n- x\n"
         subprocess_calls, streamed_calls = self._patch(
-            monkeypatch, tmp_path, pyproject, changelog=empty_changelog
+            monkeypatch, tmp_path, pyproject, fail_on=["git", "add"]
         )
 
         with pytest.raises(SystemExit):
@@ -1673,3 +1701,74 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
         restore = subprocess_calls.index(["git", "checkout", "--", "."])
         assert subprocess_calls.index(["git", "reset", "--quiet", "HEAD"]) < restore
         assert restore < subprocess_calls.index(["git", "checkout", "main"])
+        branch_name = f"release/v{self._NEXT_VERSION}"
+        assert ["git", "branch", "-D", branch_name] in subprocess_calls
+
+    @staticmethod
+    def _pr_body(streamed_calls: list[list[str]]) -> str:
+        create = next(cmd for cmd in streamed_calls if cmd[:3] == ["gh", "pr", "create"])
+        return create[create.index("--body") + 1]
+
+    def test_issue_param_writes_addresses_line(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """``--issue`` puts the line ``doit pr_merge`` and the issue-link check look for."""
+        pyproject = '[tool.commitizen]\nversion_provider = "scm"\nupdate_changelog_on_bump = true\n'
+        _subprocess_calls, streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        _release_action()(issue="#304")
+
+        assert re.search(r"^Addresses #304$", self._pr_body(streamed_calls), re.MULTILINE)
+
+    def test_no_issue_param_writes_no_addresses_line(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        pyproject = '[tool.commitizen]\nversion_provider = "scm"\nupdate_changelog_on_bump = true\n'
+        _subprocess_calls, streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        _release_action()()
+
+        assert "Addresses" not in self._pr_body(streamed_calls)
+
+    def test_invalid_issue_param_aborts_before_anything_runs(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        pyproject = '[tool.commitizen]\nversion_provider = "scm"\nupdate_changelog_on_bump = true\n'
+        subprocess_calls, _streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        with pytest.raises(SystemExit) as exc:
+            _release_action()(issue="abc")
+
+        assert exc.value.code == 1
+        assert not any(cmd[:2] == ["git", "pull"] for cmd in subprocess_calls)
+
+    def test_static_version_body_lists_every_bumped_file(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        pyproject = (
+            "[tool.commitizen]\n"
+            'version_provider = "pep621"\n'
+            'version_files = ["src/mypkg/__init__.py:__version__"]\n'
+        )
+        _subprocess_calls, streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        _release_action()()
+
+        body = self._pr_body(streamed_calls)
+        assert "in pyproject.toml" in body
+        assert "in src/mypkg/__init__.py" in body
+        assert "uv.lock" in body
+
+    @pytest.mark.parametrize(("has_workflow", "mentions_workflow"), [(True, True), (False, False)])
+    def test_body_mentions_the_release_workflow_only_when_it_exists(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, has_workflow: bool, mentions_workflow: bool
+    ) -> None:
+        pyproject = '[tool.commitizen]\nversion_provider = "scm"\nupdate_changelog_on_bump = true\n'
+        if has_workflow:
+            (tmp_path / ".github" / "workflows").mkdir(parents=True)
+            (tmp_path / ".github" / "workflows" / "release.yml").write_text("", encoding="utf-8")
+        _subprocess_calls, streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        _release_action()()
+
+        assert ("release workflow" in self._pr_body(streamed_calls)) is mentions_workflow
