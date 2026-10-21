@@ -71,11 +71,11 @@ MULTI_AGENT_FILES: dict[str, Path] = {
 # A `gh` subcommand invocation, the thing a delegated prompt must no longer contain (#985):
 # the host now pre-fetches any GitHub data a delegated agent needs with `doit
 # delegation_context` and writes it to files under `tmp/agents/<host>/<task>-<n>/`, so the
-# delegated prompt reads those instead of shelling out to `gh` itself. Matches the
-# subcommand groups this template's skills ever asked a delegated agent to run
-# (`gh issue ...`, `gh pr ...`, `gh api ...`) — not a bare mention of the word "gh" in
-# prose, which several prompts now carry when telling the agent NOT to run it.
-GH_COMMAND_PATTERN = re.compile(r"\bgh (issue|pr|api|repo|label)\b")
+# delegated prompt reads those instead of shelling out to `gh` itself. Matches `gh`
+# followed by any subcommand (`gh issue`, `gh run`, `gh release`, ...) — not a bare
+# mention of `gh` in prose, which several prompts carry when telling the agent NOT
+# to run it (the closing backtick in "`gh` itself" keeps that from matching).
+GH_COMMAND_PATTERN = re.compile(r"\bgh [a-z][a-z-]*\b")
 
 # The host half of the DELEGATION-ERROR marker: without it, a delegated run that
 # reached no GitHub data still prints a confident plan or review, and nothing
@@ -535,3 +535,11 @@ def test_headless_codex_host_files_carry_the_limit_sentence() -> None:
             missing.append(f"{name} is missing HEADLESS_CODEX_HOST_SENTENCE")
 
     assert not missing, "headless-Codex-host sentence violations:\n  " + "\n  ".join(missing)
+
+
+def test_gh_command_pattern_catches_any_subcommand_but_not_prose() -> None:
+    """The no-`gh` tests are only as strong as this pattern (#985 review)."""
+    for command in ("gh issue view 1", "gh run list", "gh release create", "gh secret set X"):
+        assert GH_COMMAND_PATTERN.search(command), command
+    for prose in ("instead of running `gh`.", "rather than calling `gh` itself"):
+        assert not GH_COMMAND_PATTERN.search(prose), prose
