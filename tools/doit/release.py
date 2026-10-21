@@ -6,6 +6,7 @@ import re
 import subprocess  # nosec B404 - subprocess is required for doit tasks
 import sys
 import tomllib
+from datetime import date
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -312,6 +313,140 @@ def _major_version(version: str) -> int:
     return int(match.group()) if match else 0
 
 
+def _version_provider_is_scm() -> bool:
+    """Return ``True`` unless ``[tool.commitizen].version_provider`` is set to something else.
+
+    The template's own config sets ``version_provider = "scm"`` (hatch-vcs derives the
+    version from git tags), so ``create_release_pr`` never bumps a version file for it. A
+    downstream project with a static version (e.g. ``version_provider = "pep621"``) opts
+    into the version-bump step by setting this to anything other than ``"scm"``. Reads the
+    file in the current directory. A missing or unreadable file, or a missing key, counts
+    as ``"scm"`` so a project that hasn't configured commitizen at all keeps today's
+    behaviour (#971).
+    """
+    try:
+        with Path("pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+    except (tomllib.TOMLDecodeError, OSError):
+        return True
+    provider = data.get("tool", {}).get("commitizen", {}).get("version_provider", "scm")
+    return bool(provider == "scm")
+
+
+def _changelog_is_handwritten_enabled() -> bool:
+    """Return ``True`` if ``[tool.commitizen].update_changelog_on_bump`` is explicitly ``false``.
+
+    The template sets it to ``true``, so ``create_release_pr`` runs ``cz changelog
+    --incremental`` and never takes the hand-written rename path. A downstream project that
+    writes ``CHANGELOG.md`` by hand under a ``## [Unreleased]`` heading opts in by setting
+    the key to ``false`` — the same key commitizen itself reads to decide whether to write
+    the changelog on a bump. Reads the file in the current directory. A missing or
+    unreadable file, or a missing key, counts as generated (``False``) so a project that
+    hasn't configured commitizen at all keeps today's behaviour (#971).
+    """
+    try:
+        with Path("pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+    except (tomllib.TOMLDecodeError, OSError):
+        return False
+    return data.get("tool", {}).get("commitizen", {}).get("update_changelog_on_bump") is False
+
+
+def _version_files_from_pyproject() -> list[str]:
+    """Return ``[tool.commitizen].version_files`` from ``pyproject.toml``, paths only.
+
+    Each entry in commitizen's ``version_files`` list may carry an optional ``:pattern``
+    suffix (e.g. ``"src/mypkg/__init__.py:__version__"``) telling commitizen which line to
+    match inside the file. ``cz bump --files-only`` already consumes that suffix itself;
+    ``create_release_pr`` only needs the bare path to ``git add`` it. Reads the file in the
+    current directory. A missing or unreadable file, a missing key, or a key that isn't a
+    list, all return an empty list (#971).
+    """
+    try:
+        with Path("pyproject.toml").open("rb") as f:
+            data = tomllib.load(f)
+    except (tomllib.TOMLDecodeError, OSError):
+        return []
+    files = data.get("tool", {}).get("commitizen", {}).get("version_files", [])
+    if not isinstance(files, list):
+        return []
+    return [str(entry).split(":", 1)[0] for entry in files]
+
+
+class ChangelogFormatError(Exception):
+    """Raised when ``CHANGELOG.md`` doesn't have the shape ``_bump_handwritten_changelog`` needs."""
+
+
+# Matches a top-level "## [Unreleased]" heading on its own line (Keep a Changelog style).
+_UNRELEASED_HEADING = re.compile(r"^## \[Unreleased\][ \t]*$", re.MULTILINE)
+# Matches the start of the next top-level "## " heading, used to bound the Unreleased section.
+_NEXT_HEADING = re.compile(r"^## ", re.MULTILINE)
+
+
+def _bump_handwritten_changelog(next_version: str) -> None:
+    """Rename ``## [Unreleased]`` to ``## [<next_version>] - <date>`` in ``CHANGELOG.md``.
+
+    Used by ``create_release_pr`` instead of ``cz changelog --incremental`` when
+    ``update_changelog_on_bump`` is explicitly ``false`` (#971): the project writes its own
+    changelog entries under ``## [Unreleased]`` by hand, Keep a Changelog style, and the
+    generated changelog would discard them (measured against gnome-connection-manager,
+    endavis/gnome-connection-manager#291 — 119 lines added, 353 removed, every hand-written
+    entry gone).
+
+    A new, empty ``## [Unreleased]`` heading is inserted above the renamed section so the
+    next development cycle has somewhere to write entries. Every existing entry under the
+    old heading is left untouched.
+
+    Args:
+        next_version: The bare version string (no leading ``v``) to put in the new heading.
+
+    Raises:
+        ChangelogFormatError: ``CHANGELOG.md`` has no ``## [Unreleased]`` heading, or the
+            heading's section (everything up to the next ``## `` heading, or EOF) has no
+            non-blank lines.
+    """
+    path = Path("CHANGELOG.md")
+    text = path.read_text(encoding="utf-8")
+
+    match = _UNRELEASED_HEADING.search(text)
+    if match is None:
+        raise ChangelogFormatError(
+            "CHANGELOG.md has no '## [Unreleased]' heading — cannot bump a hand-written changelog."
+        )
+
+    section_start = match.end()
+    next_heading = _NEXT_HEADING.search(text, section_start)
+    section_end = next_heading.start() if next_heading else len(text)
+    section_body = text[section_start:section_end]
+    if not any(line.strip() for line in section_body.splitlines()):
+        raise ChangelogFormatError(
+            "CHANGELOG.md's '## [Unreleased]' section is empty — nothing to release."
+        )
+
+    today = date.today().isoformat()
+    new_heading = f"## [Unreleased]\n\n## [{next_version}] - {today}"
+    new_text = text[: match.start()] + new_heading + text[match.end() :]
+    path.write_text(new_text, encoding="utf-8")
+
+
+def _abort_release_branch(branch_name: str) -> None:
+    """Return to ``main`` and delete the just-created release branch.
+
+    Shared cleanup for every abort path in ``create_release_pr`` that runs after
+    ``git checkout -b <branch_name>`` has already succeeded — the changelog update, the
+    static-version bump, or the commit.
+
+    The working tree was verified clean before the branch was created, so any change
+    left in it was made by the release itself — e.g. version files bumped before a
+    hand-written changelog check failed. Discard those first, or ``git checkout main``
+    would carry them onto ``main``.
+    """
+    subprocess.run(["git", "reset", "--quiet", "HEAD"], capture_output=True)
+    subprocess.run(["git", "checkout", "--", "."], capture_output=True)
+    subprocess.run(["git", "checkout", "main"], capture_output=True)
+    subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
+
+
 def task_release() -> dict[str, Any]:
     """Create a release PR with changelog updates (PR-based release flow).
 
@@ -319,6 +454,15 @@ def task_release() -> dict[str, Any]:
     branch, updates ``CHANGELOG.md``, and opens a pull request. After a
     reviewer merges the PR, run ``doit release_tag`` to tag ``main`` and
     trigger the publish workflow.
+
+    Two behaviours are opt-in and do nothing under the template's own config (#971):
+
+    - When ``[tool.commitizen].version_provider`` is not ``"scm"``, it also runs
+      ``cz bump --files-only`` and ``uv lock`` on the release branch, and commits the
+      version files and ``uv.lock`` alongside ``CHANGELOG.md``.
+    - When ``[tool.commitizen].update_changelog_on_bump`` is explicitly ``false``, it
+      renames the hand-written ``## [Unreleased]`` section instead of running
+      ``cz changelog --incremental``.
 
     CLI params (see the ``params`` entry in the returned dict): ``--prerelease``
     alone uses conventional-commit hints; ``--increment`` alone forces a bump
@@ -503,40 +647,73 @@ def task_release() -> dict[str, Any]:
             console.print(verbatim(f"Stderr: {e.stderr}", "red"))
             sys.exit(1)
 
-        # Update changelog
-        console.print("\n[cyan]Updating CHANGELOG.md...[/cyan]")
-        try:
-            changelog_cmd = ["uv", "run", "cz", "changelog", "--incremental"]
-            run_streamed(
-                changelog_cmd,
-                env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
-            )
-            console.print("[green]✓ CHANGELOG.md updated.[/green]")
-        except subprocess.CalledProcessError:
-            console.print("[bold red]❌ Failed to update changelog.[/bold red]")
-            # Cleanup: go back to main
-            subprocess.run(["git", "checkout", "main"], capture_output=True)
-            subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
-            sys.exit(1)
+        # Bump a static version (opt-in: version_provider != "scm", #971). The template's
+        # own config leaves this off, so nothing here runs for it.
+        is_static_version = not _version_provider_is_scm()
+        version_files: list[str] = []
+        if is_static_version:
+            console.print("\n[cyan]Bumping static version files...[/cyan]")
+            try:
+                run_streamed(
+                    ["uv", "run", "cz", "bump", "--files-only", "--yes", next_version],
+                    env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
+                )
+                run_streamed(["uv", "lock"])
+                version_files = _version_files_from_pyproject()
+                console.print("[green]✓ Version files updated.[/green]")
+            except subprocess.CalledProcessError:
+                console.print("[bold red]❌ Failed to bump version files.[/bold red]")
+                _abort_release_branch(branch_name)
+                sys.exit(1)
 
-        # Commit changelog
+        # Update changelog: either the generated form (template default) or, when the
+        # project opts in, rename the hand-written "## [Unreleased]" section (#971).
+        console.print("\n[cyan]Updating CHANGELOG.md...[/cyan]")
+        if _changelog_is_handwritten_enabled():
+            try:
+                _bump_handwritten_changelog(next_version)
+                console.print("[green]✓ CHANGELOG.md updated.[/green]")
+            except ChangelogFormatError as e:
+                console.print(verbatim(f"❌ {e}", "bold red"))
+                _abort_release_branch(branch_name)
+                sys.exit(1)
+        else:
+            try:
+                changelog_cmd = ["uv", "run", "cz", "changelog", "--incremental"]
+                run_streamed(
+                    changelog_cmd,
+                    env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
+                )
+                console.print("[green]✓ CHANGELOG.md updated.[/green]")
+            except subprocess.CalledProcessError:
+                console.print("[bold red]❌ Failed to update changelog.[/bold red]")
+                _abort_release_branch(branch_name)
+                sys.exit(1)
+
+        # Commit changelog (and version files, when the version is static)
         console.print("\n[cyan]Committing changelog...[/cyan]")
         try:
+            if is_static_version:
+                # dict.fromkeys dedupes while keeping first-seen order, in case a project
+                # also lists pyproject.toml itself in version_files.
+                files_to_add = list(
+                    dict.fromkeys(["CHANGELOG.md", "pyproject.toml", *version_files, "uv.lock"])
+                )
+                commit_message = f"chore: release v{next_version}"
+            else:
+                files_to_add = ["CHANGELOG.md"]
+                commit_message = f"chore: update changelog for v{next_version}"
             subprocess.run(
-                ["git", "add", "CHANGELOG.md"],
+                ["git", "add", *files_to_add],
                 check=True,
                 capture_output=True,
                 text=True,
             )
-            run_streamed(
-                ["git", "commit", "-m", f"chore: update changelog for v{next_version}"],
-            )
+            run_streamed(["git", "commit", "-m", commit_message])
             console.print("[green]✓ Changelog committed.[/green]")
         except subprocess.CalledProcessError:
             console.print("[bold red]❌ Failed to commit changelog.[/bold red]")
-            # Cleanup
-            subprocess.run(["git", "checkout", "main"], capture_output=True)
-            subprocess.run(["git", "branch", "-D", branch_name], capture_output=True)
+            _abort_release_branch(branch_name)
             sys.exit(1)
 
         # Push branch

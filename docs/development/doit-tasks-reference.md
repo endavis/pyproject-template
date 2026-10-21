@@ -964,6 +964,9 @@ doit release --prerelease=alpha --increment=minor  # 1.0.0 → 1.1.0a0
 8. Creates a `release/vX.Y.Z` branch and updates `CHANGELOG.md`
 9. Commits the changelog, pushes the branch, and opens PR `release: vX.Y.Z`
 
+A downstream project with a static version or a hand-written changelog opts into two more
+steps here — see [Release Automation — Downstream opt-ins](release-and-automation.md#downstream-opt-ins-static-version-and-hand-written-changelog).
+
 **Options:**
 - `--increment`: Force `MAJOR`, `MINOR`, or `PATCH` bump (auto-detects if empty).
 - `--prerelease`: `alpha`, `beta`, or `rc`. Empty means a production release.

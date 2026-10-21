@@ -184,6 +184,59 @@ TestPyPI followed by PyPI.
 See the [Workflow Triggers](../../.github/CONTRIBUTING.md#workflow-triggers)
 table in `CONTRIBUTING.md` for the full mapping.
 
+### Downstream opt-ins: static version and hand-written changelog
+
+`doit release` assumes the template's own setup by default: a version derived from the git
+tag (`version_provider = "scm"`) and a changelog `cz changelog --incremental` generates from
+commit subjects. Neither assumption holds for every downstream project, so two behaviours
+are opt-in — both are no-ops under the template's own `pyproject.toml`, so its own release
+PR is unaffected (issue #971).
+
+**A static version.** Set `[tool.commitizen].version_provider` to anything other than
+`"scm"` (e.g. `"pep621"`), and list the files that carry the version in
+`[tool.commitizen].version_files`. `doit release` then runs, on the release branch, after it
+determines the next version:
+
+```toml
+[tool.commitizen]
+version_provider = "pep621"
+version_files = [
+    "src/mypkg/__init__.py:__version__",
+    "Makefile:VERSION",
+]
+```
+
+```bash
+uv run cz bump --files-only --yes <next_version>
+uv lock
+```
+
+`pyproject.toml`, every path in `version_files`, and `uv.lock` are committed alongside
+`CHANGELOG.md` in a single commit, `chore: release v<next_version>` — `uv.lock` has to move
+with the version bump because it records the project's own version, and `uv lock --check`
+(run by the `uv-lock-check` pre-commit hook) fails once `pyproject.toml` alone has moved.
+
+**A hand-written changelog.** Set `[tool.commitizen].update_changelog_on_bump` to `false` —
+the same key commitizen itself reads to decide whether to write the changelog on a bump.
+`doit release` then skips `cz changelog --incremental` and instead renames the project's own
+`## [Unreleased]` heading in `CHANGELOG.md` to `## [<next_version>] - <YYYY-MM-DD>`, and
+inserts a new, empty `## [Unreleased]` above it. Every entry already under the old heading is
+kept as written:
+
+```markdown
+## [Unreleased]
+
+## [1.2.0] - 2026-10-21
+
+### Added
+- A hand-written entry
+```
+
+The release aborts, with the usual release-branch cleanup, if `CHANGELOG.md` has no
+`## [Unreleased]` heading, or if that section has no entries — there is nothing to release
+under the new version in either case. The cleanup also discards a version-file bump the
+release already made, so nothing it changed is carried back onto `main`.
+
 ### Example Release Cycle
 
 ```bash
