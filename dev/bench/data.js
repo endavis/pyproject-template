@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792576727218,
+  "lastUpdate": 1792580153805,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17228,6 +17228,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5904158676604387e-7",
             "extra": "mean: 1.935760808624596 usec\nrounds: 53721"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ec0f4792154d36689f5786244232dfecba2b9d78",
+          "message": "fix: let delegated Codex runs reach GitHub via a gh allow rule (merges PR #981, addresses #980)\n\n* fix: let delegated Codex runs reach GitHub via a gh allow rule\n\nInside Codex's sandbox gh has no network at all, even with\nsandbox_workspace_write.network_access=true, so a delegated Codex run\nthat chains gh with other commands planned and reviewed blind. Ship a\nproject-level .codex/rules/gh.rules that allow-rules a standalone gh\n(it then runs outside the sandbox; the PreToolUse hook still applies),\nand make every prompt this repo hands Codex non-interactively open with\nGH_STANDALONE_SENTENCE, which tells it never to chain gh. Tests pin the\nrule file and the sentence on every Codex-bound surface.\n\nAddresses #980\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: narrow the Codex gh allow rule to read-only subcommands\n\nAddress the #981 multi-review findings. The bare [\"gh\"] allow rule let a\ndelegated Codex run write to GitHub outside the sandbox (gh api -X DELETE,\ngh pr comment); allow only gh pr {view,diff,checks,list} and gh issue\n{view,list}, and fetch the plan comment in the Coder brief with\n`gh issue view --json comments` instead of `gh api`. Test the rule file's\nexact lines and, when codex is installed, check it with\n`codex execpolicy check` for both reads and writes.\n\nEvery headless `codex exec` invocation now ends in `< /dev/null`: with an\nopen pipe or socket on stdin, codex exec waits forever reading \"additional\ninput\" (found when the multi-review run was backgrounded).\n\nDrop test_multi_agent_files_carry_the_gh_standalone_sentence, which\ntest_multi_agent_files_carry_every_invocation already covers.\n\nAddresses #980\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: make delegated Codex runs fail loudly and stop overclaiming\n\nAddress the #981 adversarial-review findings.\n\nGH_STANDALONE_SENTENCE now also tells Codex to print `DELEGATION-ERROR:`\nand stop when a gh call fails, and every caller (the three multi-*\nskills and the six Codex bridges) treats output containing the marker\nas a failed run. A run that reached no GitHub data used to print a\nconfident plan or review anyway; now it lands on the existing\nfailed-run path. A new contract test pins the caller-side check.\n\nThe rules file and command-blocking.md said a delegated run \"cannot\nwrite to GitHub\". A prefix rule plus a guardrail hook (ADR-9019) cannot\npromise that; they now say writes get no network path, which narrows\nthe normal path, and that a guarantee needs a credential boundary.\n\nAddresses #980\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-21T11:55:13+01:00",
+          "tree_id": "e08a40b2651eb9e0b8909aafac5e4e7b17b63d7d",
+          "url": "https://github.com/endavis/pyproject-template/commit/ec0f4792154d36689f5786244232dfecba2b9d78"
+        },
+        "date": 1792580152525,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8676632.338694632,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3978547325504482e-8",
+            "extra": "mean: 115.25208870962096 nsec\nrounds: 89438"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8717300.528375499,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0958076348869484e-8",
+            "extra": "mean: 114.71441150215269 nsec\nrounds: 91912"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5576889.4194617,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9176482941340336e-8",
+            "extra": "mean: 179.31142699553888 nsec\nrounds: 58921"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2115753.5706324084,
+            "unit": "iter/sec",
+            "range": "stddev: 8.227327922440836e-8",
+            "extra": "mean: 472.64483627982037 nsec\nrounds: 184502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 513280.2699655776,
+            "unit": "iter/sec",
+            "range": "stddev: 3.491577889722203e-7",
+            "extra": "mean: 1.9482533393833035 usec\nrounds: 55115"
           }
         ]
       }
