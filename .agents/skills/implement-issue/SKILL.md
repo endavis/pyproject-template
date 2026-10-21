@@ -160,8 +160,10 @@ name, and any issue-specific notes:
 
 1. Read `AGENTS.md` and the host's agent-specific instructions file for workflow, conventions, code
    style, and the mandatory test requirement.
-2. Fetch the plan comment (the most recent one matching `Implementation Plan for`) via `gh api
-   repos/{owner}/{repo}/issues/<n>/comments`. If there is none, use the issue body as the spec.
+2. Fetch the plan comment (the most recent one matching `Implementation Plan for`) via `gh issue
+   view <n> --json comments`. If there is none, use the issue body as the spec. (Not `gh api`: a
+   delegated Codex run may only reach GitHub through the read-only subcommands in
+   `.codex/rules/gh.rules`.)
 3. Implement the plan (or the issue): create and edit files, follow existing patterns, and write
    tests — this is mandatory whenever there is code to test, with no exceptions for "small" changes.
    All new code is type-annotated for mypy strict mode.

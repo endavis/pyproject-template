@@ -87,7 +87,8 @@ GH_STANDALONE_SENTENCE = (
 NON_INTERACTIVE_INVOCATIONS: dict[str, str] = {
     "claude": "claude -p '<prompt>'",
     "codex": (
-        f"codex -a never --dangerously-bypass-hook-trust exec '{GH_STANDALONE_SENTENCE} <prompt>'"
+        "codex -a never --dangerously-bypass-hook-trust exec "
+        f"'{GH_STANDALONE_SENTENCE} <prompt>' < /dev/null"
     ),
     "copilot": "copilot --allow-all -p '<prompt>'",
     "antigravity": (
@@ -352,25 +353,8 @@ def test_multi_review_files_carry_the_read_only_sentence() -> None:
     )
 
 
-def test_multi_agent_files_carry_the_gh_standalone_sentence() -> None:
-    """Every multi-* file's Codex row must carry GH_STANDALONE_SENTENCE verbatim.
-
-    Same reasoning as test_multi_review_files_carry_the_read_only_sentence: a
-    paraphrase drifts into a weaker version, and whichever agent is driving
-    decides which version applies (#980).
-    """
-    divergent = [
-        name
-        for name, path in MULTI_AGENT_FILES.items()
-        if GH_STANDALONE_SENTENCE not in path.read_text(encoding="utf-8")
-    ]
-    assert not divergent, (
-        f"these multi-* files do not carry the exact gh-standalone sentence: {divergent}"
-    )
-
-
 def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
-    """The six Codex bridge files with a concrete exec string must carry the sentence too.
+    """The six Codex bridge files must carry the sentence and close Codex's stdin.
 
     Hybrid C's "activate $codex-review/$codex-adversarial-review if available"
     fallback can still reach `gh pr view`/`gh pr diff` from inside a headless
@@ -382,7 +366,11 @@ def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
         if not path.is_file():
             missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
             continue
-        if GH_STANDALONE_SENTENCE not in path.read_text(encoding="utf-8"):
+        text = path.read_text(encoding="utf-8")
+        if GH_STANDALONE_SENTENCE not in text:
             missing.append(f"{name} is missing GH_STANDALONE_SENTENCE")
+        exec_lines = [line for line in text.splitlines() if "trust exec '" in line]
+        if not exec_lines or not all(line.endswith("' < /dev/null") for line in exec_lines):
+            missing.append(f"{name}: a codex exec line does not end in < /dev/null")
 
     assert not missing, "Codex bridge file violations:\n  " + "\n  ".join(missing)

@@ -274,7 +274,7 @@ Headless invocations therefore pass `--dangerously-bypass-hook-trust`, the way A
 `--dangerously-skip-permissions`:
 
 ```bash
-codex -a never --dangerously-bypass-hook-trust exec '<prompt>'
+codex -a never --dangerously-bypass-hook-trust exec '<prompt>' < /dev/null
 ```
 
 The flag makes the safety hook **run**; it does not weaken it. What it bypasses is Codex's check
@@ -302,6 +302,17 @@ confirmed by a probe rule file that fixed a previously-failing `git ls-remote`. 
 decides only *where* a command runs; the `PreToolUse` hook still fires first (Codex logs `hook:
 PreToolUse` before each allow-ruled `gh` call), so `gh pr merge --admin` and the other blocked
 patterns are refused exactly as before.
+
+`.codex/rules/gh.rules` allows only the read-only subcommands delegated runs use: `gh pr
+{view,diff,checks,list}` and `gh issue {view,list}`. Everything else — `gh pr comment`, `gh api`
+(which writes with `-X`/`-f`), `gh pr merge` — matches no rule and stays in the sandbox, where it has
+no network, so a delegated Codex run cannot write to GitHub. Check a change to the file with
+`codex execpolicy check --rules .codex/rules/gh.rules gh pr view 1`;
+`tests/template/test_ai_agent_assets.py` does the same for both sides of the line.
+
+Headless invocations also end in `< /dev/null`. `codex exec` reads extra input from stdin when stdin
+is not a terminal ("Reading additional input from stdin..."), and a caller whose stdin is an open
+pipe or socket — a backgrounded shell, an agent's tool runner — leaves it waiting forever.
 
 The allow rule only matches when `gh` is the exec'd prefix. If a prompt chains `gh` with `;`, `&&`,
 `|`, or any other command, the exec'd prefix is the shell, not `gh`, so the rule does not match and
