@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792580153805,
+  "lastUpdate": 1792581296116,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17287,6 +17287,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.491577889722203e-7",
             "extra": "mean: 1.9482533393833035 usec\nrounds: 55115"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f9122cbd9959e273f38f2fdb3ba4c388331d882",
+          "message": "docs: document Codex project trust and the headless-Codex-host limits (merges PR #987, addresses #984)\n\nCodex loads a checkout's .codex/ (hooks and rules) only when the\ncheckout is trusted in ~/.codex/config.toml. Measured with codex-cli\n0.163.0 on a scratch clone and a git ls-remote probe rule: with no trust\nentry or \"untrusted\", headless codex exec loaded neither #980's\ngh.rules nor the PreToolUse dangerous-command hook;\n--dangerously-bypass-hook-trust does not change that. Document the\nmeasurement and the one-time trust step in command-blocking.md and\nAI_SETUP.md.\n\nDocument that a headless Codex host can read GitHub but cannot run the\nworkflows' write steps or delegate to another agent CLI (claude -p:\nEAI_AGAIN; nested codex exec: read-only file system), with\nHEADLESS_CODEX_HOST_SENTENCE pinned in the multi-* and implement-issue\nskills by a contract test.\n\nAddresses #984\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-21T12:14:16+01:00",
+          "tree_id": "3edc721ee5e9b4badb78becdd4c142248077bf8d",
+          "url": "https://github.com/endavis/pyproject-template/commit/3f9122cbd9959e273f38f2fdb3ba4c388331d882"
+        },
+        "date": 1792581294979,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8668671.771363527,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6704565674029336e-8",
+            "extra": "mean: 115.35792637846136 nsec\nrounds: 85165"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8624898.156633174,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1548475742470677e-8",
+            "extra": "mean: 115.94339803663969 nsec\nrounds: 87321"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5450303.806370025,
+            "unit": "iter/sec",
+            "range": "stddev: 1.769635295671258e-8",
+            "extra": "mean: 183.47601079250907 nsec\nrounds: 56520"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2056498.7625700033,
+            "unit": "iter/sec",
+            "range": "stddev: 8.406312997510504e-8",
+            "extra": "mean: 486.26336091265216 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 517990.66804877314,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8405867796825555e-7",
+            "extra": "mean: 1.930536709796173 usec\nrounds: 54574"
           }
         ]
       }
