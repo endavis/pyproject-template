@@ -31,7 +31,7 @@ stays the source of truth:
 | Agent | Invocation |
 | :--- | :--- |
 | `claude` | `claude -p '<prompt>'` |
-| `codex` | ``codex -a never --dangerously-bypass-hook-trust exec 'Run every `gh` command as its own standalone shell command, never chained with other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, then stop. <prompt>' < /dev/null`` |
+| `codex` | `codex -a never --dangerously-bypass-hook-trust exec '<prompt>' < /dev/null` |
 | `copilot` | `copilot --allow-all -p '<prompt>'` |
 | `antigravity` | `agy -p '<prompt>' --dangerously-skip-permissions --add-dir "$(git rev-parse --show-toplevel)"` |
 
@@ -70,14 +70,20 @@ gh pr view --json comments --jq '.comments[].body' | grep -E "\*Review by:"
 
 Each review MUST be in an isolated context.
 
+Fetch the PR context every review reads, once, shared by your own inline run and every delegated
+one (`<PR_NUMBER>` is what Step 1 saved):
+
+```bash
+doit delegation_context --kind=pr --n=<PR_NUMBER> --out=tmp/agents/<host>/multi-review-<PR_NUMBER>/
+```
+
 #### You (the agent running this skill)
 
 Run your review inline:
-1. Run `gh pr view --json number,title,body,headRefName`
-2. Run `gh pr diff`
-3. Read AGENTS.md and .github/CONTRIBUTING.md
-4. Review for correctness, style, testing, security, documentation, architecture, breaking changes
-5. Draft the review in the standard format:
+1. Read `<context-dir>/pr.json` (number/title/body/headRefName) and `<context-dir>/diff.txt`
+2. Read AGENTS.md and .github/CONTRIBUTING.md
+3. Review for correctness, style, testing, security, documentation, architecture, breaking changes
+4. Draft the review in the standard format:
    ```
    ## PR Review: #<number> — <title>
    ### Summary
@@ -93,23 +99,26 @@ Run your review inline:
 #### Every agent remaining after Step 0 removed yours
 
 Invoke it with its row from [Agent invocations](#agent-invocations) above, substituting this prompt
-(filling in `<agent name>`):
+(filling in `<context-dir>` and `<agent name>`):
 
-> Read AGENTS.md and .github/CONTRIBUTING.md. Get the PR via `gh pr view --json
-> number,title,body,headRefName`. Get the diff via `gh pr diff`. Review for: correctness, style,
-> testing, security, documentation, architecture, breaking changes. Output ONLY the review: ## PR
-> Review: #<number> — <title> / ### Summary / ### Findings / #### Critical / #### Suggestions /
-> #### Positive / ### Verdict. End with --- and *Review by: <agent name>* | *Date: <today>*.
+> Read AGENTS.md and .github/CONTRIBUTING.md. The PR context has already been fetched to
+> `<context-dir>` — read `pr.json` (number/title/body/headRefName) and `diff.txt` from there instead
+> of running `gh`. If the context directory is missing or unreadable, print `DELEGATION-ERROR:` and
+> stop. Review for: correctness, style, testing, security, documentation, architecture, breaking
+> changes. Output ONLY the review: ## PR Review: #<number> — <title> / ### Summary / ### Findings /
+> #### Critical / #### Suggestions / #### Positive / ### Verdict. End with --- and *Review by: <agent
+> name>* | *Date: <today>*.
 
 For example, to delegate to Claude:
 
 ```bash
-claude -p 'Read AGENTS.md and .github/CONTRIBUTING.md. Get the PR via `gh pr view --json number,title,body,headRefName`. Get the diff via `gh pr diff`. Review for: correctness, style, testing, security, documentation, architecture, breaking changes. Output ONLY the review: ## PR Review: #<number> — <title> / ### Summary / ### Findings / #### Critical / #### Suggestions / #### Positive / ### Verdict. End with --- and *Review by: Claude* | *Date: <today>*.'
+claude -p 'Read AGENTS.md and .github/CONTRIBUTING.md. The PR context has already been fetched to <context-dir> — read pr.json (number/title/body/headRefName) and diff.txt from there instead of running gh. If the context directory is missing or unreadable, print DELEGATION-ERROR: and stop. Review for: correctness, style, testing, security, documentation, architecture, breaking changes. Output ONLY the review: ## PR Review: #<number> — <title> / ### Summary / ### Findings / #### Critical / #### Suggestions / #### Positive / ### Verdict. End with --- and *Review by: Claude* | *Date: <today>*.'
 ```
 
-Capture stdout as that agent's review.
+Capture stdout as that agent's review. Delete `tmp/agents/<host>/multi-review-<PR_NUMBER>/` once
+every agent has returned.
 
-If any agent fails or produces empty output, report the error and ask whether to continue or retry. Also treat output containing `DELEGATION-ERROR:` as a failed run: the agent could not reach GitHub, so whatever else it printed rests on no data.
+If any agent fails or produces empty output, report the error and ask whether to continue or retry. Also treat output containing `DELEGATION-ERROR:` as a failed run: the agent's context file was missing or unreadable, so whatever else it printed rests on no data.
 
 ### Step 4: Post each review to the PR
 

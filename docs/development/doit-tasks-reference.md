@@ -38,7 +38,7 @@ doit <task_name>
 | [Security](#security-tasks) | `security`, `audit`, `licenses`, `sbom` | Security scanning and SBOM |
 | [Documentation](#documentation-tasks) | `docs_serve`, `docs_build`, `docs_deploy`, `docs_toc` | Documentation management |
 | [Dependencies](#dependency-tasks) | `install`, `install_dev`, `update_deps` | Package management |
-| [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync`, `env_create`, `env_list`, `publish_setup` | Issue, PR, and environment management |
+| [GitHub Workflow](#github-workflow-tasks) | `issue`, `pr`, `pr_merge`, `adr`, `labels_sync`, `delegation_context`, `env_create`, `env_list`, `publish_setup` | Issue, PR, and environment management |
 | [Release](#release-tasks) | `release`, `release_tag`, `publish` | Version and release management |
 | [Version](#version-tasks) | `bump`, `changelog` | Version bumping and changelog |
 | [Setup](#setup-tasks) | `pre_commit_install`, `completions`, `install_direnv`, `install_jq`, `worktree` | Development environment |
@@ -818,6 +818,47 @@ doit labels_sync --file=.github/labels.custom.yml
 - `--file=<path>`: Path to the labels file (default `.github/labels.yml`).
 
 See [GitHub Repository Settings → Labels](github-repository-settings.md#labels) for the canonical label list and the file schema.
+
+---
+
+### `delegation_context`
+
+Fetch GitHub data a delegated agent needs and write it to files it reads instead of calling `gh`
+itself.
+
+A delegated agent (another CLI invoked non-interactively, as `/multi-*` and the Codex bridge skills
+do) does not have a trusted, un-sandboxed `gh` in every host. The **host** — the CLI the user is
+driving, which does — runs this task before delegating, and the delegated prompt reads the files it
+writes instead of shelling out to `gh` itself.
+
+```bash
+# Issue context: issue.json + comments.json
+doit delegation_context --kind=issue --n=985 --out=tmp/agents/claude/multi-plan-985
+
+# PR context: pr.json + diff.txt
+doit delegation_context --kind=pr --n=42 --out=tmp/agents/claude/multi-review-42
+```
+
+**What it does:**
+- `--kind=issue`: writes `issue.json` (`number`/`title`/`body`/`labels`/`assignees`) and
+  `comments.json` (`{"comments": [...]}}`) from a single `gh issue view --json ...,comments` call.
+- `--kind=pr`: writes `pr.json` (`number`/`title`/`body`/`baseRefName`/`headRefName`) from `gh pr
+  view` and `diff.txt` from `gh pr diff`.
+- A missing or inaccessible issue/PR aborts with a clear error and exit code 1 — never a silent
+  empty file.
+
+**Output location:** by convention, `--out` is `tmp/agents/<host>/<task>-<n>/` (for example
+`tmp/agents/claude/multi-review-123/`), per `AGENTS.md`'s temp-file convention. The orchestrating
+skill that creates the directory deletes it once every delegated agent has returned — this task
+does not clean up after itself.
+
+**Options:**
+- `--kind` (required): `issue` or `pr`.
+- `--n` (required): Issue or PR number.
+- `--out` (required): Output directory, created if missing.
+
+See [Cross-Agent Delegation Matrix](ai/cross-agent-delegation.md) for the skills that call this
+task before delegating, and `docs/decisions/` for the ADR that introduced it.
 
 ---
 

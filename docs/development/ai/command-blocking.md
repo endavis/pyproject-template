@@ -365,12 +365,15 @@ Headless invocations also end in `< /dev/null`. `codex exec` reads extra input f
 is not a terminal ("Reading additional input from stdin..."), and a caller whose stdin is an open
 pipe or socket — a backgrounded shell, an agent's tool runner — leaves it waiting forever.
 
-The allow rule only matches when `gh` is the exec'd prefix. If a prompt chains `gh` with `;`, `&&`,
-`|`, or any other command, the exec'd prefix is the shell, not `gh`, so the rule does not match and
-the chained call falls into the sandboxed, network-less path instead. `.codex/rules/gh.rules` carries
-the allow rule; every prompt this repo hands Codex non-interactively also carries the standalone-`gh`
-requirement — see `GH_STANDALONE_SENTENCE` in
-[Non-interactive flags per CLI](cross-agent-delegation.md#non-interactive-flags-per-cli).
+The allow rule only matches when `gh` is the exec'd prefix. If a command chains `gh` with `;`,
+`&&`, `|`, or any other command, the exec'd prefix is the shell, not `gh`, so the rule does not
+match and the chained call falls into the sandboxed, network-less path instead. `.codex/rules/gh.rules`
+still carries this allow rule for a headless Codex **host**'s own reads (its own `gh issue
+view`/`gh pr view` in `multi-plan`/`multi-review`'s precondition steps) — but as of #985 no prompt
+this repo hands Codex *non-interactively as a delegate* calls `gh` at all: the host pre-fetches the
+GitHub data a delegated prompt needs with `doit delegation_context` first, so there is no `gh` call
+left to chain-guard in a delegated prompt. See [Context-file
+convention](cross-agent-delegation.md#context-file-convention).
 
 #### Antigravity CLI (`agy`)
 

@@ -4,10 +4,11 @@ Delegate a read-only code review of the current changes to Codex CLI. Optional f
 
 ## Instructions
 
-Use the Bash tool to invoke Codex non-interactively. Hybrid C: prefer the existing `$codex-review` skill if available, otherwise the prompt is fully inlined.
+Use the Bash tool to invoke Codex non-interactively. The prompt is fully inlined and reads only
+`git`/local files — no `gh` call, so the review needs nothing from `.codex/rules/gh.rules` (#985).
 
 ```bash
-codex -a never --dangerously-bypass-hook-trust exec 'Run every `gh` command as its own standalone shell command, never chained with other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, then stop. Review the current uncommitted changes and the current branch vs main, read-only. 1) Run `git status` and `git diff` to see what changed. 2) Run `git log main..HEAD --oneline` for branch context. 3) Read AGENTS.md and any relevant ADRs in docs/decisions/. 4) Identify correctness issues, risks, missing tests, style/convention violations, and concrete suggestions. 5) Print findings to stdout in a structured format (Summary / Issues / Suggestions). Do NOT modify any files. Focus area (optional): $ARGUMENTS' < /dev/null
+codex -a never --dangerously-bypass-hook-trust exec 'Review the current uncommitted changes and the current branch vs main, read-only. 1) Run `git status` and `git diff` to see what changed. 2) Run `git log main..HEAD --oneline` for branch context. 3) Read AGENTS.md and any relevant ADRs in docs/decisions/. 4) Identify correctness issues, risks, missing tests, style/convention violations, and concrete suggestions. 5) Print findings to stdout in a structured format (Summary / Issues / Suggestions). Do NOT modify any files. Focus area (optional): $ARGUMENTS' < /dev/null
 ```
 
 After Codex returns:
