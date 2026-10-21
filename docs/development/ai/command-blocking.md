@@ -268,7 +268,9 @@ target list stays in one place.
 
 Codex will not run a hook it has not been told to trust; trust is persisted per hook (`trusted_hash`
 in the hooks config). **An untrusted hook is skipped silently** — no warning, no log line — which is
-why this hook appeared to work for as long as nobody checked.
+why this hook appeared to work for as long as nobody checked. This is hook trust, scoped to one
+hook's source; it is a different gate from the *project* trust covered next, and bypassing one does
+not bypass the other.
 
 Headless invocations therefore pass `--dangerously-bypass-hook-trust`, the way Antigravity's pass
 `--dangerously-skip-permissions`:
@@ -285,6 +287,50 @@ script.
 > config runs without a prompt — so a hook added by a malicious pull request would execute. A
 > consumer who would rather not accept that can trust the hook once in an interactive Codex session
 > (the trust persists) and drop the flag from the bridges.
+
+##### Codex requires *project* trust, a separate gate from hook trust
+
+Hook trust (above) governs one hook's source. A separate, earlier gate governs whether Codex loads
+the checkout's `.codex/` configuration — hooks **and** rules — at all: **project trust**, recorded
+per checkout path in `~/.codex/config.toml`'s `[projects."<abs path>"]` table.
+`--dangerously-bypass-hook-trust` does not grant it; the name only covers hook-source review.
+
+Measured with codex-cli 0.163.0, 2026-10-21 (#984), from a scratch `git clone` of this repo with a
+probe rule `.codex/rules/probe-984.rules` = `prefix_rule(pattern=["git", "ls-remote"],
+decision="allow")` — chosen because the maintainer's personal `~/.codex/rules` do not cover `git
+ls-remote`, so they cannot mask the result. Each row ran:
+
+```bash
+codex -a never --dangerously-bypass-hook-trust \
+  [-c 'projects={"<clone path>"={trust_level="<level>"}}'] \
+  exec 'Run exactly: git ls-remote https://github.com/endavis/pyproject-template refs/heads/main ...' \
+  < /dev/null
+```
+
+counting `hook: PreToolUse` lines on stderr:
+
+| Project trust for the clone | `hook: PreToolUse` lines | `git ls-remote` result | `.codex/` loaded? |
+| :--- | :--- | :--- | :--- |
+| No `[projects."<path>"]` entry in `~/.codex/config.toml` | 0 | `fatal: unable to access ...: Could not resolve host: github.com` | **No** |
+| `trust_level = "untrusted"` | 0 | same failure | **No** |
+| `trust_level = "trusted"` | 2 | resolves `refs/heads/main` (e.g. `ec0f479...`) | **Yes** |
+
+So in a checkout Codex has not trusted, a headless `codex exec` loads neither `.codex/rules/gh.rules`
+(the #980 fix) nor the `PreToolUse` dangerous-command hook — regardless of
+`--dangerously-bypass-hook-trust`. The main checkout in this repo loads because its
+`~/.codex/config.toml` already carries
+`[projects."<abs path to this checkout>"] trust_level = "trusted"`.
+
+One syntax note from the same measurement: the dotted override form
+`-c projects."<path>".trust_level="trusted"` had no effect; the inline-table form
+`-c 'projects={"<path>"={trust_level="trusted"}}'` did.
+
+**Trust step, one-time per checkout:** before relying on `.codex/` in a headless `codex exec` run,
+trust the checkout — accept the trust prompt in an interactive `codex` session opened in that
+directory, or add `[projects."<abs path>"] trust_level = "trusted"` to `~/.codex/config.toml` by
+hand. Until then, neither defense layer applies, headless or not. See also [Headless Codex host
+limits](cross-agent-delegation.md#headless-codex-host-limits) for what a trusted-but-headless Codex
+session still cannot do.
 
 ##### `gh` has no network inside the sandbox — `.codex/rules/*.rules` is a separate mechanism
 

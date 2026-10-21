@@ -55,6 +55,15 @@ codex
 /init
 ```
 
+**One-time project trust (required before any headless run):** Codex only loads a checkout's
+`.codex/config.toml` and `.codex/rules/*.rules` — hooks and rules alike — once it trusts that
+checkout. Trust it once before the first headless `codex exec`: accept the trust prompt in an
+interactive `codex` session opened in this directory, or add `[projects."<abs path>"]
+trust_level = "trusted"` to `~/.codex/config.toml` by hand. An untrusted checkout loads neither the
+dangerous-command hook nor `.codex/rules/gh.rules`, regardless of
+`--dangerously-bypass-hook-trust`. See [Command Blocking — Codex requires project
+trust](ai/command-blocking.md#codex-cli) for the measured behavior.
+
 **Documentation:**
 - [Codex CLI Documentation](https://developers.openai.com/codex/cli/)
 - [Configuring Codex](https://developers.openai.com/codex/local-config/)

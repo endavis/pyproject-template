@@ -33,6 +33,8 @@ stays the source of truth:
 | `copilot` | `copilot --allow-all -p '<prompt>'` |
 | `antigravity` | `agy -p '<prompt>' --dangerously-skip-permissions --add-dir "$(git rev-parse --show-toplevel)"` |
 
+A headless Codex host (`codex exec -a never`) can read GitHub through `.codex/rules/gh.rules` but cannot write to it or delegate to another agent CLI — see [Headless Codex host limits](../../../docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits). It cannot run Step 3's delegation to the other listed agents or Step 4's `gh issue comment` headless; Codex hosts this skill interactively instead.
+
 ## Instructions
 
 ### Step 0: Parse arguments
