@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792587951963,
+  "lastUpdate": 1792596537412,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17464,6 +17464,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.971843818387729e-7",
             "extra": "mean: 1.9234331029532756 usec\nrounds: 54693"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "792e28c3137b800a39f749b060dfe017ab7ed1d9",
+          "message": "docs: document template layers, ADR numbering and test-guarded docs in AGENTS.md (merges PR #991, addresses #958)\n\nAdd a short section naming the three layers (the package, dev tooling\nthat ships, template-owned code that configuration sheds) with the\nADR-9017 membership rule, the 9XXX/0001 ADR numbering split, and that\ndocs and agent config are test-guarded and mirrored across .claude/,\n.github/ and .agents/. Add the single-test form to the Tool Reference.\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-21T16:18:34+01:00",
+          "tree_id": "0f4f77c9185b7a1e10d6fbef7fd7de5de40d8657",
+          "url": "https://github.com/endavis/pyproject-template/commit/792e28c3137b800a39f749b060dfe017ab7ed1d9"
+        },
+        "date": 1792596535921,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9024122.777459202,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8085297621321565e-8",
+            "extra": "mean: 110.8140951381821 nsec\nrounds: 89638"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9093627.003204292,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7470946657446017e-8",
+            "extra": "mean: 109.96712309044932 nsec\nrounds: 95832"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6524857.894042639,
+            "unit": "iter/sec",
+            "range": "stddev: 2.221500730697475e-8",
+            "extra": "mean: 153.26004278392415 nsec\nrounds: 66614"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2223022.1133215474,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0317718415653691e-7",
+            "extra": "mean: 449.8380803355309 nsec\nrounds: 196194"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 542569.705933142,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7191614827346276e-7",
+            "extra": "mean: 1.8430811544852903 usec\nrounds: 57255"
           }
         ]
       }
