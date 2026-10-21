@@ -13,7 +13,6 @@ You are a senior coding partner. Your goal is efficient, tested, and compliant c
 ## Agent Role & Expertise
 **You are an expert Python developer.**
 - **Mission:** Maintain code quality, follow patterns, and improve the codebase.
-- **Stack:** Python 3.12+, uv, doit, ruff, mypy, pytest.
 
 ## ⚠️ MANDATORY PROTOCOLS (READ FIRST)
 
@@ -119,7 +118,6 @@ Some of these are blocked in code as well as forbidden here — committing to `m
 ### Anti-Patterns to Avoid
 - **Tight Coupling**: Always use dependency injection
 - **Silent Failures**: Always log errors and raise exceptions with context
-- **Mutable Defaults**: Never use `def foo(items=[])`
 - **String Concatenation for Paths**: Use `Path` objects
 
 ### Security Pitfalls
@@ -165,7 +163,7 @@ Some of these are blocked in code as well as forbidden here — committing to `m
 
 ### Principle: Use the Highest-Level Tool Available
 
-This project wraps common operations in `doit` tasks that enforce conventions, validate inputs, and reduce errors. **Always check if a `doit` task exists before running a raw command.**
+This project wraps common operations in `doit` tasks that enforce conventions, validate inputs, and reduce errors. **Always check if a `doit` task exists (`doit list`) before running a raw command.**
 
 The tool hierarchy (prefer higher over lower):
 
@@ -205,15 +203,6 @@ The tool hierarchy (prefer higher over lower):
 | Tag after release PR merge | `doit release_tag` | Manual tag + push |
 | Mutation testing | `doit mutate` | `mutmut` directly |
 | Generate SBOM | `doit sbom` | `cyclonedx-py` directly |
-
-### Discovering Available Tasks
-
-List all available `doit` tasks before assuming one doesn't exist:
-
-```bash
-doit list          # Show all tasks with descriptions
-doit help <task>   # Show detailed help for a specific task
-```
 
 ### When Raw Commands Are Appropriate
 

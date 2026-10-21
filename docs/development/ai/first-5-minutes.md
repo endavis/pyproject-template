@@ -131,7 +131,7 @@ Run `/ghi-status`. It is read-only, has no side effects, and will tell you the c
 - [AI Agent Setup](../AI_SETUP.md) — per-CLI configuration, permissions, and hooks.
 - [Architectural Conventions](architectural-conventions.md) — imperative rules for AI-generated code.
 - [AGENTS.md](../../../AGENTS.md) — universal context file and workflow reference.
-- [`.claude/rules/` scaffold](../../../.claude/rules/README.md) — per-stack rule-file pattern for Claude Code.
+- [Per-stack rule files](rule-files.md) — the `.claude/rules/` pattern for Claude Code.
 - [`.github/instructions/` scaffold](../../../.github/instructions/README.md) — per-stack instruction-file pattern for GitHub Copilot.
 - [`.agents/skills/` scaffold](../../../.agents/skills/README.md) — per-stack rule-shaped skill pattern for Codex CLI.
 - <!-- TODO: wire this link up properly when #342 lands -->

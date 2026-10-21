@@ -79,6 +79,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Installation Guide](getting-started/installation.md) - How to install and set up your project
 - [LSP Tool and Diagnostic Noise](development/ai/lsp-tool.md) - What the LSP tool gives an AI agent, why pyright diagnostics arrive stale, and the two opt-outs agents can flip on themselves
 - [Optional Extensions](development/extensions.md) - Additional tools and extensions for testing, security, and more
+- [Per-Stack Rule Files](development/ai/rule-files.md) - How to author, load and mirror the short self-check rule files in .claude/rules/
 - [Production Deployment Guide](deployment/production.md) - Comprehensive guide for deploying Python applications to production
 - [Python Project Coding Standards](development/coding-standards.md) - Guidelines for exceptions, typing, structure, testing, and documentation
 - [Release Automation & Security](development/release-and-automation.md) - Automated versioning, release management, and security tooling
@@ -164,6 +165,7 @@ Complete index of all documentation, organized by audience and as a full alphabe
 - [Migration Guide](template/migration.md) - Migrate existing Python projects to use this template
 - [New Project Setup](template/new-project.md) - Create a new Python project from this template
 - [Optional Extensions](development/extensions.md) - Additional tools and extensions for testing, security, and more
+- [Per-Stack Rule Files](development/ai/rule-files.md) - How to author, load and mirror the short self-check rule files in .claude/rules/
 - [Production Deployment Guide](deployment/production.md) - Comprehensive guide for deploying Python applications to production
 - [Python Project Coding Standards](development/coding-standards.md) - Guidelines for exceptions, typing, structure, testing, and documentation
 - [Release Automation & Security](development/release-and-automation.md) - Automated versioning, release management, and security tooling

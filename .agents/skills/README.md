@@ -140,7 +140,7 @@ four CLIs even though the file format and load mechanism differ:
 | GitHub Copilot | `.github/instructions/` | Native auto-discovery (no directive needed) |
 | Codex CLI | `.agents/skills/<name>/` | `description:` frontmatter is the skill-gate trigger |
 
-See [`.claude/rules/README.md`](../../.claude/rules/README.md) and
+See [`docs/development/ai/rule-files.md`](../../docs/development/ai/rule-files.md) and
 [`.github/instructions/README.md`](../../.github/instructions/README.md) for the other CLI variants.
 
 ## What NOT to put in a rule-shaped skill
@@ -170,4 +170,4 @@ only the frontmatter and the loading mechanism differ.
 **When you change one, change all three.** A rule that disagrees with itself across agents is worse
 than no rule, because whichever agent is driving decides which version applies.
 `tests/template/test_rule_files.py` enforces that each rule's three bodies stay identical. See
-[`.claude/rules/README.md`](../../.claude/rules/README.md) for the authoring discipline.
+[`docs/development/ai/rule-files.md`](../../docs/development/ai/rule-files.md) for the authoring discipline.
