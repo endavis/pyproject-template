@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792581296116,
+  "lastUpdate": 1792582227553,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17346,6 +17346,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8405867796825555e-7",
             "extra": "mean: 1.930536709796173 usec\nrounds: 54574"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c6191145ac0d0048a3722e38406b465d7d194f3f",
+          "message": "fix: have multi-* hosts drop their own name before delegating (merges PR #988, addresses #986)\n\nThe multi-* skills asked the host to infer which table entry it was\n(\"that entry is you\") in two separate places. A headless Codex host got\nit wrong in one of three runs in the #975 record: it reviewed inline\nand also delegated to `codex` through the CLI.\n\nStep 0 of each skill now removes the host's own name from the parsed\nagent list, and every later step uses only the agents that remain: the\ninvocation-table intro and the delegation heading point at that list\ninstead of re-deriving identity. If no agent remains, the skill stops.\nSELF_REMOVAL_SENTENCE is pinned byte-identical across the three skills\nby a new contract test.\n\nAddresses #986\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-21T12:29:51+01:00",
+          "tree_id": "f81386e9a877e6c78fe3dc111dbca073d24db06b",
+          "url": "https://github.com/endavis/pyproject-template/commit/c6191145ac0d0048a3722e38406b465d7d194f3f"
+        },
+        "date": 1792582226797,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18000339.510375775,
+            "unit": "iter/sec",
+            "range": "stddev: 5.816840367516444e-9",
+            "extra": "mean: 55.554507703789646 nsec\nrounds: 185254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 17911170.624539394,
+            "unit": "iter/sec",
+            "range": "stddev: 5.659206104407458e-9",
+            "extra": "mean: 55.83107999819616 nsec\nrounds: 179889"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12825797.411582159,
+            "unit": "iter/sec",
+            "range": "stddev: 6.907231066758051e-9",
+            "extra": "mean: 77.96786179524119 nsec\nrounds: 119446"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4546158.536022637,
+            "unit": "iter/sec",
+            "range": "stddev: 1.219666969410672e-8",
+            "extra": "mean: 219.96593213286496 nsec\nrounds: 46120"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1015982.082358873,
+            "unit": "iter/sec",
+            "range": "stddev: 7.998374145543872e-8",
+            "extra": "mean: 984.269326559612 nsec\nrounds: 104341"
           }
         ]
       }
