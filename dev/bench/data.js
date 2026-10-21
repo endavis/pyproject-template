@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792509010504,
+  "lastUpdate": 1792576727218,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17169,6 +17169,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.645917088695748e-7",
             "extra": "mean: 1.602295297162421 usec\nrounds: 70702"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "42bb11d6c7d4ecb9c31e3daf5503b36c1309a23f",
+          "message": "chore: bump certifi to 2026.10.19 to fix PYSEC-2026-4320 (merges PR #983, addresses #982)\n\npip-audit flags certifi 2026.1.4 (PYSEC-2026-4320, fixed in 2026.10.19),\nfailing `doit audit` and the CI lint job on every PR. certifi is\ntransitive (via requests); only the lock changes.\n\nAddresses #982\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-21T10:57:58+01:00",
+          "tree_id": "64cbdb80300b5ba07e8c0b80531e00061afba66d",
+          "url": "https://github.com/endavis/pyproject-template/commit/42bb11d6c7d4ecb9c31e3daf5503b36c1309a23f"
+        },
+        "date": 1792576726151,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8683544.332664348,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2884987783814193e-8",
+            "extra": "mean: 115.16034947139755 nsec\nrounds: 89278"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8741885.727408083,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1312359035655767e-8",
+            "extra": "mean: 114.3917949950707 nsec\nrounds: 91744"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5617242.413689091,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5354156913437634e-8",
+            "extra": "mean: 178.0232944127572 nsec\nrounds: 58235"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2112569.8994746865,
+            "unit": "iter/sec",
+            "range": "stddev: 6.534466458935878e-8",
+            "extra": "mean: 473.357118383946 nsec\nrounds: 184843"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 516592.75027399877,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5904158676604387e-7",
+            "extra": "mean: 1.935760808624596 usec\nrounds: 53721"
           }
         ]
       }
