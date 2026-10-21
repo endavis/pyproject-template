@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792582227553,
+  "lastUpdate": 1792587951963,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17405,6 +17405,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.998374145543872e-8",
             "extra": "mean: 984.269326559612 nsec\nrounds: 104341"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "574be51735ffdf5af611be70b9e0fddf9e651274",
+          "message": "refactor: have hosts fetch GitHub data for delegated agents (merges PR #989, addresses #985)\n\n* refactor: have hosts fetch GitHub data for delegated agents\n\nDelegated agents fetched GitHub data themselves, which for Codex needed\nexec-policy allow rules lifting its sandbox and a prompt instruction not\nto chain gh (#980). The host already has gh, so it now fetches what the\ntask needs and the delegated agent reads files.\n\nNew `doit delegation_context --kind=issue|pr --n=N --out=DIR` writes\nissue.json + comments.json, or pr.json + diff.txt, to\ntmp/agents/<host>/<task>-<n>/, and fails without writing on a missing\nissue or PR. implement-issue's Planner and Coder briefs, multi-plan and\nmulti-review's delegated prompts, and the six Codex bridges carry no gh\ncommand; a missing context file makes the agent print DELEGATION-ERROR:\nand stop. The Codex bridges drop Hybrid C's self-action fallback, the\nonly remaining gh path. GH_STANDALONE_SENTENCE is retired; contract\ntests assert delegated prompts contain no gh command.\n.codex/rules/gh.rules stays for a headless Codex host's own reads.\n\nADR-9025 records the decision. Headless-Codex-host delegation is not\nfixed by this: delegated CLIs still need their model API (#984).\n\nAddresses #985\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* refactor: address the #985 coder-transcript review\n\n- implement-worker.md still told Claude's coding subagent to fetch the\n  plan itself and never named the context directory; it now lists the\n  directory as an input and says to read it, not call gh.\n- GH_COMMAND_PATTERN matched only gh issue|pr|api|repo|label, so a\n  delegated prompt with gh run/release/secret would pass the no-gh\n  tests; it now matches gh plus any subcommand, with a guard test.\n\nAddresses #985\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-21T14:05:15+01:00",
+          "tree_id": "a41ae80393cacae292f755564f5b1ceb082f22e3",
+          "url": "https://github.com/endavis/pyproject-template/commit/574be51735ffdf5af611be70b9e0fddf9e651274"
+        },
+        "date": 1792587951193,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8628708.061221704,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1692551980106758e-8",
+            "extra": "mean: 115.89220459249307 nsec\nrounds: 88488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8885889.674365355,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1382965353628035e-8",
+            "extra": "mean: 112.53797162088011 nsec\nrounds: 92251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5457591.424746217,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1638765295284974e-8",
+            "extra": "mean: 183.2310120295421 nsec\nrounds: 56777"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2110515.07931445,
+            "unit": "iter/sec",
+            "range": "stddev: 6.509107712018512e-8",
+            "extra": "mean: 473.81798396097037 nsec\nrounds: 183824"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 519903.706796239,
+            "unit": "iter/sec",
+            "range": "stddev: 1.971843818387729e-7",
+            "extra": "mean: 1.9234331029532756 usec\nrounds: 54693"
           }
         ]
       }
