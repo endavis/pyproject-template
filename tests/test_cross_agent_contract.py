@@ -86,6 +86,25 @@ GH_STANDALONE_SENTENCE = (
 # flags it — #980's original symptom.
 DELEGATION_ERROR_CHECK = "treat output containing `DELEGATION-ERROR:` as a failed run"
 
+# The sentence that tells a headless Codex host it cannot do GitHub writes or
+# delegate to another agent CLI, carried verbatim by implement-issue and the
+# three multi-* skills so the limit cannot read differently per surface (#984).
+# docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits is
+# the full writeup; this is the pointer every skill file carries to it.
+HEADLESS_CODEX_HOST_SENTENCE = (
+    "A headless Codex host (`codex exec -a never`) can read GitHub through "
+    "`.codex/rules/gh.rules` but cannot write to it or delegate to another agent CLI "
+    "— see [Headless Codex host "
+    "limits](../../../docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits)."
+)
+
+# Files that must carry HEADLESS_CODEX_HOST_SENTENCE verbatim — the three
+# shared multi-* skills plus the shared implement-issue skill.
+HEADLESS_CODEX_HOST_FILES: dict[str, Path] = {
+    **MULTI_AGENT_FILES,
+    "implement-issue": IMPLEMENT_ISSUE_FILE,
+}
+
 # The non-interactive invocation each CLI needs, copied verbatim from
 # docs/development/ai/cross-agent-delegation.md's "Non-interactive flags per
 # CLI" table. test_non_interactive_invocations_match_the_doc keeps this copy
@@ -396,3 +415,21 @@ def test_codex_hosts_check_for_the_delegation_error_marker() -> None:
         if DELEGATION_ERROR_CHECK not in path.read_text(encoding="utf-8")
     ]
     assert not missing, f"these files never check for DELEGATION-ERROR: {missing}"
+
+
+def test_headless_codex_host_files_carry_the_limit_sentence() -> None:
+    """implement-issue and the three multi-* skills must carry the headless-Codex-host sentence.
+
+    Without a shared literal, the limitation could be worded differently (or dropped) in one
+    skill and not the others — the same drift risk GH_STANDALONE_SENTENCE and READ_ONLY_SENTENCE
+    guard against (#984).
+    """
+    missing: list[str] = []
+    for name, path in HEADLESS_CODEX_HOST_FILES.items():
+        if not path.is_file():
+            missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
+            continue
+        if HEADLESS_CODEX_HOST_SENTENCE not in path.read_text(encoding="utf-8"):
+            missing.append(f"{name} is missing HEADLESS_CODEX_HOST_SENTENCE")
+
+    assert not missing, "headless-Codex-host sentence violations:\n  " + "\n  ".join(missing)

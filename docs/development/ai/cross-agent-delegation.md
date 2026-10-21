@@ -145,6 +145,42 @@ exec string (`.agents/skills/delegate-codex-{review,adversarial-review}/SKILL.md
 allow-rule side of this fix, and [Command Blocking — Codex CLI](command-blocking.md#codex-cli) for
 the measured sandbox-network facts (#980).
 
+## Headless Codex host limits
+
+A headless Codex host (`codex -a never exec`) can run the read side of `multi-*` and
+`implement-issue` but not the write side, and it cannot delegate to another agent CLI at all. Both
+limits trace to the same sandbox: a command or CLI Codex has not allow-ruled runs with no network
+and, for a nested CLI, a read-only home directory.
+
+**Write steps.** `.codex/rules/gh.rules` allows only `gh pr {view,diff,checks,list}` and `gh issue
+{view,list}` — see [Command Blocking — Codex CLI](command-blocking.md#codex-cli). Everything else
+these workflows need — `gh pr comment` / `gh issue comment` (the `multi-*` posting steps), `gh api
+repos/{owner}/{repo}/actions/jobs/<id>/logs` (`implement-issue`'s CI loop), and `doit pr` — matches
+no allow rule, so it runs inside the sandbox with no network and fails.
+
+**Delegation.** Measured against the #975 run record (issue #975, comment
+[6313535706](https://github.com/endavis/pyproject-template/issues/975#issuecomment-6313535706),
+runs 4–6, #984): a headless Codex host calling another agent's CLI fails every time, because the
+called CLI also runs inside Codex's sandbox rather than escaping it the way an allow-ruled `gh` call
+does:
+
+| Called CLI | Failure |
+| :--- | :--- |
+| `claude -p '<prompt>'` | exits 1 after ~200s: `API Error: Can't reach the API server — check your internet or DNS (EAI_AGAIN)` (3 of 3 attempts) |
+| nested `codex … exec '<prompt>' < /dev/null` | `Error: failed to initialize in-process app-server client: Read-only file system (os error 30)` |
+
+A delegated agent needs its own model API reachable and a writable home directory; neither exists
+inside the sandbox, and no `.codex/rules/*.rules` allow rule fixes that the way it does for a
+standalone `gh` call — an allow rule moves the *matched command* outside the sandbox, not everything
+that command goes on to run.
+
+**Supported stance.** Codex hosts `multi-*` and `implement-issue … with <agent>` interactively, where
+it can ask the user to approve the write step or the delegation. A headless Codex host supports
+neither; a user who wants one anyway can add a personal `~/.codex/rules/` entry for that one command,
+knowing the rule runs it outside the sandbox. This template does not add a repo-level rule for `gh`
+writes or for delegated CLIs — that would trade the sandbox boundary away for exactly the commands
+it exists to contain, which is a decision for a later issue, not this one.
+
 ## Hybrid C: how a delegation actually executes
 
 Each command body is a prompt that the source agent reads. The body tells the source agent to invoke the target's CLI in non-interactive mode via the source's tool layer (Bash/exec) and pass a prompt that:

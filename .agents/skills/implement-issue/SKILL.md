@@ -184,7 +184,7 @@ run the brief in the session itself instead of failing the step.
 - **Codex CLI:** `multi_agent`. `codex features list` reports `multi_agent` as `stable`/`true`
   (`multi_agent_v2` exists but is `stable`/`false` — not enabled). `codex debug prompt-input` lists
   `implement-issue` (source `.agents/skills/implement-issue/SKILL.md`) among the skills available to
-  the session.
+  the session. A headless Codex host (`codex exec -a never`) can read GitHub through `.codex/rules/gh.rules` but cannot write to it or delegate to another agent CLI — see [Headless Codex host limits](../../../docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits). It cannot run Step 4's "with \<agent\>" delegation, Step 6's `doit pr`, or Step 7's CI-log fetch headless; Codex hosts this skill interactively instead.
 - **GitHub Copilot CLI:** `--fleet` ("run the prompt in fleet mode (parallel subagent...)", per
   `copilot --help`) for parallel subagent work; the `task` tool for the Coder brief, the same
   mechanism `.claude/agents/implement-worker.md` already documents being read through for Copilot.
