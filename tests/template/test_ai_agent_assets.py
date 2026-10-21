@@ -3,8 +3,11 @@
 from __future__ import annotations
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
+import pytest
 from agent_roster import agent_is_present, present_agents, skip_if_absent
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -22,6 +25,63 @@ def test_codex_workflow_skills_exist() -> None:
 
     for skill_path in skill_paths:
         assert skill_path.exists(), f"Missing Codex skill: {skill_path}"
+
+
+GH_RULES = REPO_ROOT / ".codex" / "rules" / "gh.rules"
+
+# The exact rules in `.codex/rules/gh.rules`: the read-only `gh` subcommands a
+# delegated Codex run uses, and nothing that writes (#980).
+GH_ALLOW_RULES = (
+    'prefix_rule(pattern=["gh", "pr", ["view", "diff", "checks", "list"]], decision="allow")',
+    'prefix_rule(pattern=["gh", "issue", ["view", "list"]], decision="allow")',
+)
+
+
+def test_codex_gh_rules_allow_only_read_only_subcommands() -> None:
+    """`.codex/rules/gh.rules` carries exactly the read-only allow rules.
+
+    Without them a headless Codex session has no path to run `gh` with network
+    access at all; with a broader rule (bare `["gh"]`) a delegated run could
+    write to GitHub — see docs/development/ai/command-blocking.md#codex-cli (#980).
+    """
+    skip_if_absent("codex")
+
+    assert GH_RULES.is_file(), f"missing Codex exec-policy rule: {GH_RULES}"
+    rules = [
+        line
+        for line in GH_RULES.read_text(encoding="utf-8").splitlines()
+        if line and not line.startswith("#")
+    ]
+    assert rules == list(GH_ALLOW_RULES)
+
+
+@pytest.mark.parametrize(
+    ("command", "allowed"),
+    [
+        ("gh pr view 1", True),
+        ("gh pr diff", True),
+        ("gh pr checks 1", True),
+        ("gh issue view 1 --json comments", True),
+        ("gh pr comment 1 --body x", False),
+        ("gh api -X DELETE repos/o/r", False),
+        ("gh pr merge 1", False),
+    ],
+)
+def test_codex_gh_rules_parse_and_match(command: str, allowed: bool) -> None:
+    """Codex itself parses the rule file and allows reads but not writes."""
+    skip_if_absent("codex")
+    codex = shutil.which("codex")
+    if codex is None:
+        pytest.skip("codex CLI not installed")
+
+    result = subprocess.run(
+        [codex, "execpolicy", "check", "--rules", str(GH_RULES), *command.split()],
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    decision = json.loads(result.stdout).get("decision")
+    assert (decision == "allow") is allowed, result.stdout
 
 
 def test_multi_orchestrator_files_exist() -> None:

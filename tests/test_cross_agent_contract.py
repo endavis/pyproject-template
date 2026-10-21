@@ -67,17 +67,61 @@ MULTI_AGENT_FILES: dict[str, Path] = {
     ),
 }
 
+# The one sentence that makes Codex run every `gh` command as its own standalone
+# shell command. The exec-policy allow rule in `.codex/rules/gh.rules` only
+# matches when `gh` is the exec'd prefix — chained with `;`, `&&`, or a pipe, the
+# exec'd prefix is the shell instead, and the call falls back into the sandbox,
+# which has no network at all (#980). Asserted byte-identical everywhere a
+# non-interactive prompt reaches Codex, the same way READ_ONLY_SENTENCE is.
+GH_STANDALONE_SENTENCE = (
+    "Run every `gh` command as its own standalone shell command, never chained with "
+    "other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex "
+    "allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no "
+    "network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, "
+    "then stop."
+)
+
+# The host half of the DELEGATION-ERROR marker: without it, a delegated run that
+# reached no GitHub data still prints a confident plan or review, and nothing
+# flags it — #980's original symptom.
+DELEGATION_ERROR_CHECK = "treat output containing `DELEGATION-ERROR:` as a failed run"
+
 # The non-interactive invocation each CLI needs, copied verbatim from
 # docs/development/ai/cross-agent-delegation.md's "Non-interactive flags per
 # CLI" table. test_non_interactive_invocations_match_the_doc keeps this copy
 # honest against that doc.
 NON_INTERACTIVE_INVOCATIONS: dict[str, str] = {
     "claude": "claude -p '<prompt>'",
-    "codex": "codex -a never --dangerously-bypass-hook-trust exec '<prompt>'",
+    "codex": (
+        "codex -a never --dangerously-bypass-hook-trust exec "
+        f"'{GH_STANDALONE_SENTENCE} <prompt>' < /dev/null"
+    ),
     "copilot": "copilot --allow-all -p '<prompt>'",
     "antigravity": (
         "agy -p '<prompt>' --dangerously-skip-permissions "
         '--add-dir "$(git rev-parse --show-toplevel)"'
+    ),
+}
+
+# The six Codex bridge files that carry a *concrete* (not `<prompt>`-templated)
+# exec string rather than a copy of NON_INTERACTIVE_INVOCATIONS["codex"] — Hybrid
+# C's "activate $codex-review/$codex-adversarial-review if available" fallback can
+# still reach `gh pr view`/`gh pr diff` (#980), so each needs
+# GH_STANDALONE_SENTENCE prepended by hand.
+CODEX_BRIDGE_FILES: dict[str, Path] = {
+    "delegate-codex-review": (
+        REPO_ROOT / ".agents" / "skills" / "delegate-codex-review" / "SKILL.md"
+    ),
+    "delegate-codex-adversarial-review": (
+        REPO_ROOT / ".agents" / "skills" / "delegate-codex-adversarial-review" / "SKILL.md"
+    ),
+    "copilot-codex-review": REPO_ROOT / ".github" / "skills" / "codex-review" / "SKILL.md",
+    "copilot-codex-adversarial-review": (
+        REPO_ROOT / ".github" / "skills" / "codex-adversarial-review" / "SKILL.md"
+    ),
+    "claude-codex-review": REPO_ROOT / ".claude" / "commands" / "codex" / "review.md",
+    "claude-codex-adversarial-review": (
+        REPO_ROOT / ".claude" / "commands" / "codex" / "adversarial-review.md"
     ),
 }
 
@@ -313,3 +357,42 @@ def test_multi_review_files_carry_the_read_only_sentence() -> None:
     assert not divergent, (
         f"these multi-* files do not carry the exact read-only sentence: {divergent}"
     )
+
+
+def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
+    """The six Codex bridge files must carry the sentence and close Codex's stdin.
+
+    Hybrid C's "activate $codex-review/$codex-adversarial-review if available"
+    fallback can still reach `gh pr view`/`gh pr diff` from inside a headless
+    Codex session, so these bridges need the standalone-`gh` requirement
+    prepended to their inline prompt, not just a link to the doc (#980).
+    """
+    missing: list[str] = []
+    for name, path in CODEX_BRIDGE_FILES.items():
+        if not path.is_file():
+            missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
+            continue
+        text = path.read_text(encoding="utf-8")
+        if GH_STANDALONE_SENTENCE not in text:
+            missing.append(f"{name} is missing GH_STANDALONE_SENTENCE")
+        exec_lines = [line for line in text.splitlines() if "trust exec '" in line]
+        if not exec_lines or not all(line.endswith("' < /dev/null") for line in exec_lines):
+            missing.append(f"{name}: a codex exec line does not end in < /dev/null")
+
+    assert not missing, "Codex bridge file violations:\n  " + "\n  ".join(missing)
+
+
+def test_codex_hosts_check_for_the_delegation_error_marker() -> None:
+    """Every file that hands Codex a prompt must also check its output for the marker.
+
+    GH_STANDALONE_SENTENCE tells Codex to print `DELEGATION-ERROR:` when a `gh`
+    call fails; this is the other half, so the calling agent reports a failed run
+    instead of summarizing output built on no data (#980).
+    """
+    files = {**MULTI_AGENT_FILES, **CODEX_BRIDGE_FILES}
+    missing = [
+        name
+        for name, path in files.items()
+        if DELEGATION_ERROR_CHECK not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, f"these files never check for DELEGATION-ERROR: {missing}"

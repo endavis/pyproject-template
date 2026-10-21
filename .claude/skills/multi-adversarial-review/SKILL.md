@@ -31,7 +31,7 @@ stays the source of truth:
 | Agent | Invocation |
 | :--- | :--- |
 | `claude` | `claude -p '<prompt>'` |
-| `codex` | `codex -a never --dangerously-bypass-hook-trust exec '<prompt>'` |
+| `codex` | ``codex -a never --dangerously-bypass-hook-trust exec 'Run every `gh` command as its own standalone shell command, never chained with other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no network access. If any `gh` command fails, print `DELEGATION-ERROR:` and the error, then stop. <prompt>' < /dev/null`` |
 | `copilot` | `copilot --allow-all -p '<prompt>'` |
 | `antigravity` | `agy -p '<prompt>' --dangerously-skip-permissions --add-dir "$(git rev-parse --show-toplevel)"` |
 
@@ -96,7 +96,7 @@ claude -p 'Run an adversarial review of the current uncommitted changes and the 
 
 Capture stdout as that agent's adversarial review.
 
-If any agent fails or produces empty output, report the error and ask whether to continue or retry.
+If any agent fails or produces empty output, report the error and ask whether to continue or retry. Also treat output containing `DELEGATION-ERROR:` as a failed run: the agent could not reach GitHub, so whatever else it printed rests on no data.
 
 ### Step 3: Synthesize the findings
 

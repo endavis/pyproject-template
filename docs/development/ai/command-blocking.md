@@ -274,7 +274,7 @@ Headless invocations therefore pass `--dangerously-bypass-hook-trust`, the way A
 `--dangerously-skip-permissions`:
 
 ```bash
-codex -a never --dangerously-bypass-hook-trust exec '<prompt>'
+codex -a never --dangerously-bypass-hook-trust exec '<prompt>' < /dev/null
 ```
 
 The flag makes the safety hook **run**; it does not weaken it. What it bypasses is Codex's check
@@ -285,6 +285,46 @@ script.
 > config runs without a prompt — so a hook added by a malicious pull request would execute. A
 > consumer who would rather not accept that can trust the hook once in an interactive Codex session
 > (the trust persists) and drop the flag from the bridges.
+
+##### `gh` has no network inside the sandbox — `.codex/rules/*.rules` is a separate mechanism
+
+`.codex/config.toml`'s `approval_policy` and `[[hooks.PreToolUse]]` control whether a command is
+*asked about* or run through the dangerous-command hook. They do not control whether a command runs
+*inside Codex's sandbox* or outside it — that is a third, separate mechanism: project-level
+`.codex/rules/*.rules` files, each a sequence of Starlark `prefix_rule(pattern=[...],
+decision="allow")` calls matched against the exec'd command's prefix.
+
+Measured with codex-cli 0.163.0 (#980): inside the sandbox, `gh` has no network at all — a DNS write to `:53`,
+and (with `GODEBUG=netdns=cgo`) a TCP write to `:443`, both return "permission denied", even with `-c
+sandbox_workspace_write.network_access=true`. A standalone `gh` command (or `git ls-remote`) that
+matches a `prefix_rule` allow runs *outside* the sandbox instead, with full network access —
+confirmed by a probe rule file that fixed a previously-failing `git ls-remote`. The allow rule
+decides only *where* a command runs; the `PreToolUse` hook still fires first (Codex logs `hook:
+PreToolUse` before each allow-ruled `gh` call), so `gh pr merge --admin` and the other blocked
+patterns are refused exactly as before.
+
+`.codex/rules/gh.rules` allows only the read-only subcommands delegated runs use: `gh pr
+{view,diff,checks,list}` and `gh issue {view,list}`. Everything else — `gh pr comment`, `gh api`
+(which writes with `-X`/`-f`), `gh pr merge` — matches no rule and stays in the sandbox, where it has
+no network, so GitHub writes from a delegated Codex run get no network path. That narrows the
+normal path; it does not guarantee that a delegated run can't write. A rule matches its prefix with
+any arguments after it, and the `PreToolUse` hook is a guardrail, not a security boundary
+([ADR-9019](../../decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md)).
+A guarantee needs a credential boundary, such as a token scoped for delegated runs. Check a change
+to the file with
+`codex execpolicy check --rules .codex/rules/gh.rules gh pr view 1`;
+`tests/template/test_ai_agent_assets.py` does the same for both sides of the line.
+
+Headless invocations also end in `< /dev/null`. `codex exec` reads extra input from stdin when stdin
+is not a terminal ("Reading additional input from stdin..."), and a caller whose stdin is an open
+pipe or socket — a backgrounded shell, an agent's tool runner — leaves it waiting forever.
+
+The allow rule only matches when `gh` is the exec'd prefix. If a prompt chains `gh` with `;`, `&&`,
+`|`, or any other command, the exec'd prefix is the shell, not `gh`, so the rule does not match and
+the chained call falls into the sandboxed, network-less path instead. `.codex/rules/gh.rules` carries
+the allow rule; every prompt this repo hands Codex non-interactively also carries the standalone-`gh`
+requirement — see `GH_STANDALONE_SENTENCE` in
+[Non-interactive flags per CLI](cross-agent-delegation.md#non-interactive-flags-per-cli).
 
 #### Antigravity CLI (`agy`)
 

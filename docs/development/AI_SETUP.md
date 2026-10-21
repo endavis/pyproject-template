@@ -31,7 +31,7 @@ The project-level dangerous-command hooks under `tools/hooks/ai/` apply to all f
 
 ### 1. Codex CLI (OpenAI)
 
-**Configuration:** `.codex/config.toml`
+**Configuration:** `.codex/config.toml`, `.codex/rules/*.rules`
 
 > **Note**: Project-level dangerous-command hooks under `tools/hooks/ai/` apply to this agent regardless of the per-agent config below. See [AI Enforcement Principles](ai/enforcement-principles.md) and [Command Blocking](ai/command-blocking.md).
 
