@@ -174,6 +174,21 @@ inside the sandbox, and no `.codex/rules/*.rules` allow rule fixes that the way 
 standalone `gh` call — an allow rule moves the *matched command* outside the sandbox, not everything
 that command goes on to run.
 
+**Self-identification was inference-based, now it's mechanical.** The #975 run record (issue #975,
+comment
+[6313535706](https://github.com/endavis/pyproject-template/issues/975#issuecomment-6313535706), run
+6) caught a headless Codex host getting its own identity wrong once in three attempts: it reviewed
+inline as `codex` *and* spawned a nested `codex … exec` call for the same slot, which then failed as
+above. The other two runs in the same batch got it right, so the failure was intermittent — the
+instruction ("identify which of the four CLIs is running this skill — that entry is you") was
+inference the model could occasionally misjudge, not a step it executed deterministically. Each
+`multi-*` skill's Step 0 now removes the host's own CLI name from the agent list before any
+delegation call is made, so what follows (own part inline, delegate to everyone the filtered list
+still names) is a filter over Step 0's parse result rather than a judgment call (#986). The sentence
+is pinned byte-identical across the three skills by
+`tests/test_cross_agent_contract.py`'s `SELF_REMOVAL_SENTENCE`, the same way `GH_STANDALONE_SENTENCE`
+and `HEADLESS_CODEX_HOST_SENTENCE` are.
+
 **Supported stance.** Codex hosts `multi-*` and `implement-issue … with <agent>` interactively, where
 it can ask the user to approve the write step or the delegation. A headless Codex host supports
 neither; a user who wants one anyway can add a personal `~/.codex/rules/` entry for that one command,
@@ -251,7 +266,7 @@ In addition to the 1-to-1 delegation matrix above, this template ships three N-t
 | `/multi-review <ais...>` | agent list | Each listed agent independently reviews the current PR; reviews posted as separate comments; synthesis posted after user approval. |
 | `/multi-adversarial-review <ais...>` | agent list | Each listed agent independently challenges the current changes; synthesis posted to PR (if exists) after user approval. |
 
-Each is a single shared skill, written once in `.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md` (read directly by Codex, Antigravity, and Copilot) and generated for Claude at `.claude/skills/multi-{plan,review,adversarial-review}/SKILL.md` by `doit skills_sync` — the same mechanism the other 14 shared workflow skills use. Each file says which agent is running it the same way: "the entry in the table that matches the CLI running this skill is you," so the file does not hardcode one agent as the default.
+Each is a single shared skill, written once in `.agents/skills/multi-{plan,review,adversarial-review}/SKILL.md` (read directly by Codex, Antigravity, and Copilot) and generated for Claude at `.claude/skills/multi-{plan,review,adversarial-review}/SKILL.md` by `doit skills_sync` — the same mechanism the other 14 shared workflow skills use. Each file identifies which agent is running it the same way: Step 0 removes the host's own CLI name from the parsed agent list (see [Headless Codex host limits](#headless-codex-host-limits) above, which documents why this moved from inference to a mechanical filter), so the file never hardcodes one agent as the default and never has to infer identity a second time downstream.
 
 ## Out of scope (v1)
 

@@ -20,9 +20,9 @@ If the agent list or issue number is missing, ask for it before continuing.
 
 ## Agent invocations
 
-Identify which of the four CLIs is running this skill — **that entry is you.** Run your own part
-directly, in this session (Step 3 below). Call every *other* listed agent through its CLI, exactly
-as this table gives it — copied from [cross-agent-delegation.md — Non-interactive flags per
+Step 0 below already removed your own CLI from the agent list. Run your own part directly, in this
+session (Step 3 below). Call every agent that list left through its CLI, exactly as this table gives
+it — copied from [cross-agent-delegation.md — Non-interactive flags per
 CLI](../../../docs/development/ai/cross-agent-delegation.md#non-interactive-flags-per-cli), which
 stays the source of truth:
 
@@ -44,6 +44,8 @@ Allowed agent names: `claude`, `copilot`, `codex`, `antigravity`.
 
 - If the issue number is missing, tell the user the required syntax and stop.
 - If any agent name is not in the allowed list, report the unknown name, list allowed names, and stop.
+
+Then remove your own name — the CLI running this skill — from the agent list. Every later step uses only the agents that remain: you never call your own CLI. If no agent remains, tell the user and stop.
 
 ### Step 1: Validate the issue
 
@@ -77,7 +79,7 @@ notes](../implement-issue/SKILL.md#per-host-subagent-notes)), otherwise inline i
 Append `---` followed by `*Plan by: <your agent name>* | *Date: <today>*` to what the brief returns,
 and capture that as your plan.
 
-#### Every other listed agent
+#### Every agent remaining after Step 0 removed yours
 
 Invoke it with its row from [Agent invocations](#agent-invocations) above, substituting this prompt
 (filling in `<issue>` and `<agent name>`):
