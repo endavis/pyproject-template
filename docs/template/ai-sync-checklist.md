@@ -261,6 +261,9 @@ AI coding assistants (Claude Code, Copilot, Codex, Antigravity) use hooks to blo
 
 - [ ] Compare `.claude/settings.json` for Claude Code hook configuration
 - [ ] Compare `.codex/config.toml` for Codex CLI approval policies
+- [ ] Compare `.codex/rules/*.rules` for Codex CLI exec-policy allow rules — a separate mechanism
+      from `.codex/config.toml`'s hooks/approval policy; see
+      [Command Blocking — Codex CLI](../development/ai/command-blocking.md#codex-cli)
 - [ ] **Review pinned model IDs.** `.claude/settings.json` pins
       `CLAUDE_CODE_SUBAGENT_MODEL`, and `tools/hooks/ai/precompact-checkpoint.py`
       passes a model to `claude -p`. Nothing in the update-check machinery looks at

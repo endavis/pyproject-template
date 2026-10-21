@@ -1,0 +1,19 @@
+# #980: delegated/headless Codex runs need `gh` to reach GitHub's network.
+#
+# Measured with codex-cli 0.163.0: inside Codex's sandbox, `gh` has no network at all —
+# a DNS write to :53, and (with GODEBUG=netdns=cgo) a TCP write to :443, both
+# return "permission denied" — even with
+# `-c sandbox_workspace_write.network_access=true`. A standalone `gh` (or
+# `git ls-remote`) call that matches a `prefix_rule` allow runs *outside* the
+# sandbox instead, with full network access. `.codex/rules/*.rules` is loaded
+# at the project level (confirmed by a probe rule file that fixed a
+# previously-failing `git ls-remote`).
+#
+# This rule only helps when `gh` is the exec'd prefix. If a prompt chains `gh`
+# with `;`, `&&`, `|`, or any other command, the exec'd prefix is the shell,
+# not `gh`, so this rule does not match and the chained call falls back into
+# the sandboxed, network-less path. Every prompt handed to Codex
+# non-interactively must therefore also instruct it to run each `gh` command
+# as its own standalone shell command — see GH_STANDALONE_SENTENCE in
+# docs/development/ai/cross-agent-delegation.md and tests/test_cross_agent_contract.py.
+prefix_rule(pattern=["gh"], decision="allow")

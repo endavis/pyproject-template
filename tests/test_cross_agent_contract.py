@@ -67,17 +67,54 @@ MULTI_AGENT_FILES: dict[str, Path] = {
     ),
 }
 
+# The one sentence that makes Codex run every `gh` command as its own standalone
+# shell command. The exec-policy allow rule in `.codex/rules/gh.rules` only
+# matches when `gh` is the exec'd prefix — chained with `;`, `&&`, or a pipe, the
+# exec'd prefix is the shell instead, and the call falls back into the sandbox,
+# which has no network at all (#980). Asserted byte-identical everywhere a
+# non-interactive prompt reaches Codex, the same way READ_ONLY_SENTENCE is.
+GH_STANDALONE_SENTENCE = (
+    "Run every `gh` command as its own standalone shell command, never chained with "
+    "other commands via `;`, `&&`, or a pipe — only a standalone `gh` matches the Codex "
+    "allow rule in `.codex/rules/gh.rules`; chained, it runs inside the sandbox with no "
+    "network access."
+)
+
 # The non-interactive invocation each CLI needs, copied verbatim from
 # docs/development/ai/cross-agent-delegation.md's "Non-interactive flags per
 # CLI" table. test_non_interactive_invocations_match_the_doc keeps this copy
 # honest against that doc.
 NON_INTERACTIVE_INVOCATIONS: dict[str, str] = {
     "claude": "claude -p '<prompt>'",
-    "codex": "codex -a never --dangerously-bypass-hook-trust exec '<prompt>'",
+    "codex": (
+        f"codex -a never --dangerously-bypass-hook-trust exec '{GH_STANDALONE_SENTENCE} <prompt>'"
+    ),
     "copilot": "copilot --allow-all -p '<prompt>'",
     "antigravity": (
         "agy -p '<prompt>' --dangerously-skip-permissions "
         '--add-dir "$(git rev-parse --show-toplevel)"'
+    ),
+}
+
+# The six Codex bridge files that carry a *concrete* (not `<prompt>`-templated)
+# exec string rather than a copy of NON_INTERACTIVE_INVOCATIONS["codex"] — Hybrid
+# C's "activate $codex-review/$codex-adversarial-review if available" fallback can
+# still reach `gh pr view`/`gh pr diff` (#980), so each needs
+# GH_STANDALONE_SENTENCE prepended by hand.
+CODEX_BRIDGE_FILES: dict[str, Path] = {
+    "delegate-codex-review": (
+        REPO_ROOT / ".agents" / "skills" / "delegate-codex-review" / "SKILL.md"
+    ),
+    "delegate-codex-adversarial-review": (
+        REPO_ROOT / ".agents" / "skills" / "delegate-codex-adversarial-review" / "SKILL.md"
+    ),
+    "copilot-codex-review": REPO_ROOT / ".github" / "skills" / "codex-review" / "SKILL.md",
+    "copilot-codex-adversarial-review": (
+        REPO_ROOT / ".github" / "skills" / "codex-adversarial-review" / "SKILL.md"
+    ),
+    "claude-codex-review": REPO_ROOT / ".claude" / "commands" / "codex" / "review.md",
+    "claude-codex-adversarial-review": (
+        REPO_ROOT / ".claude" / "commands" / "codex" / "adversarial-review.md"
     ),
 }
 
@@ -313,3 +350,39 @@ def test_multi_review_files_carry_the_read_only_sentence() -> None:
     assert not divergent, (
         f"these multi-* files do not carry the exact read-only sentence: {divergent}"
     )
+
+
+def test_multi_agent_files_carry_the_gh_standalone_sentence() -> None:
+    """Every multi-* file's Codex row must carry GH_STANDALONE_SENTENCE verbatim.
+
+    Same reasoning as test_multi_review_files_carry_the_read_only_sentence: a
+    paraphrase drifts into a weaker version, and whichever agent is driving
+    decides which version applies (#980).
+    """
+    divergent = [
+        name
+        for name, path in MULTI_AGENT_FILES.items()
+        if GH_STANDALONE_SENTENCE not in path.read_text(encoding="utf-8")
+    ]
+    assert not divergent, (
+        f"these multi-* files do not carry the exact gh-standalone sentence: {divergent}"
+    )
+
+
+def test_codex_bridge_files_carry_the_gh_standalone_sentence() -> None:
+    """The six Codex bridge files with a concrete exec string must carry the sentence too.
+
+    Hybrid C's "activate $codex-review/$codex-adversarial-review if available"
+    fallback can still reach `gh pr view`/`gh pr diff` from inside a headless
+    Codex session, so these bridges need the standalone-`gh` requirement
+    prepended to their inline prompt, not just a link to the doc (#980).
+    """
+    missing: list[str] = []
+    for name, path in CODEX_BRIDGE_FILES.items():
+        if not path.is_file():
+            missing.append(f"{name}: {path.relative_to(REPO_ROOT)} does not exist")
+            continue
+        if GH_STANDALONE_SENTENCE not in path.read_text(encoding="utf-8"):
+            missing.append(f"{name} is missing GH_STANDALONE_SENTENCE")
+
+    assert not missing, "Codex bridge file violations:\n  " + "\n  ".join(missing)

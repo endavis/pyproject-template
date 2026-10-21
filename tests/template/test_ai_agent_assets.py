@@ -24,6 +24,22 @@ def test_codex_workflow_skills_exist() -> None:
         assert skill_path.exists(), f"Missing Codex skill: {skill_path}"
 
 
+def test_codex_gh_exec_policy_allow_rule_exists() -> None:
+    """`.codex/rules/gh.rules` must allow-rule a standalone `gh` prefix.
+
+    Without it, a headless Codex session has no path to run `gh` with network
+    access at all — see docs/development/ai/command-blocking.md#codex-cli (#980).
+    """
+    skip_if_absent("codex")
+
+    rules_file = REPO_ROOT / ".codex" / "rules" / "gh.rules"
+    assert rules_file.is_file(), f"missing Codex exec-policy rule: {rules_file}"
+
+    text = rules_file.read_text(encoding="utf-8")
+    assert 'prefix_rule(pattern=["gh"]' in text
+    assert 'decision="allow"' in text
+
+
 def test_multi_orchestrator_files_exist() -> None:
     """multi-* orchestrators exist for every host this project wires.
 
