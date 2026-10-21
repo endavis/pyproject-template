@@ -128,6 +128,7 @@ nav:
           - LSP Tool and Diagnostics: development/ai/lsp-tool.md
           - Statusline: development/ai/statusline.md
           - Token-Efficiency Add-Ons: development/ai/token-efficiency-add-ons.md
+          - Per-Stack Rule Files: development/ai/rule-files.md
   - Deployment:
       - Development: deployment/development.md
       - Production: deployment/production.md

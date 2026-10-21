@@ -1,8 +1,15 @@
+---
+title: Per-Stack Rule Files
+description: How to author, load and mirror the short self-check rule files in .claude/rules/
+audience:
+  - contributors
+---
+
 # Per-Stack Rule Files
 
 ## Purpose
 
-Rule files in this directory capture **narrow, recurring footguns** that an AI agent keeps getting
+Rule files in `.claude/rules/` capture **narrow, recurring footguns** that an AI agent keeps getting
 wrong for a specific stack or domain. They are not a second copy of `AGENTS.md`. `AGENTS.md` carries
 broad workflow and architectural rules for the whole project. A rule file carries three to ten
 numbered self-checks for one specific failure mode — small enough to survive a context window, sharp
@@ -50,7 +57,7 @@ Target: **30 lines or fewer** per rule file. If a file grows past 30 lines, spli
 
 ## How to load
 
-`.claude/CLAUDE.md` glob-imports every rule file in this directory:
+`.claude/CLAUDE.md` glob-imports every `.md` file in `.claude/rules/`:
 
 ```
 @../AGENTS.md
@@ -65,6 +72,10 @@ a trap that produced defects in two consecutive PRs **in this repository's code*
 measured (#785). A rule file that
 ships but never loads is a mechanism built and not used, so the loader is on and downstream
 projects inherit it.
+
+Because the glob loads every `.md` file in the directory, `.claude/rules/` holds rule files and
+nothing else. This page lived there as `README.md` until #957 and was loaded into every session —
+about 6 KB of authoring guidance no agent applies while coding. Keep docs about rule files here.
 
 If you fork this template and delete the shipped rule file, remove the import too — Claude Code
 tolerates a glob matching nothing, but leaving it invites a future file to load unnoticed.

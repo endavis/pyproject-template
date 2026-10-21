@@ -6,7 +6,7 @@ Claude (generated from the former by `doit skills_sync`, byte for byte).
 Whichever agent the user happens to be driving decides which body applies, so
 a step present in one and missing from the other is not a documentation
 inconsistency; it is a control that fires for some users and not others.
-`.claude/rules/README.md` makes the same argument for rule files.
+`docs/development/ai/rule-files.md` makes the same argument for rule files.
 
 Since #972 the two bodies are byte-identical, like the rule files. What is
 asserted here is the contract — the ordering constraint and the guards whose
