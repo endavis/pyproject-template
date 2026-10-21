@@ -113,6 +113,20 @@ Some of these are blocked in code as well as forbidden here — committing to `m
 | **Slash Commands & Workflows** | `docs/development/ai/slash-commands.md` | Reference for "implement issue N", self-action review/adversarial-review, and cross-agent workflows. |
 | **AI Agent Walkthrough** | `docs/development/ai/first-5-minutes.md` | Narrative onboarding for the AI agent workflow (plan → implement → review → PR → merge). |
 
+## Template Layers and Guarded Docs
+
+Configuration turns this template into a project. Know which layer a file belongs to before editing it:
+
+- **The package**: `src/package_name/`, renamed to the project's package on configuration.
+- **Dev tooling that ships**: `tools/doit/`, `tools/hooks/` and their tests. The tests ship too; shedding them broke a spawned project's coverage gate (#731).
+- **Template-owned, shed on configuration**: `tools/pyproject_template/`, `bootstrap.py`, `README.template.md` (renamed onto `README.md`), and only the tests in `TEMPLATE_OWNED_TEST_FILES`. `tests/template/` is not shed wholesale.
+
+A test is template-owned when its target does not survive configuration ([ADR-9017](docs/decisions/9017-template-tooling-and-its-tests-are-template-owned.md)). A test that ships must never depend on shed code (#691).
+
+**ADR numbering:** template decisions use the 9XXX series (`doit adr --template`), project decisions the 0001 series (`doit adr`). See [Tooling Roles](docs/development/tooling-roles.md).
+
+**Docs and AI config are test-guarded.** Editing docs, `AGENTS.md`, rule files or agent commands and skills can fail `doit test`, for example in `tests/test_instruction_pointers.py`, `tests/test_cross_agent_contract.py` and `tests/test_markdown_links.py`. A change to one agent's command, skill or rule must be mirrored across `.claude/`, `.github/` and `.agents/`.
+
 ## Common Pitfalls
 
 ### Anti-Patterns to Avoid
@@ -195,6 +209,7 @@ The tool hierarchy (prefer higher over lower):
 | Sync dependencies | `doit install_dev` | plain `uv sync`, `pip install -r` |
 | Run Python scripts | `uv run <script>` | `python` directly |
 | Run a specific test file | `uv run pytest tests/test_foo.py` | `pytest` directly |
+| Run a single test | `uv run pytest tests/test_foo.py::test_name` | `pytest` directly |
 | Read issues/PRs/comments | `gh issue view`, `gh pr view`, `gh api` | `WebFetch` on GitHub URLs |
 | GitHub API queries | `gh api` | `curl` to GitHub API |
 | Build docs | `doit docs_build` | `mkdocs build` directly |
