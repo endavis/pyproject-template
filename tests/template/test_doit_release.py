@@ -14,6 +14,7 @@ per the plan.
 from __future__ import annotations
 
 import io
+import json
 import os
 import re
 import subprocess
@@ -1254,6 +1255,71 @@ class TestCreateReleaseTag:
 
         assert exc.value.code == 1
         assert "Error pulling latest changes" in capsys.readouterr().out
+
+    @staticmethod
+    def _patch_happy_path(monkeypatch: MonkeyPatch) -> None:
+        """Walk the action from entry to the final "Next steps" printout.
+
+        Mocks ``subprocess.run`` for every call `create_release_tag` makes
+        after the main-branch check: finding the merged release PR via
+        ``gh pr list``, the existing-tag check, and ``git tag``. ``run_streamed``
+        (``git pull``, ``git push``) is a no-op.
+        """
+
+        def fake_run(
+            cmd: list[str], *_args: object, **_kwargs: object
+        ) -> subprocess.CompletedProcess[str]:
+            if cmd[:3] == ["git", "branch", "--show-current"]:
+                stdout = "main\n"
+            elif cmd[:2] == ["gh", "pr"]:
+                stdout = json.dumps(
+                    [
+                        {
+                            "title": "release: v1.2.3",
+                            "mergedAt": "2024-01-01T00:00:00Z",
+                            "headRefName": "release/v1.2.3",
+                        }
+                    ]
+                )
+            else:
+                # Covers ``git tag -l <tag>`` (no existing tag) and
+                # ``git tag <tag>`` (create).
+                stdout = ""
+            return subprocess.CompletedProcess(args=cmd, returncode=0, stdout=stdout, stderr="")
+
+        monkeypatch.setattr("tools.doit.release.subprocess.run", fake_run)
+        monkeypatch.setattr("tools.doit.release.run_streamed", lambda *a, **kw: None)
+
+    def test_next_steps_mention_pypi_and_actions_with_release_workflow(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """With ``.github/workflows/release.yml``, the three original steps print."""
+        workflows_dir = tmp_path / ".github" / "workflows"
+        workflows_dir.mkdir(parents=True)
+        (workflows_dir / "release.yml").write_text("name: release\n", encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+        self._patch_happy_path(monkeypatch)
+
+        _tag_action()()
+
+        out = capsys.readouterr().out
+        assert "Monitor GitHub Actions" in out
+        assert "Check TestPyPI" in out
+        assert "Check PyPI" in out
+
+    def test_next_steps_say_tag_is_the_release_without_release_workflow(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Without ``.github/workflows/release.yml``, no step names PyPI or Actions (#993)."""
+        monkeypatch.chdir(tmp_path)
+        self._patch_happy_path(monkeypatch)
+
+        _tag_action()()
+
+        out = capsys.readouterr().out
+        assert "PyPI" not in out
+        assert "GitHub Actions" not in out
+        assert "tag is the release" in out
 
 
 class TestMajorVersionZeroEnabled:

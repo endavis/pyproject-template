@@ -983,7 +983,8 @@ See [Release Automation](release-and-automation.md) for the full flow.
 
 ### `release_tag`
 
-Tag `main` after the release PR is merged and trigger the publish workflow.
+Tag `main` after the release PR is merged, and — if `.github/workflows/release.yml`
+exists — trigger the publish workflow it defines.
 
 ```bash
 git checkout main
@@ -997,7 +998,10 @@ doit release_tag
 3. Finds the most recently merged `release: vX.Y.Z` PR
 4. Extracts the version from the PR title (falls back to the branch name)
 5. Creates the git tag `vX.Y.Z` on `main`
-6. Pushes the tag, which triggers the publish workflow
+6. Pushes the tag. If `.github/workflows/release.yml` exists, it triggers the
+   publish workflow and the printed next steps point at GitHub Actions and
+   PyPI/TestPyPI. Otherwise nothing builds or publishes from the tag, and the
+   task says so instead — the tag is the release (#993).
 
 ### `publish`
 
