@@ -137,7 +137,7 @@ uv run doit release --prerelease=rc
 **What it does:**
 
 1. ✅ Verifies you're on the `main` branch
-2. ✅ Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
+2. ✅ Validates `--prerelease` (must be empty, `alpha`, `beta`, or `rc`), `--issue` (must be empty or a number) and `--increment` (must be empty, `MAJOR`, `MINOR` or `PATCH`, in any case)
 3. ✅ Checks for uncommitted changes
 4. ✅ Pulls latest changes from remote
 5. ✅ **Runs governance validations** (merge commit format, issue links)
@@ -183,6 +183,74 @@ trigger the TestPyPI publish workflow; production tags (e.g. `v1.2.0`) trigger
 TestPyPI followed by PyPI.
 See the [Workflow Triggers](../../.github/CONTRIBUTING.md#workflow-triggers)
 table in `CONTRIBUTING.md` for the full mapping.
+
+### Downstream opt-ins: static version and hand-written changelog
+
+`doit release` reads two `[tool.commitizen]` keys to decide what a release PR changes (issue
+#971). The template sets `version_provider = "scm"` and `update_changelog_on_bump = true`, so its
+own release PR changes only a generated `CHANGELOG.md`. A downstream project that versions or
+writes its changelog differently gets a release PR that matches.
+
+| `[tool.commitizen]` | What `doit release` does |
+| :--- | :--- |
+| `version_provider = "scm"` | Leaves version files alone; the tag is the version. |
+| `version_provider` is anything else | Bumps every version file and `uv.lock` (below). |
+| `update_changelog_on_bump = true` | Generates `CHANGELOG.md` from commit subjects. |
+| `update_changelog_on_bump` is `false` **or missing** | Treats `CHANGELOG.md` as hand-written (below). |
+
+A missing `update_changelog_on_bump` counts as hand-written because that is commitizen's own
+default for it. A project that never set the key gets its `## [Unreleased]` section renamed, or a
+clear abort, instead of `cz changelog` overwriting entries it wrote by hand.
+
+**A static version.** With `version_provider` set to something other than `"scm"` (e.g.
+`"pep621"`) and the files that carry the version listed in `version_files`:
+
+```toml
+[tool.commitizen]
+version_provider = "pep621"
+version_files = [
+    "src/mypkg/__init__.py:__version__",
+    "Makefile:VERSION",
+]
+```
+
+`doit release` runs, on the release branch:
+
+```bash
+uv run cz bump --files-only --yes <next_version>
+uv lock
+```
+
+`pyproject.toml`, every path in `version_files`, and `uv.lock` are committed alongside
+`CHANGELOG.md` in a single commit, `chore: release v<next_version>`. `uv.lock` has to move with
+the version because it records the project's own version, and `uv lock --check` (run by the
+`uv-lock-check` pre-commit hook) fails once `pyproject.toml` alone has moved. With
+`update_changelog_on_bump = true`, the bump writes the changelog itself, so `doit release` does
+not run `cz changelog` again — it would exit 16, finding the new version's heading with no tag
+behind it.
+
+**A hand-written changelog.** `doit release` skips `cz changelog --incremental` and renames the
+project's own `## [Unreleased]` heading in `CHANGELOG.md` to `## [<next_version>] - <YYYY-MM-DD>`,
+under a new, empty `## [Unreleased]`. Every entry already under the old heading is kept as written:
+
+```markdown
+## [Unreleased]
+
+## [1.2.0] - 2026-10-21
+
+### Added
+- A hand-written entry
+```
+
+It checks the changelog before creating the release branch, and aborts if `CHANGELOG.md` has no
+`## [Unreleased]` heading or that section has no entries — there is nothing to release under the
+new version in either case. Any later abort discards what the release changed before returning to
+`main`, so a version-file bump is never carried back onto it.
+
+**Linking a release issue.** A release PR is exempt from the Validate Issue Link check by its
+`release/v*` branch, since a static-version release is no longer docs-only. A project that files
+an issue for each release can link it with `doit release --issue=<N>`, which writes
+`Addresses #<N>` into the PR body; `doit pr_merge` then records it in the merge commit.
 
 ### Example Release Cycle
 
