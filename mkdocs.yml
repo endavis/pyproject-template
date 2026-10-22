@@ -120,6 +120,7 @@ nav:
           - Setup: development/AI_SETUP.md
           - Slash Commands: development/ai/slash-commands.md
           - Cross-Agent Delegation: development/ai/cross-agent-delegation.md
+          - Review Focus Areas: development/ai/review-focus-areas.md
           - Architectural Conventions: development/ai/architectural-conventions.md
           - Enforcement Principles: development/ai/enforcement-principles.md
           - Command Blocking: development/ai/command-blocking.md

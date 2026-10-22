@@ -51,6 +51,34 @@ SELF_ACTION_LAYOUTS = {
     ),
 }
 
+
+def _bridge_action_file(source: str, target: str, action: str) -> Path:
+    """Map a (source, target, action) cross-agent cell to its on-disk bridge file.
+
+    Mirrors `tests/test_delegation_matrix.py::_expected_path` — kept as a separate,
+    smaller copy here rather than imported, since nothing else in this module
+    depends on that file and test modules in this repo do not import each other.
+    """
+    if source == "claude":
+        return REPO_ROOT / ".claude" / "commands" / target / f"{action}.md"
+    if source == "copilot":
+        return REPO_ROOT / ".github" / "skills" / f"{target}-{action}" / "SKILL.md"
+    if source in ("codex", "antigravity"):
+        return REPO_ROOT / ".agents" / "skills" / f"delegate-{target}-{action}" / "SKILL.md"
+    raise ValueError(f"unknown source agent: {source}")
+
+
+def _bridge_files(action: str) -> dict[tuple[str, str], Path]:
+    """Every distinct (source, target) bridge file for *action*, among wired agents."""
+    agents = present_agents()
+    return {
+        (source, target): _bridge_action_file(source, target, action)
+        for source in agents
+        for target in agents
+        if source != target
+    }
+
+
 # The single shared implement-issue skill source. Its generated Claude copy is
 # asserted byte-identical by tests/template/test_skills_sync.py, so checking
 # the source here is sufficient.
@@ -156,15 +184,29 @@ CODEX_BRIDGE_FILES: dict[str, Path] = {
 
 CROSS_AGENT_DELEGATION_DOC = REPO_ROOT / "docs" / "development" / "ai" / "cross-agent-delegation.md"
 
+# The pointer sentence every review and adversarial-review surface (self-action
+# and cross-agent bridge alike) carries verbatim to the one shared doc that
+# holds the errors/tests/types/comments focus-area checklists (#956). The
+# checklists themselves live only in docs/development/ai/review-focus-areas.md
+# — this sentence is what keeps every surface pointing at that one source
+# instead of copying the checklist text.
+REVIEW_FOCUS_AREAS_SENTENCE = (
+    "If the focus area names any of `errors`, `tests`, `types`, `comments`, read "
+    "`docs/development/ai/review-focus-areas.md` and apply those checklists in addition to the "
+    "general review."
+)
+
 # Contract elements, by the action whose files must carry them. Each entry is
 # (label, substring). Substrings rather than regexes: the contract is a literal
 # string the agents must reproduce, so a literal check is the honest test.
 CONTRACT = {
     "review": [
         ("read-only constraint", "**Read-only.**"),
+        ("review-focus-areas pointer", REVIEW_FOCUS_AREAS_SENTENCE),
     ],
     "adversarial-review": [
         ("read-only constraint", "**Read-only.**"),
+        ("review-focus-areas pointer", REVIEW_FOCUS_AREAS_SENTENCE),
     ],
 }
 
@@ -225,6 +267,26 @@ def test_self_action_files_carry_the_contract(action: str) -> None:
         + "\n  ".join(missing)
         + "\n\nThe contract is specified in docs/development/ai/cross-agent-delegation.md. "
         "If an agent legitimately differs, declare it in EXEMPTIONS with a reason."
+    )
+
+
+@pytest.mark.parametrize("action", sorted(CONTRACT))
+def test_bridge_files_carry_the_review_focus_areas_pointer(action: str) -> None:
+    """Every cross-agent bridge file for *action* points at the shared focus-area doc.
+
+    `test_self_action_files_carry_the_contract` already checks the 8 self-action files
+    through `CONTRACT`; this is the matching check for the 20 (12 cells, 4 shared via
+    `delegate-*`) cross-agent bridge files, so the pointer sentence cannot drift on the
+    delegated path while holding on every self-action one.
+    """
+    missing = [
+        f"{source}->{target}/{action}: {path.relative_to(REPO_ROOT)}"
+        for (source, target), path in _bridge_files(action).items()
+        if not path.is_file() or REVIEW_FOCUS_AREAS_SENTENCE not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, (
+        "these cross-agent bridge files are missing the review-focus-areas pointer "
+        f"sentence verbatim: {missing}"
     )
 
 
