@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792668105384,
+  "lastUpdate": 1792668305845,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17582,6 +17582,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7964714795773073e-7",
             "extra": "mean: 1.9270304948629997 usec\nrounds: 54278"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "74fc00a5f69179a9fa90040ee4040b1b7d4607ae",
+          "message": "feat: let doit release bump a static version and keep a hand-written changelog (merges PR #992, addresses #971)\n\n* feat: let doit release bump a static version and keep a hand-written changelog\n\nTwo opt-ins for downstream projects, both inert under the template's own\nconfig (version_provider = \"scm\", update_changelog_on_bump = true):\n\n- version_provider other than \"scm\": run `cz bump --files-only --yes\n  <next>` and `uv lock` on the release branch, and commit pyproject.toml,\n  version_files and uv.lock with the changelog.\n- update_changelog_on_bump = false: skip `cz changelog --incremental` and\n  rename the hand-written `## [Unreleased]` to `## [<next>] - <date>`\n  under a new empty Unreleased; abort on a missing or empty section.\n\nRelease-branch aborts now discard changes the release made before\nreturning to main, so a bumped version file is not carried onto main.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: address the GCM review of the release opt-ins\n\nFrom the review comment on #971:\n\n- A static version with update_changelog_on_bump = true no longer runs\n  cz changelog after the bump: commitizen already wrote it, and\n  `cz changelog --incremental` then exits 16 (reproduced on 4.19.2).\n- The hand-written changelog is checked before the release branch is\n  created, so that abort leaves nothing to clean up.\n- A missing update_changelog_on_bump now means hand-written, matching\n  commitizen's own default, so a project that never set it is not\n  silently overwritten by cz changelog.\n- `doit release --issue=N` writes `Addresses #N` into the PR body, and\n  pr-checks.yml exempts release/v* branches from Validate Issue Link,\n  since a static-version release PR is no longer docs-only.\n- The PR body lists the bumped files and mentions the release workflow\n  only when .github/workflows/release.yml exists.\n- consumer-notes.md gains an entry: the static bump turns on for any\n  non-scm version_provider with no new key.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-22T12:24:25+01:00",
+          "tree_id": "4a75671e2d9894b7dda0885065c23192012b5888",
+          "url": "https://github.com/endavis/pyproject-template/commit/74fc00a5f69179a9fa90040ee4040b1b7d4607ae"
+        },
+        "date": 1792668304570,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8308370.427857945,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2211303433949433e-8",
+            "extra": "mean: 120.36054587154692 nsec\nrounds: 85020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8858192.421204658,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3536057480144163e-8",
+            "extra": "mean: 112.88984845330403 nsec\nrounds: 91325"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5636076.924162926,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9500056123185795e-8",
+            "extra": "mean: 177.42838031766584 nsec\nrounds: 58956"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2097418.6928570303,
+            "unit": "iter/sec",
+            "range": "stddev: 7.750367255384698e-8",
+            "extra": "mean: 476.7765269784236 nsec\nrounds: 188324"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 533672.2836893905,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1012248978338145e-7",
+            "extra": "mean: 1.8738091344875292 usec\nrounds: 55701"
           }
         ]
       }
