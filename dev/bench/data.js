@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792668502027,
+  "lastUpdate": 1792669614203,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17700,6 +17700,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.937422531795013e-7",
             "extra": "mean: 1.04152372026893 usec\nrounds: 101369"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3654e17dc5832925277e86d986d3f87e12e4f393",
+          "message": "feat: add errors, tests, types and comments focus areas to reviews (merges PR #997, addresses #956)\n\nAdd docs/development/ai/review-focus-areas.md, which holds one checklist\nper focus area. Every review and adversarial-review surface, self-action\nand cross-agent bridge on all four agents, gains one identical sentence:\nwhen the focus argument names an area, the reviewer reads the doc and\napplies that checklist on top of the general review. With no argument\nthe review runs as before.\n\nContract tests check that the 8 self-action files and the 20 bridge\nfiles all carry the pointer, and a new test checks the doc's structure.\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-22T12:46:14+01:00",
+          "tree_id": "7a090f941efe095c524fe4c18728b70938233013",
+          "url": "https://github.com/endavis/pyproject-template/commit/3654e17dc5832925277e86d986d3f87e12e4f393"
+        },
+        "date": 1792669613156,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8663561.329314522,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1833396373900203e-8",
+            "extra": "mean: 115.42597345231951 nsec\nrounds: 88520"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8988099.645624094,
+            "unit": "iter/sec",
+            "range": "stddev: 1.168934521776474e-8",
+            "extra": "mean: 111.25822358754729 nsec\nrounds: 92456"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6506480.031399786,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8573270831611707e-8",
+            "extra": "mean: 153.69293307196438 nsec\nrounds: 68297"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2195029.1320140637,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4380346739546698e-7",
+            "extra": "mean: 455.5748192200271 nsec\nrounds: 194667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 545183.7983708568,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6601425184178346e-7",
+            "extra": "mean: 1.834243796290803 usec\nrounds: 56571"
           }
         ]
       }
