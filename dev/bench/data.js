@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792668305845,
+  "lastUpdate": 1792668502027,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17641,6 +17641,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.1012248978338145e-7",
             "extra": "mean: 1.8738091344875292 usec\nrounds: 55701"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7f1c390bfd87e9ed322f802ce1117b72b4a0f68a",
+          "message": "chore: make doit release_tag's next steps depend on release.yml (merges PR #994, addresses #993)\n\nPrint the GitHub Actions and PyPI/TestPyPI steps only when\n.github/workflows/release.yml exists. Without it, say the tag is the\nrelease, since nothing builds or publishes from it.\n\nDownstream projects that removed release.yml had to patch this\nlocally, and a template sync reverted the patch.\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-22T12:27:43+01:00",
+          "tree_id": "4c96365b50d7b00bfeb8276ce71a3e8b5736095b",
+          "url": "https://github.com/endavis/pyproject-template/commit/7f1c390bfd87e9ed322f802ce1117b72b4a0f68a"
+        },
+        "date": 1792668500949,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 17608790.905168936,
+            "unit": "iter/sec",
+            "range": "stddev: 7.816640339100031e-9",
+            "extra": "mean: 56.789816256291466 nsec\nrounds: 179598"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 17855634.7841378,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8691201042194086e-8",
+            "extra": "mean: 56.004729716378286 nsec\nrounds: 182216"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13181732.558581436,
+            "unit": "iter/sec",
+            "range": "stddev: 8.149228353677565e-9",
+            "extra": "mean: 75.86256173502703 nsec\nrounds: 132785"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4385635.048237849,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6074223638138414e-8",
+            "extra": "mean: 228.01714894215849 nsec\nrounds: 43433"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 960131.7574810411,
+            "unit": "iter/sec",
+            "range": "stddev: 2.937422531795013e-7",
+            "extra": "mean: 1.04152372026893 usec\nrounds: 101369"
           }
         ]
       }
