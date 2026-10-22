@@ -995,18 +995,25 @@ def task_release_tag() -> dict[str, Any]:
         console.print(f"[bold green]✓ Release {tag_name} tagged![/bold green]")
         console.print("=" * 70)
         console.print("\nNext steps:")
-        console.print("1. Monitor GitHub Actions for build and publish.")
-        # Resolve the PyPI name at runtime from pyproject.toml so the same
-        # code works in the template repo and in every spawned project. Fall
-        # back to the literal placeholder if the lookup fails — the tag has
-        # already been pushed, so the printout must not crash.
-        pypi_name = _get_pypi_name_from_pyproject() or "package-name"
-        console.print(
-            f"2. Check TestPyPI: [link=https://test.pypi.org/project/{pypi_name}/]https://test.pypi.org/project/{pypi_name}/[/link]"
-        )
-        console.print(
-            f"3. Check PyPI: [link=https://pypi.org/project/{pypi_name}/]https://pypi.org/project/{pypi_name}/[/link]"
-        )
+        # These three steps describe .github/workflows/release.yml. A project
+        # that removed that workflow never builds or publishes from the tag,
+        # so printing them unconditionally pointed at a build that never runs
+        # and at PyPI pages that 404 (#993).
+        if Path(".github/workflows/release.yml").exists():
+            console.print("1. Monitor GitHub Actions for build and publish.")
+            # Resolve the PyPI name at runtime from pyproject.toml so the same
+            # code works in the template repo and in every spawned project. Fall
+            # back to the literal placeholder if the lookup fails — the tag has
+            # already been pushed, so the printout must not crash.
+            pypi_name = _get_pypi_name_from_pyproject() or "package-name"
+            console.print(
+                f"2. Check TestPyPI: [link=https://test.pypi.org/project/{pypi_name}/]https://test.pypi.org/project/{pypi_name}/[/link]"
+            )
+            console.print(
+                f"3. Check PyPI: [link=https://pypi.org/project/{pypi_name}/]https://pypi.org/project/{pypi_name}/[/link]"
+            )
+        else:
+            console.print("Nothing builds or publishes from this tag — the tag is the release.")
 
     return {
         "actions": [create_release_tag],

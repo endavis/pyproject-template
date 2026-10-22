@@ -240,6 +240,13 @@ customization on top of the context-file convention rather than the old inline `
 and [Cross-Agent Delegation Matrix — Context-file
 convention](../development/ai/cross-agent-delegation.md#context-file-convention).
 
+### `doit release_tag`'s next steps depend on `release.yml`
+
+Without `.github/workflows/release.yml`, `doit release_tag` no longer tells you to monitor GitHub
+Actions or check TestPyPI/PyPI — it says the tag is the release, since nothing builds or publishes
+from it. If you patched this locally (as gnome-connection-manager did in endavis/gnome-connection-manager#306), drop your patch; the
+template now carries the condition.
+
 ## Adding to this page
 
 An entry belongs here when a downstream project would be **surprised** by the change: it breaks a
