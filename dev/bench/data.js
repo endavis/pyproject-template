@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792596537412,
+  "lastUpdate": 1792668105384,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17523,6 +17523,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7191614827346276e-7",
             "extra": "mean: 1.8430811544852903 usec\nrounds: 57255"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b7cc52b16620689a6607f2970b40b669c35eb946",
+          "message": "chore: bump virtualenv to clear pip-audit CVEs (merges PR #996, addresses #995)\n\nvirtualenv 21.14.2 carries CVE-2026-113722, -113725 and -113726, which\nfail pip-audit on every branch. Upgrade it to 21.14.12 in uv.lock. It\ncomes in only through pre-commit. uv also moved distlib (0.4.0 -> 0.4.4)\nand packaging (26.0 -> 26.3) to satisfy the new virtualenv.\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-22T12:21:01+01:00",
+          "tree_id": "de95d6706479359f6e0b234df5a05f27ed082079",
+          "url": "https://github.com/endavis/pyproject-template/commit/b7cc52b16620689a6607f2970b40b669c35eb946"
+        },
+        "date": 1792668104594,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8627901.139432196,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2822071161164241e-8",
+            "extra": "mean: 115.90304337513659 nsec\nrounds: 88254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8728869.121935893,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3251187404048779e-8",
+            "extra": "mean: 114.56237755781811 nsec\nrounds: 92166"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5343901.015185083,
+            "unit": "iter/sec",
+            "range": "stddev: 2.8902329236014126e-8",
+            "extra": "mean: 187.12921462400354 nsec\nrounds: 58507"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2118141.602413778,
+            "unit": "iter/sec",
+            "range": "stddev: 7.44862824800316e-8",
+            "extra": "mean: 472.1119678025428 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 518933.14748560527,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7964714795773073e-7",
+            "extra": "mean: 1.9270304948629997 usec\nrounds: 54278"
           }
         ]
       }
