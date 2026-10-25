@@ -58,6 +58,9 @@ Compares your project against the latest template:
 2. Shows files that differ from the template
 3. Provides diff commands for reviewing changes
 4. Shows GitHub compare URL for commit history
+5. Warns — before the drift report — if your local `template-sync` skill copy (`.agents/` or
+   `.claude/`) is older than the template just downloaded, naming the upstream `SKILL.md` URL to
+   re-read before triaging. It only warns; it never writes those files.
 
 **When to use:** You want to see what improvements have been made to the template since you last synced.
 

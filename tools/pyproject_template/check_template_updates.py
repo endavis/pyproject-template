@@ -64,6 +64,20 @@ DEFAULT_TEMPLATE_REF = "main"
 # project intentionally does not adopt. See docs/template/manage.md.
 SYNC_EXCLUDE_FILE = Path(".config/pyproject_template/sync-exclude.toml")
 
+# Downstream copies of the template-sync skill (#806, shared-skill layout #972).
+# These are downstream-owned: a sync adopts them through the normal drift triage,
+# never by this check overwriting them.
+TEMPLATE_SYNC_SKILL_REL_PATHS = (
+    ".agents/skills/template-sync/SKILL.md",
+    ".claude/skills/template-sync/SKILL.md",
+)
+
+# Upstream location of the skill source at a ref, named in the warning below so
+# an agent or admin can go re-read the current instructions before triaging a sync.
+TEMPLATE_SYNC_SKILL_URL = (
+    "https://raw.githubusercontent.com/{repo}/{ref}/.agents/skills/template-sync/SKILL.md"
+)
+
 
 def load_sync_excludes(project_root: Path) -> list[str]:
     """Load project-managed sync exclude patterns.
@@ -323,6 +337,68 @@ def _emit_coupling_warnings(different_files: list[Path], project_root: Path) -> 
             )
 
 
+def stale_template_sync_skill_copies(project_root: Path, template_root: Path) -> list[Path]:
+    """Return project-relative paths of ``template-sync`` ``SKILL.md`` copies that are stale.
+
+    Checks each path in ``TEMPLATE_SYNC_SKILL_REL_PATHS`` -- the ``.agents/`` and
+    ``.claude/`` copies of the skill -- against ``template_root``. A path the
+    template lacks is skipped: it names an older ref that predates the
+    shared-skill layout (#806), so its absence is not drift, just a ref that
+    predates the feature.
+
+    A path is stale when the project's copy is missing, or when its contents
+    differ from the template's.
+
+    Args:
+        project_root: Downstream project root.
+        template_root: Extracted upstream template directory.
+
+    Returns:
+        Sorted project-relative paths that are missing or differ. Empty when
+        both copies match, or the template has neither path.
+    """
+    stale: list[Path] = []
+    for rel in TEMPLATE_SYNC_SKILL_REL_PATHS:
+        template_file = template_root / rel
+        if not template_file.is_file():
+            continue  # Older ref predates #806 -- not stale, just absent upstream.
+
+        project_file = project_root / rel
+        if not project_file.is_file() or not filecmp.cmp(
+            template_file, project_file, shallow=False
+        ):
+            stale.append(Path(rel))
+
+    return sorted(stale)
+
+
+def _warn_stale_template_sync_skill(
+    stale: list[Path], project_root: Path, ref: str = DEFAULT_TEMPLATE_REF
+) -> None:
+    """Warn, before the drift report, that the local ``template-sync`` skill is stale.
+
+    Prints nothing when ``stale`` is empty. This only warns and never writes --
+    the skill is downstream-owned (#806), and adopting a stale copy goes through
+    the normal drift triage (Step 5 of the skill itself), not an overwrite here.
+    A skill that is already running also cannot usefully reload itself mid-sync.
+
+    Args:
+        stale: Project-relative paths returned by ``stale_template_sync_skill_copies``.
+        project_root: Downstream project root the paths are relative to.
+        ref: Template ref the copies were compared against, named in the URL.
+    """
+    if not stale:
+        return
+
+    Logger.warning(
+        "Your local template-sync skill is older than the template's. Re-read "
+        f"{TEMPLATE_SYNC_SKILL_URL.format(repo=TEMPLATE_REPO, ref=ref)} before triaging this sync."
+    )
+    for rel_path in stale:
+        status = "(differs)" if (project_root / rel_path).is_file() else "(missing)"
+        print(f"  {rel_path} {status}")
+
+
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Compare your project against the latest pyproject-template."
@@ -394,6 +470,12 @@ def run_check_updates(
 
     # Download template
     template_dir = download_template(tmp_dir, ref)
+
+    # Warn -- before anything else -- if the local template-sync skill copies
+    # are older than the template just downloaded. An agent following a stale
+    # skill triages the rest of this sync on out-of-date instructions.
+    stale_skill_copies = stale_template_sync_skill_copies(project_root, template_dir)
+    _warn_stale_template_sync_skill(stale_skill_copies, project_root, ref)
 
     # Open CHANGELOG.md for review
     if not skip_changelog:
