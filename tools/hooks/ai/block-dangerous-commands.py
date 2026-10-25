@@ -441,7 +441,7 @@ def _reads_stdin_as_code(words: list[str]) -> bool:
     return True  # bare `bash <<EOF` reads the program from stdin
 
 
-def _heredoc_marker_match(line: str) -> re.Match[str] | None:
+def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | None, str]:
     """Return the first ``_HEREDOC_START`` match outside quotes and comments.
 
     A bare ``.search()`` over the raw line, as used before this fix, takes any
@@ -451,27 +451,32 @@ def _heredoc_marker_match(line: str) -> re.Match[str] | None:
     its body (regression from #1010, gap 1). This walks the line with the same
     quote-and-comment state machine :func:`_strip_shell_comments` uses --
     single- and double-quoted runs are skipped, a backslash escapes the next
-    character, and an unquoted ``#`` ends the scan -- and only tries the
-    marker regex where that state is bare.
+    character outside single quotes, and an unquoted ``#`` ends the scan --
+    and only tries the marker regex where that state is bare.
 
-    Known, more conservative limit: quote state resets at the start of every
-    line, the same way :func:`_strip_shell_comments`'s comment state does, so
-    a ``<<'EOF'`` inside a ``"$(...)"`` opened on an earlier line is not
-    recognised as a heredoc and its body is not stripped.
+    *quote* is the quote still open from the previous line, and the second
+    item returned is the quote still open at the end of this one, so a
+    ``<<EOF"`` that closes a string opened on an earlier line is not taken as
+    a marker either (#1011).
     """
-    quote = ""
-    word_start = True
+    found: re.Match[str] | None = None
+    word_start = not quote
     index = 0
     while index < len(line):
         char = line[index]
-        if quote:
-            if char == quote:
+        if quote == "'":
+            if char == "'":
                 quote = ""
             index += 1
             continue
         if char == "\\" and index + 1 < len(line):
             index += 2
             word_start = False
+            continue
+        if quote:
+            if char == quote:
+                quote = ""
+            index += 1
             continue
         if char in "'\"":
             quote = char
@@ -480,13 +485,11 @@ def _heredoc_marker_match(line: str) -> re.Match[str] | None:
             continue
         if char == "#" and word_start:
             break  # the rest of the line is a comment
-        if char == "<" and line[index + 1 : index + 2] == "<":
-            match = _HEREDOC_START.match(line, index)
-            if match:
-                return match
+        if found is None and char == "<" and line[index + 1 : index + 2] == "<":
+            found = _HEREDOC_START.match(line, index)
         word_start = char in _COMMENT_WORD_BOUNDARY
         index += 1
-    return None
+    return found, quote
 
 
 def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
@@ -498,9 +501,10 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
     terminator, when present, is line ``body_end``.
     """
     found: list[tuple[int, list[str], int, int]] = []
+    quote = ""  # a quote left open by an earlier line; a body never changes it
     index = 0
     while index < len(lines):
-        match = _heredoc_marker_match(lines[index])
+        match, quote = _heredoc_marker_match(lines[index], quote)
         if not match:
             index += 1
             continue

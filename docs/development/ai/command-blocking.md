@@ -153,9 +153,10 @@ scan is what covers interpreters nobody has listed.
 
 Finding the marker itself has to be quote-aware too: `echo "<<EOF"` is not a heredoc, it is an
 ordinary argument that happens to contain the characters `<<EOF`. `_heredoc_marker_match` walks
-each line with the same quote-tracking the comment stripper uses and only tries the marker pattern
-outside a quote, so a quoted `<<WORD` is left alone and the lines after it are not mistaken for its
-body (#1011).
+each line with the same quote-tracking the comment stripper uses, carrying an open quote from one
+line to the next, and only tries the marker pattern outside a quote. A quoted `<<WORD`, including
+one that closes a string opened on an earlier line, is left alone, and the lines after it are not
+mistaken for its body (#1011).
 
 ```bash
 # BLOCKED - the quoted "<<EOF" is not a heredoc marker, so the read after it is still seen

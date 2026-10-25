@@ -1239,6 +1239,15 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
     ("cat &>/tmp/x ~/.netrc", "BLOCK", "credential path follows a glued &> redirect"),
     ("cat &> /tmp/x ~/.netrc", "BLOCK", "credential path follows a standalone &> redirect"),
     ("cat &>>/tmp/x ~/.netrc", "BLOCK", "credential path follows a glued &>> redirect"),
+    # A `<<EOF` that closes a quote opened on an earlier line is not a marker,
+    # so the line after it is still a command (#1011).
+    ('echo "x\n<<EOF"\ncat ~/.netrc\nEOF', "BLOCK", "marker closes a multi-line double quote"),
+    ("echo 'x\n<<EOF'\ncat ~/.netrc\nEOF", "BLOCK", "marker closes a multi-line single quote"),
+    (
+        'echo "a\nb"\ncat >> notes.md <<EOF\ncat ~/.netrc\nEOF',
+        "ALLOW",
+        "a closed multi-line quote does not hide a real data heredoc after it",
+    ),
 ]
 
 
