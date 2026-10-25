@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792926701321,
+  "lastUpdate": 1792927819671,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17818,6 +17818,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.1257617492802474e-7",
             "extra": "mean: 1.8912005409560944 usec\nrounds: 54903"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd5c800109e17bbbea78e6a89e7ce88fff076087",
+          "message": "fix: treat pre-commit's store as rebuildable when removing a worktree (merges PR #1002, addresses #998)\n\n.envrc sets PRE_COMMIT_HOME to tmp/.pre-commit, so once direnv is\nallowed in a worktree its first commit builds pre-commit's store there.\n.pre-commit matched none of _REBUILDABLE_IGNORED, so doit pr_merge kept\nthe merged worktree. Add it; pre-commit rebuilds the store on its next\nrun.\n\nThe test fixture now ignores tmp/* and tracks tmp/.gitkeep, as the\nrepository does, so git reports tmp/.pre-commit/ itself.\n\nAddresses #998\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T11:29:43Z",
+          "tree_id": "7b8e0c38c22e664be25c18cc676c063a1a0d5475",
+          "url": "https://github.com/endavis/pyproject-template/commit/dd5c800109e17bbbea78e6a89e7ce88fff076087"
+        },
+        "date": 1792927818962,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8455337.58857435,
+            "unit": "iter/sec",
+            "range": "stddev: 1.392853105181962e-8",
+            "extra": "mean: 118.26848893074292 nsec\nrounds: 89526"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8663058.004191656,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1638102742721775e-8",
+            "extra": "mean: 115.4326797207344 nsec\nrounds: 87789"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5359423.347755774,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4804791842183468e-8",
+            "extra": "mean: 186.5872380502921 nsec\nrounds: 57072"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2011493.604851327,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3078799946653547e-7",
+            "extra": "mean: 497.14301730226566 nsec\nrounds: 182482"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 527476.4876351454,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7033423786762043e-7",
+            "extra": "mean: 1.8958190998869666 usec\nrounds: 54482"
           }
         ]
       }
