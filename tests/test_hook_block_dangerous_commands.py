@@ -705,6 +705,16 @@ def test_redirect_fires_only_on_a_commit_heredoc(
         ("git merge feature\necho --ff-only", 2),
         ("git merge feature # --ff-only", 2),
         ("git merge feature #--ff-only", 2),
+        ("git merge feature # c\n--ff-only", 2),
+        # A `#` mid-word, or quoted, is not a comment, so the merge after it runs.
+        ("x#y; git merge feature", 2),
+        ("echo '#' ; git merge feature", 2),
+        ("x\\ #; git merge feature", 2),
+        # A quoted string spanning lines stays one word, and a glued `&&`
+        # still ends the command before it.
+        ('echo "x\n# y" ; git merge feature', 2),
+        ('echo "a\nb"&&git merge feature', 2),
+        ('echo "unterminated\n&&git merge feature', 2),
         # A backslash-newline continuation is still one command.
         ("git \\\nmerge feature", 2),
         ("git merge feature \\\n--ff-only", 0),

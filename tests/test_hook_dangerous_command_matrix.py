@@ -1193,6 +1193,15 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "BLOCK",
         "credential path follows a glued redirect",
     ),
+    # A here-string or heredoc marker does not end the reader's arguments
+    # either: the shell still reads the file named after it.
+    ("cat <<<x ~/.pypirc", "BLOCK", "credential path follows a here-string"),
+    ("cat <<EOF ~/.netrc\nhi\nEOF", "BLOCK", "credential path follows a heredoc marker"),
+    (
+        "cat >> notes.md <<EOF\ncat ~/.netrc\nEOF",
+        "ALLOW",
+        "a credential read written to a file by a data heredoc is not run",
+    ),
 ]
 
 

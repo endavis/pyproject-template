@@ -441,6 +441,39 @@ def _reads_stdin_as_code(words: list[str]) -> bool:
     return True  # bare `bash <<EOF` reads the program from stdin
 
 
+def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
+    """Find each heredoc in *lines*.
+
+    Returns ``(marker_line, owner_words, body_start, body_end)`` per heredoc:
+    the line holding the ``<<`` marker, the words of the command that owns it,
+    and the body as the half-open line range ``[body_start, body_end)``. The
+    terminator, when present, is line ``body_end``.
+    """
+    found: list[tuple[int, list[str], int, int]] = []
+    index = 0
+    while index < len(lines):
+        match = _HEREDOC_START.search(lines[index])
+        if not match:
+            index += 1
+            continue
+
+        strip_leading_tabs = bool(match.group(1))
+        delimiter = match.group(3) or match.group(4) or match.group(5)
+        # The command owning this heredoc is the last segment before it.
+        words = re.split(r"[;&|]", lines[index][: match.start()])[-1].split()
+
+        cursor = index + 1
+        while (
+            cursor < len(lines)
+            and _heredoc_terminator(lines[cursor], strip_leading_tabs) != delimiter
+        ):
+            cursor += 1
+
+        found.append((index, words, index + 1, cursor))
+        index = cursor + 1
+    return found
+
+
 def _heredoc_payloads(command: str) -> list[str]:
     """Return the lines of every heredoc body that its receiver will execute.
 
@@ -454,33 +487,28 @@ def _heredoc_payloads(command: str) -> list[str]:
     Each line is yielded separately because each is its own command to the
     shell, and a command position is what the missing checks require.
     """
-    payloads: list[str] = []
     lines = command.splitlines()
-    index = 0
-    while index < len(lines):
-        match = _HEREDOC_START.search(lines[index])
-        if not match:
-            index += 1
-            continue
-
-        strip_leading_tabs = bool(match.group(1))
-        delimiter = match.group(3) or match.group(4) or match.group(5)
-        # The command owning this heredoc is the last segment before it.
-        words = re.split(r"[;&|]", lines[index][: match.start()])[-1].split()
-
-        body: list[str] = []
-        cursor = index + 1
-        while (
-            cursor < len(lines)
-            and _heredoc_terminator(lines[cursor], strip_leading_tabs) != delimiter
-        ):
-            body.append(lines[cursor])
-            cursor += 1
-
+    payloads: list[str] = []
+    for _marker, words, body_start, body_end in _heredocs(lines):
         if _reads_stdin_as_code(words):
-            payloads += [line for line in body if line.strip()]
-        index = cursor + 1
+            payloads += [line for line in lines[body_start:body_end] if line.strip()]
     return payloads
+
+
+def _without_heredoc_bodies(command: str) -> str:
+    """Return *command* with every heredoc body and terminator line removed.
+
+    A body is the receiver's stdin, not its arguments. The credential-read
+    check scans a reader's arguments past a redirection (#1007, gap 4), so
+    without this `cat >> notes.md <<EOF` would read its own body's text as
+    file names. A body that is run as code is still checked, line by line,
+    through :func:`_heredoc_payloads`.
+    """
+    lines = command.splitlines()
+    dropped: set[int] = set()
+    for _marker, _words, body_start, body_end in _heredocs(lines):
+        dropped.update(range(body_start, body_end + 1))
+    return "\n".join(line for number, line in enumerate(lines) if number not in dropped)
 
 
 # A commit message is data, but a heredoc carrying one is scanned as arguments,
@@ -1045,27 +1073,85 @@ def _command_args(tokens: list[str], start: int) -> list[str]:
 # would split a ``$(...)`` command substitution, separating its trailing ``)``
 # from a word like ``--ff-only)`` and turning it into the literal flag --
 # letting an *unevaluated* ``--ff-only`` inside the substitution count as a
-# real one (#1007, gap 5).
-_MERGE_RULE_PUNCTUATION = "&|;"
+# real one. ``\n`` is here so an unquoted newline ends a command, as the shell
+# reads it, while a quoted one stays inside its word (#1007, gap 5).
+_MERGE_RULE_PUNCTUATION = "&|;\n"
+
+# Characters after which a ``#`` starts a word, and so a comment.
+_COMMENT_WORD_BOUNDARY = frozenset(" \t\n;&|()<>")
 
 
-def _merge_rule_line_tokens(line: str) -> list[str]:
-    """Tokenize one line of a command for the merge rule.
+def _strip_shell_comments(command: str) -> str:
+    """Return *command* without its comments and backslash-newline continuations.
+
+    A ``#`` starts a comment only at the start of a word and outside quotes:
+    ``x#y; git merge feature`` and ``echo '#'; git merge feature`` both still
+    run the merge. shlex's own ``commenters`` cut at any unquoted ``#``, which
+    hid the rest of the line (#1007). A comment runs to the end of its line;
+    the newline itself is kept, since it ends the command.
+    """
+    out: list[str] = []
+    quote = ""
+    word_start = True  # the next character would start a word
+    index = 0
+    while index < len(command):
+        char = command[index]
+        if quote == "'":
+            out.append(char)
+            if char == "'":
+                quote = ""
+            index += 1
+            continue
+        if char == "\\" and index + 1 < len(command):
+            if command[index + 1] != "\n":
+                out.append(command[index : index + 2])
+                word_start = False  # an escaped character is part of a word
+            index += 2  # a continuation joins the next line, as the shell does
+            continue
+        if quote == '"':
+            out.append(char)
+            if char == '"':
+                quote = ""
+            index += 1
+            continue
+        if char in "'\"":
+            quote = char
+        elif char == "#" and word_start:
+            while index < len(command) and command[index] != "\n":
+                index += 1
+            continue
+        word_start = char in _COMMENT_WORD_BOUNDARY
+        out.append(char)
+        index += 1
+    return "".join(out)
+
+
+def _merge_rule_tokens(command: str) -> list[str]:
+    """Tokenize *command* for the merge rule, with each unquoted newline as ``;``.
 
     Built on ``shlex.shlex`` directly rather than :func:`tokenize`, so ``&&``,
-    ``;``, ``|`` and ``&`` are split into their own tokens the way
-    ``_SHELL_OPERATORS``/``_command_args`` expect, and a ``#`` comment (shlex's
-    default ``commenters``) is dropped rather than scanned as arguments.
+    ``;``, ``|``, ``&`` and an unquoted newline become their own tokens the way
+    ``_SHELL_OPERATORS``/``_command_args`` expect. The whole command is lexed at
+    once, so a quoted string spanning lines stays one word instead of breaking
+    the line it starts on.
     """
+    stripped = _strip_shell_comments(command)
     try:
-        lexer = shlex.shlex(line, posix=True, punctuation_chars=_MERGE_RULE_PUNCTUATION)
+        lexer = shlex.shlex(stripped, posix=True, punctuation_chars=_MERGE_RULE_PUNCTUATION)
+        lexer.whitespace = " \t\r"
         lexer.whitespace_split = True
-        return list(lexer)
+        lexer.commenters = ""
+        tokens = list(lexer)
     except ValueError:
-        # Malformed quoting on this one line; fall back to a plain split
-        # rather than raising. The command is still checked by every other
-        # rule through the normal `tokenize()` path.
-        return line.split()
+        # Malformed quoting. Split on whitespace and operators instead, so a
+        # glued ``&&git merge`` still yields its own ``git`` token.
+        tokens = re.findall(r"[;&|\n]+|[^\s;&|]+", stripped)
+    # A run of operators that includes a newline is a separator, whatever else
+    # it holds: ``&&\n`` and ``;\n`` both end the command.
+    return [
+        ";" if "\n" in token and not token.strip(_MERGE_RULE_PUNCTUATION) else token
+        for token in tokens
+    ]
 
 
 def check_merge_to_protected(command: str) -> tuple[bool, str]:
@@ -1080,38 +1166,32 @@ def check_merge_to_protected(command: str) -> tuple[bool, str]:
     anywhere on the line refused read-only commands such as
     ``git log --grep merge`` and let ``git merge x; echo --ff-only`` through (#894).
 
-    Takes the raw *command* rather than pre-tokenized tokens, and re-tokenizes
-    it one physical line at a time with its own shlex instance (#1007, gap 5):
-    the shared ``tokenize()`` call treats a newline as ordinary whitespace, so
-    ``--ff-only`` on the line *after* a ``git merge`` tokenized as if it were
-    that command's own argument. Splitting on newlines first, and using a
-    shlex that treats ``#`` as a comment, closes both that gap and the
-    sibling one where ``--ff-only`` sat inside a trailing comment. A
-    backslash-newline continuation is joined first, as the shell does, so
-    ``git \\<newline>merge x`` is still one command.
+    Takes the raw *command* rather than the shared ``tokenize()`` tokens, which
+    treat a newline as whitespace and read a ``#`` comment as arguments: either
+    let a ``--ff-only`` on the next line, or in a trailing comment, count for
+    the ``git merge`` before it (#1007, gap 5).
     """
-    for line in command.replace("\\\n", " ").splitlines():
-        tokens = _merge_rule_line_tokens(line)
-        tokens_lower = [t.lower() for t in tokens]
+    tokens = _merge_rule_tokens(command)
+    tokens_lower = [t.lower() for t in tokens]
 
-        for git_idx in range(len(tokens_lower)):
-            if tokens_lower[git_idx] != "git":
-                continue
-            subcommand_idx = _git_subcommand_index(tokens, git_idx)
-            if subcommand_idx is None or tokens_lower[subcommand_idx] != "merge":
-                continue
-            # Allow a fast-forward-only merge (no merge commit)
-            if "--ff-only" in _command_args(tokens_lower, subcommand_idx + 1):
-                continue
+    for git_idx in range(len(tokens_lower)):
+        if tokens_lower[git_idx] != "git":
+            continue
+        subcommand_idx = _git_subcommand_index(tokens, git_idx)
+        if subcommand_idx is None or tokens_lower[subcommand_idx] != "merge":
+            continue
+        # Allow a fast-forward-only merge (no merge commit)
+        if "--ff-only" in _command_args(tokens_lower, subcommand_idx + 1):
+            continue
 
-            # Check if we're on a protected branch
-            current_branch = get_current_branch()
-            if current_branch and current_branch.lower() in PROTECTED_BRANCHES:
-                return True, (
-                    f"Merge on protected branch '{current_branch}' would create merge commit. "
-                    f"Use --ff-only for fast-forward merge, or merge via PR"
-                )
-            return False, ""
+        # Check if we're on a protected branch
+        current_branch = get_current_branch()
+        if current_branch and current_branch.lower() in PROTECTED_BRANCHES:
+            return True, (
+                f"Merge on protected branch '{current_branch}' would create merge commit. "
+                f"Use --ff-only for fast-forward merge, or merge via PR"
+            )
+        return False, ""
 
     return False, ""
 
@@ -1221,8 +1301,7 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
     writer for that one argument, but `cat /dev/null > /tmp/x ~/.pypirc` still
     reads `~/.pypirc` as a second, un-redirected argument. A glued form such as
     `>/tmp/x` carries its target in the same token, so only the token itself is
-    skipped. A heredoc marker (`<<...`) still ends the scan, which keeps the
-    `cat >> notes.md <<EOF` data-heredoc case allowed.
+    skipped.
     """
     for index in _command_start_indices(tokens):
         if index >= len(tokens) or tokens[index] not in _CREDENTIAL_READER_COMMANDS:
@@ -1232,8 +1311,6 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
             if skip_next:
                 skip_next = False
                 continue
-            if argument.startswith("<<"):
-                break
             redirect_match = _REDIRECT_TOKEN_RE.match(argument)
             if redirect_match:
                 if redirect_match.end() == len(argument):
@@ -1286,7 +1363,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     if is_dangerous:
         return True, reason
 
-    is_dangerous, reason = check_credential_file_read(tokens)
+    is_dangerous, reason = check_credential_file_read(tokenize(_without_heredoc_bodies(command)))
     if is_dangerous:
         return True, reason
 
