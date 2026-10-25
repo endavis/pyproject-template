@@ -59,9 +59,9 @@ git status; git push origin feat/branch
 
 #### Key Feature: Git Global Option Handling
 
-Git global options (e.g., `-C <path>`, `-c <k>=<v>`, `--git-dir=<dir>`) appear between the `git`
-token and the subcommand. The hook walks past them to find the real subcommand, so these are all
-caught:
+Git global options (e.g., `-C <path>`, `-c <k>=<v>`, `--git-dir=<dir>`, `--attr-source <ref>`,
+`--config-env <var>=<envvar>`) appear between the `git` token and the subcommand. The hook walks
+past them to find the real subcommand, so these are all caught:
 
 ```bash
 # BLOCKED - global options shift the subcommand position, but hook handles them
@@ -580,6 +580,9 @@ Force push, delete, and merge operations are only blocked when targeting protect
 | `git merge branch` (on main) | BLOCKED (creates merge commit) |
 | `git merge --ff-only branch` (on main) | ALLOWED (fast-forward only) |
 | `git merge branch; echo --ff-only` (on main) | BLOCKED (`--ff-only` counts only on the merge itself) |
+| `git merge branch\necho --ff-only` (on main) | BLOCKED (a newline doesn't end the command either) |
+| `git merge branch # --ff-only` (on main) | BLOCKED (`#` starts a comment, not an argument) |
+| `git --attr-source HEAD merge branch` (on main) | BLOCKED (`--attr-source` is a value-taking global option) |
 | `git log --grep merge` (on main) | ALLOWED (a `git log`, not a merge) |
 | `git merge branch` (on feature) | ALLOWED |
 
