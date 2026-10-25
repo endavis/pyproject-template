@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792669614203,
+  "lastUpdate": 1792926701321,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17759,6 +17759,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6601425184178346e-7",
             "extra": "mean: 1.834243796290803 usec\nrounds: 56571"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a8ce3db40eaa3a3356f11a25b4592059da0b45f0",
+          "message": "chore: bump filelock to clear pip-audit CVEs (merges PR #1001, addresses #999)\n\nfilelock 4.0.8 carries CVE-2026-112940, -112913 and -112907, which fail\nthe audit task in the scheduled doit check on main. Upgrade it to 4.2.4\nin uv.lock. It comes in transitively through virtualenv/python-discovery\n(pre-commit) and cachecontrol (pip-audit).\n\nAddresses #999\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T11:10:47Z",
+          "tree_id": "f3d759bbe78e2ce0ce11e945165b1a1321c70a7f",
+          "url": "https://github.com/endavis/pyproject-template/commit/a8ce3db40eaa3a3356f11a25b4592059da0b45f0"
+        },
+        "date": 1792926700022,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8333747.07192202,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2242608549545957e-7",
+            "extra": "mean: 119.9940424601066 nsec\nrounds: 89119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8808323.831460388,
+            "unit": "iter/sec",
+            "range": "stddev: 1.216799689347228e-8",
+            "extra": "mean: 113.52897771859092 nsec\nrounds: 92499"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5471878.180127647,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7716182559727775e-8",
+            "extra": "mean: 182.75260652397643 nsec\nrounds: 58062"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 1899737.1428451221,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9108300886635532e-7",
+            "extra": "mean: 526.3886131648509 nsec\nrounds: 185874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 528764.6541674798,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1257617492802474e-7",
+            "extra": "mean: 1.8912005409560944 usec\nrounds: 54903"
           }
         ]
       }
