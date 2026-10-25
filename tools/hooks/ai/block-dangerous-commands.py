@@ -441,8 +441,8 @@ def _reads_stdin_as_code(words: list[str]) -> bool:
     return True  # bare `bash <<EOF` reads the program from stdin
 
 
-# Returned by `_heredoc_marker_match` as the open "quote" once a line nests a
-# command substitution inside a double quote, where bash's quoting is no longer
+# Returned by `_heredoc_marker_match` as the open "quote" once a line nests an
+# expansion inside a double quote, where bash's quoting is no longer
 # a single flat state this scan can follow (#1011).
 _QUOTING_UNCLEAR = "$("
 
@@ -465,9 +465,9 @@ def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | N
     ``<<EOF"`` that closes a string opened on an earlier line is not taken as
     a marker either (#1011).
 
-    Inside a double quote, ``$(`` or a backtick starts a command substitution
-    whose own quotes nest (``"$(echo "x")"``), which a flat quote state cannot
-    follow. The scan stops there and returns ``_QUOTING_UNCLEAR`` as the quote,
+    Inside a double quote, ``$(``, ``${`` or a backtick starts an expansion
+    whose own quotes nest (``"$(echo "x")"``, ``"${x:-"y"}"``), which a flat
+    quote state cannot follow. The scan stops there and returns ``_QUOTING_UNCLEAR`` as the quote,
     so the caller can fail closed.
     """
     found: re.Match[str] | None = None
@@ -485,7 +485,7 @@ def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | N
             word_start = False
             continue
         if quote:
-            if char == "`" or line.startswith("$(", index):
+            if char == "`" or line.startswith(("$(", "${"), index):
                 return found, _QUOTING_UNCLEAR
             if char == quote:
                 quote = ""

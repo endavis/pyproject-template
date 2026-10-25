@@ -157,8 +157,8 @@ each line with the same quote-tracking the comment stripper uses, carrying an op
 line to the next, and only tries the marker pattern outside a quote. A quoted `<<WORD`, including
 one that closes a string opened on an earlier line, is left alone, and the lines after it are not
 mistaken for its body (#1011). Where the quoting is too tangled to follow (a marker line that ends
-inside a quote, or a `$(...)` or backtick substitution inside a double quote, whose own quotes
-nest), the hook stops stripping heredoc bodies from that point on, so every later line is still
+inside a quote, or a `$(...)`, `${...}` or backtick expansion inside a double quote, whose own
+quotes nest), the hook stops stripping heredoc bodies from that point on, so every later line is still
 scanned.
 
 ```bash

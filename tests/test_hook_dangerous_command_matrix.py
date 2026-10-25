@@ -1272,6 +1272,11 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "BLOCK",
         "marker inside a quote nested in a backtick substitution",
     ),
+    (
+        'echo "${x:-"x\n<<EOF"}"\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker inside a quote nested in a parameter expansion",
+    ),
 ]
 
 
