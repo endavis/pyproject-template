@@ -508,6 +508,12 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
         if not match:
             index += 1
             continue
+        if quote:
+            # The marker line ends inside a quote, which the shell keeps
+            # reading into the lines that look like the body. Where the body
+            # really starts is unclear, so stop finding heredocs: nothing from
+            # here on is stripped, and every later line stays in the scans.
+            break
 
         strip_leading_tabs = bool(match.group(1))
         delimiter = match.group(3) or match.group(4) or match.group(5)

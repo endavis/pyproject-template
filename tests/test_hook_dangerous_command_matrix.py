@@ -1248,6 +1248,18 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "ALLOW",
         "a closed multi-line quote does not hide a real data heredoc after it",
     ),
+    # A marker line that ends inside a quote leaves where the body starts
+    # unclear, so nothing after it is stripped (#1011).
+    (
+        'cat <<EOF "\nx\nEOF\n"<<EOF\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker line ends inside a double quote",
+    ),
+    (
+        "cat <<EOF '\nx\nEOF\n'<<EOF\ncat ~/.netrc\nEOF",
+        "BLOCK",
+        "marker line ends inside a single quote",
+    ),
 ]
 
 
