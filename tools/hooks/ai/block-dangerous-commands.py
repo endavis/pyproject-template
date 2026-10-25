@@ -1441,14 +1441,21 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # body's own quoting as part of the surrounding command (#1011).
     stripped = _without_heredoc_bodies(command)
 
-    # Check for environment dumps and credential-store reads
-    is_dangerous, reason = check_env_dump(_structural_tokens(stripped))
-    if is_dangerous:
-        return True, reason
-
-    is_dangerous, reason = check_credential_file_read(_structural_tokens(stripped))
-    if is_dangerous:
-        return True, reason
+    # Check for environment dumps and credential-store reads. Each check runs on
+    # the structural tokens, which find a command after a newline or a glued
+    # separator, and also on the `tokenize()` input it had before #1011. That
+    # second pass keeps every block the first one would lose to the new
+    # tokenizer, such as `cat &>/tmp/x ~/.netrc`, where `&>` splits into a
+    # separator `&` and `>/tmp/x`.
+    structural = _structural_tokens(stripped)
+    for check, legacy in (
+        (check_env_dump, tokens),
+        (check_credential_file_read, tokenize(stripped)),
+    ):
+        for check_tokens in (structural, legacy):
+            is_dangerous, reason = check(check_tokens)
+            if is_dangerous:
+                return True, reason
 
     # Check for push to protected branches (regular or force)
     is_dangerous, reason = check_push_to_protected(tokens)

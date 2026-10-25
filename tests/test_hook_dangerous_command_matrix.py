@@ -1234,6 +1234,11 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "BLOCK",
         "env dump survives a 2>&1 redirect before it",
     ),
+    # `&>` is one redirect, not a background `&` followed by `>` (#1011). The
+    # structural tokenizer splits it, so the tokenize() pass has to catch it.
+    ("cat &>/tmp/x ~/.netrc", "BLOCK", "credential path follows a glued &> redirect"),
+    ("cat &> /tmp/x ~/.netrc", "BLOCK", "credential path follows a standalone &> redirect"),
+    ("cat &>>/tmp/x ~/.netrc", "BLOCK", "credential path follows a glued &>> redirect"),
 ]
 
 
