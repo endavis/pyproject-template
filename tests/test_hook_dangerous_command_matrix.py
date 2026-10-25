@@ -1202,6 +1202,38 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "ALLOW",
         "a credential read written to a file by a data heredoc is not run",
     ),
+    # Gap 1 (#1011, regression from #1010): a quoted `<<WORD` was mistaken for
+    # a real heredoc marker, so `_without_heredoc_bodies` dropped the lines
+    # after it -- the credential read following the quoted `"<<EOF"` was never
+    # scanned.
+    (
+        'echo "<<EOF" ;\ncat ~/.netrc',
+        "BLOCK",
+        "a quoted heredoc marker does not hide the read after it",
+    ),
+    # Gap 2 (#1011, predates #1010): `_command_start_indices`'s callers got
+    # `tokenize()` tokens, which treat a newline as whitespace and keep a
+    # glued `;` stuck to its neighbour -- so a command position after either
+    # was invisible to the credential-read and env-dump checks.
+    ("echo hi; cat ~/.netrc", "BLOCK", "credential read after a glued semicolon"),
+    ("echo hi\ncat ~/.netrc", "BLOCK", "credential read after an unquoted newline"),
+    (
+        'echo "<<EOF"\ncat ~/.netrc',
+        "BLOCK",
+        "credential read after a newline, with a quoted << earlier on the line",
+    ),
+    ("true\nprintenv", "BLOCK", "bare printenv after an unquoted newline"),
+    # Should still block after the tokenizer swap to `_structural_tokens`:
+    # that tokenizer splits `2>&1` into `2>`, `&`, `1`, so the redirect-skip
+    # logic in `check_credential_file_read` must still see `2>` as a single
+    # redirect token and the env-dump command-start scan must still treat `&`
+    # as a separator rather than part of a word.
+    ("cat foo 2>&1 ~/.netrc", "BLOCK", "credential path survives a 2>&1 redirect"),
+    (
+        "cat foo 2>&1 && printenv MY_API_KEY",
+        "BLOCK",
+        "env dump survives a 2>&1 redirect before it",
+    ),
 ]
 
 

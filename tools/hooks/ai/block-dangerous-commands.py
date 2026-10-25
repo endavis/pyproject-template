@@ -441,6 +441,54 @@ def _reads_stdin_as_code(words: list[str]) -> bool:
     return True  # bare `bash <<EOF` reads the program from stdin
 
 
+def _heredoc_marker_match(line: str) -> re.Match[str] | None:
+    """Return the first ``_HEREDOC_START`` match outside quotes and comments.
+
+    A bare ``.search()`` over the raw line, as used before this fix, takes any
+    ``<<`` on the line -- including one inside a quoted string. ``echo
+    "<<EOF"`` was therefore mistaken for a real heredoc marker, and the lines
+    after it were dropped from the credential-read check as though they were
+    its body (regression from #1010, gap 1). This walks the line with the same
+    quote-and-comment state machine :func:`_strip_shell_comments` uses --
+    single- and double-quoted runs are skipped, a backslash escapes the next
+    character, and an unquoted ``#`` ends the scan -- and only tries the
+    marker regex where that state is bare.
+
+    Known, more conservative limit: quote state resets at the start of every
+    line, the same way :func:`_strip_shell_comments`'s comment state does, so
+    a ``<<'EOF'`` inside a ``"$(...)"`` opened on an earlier line is not
+    recognised as a heredoc and its body is not stripped.
+    """
+    quote = ""
+    word_start = True
+    index = 0
+    while index < len(line):
+        char = line[index]
+        if quote:
+            if char == quote:
+                quote = ""
+            index += 1
+            continue
+        if char == "\\" and index + 1 < len(line):
+            index += 2
+            word_start = False
+            continue
+        if char in "'\"":
+            quote = char
+            index += 1
+            word_start = False
+            continue
+        if char == "#" and word_start:
+            break  # the rest of the line is a comment
+        if char == "<" and line[index + 1 : index + 2] == "<":
+            match = _HEREDOC_START.match(line, index)
+            if match:
+                return match
+        word_start = char in _COMMENT_WORD_BOUNDARY
+        index += 1
+    return None
+
+
 def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
     """Find each heredoc in *lines*.
 
@@ -452,7 +500,7 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
     found: list[tuple[int, list[str], int, int]] = []
     index = 0
     while index < len(lines):
-        match = _HEREDOC_START.search(lines[index])
+        match = _heredoc_marker_match(lines[index])
         if not match:
             index += 1
             continue
@@ -1067,14 +1115,17 @@ def _command_args(tokens: list[str], start: int) -> list[str]:
     return args
 
 
-# Punctuation characters the merge rule's own tokenizer splits into standalone
+# Punctuation characters the structural tokenizer splits into standalone
 # tokens. Deliberately narrower than shlex's default punctuation set
 # (``();<>|&``, used when ``punctuation_chars=True``): including ``(``/``)``
 # would split a ``$(...)`` command substitution, separating its trailing ``)``
 # from a word like ``--ff-only)`` and turning it into the literal flag --
 # letting an *unevaluated* ``--ff-only`` inside the substitution count as a
-# real one. ``\n`` is here so an unquoted newline ends a command, as the shell
-# reads it, while a quoted one stays inside its word (#1007, gap 5).
+# real one. ``>`` is also absent, so a redirect like ``2>&1`` or ``1>`` keeps
+# its leading digit glued on instead of splitting into a bare ``>`` that no
+# longer matches ``_REDIRECT_TOKEN_RE``. ``\n`` is here so an unquoted newline
+# ends a command, as the shell reads it, while a quoted one stays inside its
+# word (#1007, gap 5).
 _MERGE_RULE_PUNCTUATION = "&|;\n"
 
 # Characters after which a ``#`` starts a word, and so a comment.
@@ -1126,14 +1177,23 @@ def _strip_shell_comments(command: str) -> str:
     return "".join(out)
 
 
-def _merge_rule_tokens(command: str) -> list[str]:
-    """Tokenize *command* for the merge rule, with each unquoted newline as ``;``.
+def _structural_tokens(command: str) -> list[str]:
+    """Tokenize *command* with each unquoted newline or glued separator as its own token.
 
-    Built on ``shlex.shlex`` directly rather than :func:`tokenize`, so ``&&``,
-    ``;``, ``|``, ``&`` and an unquoted newline become their own tokens the way
-    ``_SHELL_OPERATORS``/``_command_args`` expect. The whole command is lexed at
-    once, so a quoted string spanning lines stays one word instead of breaking
-    the line it starts on.
+    Built on ``shlex.shlex`` directly rather than :func:`tokenize` (``shlex.
+    split``), so ``&&``, ``;``, ``|``, ``&`` and an unquoted newline become
+    their own tokens the way ``_SHELL_OPERATORS``/``_command_args`` expect.
+    ``tokenize()`` treats a newline as ordinary whitespace and leaves a glued
+    separator (``hi;``) stuck to its neighbour, so a command position after
+    either was invisible to any check anchored on :func:`_command_start_indices`
+    (#1011, gap 2) -- the merge rule (:func:`check_merge_to_protected`),
+    :func:`check_env_dump` and :func:`check_credential_file_read` all need one.
+    The whole command is lexed at once, so a quoted string spanning lines
+    stays one word instead of breaking the line it starts on.
+
+    Written for the merge rule (then named ``_merge_rule_tokens``); renamed
+    when the other two checks started reusing it (#1011). Its behaviour is
+    unchanged by the rename.
     """
     stripped = _strip_shell_comments(command)
     try:
@@ -1166,12 +1226,17 @@ def check_merge_to_protected(command: str) -> tuple[bool, str]:
     anywhere on the line refused read-only commands such as
     ``git log --grep merge`` and let ``git merge x; echo --ff-only`` through (#894).
 
-    Takes the raw *command* rather than the shared ``tokenize()`` tokens, which
-    treat a newline as whitespace and read a ``#`` comment as arguments: either
-    let a ``--ff-only`` on the next line, or in a trailing comment, count for
-    the ``git merge`` before it (#1007, gap 5).
+    Takes *command* with its heredoc bodies already removed (``check_command``
+    passes the result of :func:`_without_heredoc_bodies`) rather than the
+    shared ``tokenize()`` tokens: ``tokenize()`` treats a newline as whitespace
+    and reads a ``#`` comment as arguments, either of which would let a
+    ``--ff-only`` on the next line, or in a trailing comment, count for the
+    ``git merge`` before it (#1007, gap 5). An unstripped heredoc body is worse
+    -- an unbalanced quote inside it can swallow every command after its
+    terminator, hiding a real ``git merge`` from this scan entirely (#1011,
+    gap 3).
     """
-    tokens = _merge_rule_tokens(command)
+    tokens = _structural_tokens(command)
     tokens_lower = [t.lower() for t in tokens]
 
     for git_idx in range(len(tokens_lower)):
@@ -1223,6 +1288,12 @@ def check_env_dump(tokens: list[str]) -> tuple[bool, str]:
     Distinguishes a *dump* from an *invocation*: ``env`` with no trailing
     command prints everything, while ``env -u FOO cmd`` and ``env VAR=1 cmd``
     merely run ``cmd`` with a modified environment and are left alone.
+
+    Anchored on :func:`_command_start_indices`, so *tokens* must come from
+    :func:`_structural_tokens` rather than the shared ``tokenize()``:
+    ``tokenize()`` treats an unquoted newline as whitespace and leaves a glued
+    separator (``hi;printenv``) stuck to its neighbour, so neither ever placed
+    a command at the start of a line or after a glued ``;`` (#1011, gap 2).
     """
     for index in _command_start_indices(tokens):
         if index >= len(tokens) or tokens[index] not in _ENV_DUMP_COMMANDS:
@@ -1302,6 +1373,12 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
     reads `~/.pypirc` as a second, un-redirected argument. A glued form such as
     `>/tmp/x` carries its target in the same token, so only the token itself is
     skipped.
+
+    Anchored on :func:`_command_start_indices`, so *tokens* must come from
+    :func:`_structural_tokens` rather than the shared ``tokenize()``:
+    ``tokenize()`` treats an unquoted newline as whitespace and leaves a glued
+    separator (``hi;cat``) stuck to its neighbour, so neither ever placed a
+    command at the start of a line or after a glued ``;`` (#1011, gap 2).
     """
     for index in _command_start_indices(tokens):
         if index >= len(tokens) or tokens[index] not in _CREDENTIAL_READER_COMMANDS:
@@ -1358,12 +1435,18 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     if is_dangerous:
         return True, reason
 
+    # *command* with every heredoc body and terminator line removed. Shared by
+    # the three checks below that need a command position across an unquoted
+    # newline or a glued separator, or that would otherwise lex a heredoc
+    # body's own quoting as part of the surrounding command (#1011).
+    stripped = _without_heredoc_bodies(command)
+
     # Check for environment dumps and credential-store reads
-    is_dangerous, reason = check_env_dump(tokens)
+    is_dangerous, reason = check_env_dump(_structural_tokens(stripped))
     if is_dangerous:
         return True, reason
 
-    is_dangerous, reason = check_credential_file_read(tokenize(_without_heredoc_bodies(command)))
+    is_dangerous, reason = check_credential_file_read(_structural_tokens(stripped))
     if is_dangerous:
         return True, reason
 
@@ -1377,10 +1460,15 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     if is_dangerous:
         return True, reason
 
-    # Check for merge commits on protected branches
-    is_dangerous, reason = check_merge_to_protected(command)
-    if is_dangerous:
-        return True, reason
+    # Check for merge commits on protected branches. The stripped command keeps
+    # a heredoc body's stray quote from hiding a later `git merge` (#1011, gap
+    # 3); the full command still sees a merge inside a body whose receiver the
+    # hook does not recognise as running it, such as `env -i bash <<EOF`.
+    # Skipping bodies by receiver alone would be a bypass (ADR-9019, rule 3).
+    for source in (stripped, command):
+        is_dangerous, reason = check_merge_to_protected(source)
+        if is_dangerous:
+            return True, reason
 
     # Check for blocked workflow commands
     is_dangerous, reason = check_blocked_workflow_commands(tokens)
