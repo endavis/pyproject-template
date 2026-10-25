@@ -1260,6 +1260,18 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "BLOCK",
         "marker line ends inside a single quote",
     ),
+    # A command substitution inside a double quote nests its own quotes, so
+    # nothing after it is stripped as a heredoc body (#1011).
+    (
+        'echo "$(echo "x\n<<EOF")"\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker inside a quote nested in a command substitution",
+    ),
+    (
+        'echo "`echo "x\n<<EOF"`"\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker inside a quote nested in a backtick substitution",
+    ),
 ]
 
 

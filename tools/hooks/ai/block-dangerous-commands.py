@@ -441,6 +441,12 @@ def _reads_stdin_as_code(words: list[str]) -> bool:
     return True  # bare `bash <<EOF` reads the program from stdin
 
 
+# Returned by `_heredoc_marker_match` as the open "quote" once a line nests a
+# command substitution inside a double quote, where bash's quoting is no longer
+# a single flat state this scan can follow (#1011).
+_QUOTING_UNCLEAR = "$("
+
+
 def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | None, str]:
     """Return the first ``_HEREDOC_START`` match outside quotes and comments.
 
@@ -458,6 +464,11 @@ def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | N
     item returned is the quote still open at the end of this one, so a
     ``<<EOF"`` that closes a string opened on an earlier line is not taken as
     a marker either (#1011).
+
+    Inside a double quote, ``$(`` or a backtick starts a command substitution
+    whose own quotes nest (``"$(echo "x")"``), which a flat quote state cannot
+    follow. The scan stops there and returns ``_QUOTING_UNCLEAR`` as the quote,
+    so the caller can fail closed.
     """
     found: re.Match[str] | None = None
     word_start = not quote
@@ -474,6 +485,8 @@ def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | N
             word_start = False
             continue
         if quote:
+            if char == "`" or line.startswith("$(", index):
+                return found, _QUOTING_UNCLEAR
             if char == quote:
                 quote = ""
             index += 1
@@ -505,6 +518,11 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
     index = 0
     while index < len(lines):
         match, quote = _heredoc_marker_match(lines[index], quote)
+        if quote == _QUOTING_UNCLEAR:
+            # A command substitution inside a double quote: its own quotes
+            # nest, so whether a later `<<` is a marker is unclear. Stop
+            # finding heredocs, as for a marker line ending inside a quote.
+            break
         if not match:
             index += 1
             continue
