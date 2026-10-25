@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792933846232,
+  "lastUpdate": 1792966155439,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17995,6 +17995,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.0966190120384259e-7",
             "extra": "mean: 1.4144634940499592 usec\nrounds: 72569"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fb5f6c3c79af6ee7d93a8fac127a37a476a88077",
+          "message": "fix: keep an existing settings.toml when bootstrap --sync runs again (merges PR #1009, addresses #1008)\n\nrun_sync() rewrote .config/pyproject_template/settings.toml on every\nrun, with an empty [template] commit and commit_date, so each sync\nerased the project's recorded sync point. It now creates the file only\nwhen it is missing, as the sync checklist already says.\n\nAddresses #1008\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T22:08:34Z",
+          "tree_id": "aca92f74c981a961836819ab02126634f18c82d4",
+          "url": "https://github.com/endavis/pyproject-template/commit/fb5f6c3c79af6ee7d93a8fac127a37a476a88077"
+        },
+        "date": 1792966154191,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10711111.92470673,
+            "unit": "iter/sec",
+            "range": "stddev: 7.684864011483471e-9",
+            "extra": "mean: 93.36098875909937 nsec\nrounds: 113961"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11088601.781190779,
+            "unit": "iter/sec",
+            "range": "stddev: 9.729912436221808e-9",
+            "extra": "mean: 90.1826956845241 nsec\nrounds: 115607"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6517443.460677814,
+            "unit": "iter/sec",
+            "range": "stddev: 4.549745307609064e-8",
+            "extra": "mean: 153.4343958690821 nsec\nrounds: 70978"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2272437.636125784,
+            "unit": "iter/sec",
+            "range": "stddev: 5.533422735505557e-8",
+            "extra": "mean: 440.0560807929904 nsec\nrounds: 189430"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 631108.0354938242,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7896788434931424e-7",
+            "extra": "mean: 1.584514764128345 usec\nrounds: 67664"
           }
         ]
       }
