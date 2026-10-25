@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792931669201,
+  "lastUpdate": 1792933846232,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17936,6 +17936,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.785507286927804e-7",
             "extra": "mean: 1.8840394788525114 usec\nrounds: 54994"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "72dd3cd574484ec7df76d792b69979edac5c8e36",
+          "message": "feat: warn when the downstream template-sync skill is older than the template's (merges PR #1005, addresses #1004)\n\nbootstrap --sync refreshes tools/pyproject_template/ but not the\ntemplate-sync skill, so each sync followed the previous sync's\ninstructions. manage.py check now compares the .agents/ and .claude/\nSKILL.md copies with the downloaded template and warns, before the\ndrift report, naming the upstream file at the compared ref. It never\nwrites them; adoption stays in the triage. The skill's Step 1 and the\nchecklist's Pre-Flight gain a fetch-and-diff step 0.\n\nAddresses #1004\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T13:10:06Z",
+          "tree_id": "5ff415399023b64fb2fd6b0cb6da8611f13713a0",
+          "url": "https://github.com/endavis/pyproject-template/commit/72dd3cd574484ec7df76d792b69979edac5c8e36"
+        },
+        "date": 1792933845412,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11302712.333471928,
+            "unit": "iter/sec",
+            "range": "stddev: 8.00815858605971e-9",
+            "extra": "mean: 88.47433876898673 nsec\nrounds: 115701"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11551062.423095733,
+            "unit": "iter/sec",
+            "range": "stddev: 8.100835692041467e-9",
+            "extra": "mean: 86.57212327071781 nsec\nrounds: 117206"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8316632.937720058,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0959328739123585e-8",
+            "extra": "mean: 120.24096860936399 nsec\nrounds: 85566"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2850970.3540015453,
+            "unit": "iter/sec",
+            "range": "stddev: 4.273890571567066e-8",
+            "extra": "mean: 350.7577687001995 nsec\nrounds: 197356"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 706981.8374292237,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0966190120384259e-7",
+            "extra": "mean: 1.4144634940499592 usec\nrounds: 72569"
           }
         ]
       }
