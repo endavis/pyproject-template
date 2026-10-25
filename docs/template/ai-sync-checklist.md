@@ -31,6 +31,15 @@ This checklist guides an AI agent through synchronizing a downstream project wit
 
 ## Pre-Flight
 
+- [ ] Check this checklist and skill against the upstream copy:
+  ```bash
+  curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/.agents/skills/template-sync/SKILL.md \
+    -o tmp/agents/<agent>/template-sync-upstream-SKILL.md
+  diff tmp/agents/<agent>/template-sync-upstream-SKILL.md .agents/skills/template-sync/SKILL.md
+  ```
+  If they differ, follow the fetched version for this sync instead of this checklist's copy. The
+  local skill copy is adopted later through the normal drift triage (Phase 2 onward), not by
+  overwriting it here — `manage.py check` only warns about it and never writes it.
 - [ ] Verify on `main` branch and clean working tree (`git status`)
 - [ ] Run `doit check` to confirm current state passes
 - [ ] Create a GitHub Issue for the sync work:
@@ -65,6 +74,13 @@ This will:
 template version it was fetched with. If your local tooling is older than the template version you are
 comparing against, the checker may miss or misreport differences. Always run `bootstrap --sync` before running
 the drift check.
+
+**Why the Pre-Flight step 0 above matters:** `bootstrap --sync` refreshes `tools/pyproject_template/`
+but not this checklist or the `template-sync` skill copies themselves — those are downstream-owned
+and only adopted through triage. Without the fetch-and-diff in Pre-Flight, a sync follows whatever
+procedure the *previous* sync adopted, so a change to the sync procedure itself only takes effect one
+sync late. `manage.py check` (Phase 2) backs this up: it warns, before the drift report, when either
+local `SKILL.md` copy is stale, but it never writes those files.
 
 **Template-owned tests:** The files listed in `TEMPLATE_OWNED_TEST_FILES` are excluded from the drift
 report and shed by `cleanup --setup`; you do not need to adopt or maintain them. A test is

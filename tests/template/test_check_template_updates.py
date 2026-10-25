@@ -11,9 +11,12 @@ import pytest
 
 from tools.pyproject_template import check_template_updates as ctu
 from tools.pyproject_template.check_template_updates import (
+    TEMPLATE_SYNC_SKILL_REL_PATHS,
     _emit_coupling_warnings,
+    _warn_stale_template_sync_skill,
     compare_files,
     load_sync_excludes,
+    stale_template_sync_skill_copies,
 )
 from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
 
@@ -302,6 +305,164 @@ class TestEmitCouplingWarnings:
         _emit_coupling_warnings(different_files, project)
         captured = capsys.readouterr()
         assert "bootstrap" not in captured.out
+
+
+def _write_skill_copies(root: Path, agents_content: str, claude_content: str) -> None:
+    """Write both ``template-sync`` ``SKILL.md`` copies under ``root``."""
+    for rel, content in zip(
+        TEMPLATE_SYNC_SKILL_REL_PATHS, (agents_content, claude_content), strict=True
+    ):
+        path = root / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+
+
+class TestStaleTemplateSyncSkillCopies:
+    """Tests for ``stale_template_sync_skill_copies``."""
+
+    @pytest.fixture
+    def project(self, tmp_path: Path) -> Path:
+        p = tmp_path / "project"
+        p.mkdir()
+        return p
+
+    @pytest.fixture
+    def template(self, tmp_path: Path) -> Path:
+        t = tmp_path / "template"
+        t.mkdir()
+        return t
+
+    def test_both_copies_match_returns_empty(self, project: Path, template: Path) -> None:
+        _write_skill_copies(project, "same-agents", "same-claude")
+        _write_skill_copies(template, "same-agents", "same-claude")
+        assert stale_template_sync_skill_copies(project, template) == []
+
+    def test_claude_copy_differs(self, project: Path, template: Path) -> None:
+        _write_skill_copies(project, "same-agents", "old-claude")
+        _write_skill_copies(template, "same-agents", "new-claude")
+        stale = stale_template_sync_skill_copies(project, template)
+        assert stale == [Path(".claude/skills/template-sync/SKILL.md")]
+
+    def test_agents_copy_differs(self, project: Path, template: Path) -> None:
+        _write_skill_copies(project, "old-agents", "same-claude")
+        _write_skill_copies(template, "new-agents", "same-claude")
+        stale = stale_template_sync_skill_copies(project, template)
+        assert stale == [Path(".agents/skills/template-sync/SKILL.md")]
+
+    def test_a_copy_missing_is_stale(self, project: Path, template: Path) -> None:
+        # Project has only the .claude/ copy; .agents/ is missing entirely.
+        claude_rel = TEMPLATE_SYNC_SKILL_REL_PATHS[1]
+        claude_path = project / claude_rel
+        claude_path.parent.mkdir(parents=True)
+        claude_path.write_text("same-claude", encoding="utf-8")
+        _write_skill_copies(template, "new-agents", "same-claude")
+        stale = stale_template_sync_skill_copies(project, template)
+        assert stale == [Path(TEMPLATE_SYNC_SKILL_REL_PATHS[0])]
+
+    def test_both_copies_stale(self, project: Path, template: Path) -> None:
+        _write_skill_copies(project, "old-agents", "old-claude")
+        _write_skill_copies(template, "new-agents", "new-claude")
+        stale = stale_template_sync_skill_copies(project, template)
+        assert stale == sorted(Path(p) for p in TEMPLATE_SYNC_SKILL_REL_PATHS)
+
+    def test_template_lacking_path_is_not_reported_missing(
+        self, project: Path, template: Path
+    ) -> None:
+        """An older template ref that predates #806 must not false-positive as missing."""
+        # Project has neither copy; template has neither either.
+        assert stale_template_sync_skill_copies(project, template) == []
+
+
+class TestWarnStaleTemplateSyncSkill:
+    """Tests for ``_warn_stale_template_sync_skill``."""
+
+    def test_silent_when_nothing_stale(self, capsys: pytest.CaptureFixture[str]) -> None:
+        _warn_stale_template_sync_skill([], Path("."))
+        assert capsys.readouterr().out == ""
+
+    def test_names_the_upstream_url_at_the_compared_ref(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        stale = [Path(TEMPLATE_SYNC_SKILL_REL_PATHS[0])]
+        _warn_stale_template_sync_skill(stale, tmp_path, "v1.2.3")
+        out = capsys.readouterr().out.replace("\n", "")
+        expected = ctu.TEMPLATE_SYNC_SKILL_URL.format(repo=ctu.TEMPLATE_REPO, ref="v1.2.3")
+        assert expected in out
+
+    def test_lists_each_stale_path_with_status(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        present, missing = (Path(p) for p in TEMPLATE_SYNC_SKILL_REL_PATHS)
+        (tmp_path / present).parent.mkdir(parents=True)
+        (tmp_path / present).write_text("stale", encoding="utf-8")
+        # `missing` is never written -- it does not exist under the project root,
+        # which is not the cwd, so the status must come from project_root.
+        _warn_stale_template_sync_skill([missing, present], tmp_path)
+        out = capsys.readouterr().out
+        assert f"{missing} (missing)" in out
+        assert f"{present} (differs)" in out
+
+
+class TestWarnStaleTemplateSyncSkillInRunCheckUpdates:
+    """`run_check_updates` must surface the warning, in order, without writing."""
+
+    @pytest.fixture
+    def project(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+        p = tmp_path / "project"
+        p.mkdir()
+        monkeypatch.chdir(p)
+        return p
+
+    @staticmethod
+    def _fake_template(project: Path) -> Path:
+        # `run_check_updates` computes `template_dir.relative_to(project_root)`
+        # for display, so the fake extraction must live under the project root
+        # the way the real `tmp/extracted/pyproject-template-<sha>/` does.
+        t = project / "tmp" / "extracted" / "pyproject-template-fake"
+        t.mkdir(parents=True)
+        return t
+
+    def test_warning_prints_before_comparing_header(
+        self, project: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        _write_skill_copies(project, "old-agents", "old-claude")
+        template_root = self._fake_template(project)
+        _write_skill_copies(template_root, "new-agents", "new-claude")
+
+        with mock.patch.object(ctu, "download_template", lambda _target, _ref: template_root):
+            assert ctu.run_check_updates(skip_changelog=True, keep_template=True) == 0
+
+        out = capsys.readouterr().out
+        warn_idx = out.index("template-sync skill is older")
+        header_idx = out.index("Comparing your project to template")
+        assert warn_idx < header_idx
+
+    def test_silent_when_skill_copies_match(
+        self, project: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        _write_skill_copies(project, "same-agents", "same-claude")
+        template_root = self._fake_template(project)
+        _write_skill_copies(template_root, "same-agents", "same-claude")
+
+        with mock.patch.object(ctu, "download_template", lambda _target, _ref: template_root):
+            assert ctu.run_check_updates(skip_changelog=True, keep_template=True) == 0
+
+        out = capsys.readouterr().out
+        assert "template-sync skill is older" not in out
+
+    def test_run_check_updates_never_writes_the_skill_files(self, project: Path) -> None:
+        """The check only warns; the project's skill files must be byte-identical after."""
+        _write_skill_copies(project, "old-agents", "old-claude")
+        template_root = self._fake_template(project)
+        _write_skill_copies(template_root, "new-agents", "new-claude")
+
+        before = {rel: (project / rel).read_bytes() for rel in TEMPLATE_SYNC_SKILL_REL_PATHS}
+
+        with mock.patch.object(ctu, "download_template", lambda _target, _ref: template_root):
+            ctu.run_check_updates(skip_changelog=True, keep_template=True)
+
+        after = {rel: (project / rel).read_bytes() for rel in TEMPLATE_SYNC_SKILL_REL_PATHS}
+        assert before == after
 
 
 class TestTemplateVersionFlag:
