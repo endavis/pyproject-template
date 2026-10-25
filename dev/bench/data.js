@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792966155439,
+  "lastUpdate": 1792969000146,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18054,6 +18054,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7896788434931424e-7",
             "extra": "mean: 1.584514764128345 usec\nrounds: 67664"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e59f2e8e175ee868ed841ee4b5e6262e46d6fb85",
+          "message": "fix: close six parser gaps in the dangerous-command hook (merges PR #1010, addresses #1007)\n\n* fix: close six parser gaps in the dangerous-command hook\n\nEach gap let a guarded command through by its shape alone:\n- apply_patch: a `*** Move to:` destination is now checked as well as\n  the source path.\n- heredocs: a plain `<<` body ends only on an exact delimiter line,\n  `<<-` strips only tabs, and `<<\\WORD` is recognised.\n- interpreters: `env`, `sudo`, `nice`, `command` and NAME=value\n  prefixes are skipped, and `-o`/`-O`/`+o`/`--rcfile`/`--init-file`\n  consume their value.\n- credential reads: a redirection and its target are skipped instead\n  of ending the scan.\n- merge rule: the command is read one line at a time, after joining\n  backslash continuations, and a `#` comment ends it.\n- merge rule: `--attr-source` and `--config-env` are value-taking git\n  global options.\n\nAddresses #1007\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: close the bypasses the first hook fix opened\n\nThe first commit's merge-rule tokenizer and credential scan let three\ncommand shapes through that main blocked, as an automated security\nreview found:\n- shlex's commenters cut at any unquoted `#`, so `x#y; git merge\n  feature` hid the merge. Comments are now stripped by a quote-aware\n  scanner that starts one only at a word start.\n- splitting on raw newlines broke a quoted string that spans lines.\n  The command is now lexed once, with an unquoted newline as a\n  separator, and a regex fallback for malformed quoting that still\n  splits a glued `&&`.\n- the credential scan stopped at any `<<` marker, so `cat <<<x\n  ~/.pypirc` and `cat <<EOF ~/.netrc` read the file unchecked. It now\n  scans the command with heredoc bodies removed, which keeps a data\n  heredoc's body from reading as file names.\n\nAddresses #1007\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T22:55:58Z",
+          "tree_id": "fe32271c2d7cad7de6e96395161adf4b8c5c93ec",
+          "url": "https://github.com/endavis/pyproject-template/commit/e59f2e8e175ee868ed841ee4b5e6262e46d6fb85"
+        },
+        "date": 1792968999303,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13334055.235530911,
+            "unit": "iter/sec",
+            "range": "stddev: 9.364802065814069e-9",
+            "extra": "mean: 74.99593951998384 nsec\nrounds: 137533"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13538894.002209768,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3219406834647626e-8",
+            "extra": "mean: 73.86127698738049 nsec\nrounds: 141223"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8724410.754995635,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3929121328145217e-8",
+            "extra": "mean: 114.62092146766426 nsec\nrounds: 89390"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3145382.12263543,
+            "unit": "iter/sec",
+            "range": "stddev: 6.043987891802458e-8",
+            "extra": "mean: 317.92639527121344 nsec\nrounds: 194667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 806147.9938287217,
+            "unit": "iter/sec",
+            "range": "stddev: 1.579657590603575e-7",
+            "extra": "mean: 1.2404670205164154 usec\nrounds: 85347"
           }
         ]
       }
