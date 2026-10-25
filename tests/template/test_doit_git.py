@@ -431,7 +431,7 @@ def main_checkout(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     repo.mkdir()
     _git(repo, "init", "-q", "-b", "main")
     (repo / ".gitignore").write_text(
-        ".venv/\n__pycache__/\n.envrc.local\n/worktrees/\ntmp/*\n!tmp/.gitkeep\n",
+        ".venv/\n__pycache__/\n.envrc.local\n/mutants/\n/worktrees/\ntmp/*\n!tmp/.gitkeep\n",
         encoding="utf-8",
     )
     (repo / "tmp").mkdir()
@@ -531,6 +531,16 @@ class TestRemoveMergedWorktree:
         path, head = _add_worktree(main_checkout, self.BRANCH)
         (path / "tmp" / ".pre-commit").mkdir(parents=True)
         (path / "tmp" / ".pre-commit" / "db.db").write_text("", encoding="utf-8")
+
+        self._remove(path, self.BRANCH, head)
+
+        assert not path.exists()
+
+    def test_mutmut_cache_does_not_keep_it(self, main_checkout: Path) -> None:
+        """mutants/ is mutmut's copy of the project (#1000); the next run makes it again."""
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        (path / "mutants").mkdir()
+        (path / "mutants" / "mutmut-stats.json").write_text("{}\n", encoding="utf-8")
 
         self._remove(path, self.BRANCH, head)
 

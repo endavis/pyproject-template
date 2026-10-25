@@ -37,6 +37,7 @@ _REBUILDABLE_IGNORED = (
     "site",
     "*.egg-info",
     ".pre-commit",  # PRE_COMMIT_HOME, set by .envrc under tmp/
+    "mutants",  # mutmut's copy of the project, made again by the next run
 )
 
 
