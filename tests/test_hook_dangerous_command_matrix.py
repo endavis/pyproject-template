@@ -1064,6 +1064,26 @@ APPLY_PATCH_CASES: list[tuple[str, str, str]] = [
         "BLOCK",
         "apply_patch envelope carrying a dangerous flag",
     ),
+    (
+        # Gap 1 (#1007): a `*** Move to:` destination must be checked too, not
+        # just the original `*** Update File:` path.
+        _patch(
+            "*** Update File: src/old.py\n"
+            "*** Move to: ~/.bashrc\n"
+            "+export ALLOW_AI_READY_TO_MERGE=1\n"
+        ),
+        "BLOCK",
+        "apply_patch move target is protected",
+    ),
+    (
+        _patch(
+            "*** Update File: src/old.py\n"
+            "*** Move to: src/new.py\n"
+            "+export ALLOW_AI_READY_TO_MERGE=1\n"
+        ),
+        "ALLOW",
+        "apply_patch move target is ordinary",
+    ),
 ]
 
 
@@ -1160,6 +1180,19 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
     # Blocking $VAR interpolation gives false assurance while being trivially
     # avoided, and legitimate uses are common.
     ("echo $PYPI_TOKEN", "ALLOW", "var interpolation is deliberately not blocked"),
+    # Gap 4 (#1007): a redirection token ends a *write*, not the whole credential
+    # scan -- a reader can still take a credential path as a plain argument
+    # after redirecting its output elsewhere.
+    (
+        "cat /dev/null > /tmp/x ~/.pypirc",
+        "BLOCK",
+        "credential path follows a standalone redirect and its target",
+    ),
+    (
+        "cat foo >/tmp/x ~/.netrc",
+        "BLOCK",
+        "credential path follows a glued redirect",
+    ),
 ]
 
 
@@ -1229,6 +1262,37 @@ HEREDOC_BODY_CASES: list[tuple[str, str, str]] = [
     ("bash <<EOF\necho hello", "ALLOW", "unterminated heredoc, benign body"),
     ("cat > n.md <<EOF\nEOF is the delimiter\nEOF", "ALLOW", "delimiter word inside the body"),
     ('python3 -c "print(1)"', "ALLOW", "the -c path is untouched by heredoc handling"),
+    # Gap 2 (#1007): a plain `<<` body ends only on a line that exactly equals
+    # the delimiter -- a real shell does not strip the terminator line, so an
+    # indented false terminator must not end the body early.
+    (
+        "bash <<EOF\n  EOF\ncat ~/.netrc\nEOF",
+        "BLOCK",
+        "indented false terminator does not end a plain << body",
+    ),
+    (
+        "bash <<\\EOF\ncat ~/.netrc\nEOF",
+        "BLOCK",
+        "backslash-escaped delimiter form (<<\\WORD)",
+    ),
+    # Gap 3 (#1007): a wrapper before the interpreter, or a value-taking shell
+    # option, must not hide the interpreter from `_reads_stdin_as_code`.
+    ("env bash <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "env-wrapped interpreter"),
+    ("sudo sh <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "sudo-wrapped interpreter"),
+    ("nice bash <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "nice-wrapped interpreter"),
+    ("command bash <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "command-wrapped interpreter"),
+    (
+        "env FOO=1 bash <<EOF\ncat ~/.netrc\nEOF",
+        "BLOCK",
+        "env with an assignment before the interpreter",
+    ),
+    ("bash -o errexit <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "-o takes a separate value"),
+    ("bash --rcfile foo <<EOF\ncat ~/.netrc\nEOF", "BLOCK", "--rcfile takes a separate value"),
+    (
+        "fish <<EOF\ncat ~/.netrc\nEOF",
+        "ALLOW",
+        "an interpreter not in _STDIN_INTERPRETERS is left alone",
+    ),
 ]
 
 

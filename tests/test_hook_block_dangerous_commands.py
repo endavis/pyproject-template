@@ -699,6 +699,24 @@ def test_redirect_fires_only_on_a_commit_heredoc(
         ("git merge --ff-only origin/main", 0),
         ("git merge --ff-only origin/main; echo merge", 0),
         ("git merge --ff-only;echo done", 0),
+        # Gap 5 (#1007): a newline or a `#` comment does not end the command for
+        # shlex, so `--ff-only` on the next line or inside a comment used to
+        # count as an argument to the `git merge` before it.
+        ("git merge feature\necho --ff-only", 2),
+        ("git merge feature # --ff-only", 2),
+        ("git merge feature #--ff-only", 2),
+        # A backslash-newline continuation is still one command.
+        ("git \\\nmerge feature", 2),
+        ("git merge feature \\\n--ff-only", 0),
+        # A real `--ff-only` elsewhere on the same command still allows.
+        ("git merge feature $(echo --ff-only)", 2),
+        ("git merge feature && git pull --ff-only", 2),
+        # Gap 6 (#1007): `--attr-source` and `--config-env` are global options
+        # that take a separate value; missing them from
+        # `_GIT_GLOBAL_OPTS_WITH_VALUE` let their value be mistaken for the
+        # subcommand, so the merge rule never fired.
+        ("git --attr-source HEAD merge feature", 2),
+        ("git --config-env foo.bar=baz merge feature", 2),
     ],
 )
 def test_merge_rule_on_main_reads_each_command(
