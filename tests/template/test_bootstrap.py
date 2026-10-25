@@ -473,6 +473,40 @@ class TestRunSync:
         settings_path = tmp_path / ".config" / "pyproject_template" / "settings.toml"
         assert settings_path.exists()
 
+    def test_keeps_existing_settings_file(self, tmp_path: Path) -> None:
+        """A re-run keeps settings.toml, and with it the recorded sync point (#1008)."""
+        from bootstrap import run_sync
+
+        pkg_dir = tmp_path / "tools" / "pyproject_template"
+        pkg_dir.mkdir(parents=True)
+        (pkg_dir / "manage.py").write_text("# old", encoding="utf-8")
+        (tmp_path / "pyproject.toml").write_text(
+            '[project]\nname = "renamed-project"\n', encoding="utf-8"
+        )
+        settings_path = tmp_path / ".config" / "pyproject_template" / "settings.toml"
+        settings_path.parent.mkdir(parents=True)
+        existing = (
+            '[project]\nproject_name = "my-project"\n\n'
+            '[template]\ncommit = "abc1234"\ncommit_date = "2026-10-01"\n'
+        )
+        settings_path.write_text(existing, encoding="utf-8")
+
+        mock_response = MagicMock()
+        mock_response.read.return_value = b"# new content"
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with (
+            patch("builtins.input", return_value="y"),
+            patch("bootstrap.urllib.request.urlopen", return_value=mock_response),
+            patch("subprocess.run") as mock_subprocess,
+        ):
+            mock_subprocess.return_value = MagicMock(returncode=0, stderr="")
+            run_sync(tmp_path)
+
+        assert settings_path.read_text(encoding="utf-8") == existing
+        assert (pkg_dir / "manage.py").read_text(encoding="utf-8") == "# new content"
+
 
 class TestRunSetup:
     """Tests for run_setup function (original behavior)."""
