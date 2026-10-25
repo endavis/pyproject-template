@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792927819671,
+  "lastUpdate": 1792931669201,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -17877,6 +17877,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7033423786762043e-7",
             "extra": "mean: 1.8958190998869666 usec\nrounds: 54482"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b352d684d0095590168b0d6255754b2d869dcbce",
+          "message": "fix: treat mutmut's mutants/ as rebuildable when removing a worktree (merges PR #1003, addresses #1000)\n\ndoit pr_merge kept a merged PR's worktree once mutmut had run in it,\nbecause mutants/ was not in _REBUILDABLE_IGNORED. mutmut makes it again\non the next run, and the mutation-triage skill says to leave it between\nruns, so a worktree used that way was never removed.\n\nAddresses #1000\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-25T12:33:53Z",
+          "tree_id": "7a0ea15aca7cef4cdf56d9c10f43d46fa98a3bd2",
+          "url": "https://github.com/endavis/pyproject-template/commit/b352d684d0095590168b0d6255754b2d869dcbce"
+        },
+        "date": 1792931668236,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8649167.985373344,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1364069246789168e-8",
+            "extra": "mean: 115.61805733119134 nsec\nrounds: 90736"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8746115.612810148,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1342120491746447e-8",
+            "extra": "mean: 114.33647167153075 nsec\nrounds: 91233"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5344793.262561946,
+            "unit": "iter/sec",
+            "range": "stddev: 5.5123309112943683e-8",
+            "extra": "mean: 187.09797570742055 nsec\nrounds: 60347"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2006339.07531582,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1160274579186945e-7",
+            "extra": "mean: 498.4202382852902 nsec\nrounds: 195313"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 530774.4403578303,
+            "unit": "iter/sec",
+            "range": "stddev: 1.785507286927804e-7",
+            "extra": "mean: 1.8840394788525114 usec\nrounds: 54994"
           }
         ]
       }
