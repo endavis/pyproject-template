@@ -22,6 +22,7 @@ from __future__ import annotations
 import importlib.util
 import io
 import json
+import re
 import subprocess
 import sys
 import types
@@ -33,9 +34,8 @@ import pytest
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
-HOOK_PATH = (
-    Path(__file__).resolve().parents[1] / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
-)
+REPO_ROOT = Path(__file__).resolve().parents[1]
+HOOK_PATH = REPO_ROOT / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
 
 # Branch the hook sees. The migrated cases were authored against a feature
 # branch; see the module docstring.
@@ -783,6 +783,60 @@ AGY_EDIT_CASES: list[tuple[str, str, str, str]] = [
     ),
 ]
 
+# --- Antigravity edit_file / write_file cases (#1006) ---
+#
+# Shapes observed from a live `agy` 1.4.3 session through a logging hook:
+#   edit_file  -> {"Path": ..., "Target": ..., "Replacement": ...}
+#   write_file -> {"Path": ..., "Content": ..., "Overwrite": true}
+# Neither reached the hook before #1006: `.agents/hooks.json` matched only
+# `run_command|write_to_file`, and `agy` 1.4.3 never called `write_to_file`.
+AGY_EDIT_FILE_CASES: list[tuple[str, dict[str, object], str, str]] = [
+    (
+        "edit_file",
+        {
+            "Path": "/home/x/.bashrc",
+            "Target": "# end",
+            "Replacement": "export ALLOW_AI_READY_TO_MERGE=1",
+        },
+        "BLOCK",
+        "edit_file .bashrc rtm var",
+    ),
+    (
+        "edit_file",
+        {"Path": ".envrc", "Target": "x", "Replacement": "export ALLOW_AI_READY_TO_MERGE=1"},
+        "BLOCK",
+        "edit_file .envrc rtm var",
+    ),
+    (
+        "edit_file",
+        {"Path": "/tmp/scratch.txt", "Target": "x", "Replacement": "ALLOW_AI_READY_TO_MERGE=1"},
+        "ALLOW",
+        "edit_file non-protected target",
+    ),
+    (
+        "edit_file",
+        {"Path": "/home/x/.bashrc", "Target": "x", "Replacement": "export PATH=$PATH:/opt"},
+        "ALLOW",
+        "edit_file .bashrc no var",
+    ),
+    (
+        "write_file",
+        {
+            "Path": "/home/x/.zshrc",
+            "Content": "export ALLOW_AI_READY_TO_MERGE=1\n",
+            "Overwrite": True,
+        },
+        "BLOCK",
+        "write_file .zshrc rtm var",
+    ),
+    (
+        "write_file",
+        {"Path": "/tmp/notes.txt", "Content": "ALLOW_AI_READY_TO_MERGE", "Overwrite": True},
+        "ALLOW",
+        "write_file non-protected target",
+    ),
+]
+
 
 def _load_hook() -> types.ModuleType:
     """Load the hook script as a fresh module instance.
@@ -951,6 +1005,49 @@ def test_antigravity_write_to_file(
         }
     )
     assert _outcome_stdout(hook, monkeypatch, capsys, payload, "decision") == expected, description
+
+
+@pytest.mark.parametrize(
+    ("tool", "args", "expected", "description"),
+    AGY_EDIT_FILE_CASES,
+    ids=_ids(AGY_EDIT_FILE_CASES, 3),
+)
+def test_antigravity_edit_file_and_write_file(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    tool: str,
+    args: dict[str, object],
+    expected: str,
+    description: str,
+) -> None:
+    """Antigravity's edit_file and write_file use Path / Replacement / Content (#1006)."""
+    payload = json.dumps({"toolCall": {"name": tool, "args": args}})
+    assert _outcome_stdout(hook, monkeypatch, capsys, payload, "decision") == expected, description
+
+
+# Every tool name `agy` uses for a shell command or a file write, as observed from
+# a live `agy` 1.4.3 session (#1006). `write_to_file` is kept for older releases.
+_AGY_GUARDED_TOOLS = ("run_command", "write_to_file", "write_file", "edit_file")
+
+
+@pytest.mark.parametrize("tool", _AGY_GUARDED_TOOLS)
+def test_antigravity_hooks_json_matcher_reaches_every_guarded_tool(tool: str) -> None:
+    """The `.agents/hooks.json` matcher is the premise the agy checks rest on (#1006).
+
+    A tool the matcher misses never reaches the hook, however well the hook
+    handles its payload.
+    """
+    hooks = json.loads((REPO_ROOT / ".agents" / "hooks.json").read_text(encoding="utf-8"))
+    matchers = [
+        entry["matcher"]
+        for config in hooks.values()
+        for entry in config.get("PreToolUse", [])
+        if "block-dangerous-commands" in json.dumps(entry)
+    ]
+    assert any(re.fullmatch(matcher, tool) for matcher in matchers), (
+        f"no .agents/hooks.json matcher for the shared hook matches agy's {tool!r} tool"
+    )
 
 
 # --- Subprocess smoke tests -------------------------------------------------

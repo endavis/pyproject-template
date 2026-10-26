@@ -415,7 +415,7 @@ convention](cross-agent-delegation.md#context-file-convention).
   "block-dangerous-commands": {
     "PreToolUse": [
       {
-        "matcher": "run_command|write_to_file",
+        "matcher": "run_command|write_to_file|write_file|edit_file",
         "hooks": [
           {
             "type": "command",
@@ -429,9 +429,19 @@ convention](cross-agent-delegation.md#context-file-convention).
 ```
 
 Antigravity sends a distinct hook payload — a nested `toolCall` with PascalCase args
-(`{"toolCall": {"name": "run_command", "args": {"CommandLine": "..."}}}`); its file-write tool is
-`write_to_file` (`TargetFile` / `CodeContent`). The hook normalizes these to the canonical
-`command` / `file_path` / `content` keys.
+(`{"toolCall": {"name": "run_command", "args": {"CommandLine": "..."}}}`). Its file tools, as logged
+from a live `agy` 1.4.3 session (#1006):
+
+| Tool | Args | Normalized to |
+| :--- | :--- | :--- |
+| `run_command` | `CommandLine` | `command` |
+| `write_file` | `Path`, `Content`, `Overwrite` | `file_path`, `content` |
+| `edit_file` | `Path`, `Target`, `Replacement` | `file_path`, `new_string` |
+| `write_to_file` (older releases) | `TargetFile`, `CodeContent` | `file_path`, `content` |
+
+`agy` 1.4.3 never called `write_to_file`; before #1006 the matcher named only it and `run_command`,
+so `write_file` and `edit_file` never reached the hook. A test in
+`tests/test_hook_dangerous_command_matrix.py` checks that the matcher matches every tool in this table.
 
 Unlike Claude/Codex (which block via exit code 2), `agy` blocks only when the hook prints
 `{"decision": "deny", "reason": "..."}` on **stdout** (exit code 0); a safe command prints nothing
@@ -671,7 +681,7 @@ The hook reads `os.environ` at hook-startup time (the AI CLI's process environme
 
 #### Env-Var Persistence Blocks
 
-The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write_file**/**replace** (retained for Gemini compatibility), and **write_to_file** (Antigravity) in addition to Bash commands. Any operation whose payload contains the literal string `ALLOW_AI_READY_TO_MERGE` **and** whose target is a known persistence file is blocked.
+The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write_file**/**replace** (retained for Gemini compatibility), and **write_file**/**edit_file**/**write_to_file** (Antigravity) in addition to Bash commands. Any operation whose payload contains the literal string `ALLOW_AI_READY_TO_MERGE` **and** whose target is a known persistence file is blocked.
 
 **Protected file basenames** (Bash redirect target or `file_path` argument):
 
