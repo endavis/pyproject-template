@@ -5,6 +5,8 @@ from __future__ import annotations
 import importlib
 import sys
 import types
+from collections.abc import Iterator
+from email.message import Message
 from pathlib import Path
 from unittest import mock
 
@@ -552,6 +554,12 @@ class TestRefResolution:
     function. It was caught by running the tool.
     """
 
+    @pytest.fixture(autouse=True)
+    def _no_token(self) -> Iterator[None]:
+        """Keep the token lookup off the developer's `gh` login (#1026)."""
+        with mock.patch.object(ctu, "github_token", return_value=None):
+            yield
+
     def test_a_sha_is_used_as_is(self) -> None:
         """No API call for something already a commit."""
         sha = "0a64c7e7c916a9bb0b4041f20acce8653e01acfa"
@@ -568,18 +576,71 @@ class TestRefResolution:
         with mock.patch.object(ctu.urllib.request, "urlopen", return_value=response):
             assert ctu.resolve_template_ref(ref) == sha
 
-    def test_an_unresolvable_ref_warns_and_passes_through(self) -> None:
-        """Offline or rate-limited must not stop a drift check outright."""
-        with mock.patch.object(ctu.urllib.request, "urlopen", side_effect=OSError("offline")):
-            assert ctu.resolve_template_ref("main") == "main"
+    def test_an_unresolvable_ref_stops_the_check(self) -> None:
+        """A moving-ref extract cannot be recorded, so the check must not proceed (#1026)."""
+        with (
+            mock.patch.object(ctu.urllib.request, "urlopen", side_effect=OSError("offline")),
+            pytest.raises(ctu.TemplateRefError, match="offline"),
+        ):
+            ctu.resolve_template_ref("main")
+
+    def test_a_rate_limit_names_the_cause_and_the_token_remedy(self) -> None:
+        """The failure that hid behind a scrolled-past warning (#1026)."""
+        error = ctu.urllib.error.HTTPError(
+            "https://api.github.com", 403, "rate limit exceeded", Message(), None
+        )
+        with (
+            mock.patch.object(ctu.urllib.request, "urlopen", side_effect=error),
+            pytest.raises(ctu.TemplateRefError) as raised,
+        ):
+            ctu.resolve_template_ref("main")
+        message = str(raised.value)
+        assert "rate limited" in message
+        assert "GITHUB_TOKEN=$(gh auth token)" in message
+
+    def test_the_lookup_sends_a_token_when_one_is_available(self) -> None:
+        """`gh auth token` stands in for an unset GITHUB_TOKEN via `github_token`."""
+        response = mock.MagicMock()
+        response.read.return_value = f"{'4' * 40}\n".encode()
+        response.__enter__.return_value = response
+        with (
+            mock.patch.object(ctu, "github_token", return_value="tok"),
+            mock.patch.object(ctu.urllib.request, "urlopen", return_value=response) as opener,
+        ):
+            ctu.resolve_template_ref("main")
+        request = opener.call_args.args[0]
+        assert request.get_header("Authorization") == "token tok"
 
     def test_a_non_sha_response_is_not_trusted(self) -> None:
         """A proxy returning HTML must not become the archive path."""
         response = mock.MagicMock()
         response.read.return_value = b"<html>rate limited</html>"
         response.__enter__.return_value = response
-        with mock.patch.object(ctu.urllib.request, "urlopen", return_value=response):
-            assert ctu.resolve_template_ref("main") == "main"
+        with (
+            mock.patch.object(ctu.urllib.request, "urlopen", return_value=response),
+            pytest.raises(ctu.TemplateRefError, match="unexpected response"),
+        ):
+            ctu.resolve_template_ref("main")
+
+    def test_an_unpinned_ref_leaves_the_reviewed_extract_alone(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """The reviewed extract `sync` needs must survive a failed check (#1026)."""
+        reviewed = tmp_path / "tmp" / "extracted" / f"pyproject-template-{'5' * 40}"
+        reviewed.mkdir(parents=True)
+        (reviewed / ".template_commit").write_text(f"{'5' * 40}\n2026-10-26\n", encoding="utf-8")
+        monkeypatch.chdir(tmp_path)
+
+        with (
+            mock.patch.object(
+                ctu, "resolve_template_ref", side_effect=ctu.TemplateRefError("rate limited")
+            ),
+            mock.patch.object(ctu, "download_and_extract_archive") as download,
+        ):
+            assert ctu.run_check_updates(skip_changelog=True, keep_template=True) == 1
+
+        download.assert_not_called()
+        assert (reviewed / ".template_commit").exists()
 
     def test_the_archive_url_names_the_resolved_commit(self, tmp_path: Path) -> None:
         """One URL shape for tag, branch and SHA -- the resolved commit."""
@@ -817,6 +878,40 @@ class TestCheckToSyncHandoff:
 
         # dry_run stops before the settings write and the git commands.
         assert manage.action_mark_synced(manager, dry_run=True, yes=True) == 0
+
+    def test_a_failed_check_records_nothing(
+        self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        """A non-zero check must not write a sync point into a stale extract (#1026)."""
+        manage = self._manage()
+        extracted = self._extract(tmp_path, "6" * 40)
+        monkeypatch.chdir(tmp_path)
+
+        manager = mock.MagicMock()
+        manager.template_state.commit = None
+
+        with mock.patch.object(manage, "run_check_updates", lambda **_: 1):
+            assert manage.action_check_updates(manager, dry_run=False) == 1
+
+        assert not (extracted / ".template_commit").exists()
+
+    def test_sync_names_the_cause_of_a_moving_ref_extract(
+        self,
+        tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
+        capsys: pytest.CaptureFixture[str],
+    ) -> None:
+        """The bare `No reviewed template found` never pointed at the rate limit (#1026)."""
+        manage = self._manage()
+        self._extract(tmp_path, "main")
+        monkeypatch.chdir(tmp_path)
+
+        assert manage.action_mark_synced(mock.MagicMock(), dry_run=True, yes=True) == 1
+
+        output = capsys.readouterr()
+        combined = output.out + output.err
+        assert "moving ref" in combined
+        assert "GITHUB_TOKEN" in combined
 
     def test_sync_still_refuses_when_no_check_has_run(
         self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

@@ -466,6 +466,11 @@ def action_check_updates(
         dry_run=dry_run,
         show_excluded=show_excluded,
     )
+    if result != 0:
+        # Nothing was downloaded -- most often the ref could not be pinned to a
+        # commit -- so there is no review to record, and an earlier reviewed
+        # extract must be left for `sync` as it was (#1026).
+        return int(result)
 
     # The commit that was actually reviewed. Taken from the extracted archive's
     # own directory name, so it names what is on disk rather than whatever
@@ -497,8 +502,9 @@ def action_check_updates(
         print()
         Logger.info("After reviewing changes, use option [5] to mark as synced.")
     elif template_dir and not reviewed_commit and not dry_run:
-        # `resolve_template_ref` fell back to the moving ref (offline or
-        # rate-limited), so there is no commit identity to record.
+        # The extract is not named for a commit, so there is no identity to
+        # record. `resolve_template_ref` no longer falls back to a moving ref
+        # (#1026); this guards an extract left by an older version of it.
         print()
         Logger.warning("Could not determine which commit was reviewed; skipping sync-point record.")
         Logger.info("Re-run the check with network access before marking as synced.")
@@ -591,6 +597,18 @@ def action_mark_synced(manager: SettingsManager, dry_run: bool, *, yes: bool = F
 
     if commit_file is None or not commit_file.exists():
         Logger.error("No reviewed template found.")
+        if template_dir and extracted_template_commit(template_dir) is None:
+            # The extract is of a moving ref, not a commit: an older check
+            # could not pin the template and fell back to it (#1026).
+            Logger.info(
+                f"{template_dir} was extracted from a moving ref, not a commit, "
+                "so it cannot be recorded as a sync point."
+            )
+            Logger.info(
+                "This usually means the GitHub API was rate-limited. Set GITHUB_TOKEN "
+                "(e.g. GITHUB_TOKEN=$(gh auth token)) and run option [3] again."
+            )
+            return 1
         Logger.info("Run option [3] 'Check for template updates' first to review changes.")
         return 1
 

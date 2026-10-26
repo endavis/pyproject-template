@@ -30,6 +30,7 @@ from utils import (  # noqa: E402
     get_first_author,
     get_first_maintainer,
     get_git_config,
+    github_token,
     parse_github_url,
     validate_email,
     validate_package_name,
@@ -433,6 +434,9 @@ def get_template_commit(ref: str = "main") -> tuple[str, str] | None:
     try:
         req = urllib.request.Request(api_url)
         req.add_header("Accept", "application/vnd.github.v3+json")
+        token = github_token()
+        if token:
+            req.add_header("Authorization", f"token {token}")
         with urllib.request.urlopen(req, timeout=10) as response:  # nosec B310
             data = json.loads(response.read())
             commit_sha = data.get("sha", "")  # Full SHA for GitHub compare
@@ -469,6 +473,9 @@ def get_template_commits_since(since_commit: str) -> list[dict[str, str]] | None
     try:
         req = urllib.request.Request(api_url)
         req.add_header("Accept", "application/vnd.github.v3+json")
+        token = github_token()
+        if token:
+            req.add_header("Authorization", f"token {token}")
         with urllib.request.urlopen(req, timeout=10) as response:  # nosec B310
             data = json.loads(response.read())
 

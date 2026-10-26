@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import os
 import subprocess
+from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -239,6 +240,12 @@ commit_date = "2025-01-15"
 class TestGetTemplateLatestCommit:
     """Tests for get_template_latest_commit function."""
 
+    @pytest.fixture(autouse=True)
+    def _no_token(self) -> Iterator[None]:
+        """Keep the token lookup off the developer's `gh` login (#1026)."""
+        with patch("tools.pyproject_template.settings.github_token", return_value=None):
+            yield
+
     def test_returns_commit_info_on_success(self) -> None:
         """Test that function returns commit SHA and date on success."""
         mock_response = MagicMock()
@@ -269,9 +276,24 @@ class TestGetTemplateLatestCommit:
             result = get_template_latest_commit()
             assert result is None
 
+    def test_sends_a_token_when_one_is_available(self) -> None:
+        """The date lookup used to go out unauthenticated even with a token set (#1026)."""
+        with (
+            patch("tools.pyproject_template.settings.github_token", return_value="tok"),
+            patch("urllib.request.urlopen", side_effect=Exception("stop")) as opener,
+        ):
+            get_template_latest_commit()
+        assert opener.call_args.args[0].get_header("Authorization") == "token tok"
+
 
 class TestGetTemplateCommitsSince:
     """Tests for get_template_commits_since function."""
+
+    @pytest.fixture(autouse=True)
+    def _no_token(self) -> Iterator[None]:
+        """Keep the token lookup off the developer's `gh` login (#1026)."""
+        with patch("tools.pyproject_template.settings.github_token", return_value=None):
+            yield
 
     def test_returns_commits_since_sha(self) -> None:
         """Test that function returns commits since the given SHA."""
