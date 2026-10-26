@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792969000146,
+  "lastUpdate": 1792972998316,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18113,6 +18113,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.579657590603575e-7",
             "extra": "mean: 1.2404670205164154 usec\nrounds: 85347"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7691ae7658dacb1ff0dee6da780c60b6f64a064c",
+          "message": "fix: find command starts after newlines, glued separators and quoted heredoc markers (merges PR #1013, addresses #1011)\n\n* fix: find command starts after newlines, glued separators and quoted heredoc markers\n\nThree shapes got past the dangerous-command hook:\n- a quoted \"<<EOF\" was taken as a heredoc, so the lines after it were\n  dropped from the credential-read check (a regression from #1010).\n  Markers are now found only outside quotes and comments.\n- the credential-read and env-dump checks used shlex.split tokens,\n  which treat a newline as whitespace and keep `hi;` as one word, so\n  `echo hi; cat ~/.netrc` and `true` then `printenv` were never seen\n  in command position. Both now use the separator-aware tokenizer the\n  merge rule already had, renamed _structural_tokens.\n- an unbalanced quote in a heredoc body hid a later `git merge`. The\n  merge rule now also scans the command with bodies removed. It keeps\n  scanning the full command, so a merge in a body run by a receiver\n  the hook does not recognise is still blocked.\n\nAddresses #1011\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: keep the pre-#1011 env-dump and credential scans alongside the new ones\n\nThe structural tokenizer splits `&>` into a separator `&` and `>/tmp/x`,\nso `cat &>/tmp/x ~/.netrc` stopped at the `&` and was allowed, where main\nblocked it, as an automated security review found. check_env_dump and\ncheck_credential_file_read now also run on the tokenize() input each had\nbefore #1011, and block if either scan matches, so the new tokenizer can\nonly add blocks.\n\nAddresses #1011\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: carry quote state across lines when finding heredoc markers\n\n_heredoc_marker_match reset quote state on each line, so a `<<EOF\"` that\ncloses a string opened on an earlier line was taken as a heredoc marker,\nand the lines after it were dropped from the credential and env-dump\nchecks, as an automated security review found. The open quote now\ncarries from one line to the next, and a backslash escapes a character\ninside double quotes as well.\n\nAddresses #1011\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: stop stripping heredocs once a marker line ends inside a quote\n\nWhen a marker line ends with a quote still open, the shell keeps reading\nthat quote into the lines that look like the body, so where the body\nstarts is unclear. _heredocs carried the open quote past the body, and a\nlater `\"<<EOF` then closed it and was taken as a marker, dropping the\nlines after it, as an automated security review found. _heredocs now\nstops finding heredocs at such a line, so nothing after it is stripped.\n\nAddresses #1011\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: stop stripping heredocs at a substitution inside a double quote\n\nInside a double quote, `$(` or a backtick starts a command substitution\nwhose own quotes nest, so `echo \"$(echo \"x` read as closing the outer\nquote and a later `<<EOF\"` was taken as a heredoc marker, dropping the\nlines after it, as an automated security review found. The marker scan\nnow reports such a line as unclear, and _heredocs stops finding\nheredocs there, as it already does for a marker line ending inside a\nquote.\n\nAddresses #1011\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* fix: treat ${ inside a double quote as unclear quoting too\n\nA parameter expansion nests its own quotes inside a double quote\n(`\"${x:-\"y\"}\"`), just as $( and backticks do, so a later `<<EOF\"` could\nstill be taken as a heredoc marker, as an automated security review\nfound. ${ now stops heredoc stripping as well.\n\nAddresses #1011\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T00:02:39Z",
+          "tree_id": "d3af0e78f327024f79ff10244bfa72ab9dcfd1ce",
+          "url": "https://github.com/endavis/pyproject-template/commit/7691ae7658dacb1ff0dee6da780c60b6f64a064c"
+        },
+        "date": 1792972997121,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18147882.338144217,
+            "unit": "iter/sec",
+            "range": "stddev: 2.996339208752175e-8",
+            "extra": "mean: 55.10284788975875 nsec\nrounds: 193912"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20777414.788178384,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2609172424277371e-8",
+            "extra": "mean: 48.12918306703704 nsec\nrounds: 195810"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13878192.474037664,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1352168970934831e-8",
+            "extra": "mean: 72.05549295203456 nsec\nrounds: 147276"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4200904.075205818,
+            "unit": "iter/sec",
+            "range": "stddev: 9.644018880938449e-8",
+            "extra": "mean: 238.04399769614025 nsec\nrounds: 45141"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1015657.9018357149,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6387523546165093e-7",
+            "extra": "mean: 984.5834883897278 nsec\nrounds: 107597"
           }
         ]
       }
