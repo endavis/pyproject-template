@@ -106,8 +106,8 @@ When a Python version starts failing CI:
 
 ### The pipeline that ships
 
-`ci.yml` is the pipeline. It is not a starting point to copy — it is the workflow this template
-installs, and it already does what a hand-rolled `tests.yml` would:
+`ci.yml` is the pipeline. It is not a starting point to copy — it is the workflow this project
+runs, and it already does what a hand-rolled `tests.yml` would:
 
 | | |
 | :--- | :--- |
@@ -293,7 +293,7 @@ addopts = [
 
 ### PR Comments
 
-This template does **not** post coverage comments on PRs, and no workflow here uses a
+This project does **not** post coverage comments on PRs, and no workflow here uses a
 coverage-comment action. Coverage is reported by `doit coverage` locally and by the CI job's
 output; the gate is `fail_under` in `pyproject.toml`.
 
@@ -812,7 +812,7 @@ The `benchmark.yml` workflow runs on three triggers:
 
 Only pushes to `main` store results. The `store` job holds the workflow's only write permission (`contents: write`) and never runs for a pull request, so code from a PR never gets a write-capable token (#695).
 
-If `tests/benchmarks/` does not exist or contains no `test_*.py` files, the workflow skips all benchmark steps and finishes successfully. This allows downstream projects generated from this template to enable the workflow incrementally without CI failures before any benchmark tests are written.
+If `tests/benchmarks/` does not exist or contains no `test_*.py` files, the workflow skips all benchmark steps and finishes successfully. This allows downstream projects generated from pyproject-template to enable the workflow incrementally without CI failures before any benchmark tests are written.
 
 ### The `gh-benchmarks` Branch
 

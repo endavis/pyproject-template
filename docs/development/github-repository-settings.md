@@ -13,7 +13,7 @@ tags:
 
 # GitHub Repository Settings
 
-Complete reference for the GitHub repository settings this template expects.
+Complete reference for the GitHub repository settings this project expects.
 New repositories created from the template are configured automatically by
 [`repo_settings.py`](../../tools/pyproject_template/repo_settings.py) via
 `update_all_repo_settings()`. This page documents what each setting is, why

@@ -665,9 +665,9 @@ both at the **repository** scope, not in an environment:
 > with `GITHUB_TOKEN`, which leaves the Merge Gate's `require-label` check
 > stuck at `FAILURE`.
 
-**5. Optional: CI-Driven Tag-Push Flow (not used by this template's `release.yml`):**
+**5. Optional: CI-Driven Tag-Push Flow (not used by this project's `release.yml`):**
 
-This template's `release.yml` is triggered by a tag push that the
+This project's `release.yml` is triggered by a tag push that the
 maintainer makes locally with `doit release_tag`, and the publish step
 itself uses OIDC + `GITHUB_TOKEN` — so no App credentials are consumed by
 the workflow as shipped.

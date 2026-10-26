@@ -84,7 +84,7 @@ The template is opinionated about a small number of things:
 `doit` is declared under `[project.optional-dependencies] dev` in
 `pyproject.toml` and is **not** installed when adopters install the
 published package. `rich` remains a runtime dependency because most CLIs
-built on this template use it for user-facing output, which is a
+built on pyproject-template use it for user-facing output, which is a
 legitimate runtime use.
 
 > **Historical note:** `doit` was briefly placed in `[project] dependencies`
