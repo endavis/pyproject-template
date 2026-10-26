@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793015403275,
+  "lastUpdate": 1793016721362,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18467,6 +18467,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5043386202477292e-7",
             "extra": "mean: 1.255105471508871 usec\nrounds: 84346"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fbd5ca88c06c0a79528d9eb8992db57847a5b2a0",
+          "message": "fix: stop the hook reading a here-string or arithmetic << as a heredoc (merges PR #1030, addresses #1025)\n\n_heredoc_marker_match matched from the second `<` of `<<<` and from a\nleft shift inside `$((...))`, so the lines after `cat <<<EOF` or\n`echo $((1<<EOF))` were dropped as a heredoc body and never reached the\ncredential-read and env-dump checks.\n\n- skip `<<<` here-strings and `$((...))` / `((...))` arithmetic when\n  finding a heredoc start; arithmetic left open at end of line stops\n  body stripping (fail closed)\n- the issue's repro rows, plus allow cases for a lone here-string, a lone\n  shift and a real data heredoc after each, join HEREDOC_BODY_CASES\n- ADR-9019 records why the suggested full-command rescan was declined (it\n  re-blocks ten recorded data-heredoc ALLOW cases) and that a bypass\n  report is actionable only for a shape an agent could produce by accident\n\nAddresses #1025\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T12:11:19Z",
+          "tree_id": "0a5bceeec7020fbb20387909b4cf66c7a54aec5b",
+          "url": "https://github.com/endavis/pyproject-template/commit/fbd5ca88c06c0a79528d9eb8992db57847a5b2a0"
+        },
+        "date": 1793016720214,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18762327.715224523,
+            "unit": "iter/sec",
+            "range": "stddev: 5.503831169826806e-9",
+            "extra": "mean: 53.2982908719028 nsec\nrounds: 197317"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 21870860.520164877,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8954946971605745e-8",
+            "extra": "mean: 45.722938019654165 nsec\nrounds: 196928"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 14039830.24608919,
+            "unit": "iter/sec",
+            "range": "stddev: 1.377280949328677e-8",
+            "extra": "mean: 71.22593239890142 nsec\nrounds: 147276"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4564329.050859251,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9369546250406254e-8",
+            "extra": "mean: 219.09025156977816 nsec\nrounds: 47144"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1046104.1504771655,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0864774811289055e-7",
+            "extra": "mean: 955.9277625883276 nsec\nrounds: 109734"
           }
         ]
       }
