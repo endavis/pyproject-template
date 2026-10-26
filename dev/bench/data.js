@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793016721362,
+  "lastUpdate": 1793022923868,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18526,6 +18526,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.0864774811289055e-7",
             "extra": "mean: 955.9277625883276 nsec\nrounds: 109734"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d80ce9675742d883971d633696c5d6d7d53a5a8e",
+          "message": "docs: say \"this project\", not \"this template\", in docs that ship to spawned projects (merges PR #1032, addresses #1031)\n\nConfiguring a project renames README.template.md onto README.md, and the\nshipped docs, skills and tooling comments carry over unchanged, so a spawned\nproject's docs called the project \"this template\". Reword those instances to\n\"this project\" (or name pyproject-template where the upstream is meant).\nTemplate-owned files (README.md, docs/template/, 9XXX ADRs, template-sync and\ntemplate-migrate skills, tools/pyproject_template/) keep their wording.\n\nAddresses #1031\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T13:54:38Z",
+          "tree_id": "d58c7bd80ad7f34bd38301d8c9ea92ff4629a57f",
+          "url": "https://github.com/endavis/pyproject-template/commit/d80ce9675742d883971d633696c5d6d7d53a5a8e"
+        },
+        "date": 1793022922459,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9331884.09731178,
+            "unit": "iter/sec",
+            "range": "stddev: 2.169659871820203e-8",
+            "extra": "mean: 107.15949636451961 nsec\nrounds: 99020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9527842.411118576,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9654039151205123e-8",
+            "extra": "mean: 104.9555562372698 nsec\nrounds: 107562"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6651250.983694952,
+            "unit": "iter/sec",
+            "range": "stddev: 1.503573676256774e-8",
+            "extra": "mean: 150.34765677185027 nsec\nrounds: 68555"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2192662.682076221,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0575128616053775e-7",
+            "extra": "mean: 456.0665022369538 nsec\nrounds: 191976"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 595499.6613678533,
+            "unit": "iter/sec",
+            "range": "stddev: 3.1729266815887204e-7",
+            "extra": "mean: 1.6792620800203577 usec\nrounds: 62384"
           }
         ]
       }
