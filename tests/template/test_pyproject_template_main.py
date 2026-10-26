@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import os
 import subprocess
+import sys
 from collections.abc import Iterator
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pytest
 
+from tools.pyproject_template import settings as settings_module
 from tools.pyproject_template.settings import (
     PreflightWarning,
     ProjectContext,
@@ -19,6 +21,10 @@ from tools.pyproject_template.settings import (
     get_template_commits_since,
     get_template_latest_commit,
 )
+
+# `settings` imports `utils` from its own directory, a different module object
+# from `tools.pyproject_template.utils`; its token lookup is patched there.
+_SCRIPT_UTILS = sys.modules[settings_module.github_api_request.__module__]
 
 
 class TestProjectSettings:
@@ -243,7 +249,7 @@ class TestGetTemplateLatestCommit:
     @pytest.fixture(autouse=True)
     def _no_token(self) -> Iterator[None]:
         """Keep the token lookup off the developer's `gh` login (#1026)."""
-        with patch("tools.pyproject_template.settings.github_token", return_value=None):
+        with patch.object(_SCRIPT_UTILS, "github_token", return_value=None):
             yield
 
     def test_returns_commit_info_on_success(self) -> None:
@@ -279,7 +285,7 @@ class TestGetTemplateLatestCommit:
     def test_sends_a_token_when_one_is_available(self) -> None:
         """The date lookup used to go out unauthenticated even with a token set (#1026)."""
         with (
-            patch("tools.pyproject_template.settings.github_token", return_value="tok"),
+            patch.object(_SCRIPT_UTILS, "github_token", return_value="tok"),
             patch("urllib.request.urlopen", side_effect=Exception("stop")) as opener,
         ):
             get_template_latest_commit()
@@ -292,7 +298,7 @@ class TestGetTemplateCommitsSince:
     @pytest.fixture(autouse=True)
     def _no_token(self) -> Iterator[None]:
         """Keep the token lookup off the developer's `gh` login (#1026)."""
-        with patch("tools.pyproject_template.settings.github_token", return_value=None):
+        with patch.object(_SCRIPT_UTILS, "github_token", return_value=None):
             yield
 
     def test_returns_commits_since_sha(self) -> None:
