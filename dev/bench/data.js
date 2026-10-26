@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793013958485,
+  "lastUpdate": 1793015403275,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18408,6 +18408,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.586818136149829e-7",
             "extra": "mean: 1.7484326263159837 usec\nrounds: 61196"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "713f6c93fc85b5edb8ca2cd2f7a2ecc44c20b8c3",
+          "message": "fix: build every template GitHub API request through one helper (merges PR #1029, addresses #1027)\n\nThe commit-date and commit-history lookups in settings.py built bare\nrequests that never sent GITHUB_TOKEN, so `check` got past the rate limit\nand `sync` then recorded commit_date = \"unknown\". #1028 added the token to\neach call site by hand; this moves request construction into\nutils.github_api_request so a future call cannot drift from it again.\n\n- github_api_request(url, accept) adds Authorization whenever\n  github_token() finds a token\n- resolve_template_ref, get_template_commit and get_template_commits_since\n  all use it\n- a test asserts the header on each of the three calls, and another fails\n  if any module but utils.py builds a urllib Request by hand\n\nbootstrap.py keeps its own request: it runs standalone via curl and cannot\nimport utils.\n\nAddresses #1027\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T11:49:20Z",
+          "tree_id": "5181ec344128eb478fc1c462830dd0ddcd5e3af2",
+          "url": "https://github.com/endavis/pyproject-template/commit/713f6c93fc85b5edb8ca2cd2f7a2ecc44c20b8c3"
+        },
+        "date": 1793015401873,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12634386.742280874,
+            "unit": "iter/sec",
+            "range": "stddev: 8.381412239688475e-9",
+            "extra": "mean: 79.14907311278576 nsec\nrounds: 129854"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12925704.135089515,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1742544484442354e-8",
+            "extra": "mean: 77.36522432733794 nsec\nrounds: 137344"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8751509.133840032,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1307166489390577e-8",
+            "extra": "mean: 114.26600654888591 nsec\nrounds: 93756"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3108191.3080020226,
+            "unit": "iter/sec",
+            "range": "stddev: 6.261587506655451e-8",
+            "extra": "mean: 321.73051813944176 nsec\nrounds: 193499"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 796745.7896568751,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5043386202477292e-7",
+            "extra": "mean: 1.255105471508871 usec\nrounds: 84346"
           }
         ]
       }
