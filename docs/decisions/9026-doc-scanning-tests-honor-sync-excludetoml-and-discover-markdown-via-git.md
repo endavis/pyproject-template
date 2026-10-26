@@ -55,7 +55,7 @@ and `tests/test_instruction_pointers.py` — discover markdown through `git ls-f
 
 Before this change, the three test files read with `rglob("*.md")` minus a hardcoded `SKIP_DIRS`.
 That reads whatever is on disk, tracked or not: in this repository it already picks up
-`.pytest_cache/README.md`, and downstream — per the issue this ADR implements — it picked up a
+the README pytest writes into its cache directory, and downstream — per the issue this ADR implements — it picked up a
 Terraform provider's README under a checked-out `.terraform/providers/` tree and paths from an
 unrelated checked-out config repository, failing `test_markdown_anchors_resolve` and
 `test_documented_paths_exist` on content the project never wrote. `git ls-files` reports exactly
