@@ -973,3 +973,25 @@ class TestDownloadAndExtractArchive:
             utils.download_and_extract_archive("https://x/a.zip", tmp_path)
 
         assert (previous / ".template_commit").exists()
+
+
+class TestGithubApiRequest:
+    """The one place GitHub API requests are built (#1027)."""
+
+    def test_adds_the_token_when_one_is_available(self) -> None:
+        from tools.pyproject_template import utils
+
+        with patch.object(utils, "github_token", return_value="tok"):
+            request = utils.github_api_request("https://api.github.com/x")
+        assert request.get_header("Authorization") == "token tok"
+        assert request.get_header("Accept") == "application/vnd.github.v3+json"
+
+    def test_unauthenticated_when_no_token_is_available(self) -> None:
+        from tools.pyproject_template import utils
+
+        with patch.object(utils, "github_token", return_value=None):
+            request = utils.github_api_request(
+                "https://api.github.com/x", accept="application/vnd.github.sha"
+            )
+        assert not request.has_header("Authorization")
+        assert request.get_header("Accept") == "application/vnd.github.sha"

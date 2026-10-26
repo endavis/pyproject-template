@@ -52,7 +52,7 @@ from utils import (  # noqa: E402
     Colors,
     Logger,
     download_and_extract_archive,
-    github_token,
+    github_api_request,
 )
 
 # Frozen set for O(1) membership tests in the hot path of compare_files.
@@ -137,22 +137,20 @@ def resolve_template_ref(ref: str) -> str:
         return ref
 
     api_url = f"https://api.github.com/repos/{TEMPLATE_REPO}/commits/{ref}"
-    request = urllib.request.Request(api_url, headers={"Accept": "application/vnd.github.sha"})
-    token = github_token()
-    if token:
-        request.add_header("Authorization", f"token {token}")
+    request = github_api_request(api_url, accept="application/vnd.github.sha")
+    authenticated = request.has_header("Authorization")
     try:
         with urllib.request.urlopen(request, timeout=15) as response:  # nosec B310
             sha: str = response.read().decode("utf-8").strip()
     except urllib.error.HTTPError as e:
         cause = "rate limited" if e.code in (403, 429) else str(e)
-        raise TemplateRefError(_ref_error_message(ref, cause, token is not None)) from e
+        raise TemplateRefError(_ref_error_message(ref, cause, authenticated)) from e
     except Exception as e:
-        raise TemplateRefError(_ref_error_message(ref, str(e), token is not None)) from e
+        raise TemplateRefError(_ref_error_message(ref, str(e), authenticated)) from e
 
     if not SHA_RE.match(sha):
         raise TemplateRefError(
-            _ref_error_message(ref, "unexpected response from the API", token is not None)
+            _ref_error_message(ref, "unexpected response from the API", authenticated)
         )
     return sha
 

@@ -310,6 +310,23 @@ def github_token() -> str | None:
     return token if result.returncode == 0 and token else None
 
 
+def github_api_request(
+    url: str, accept: str = "application/vnd.github.v3+json"
+) -> urllib.request.Request:
+    """Build a GitHub API request, authenticated whenever a token is available.
+
+    Every API call in the management suite is built here, so one token covers
+    the whole check -> sync flow. Building them by hand let two of the three
+    drift from the token: `check` got past the rate limit and `sync` then
+    recorded `commit_date = "unknown"` (#1027).
+    """
+    request = urllib.request.Request(url, headers={"Accept": accept})
+    token = github_token()
+    if token:
+        request.add_header("Authorization", f"token {token}")
+    return request
+
+
 def get_git_config(key: str, default: str = "") -> str:
     """Get a git configuration value.
 

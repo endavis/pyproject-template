@@ -2,10 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
 import importlib
+import re
 import sys
 import types
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from email.message import Message
 from pathlib import Path
 from unittest import mock
@@ -24,6 +26,10 @@ from tools.pyproject_template.check_template_updates import (
 from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+
+# The scripts import `utils` from their own directory, so it is a different
+# module object from `tools.pyproject_template.utils`. Patch the one they call.
+SCRIPT_UTILS = sys.modules[ctu.github_api_request.__module__]
 TESTS_DIR = REPO_ROOT / "tests"
 
 # tests/doc_scan.py duplicates load_sync_excludes rather than importing it --
@@ -557,7 +563,7 @@ class TestRefResolution:
     @pytest.fixture(autouse=True)
     def _no_token(self) -> Iterator[None]:
         """Keep the token lookup off the developer's `gh` login (#1026)."""
-        with mock.patch.object(ctu, "github_token", return_value=None):
+        with mock.patch.object(SCRIPT_UTILS, "github_token", return_value=None):
             yield
 
     def test_a_sha_is_used_as_is(self) -> None:
@@ -599,12 +605,12 @@ class TestRefResolution:
         assert "GITHUB_TOKEN=$(gh auth token)" in message
 
     def test_the_lookup_sends_a_token_when_one_is_available(self) -> None:
-        """`gh auth token` stands in for an unset GITHUB_TOKEN via `github_token`."""
+        """The ref lookup is built by `github_api_request`, which adds the token."""
         response = mock.MagicMock()
         response.read.return_value = f"{'4' * 40}\n".encode()
         response.__enter__.return_value = response
         with (
-            mock.patch.object(ctu, "github_token", return_value="tok"),
+            mock.patch.object(SCRIPT_UTILS, "github_token", return_value="tok"),
             mock.patch.object(ctu.urllib.request, "urlopen", return_value=response) as opener,
         ):
             ctu.resolve_template_ref("main")
@@ -671,6 +677,46 @@ class TestRefResolution:
         ):
             ctu.download_template(tmp_path, None)
         assert seen["ref"] == "main"
+
+
+class TestEveryGitHubApiCallSendsTheToken:
+    """One token must cover the whole check -> sync flow (#1027).
+
+    Only `resolve_template_ref` used to send it, so `check` got past the rate
+    limit and `sync` then recorded `commit_date = "unknown"`.
+    """
+
+    @staticmethod
+    def _call_sites() -> list[tuple[str, Callable[[], object]]]:
+        settings = importlib.import_module("tools.pyproject_template.settings")
+        return [
+            ("resolve_template_ref", lambda: ctu.resolve_template_ref("main")),
+            ("get_template_commit", lambda: settings.get_template_commit("main")),
+            ("get_template_commits_since", lambda: settings.get_template_commits_since("a" * 40)),
+        ]
+
+    @pytest.mark.parametrize("index", [0, 1, 2], ids=lambda i: ["ref", "commit", "since"][i])
+    def test_the_call_sends_the_token(self, index: int) -> None:
+        name, call = self._call_sites()[index]
+        with (
+            mock.patch.object(SCRIPT_UTILS, "github_token", return_value="tok"),
+            mock.patch("urllib.request.urlopen", side_effect=OSError("stop")) as opener,
+            contextlib.suppress(ctu.TemplateRefError),
+        ):
+            call()
+        assert opener.called, f"{name} made no request"
+        request = opener.call_args.args[0]
+        assert request.get_header("Authorization") == "token tok", name
+
+    def test_no_request_is_built_outside_the_helper(self) -> None:
+        """A request built by hand is how two of the three lost the token."""
+        offenders = [
+            path.name
+            for path in (REPO_ROOT / "tools" / "pyproject_template").glob("*.py")
+            if path.name != "utils.py"
+            and re.search(r"urllib\.request\.Request\(", path.read_text(encoding="utf-8"))
+        ]
+        assert offenders == [], f"build GitHub API requests with github_api_request: {offenders}"
 
 
 class TestGuardedScriptsAreNotDocumentedDirectly:
