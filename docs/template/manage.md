@@ -273,6 +273,17 @@ The script auto-detects your project context:
 
 Run "Check for template updates" first to download and review the template before marking as synced.
 
+If the message says the extract came from a moving ref, an earlier check could not pin the template
+to a commit — usually the unauthenticated GitHub API limit. Set `GITHUB_TOKEN` (for example
+`GITHUB_TOKEN=$(gh auth token)`) and run the check again.
+
+### "Could not resolve 'main' to a commit"
+
+The check could not pin the template ref to a commit SHA, most often because the GitHub API
+rate-limited an unauthenticated request. It stops before touching `tmp/extracted/`, so an earlier
+reviewed template is still there for "Mark as synced". The check uses `GITHUB_TOKEN`, or
+`gh auth token` when that is unset; log in with `gh auth login` or set the variable, then re-run it.
+
 ### Settings file not committed
 
 Branch protection prevents direct commits to main. Follow the Issue → Branch → PR workflow shown after marking as synced.

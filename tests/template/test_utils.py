@@ -859,7 +859,7 @@ class TestExtractedTemplateCommit:
 
     @pytest.mark.parametrize("name", ["pyproject-template-main", "pyproject-template-v2.2.0"])
     def test_a_moving_ref_is_not_a_commit(self, name: str) -> None:
-        """`resolve_template_ref` falls back to the ref when the API is unreachable.
+        """An older `resolve_template_ref` fell back to the ref when the API was unreachable.
 
         A branch or tag name is not a sync point: recording it would claim a
         reproducible identity the project does not have. None is the honest
@@ -873,3 +873,103 @@ class TestExtractedTemplateCommit:
         from tools.pyproject_template.utils import extracted_template_commit
 
         assert extracted_template_commit(Path("/x/some-other-repo-abc")) is None
+
+
+class TestGithubToken:
+    """`github_token` falls back to `gh auth token` when GITHUB_TOKEN is unset (#1026)."""
+
+    def test_the_environment_variable_wins(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from tools.pyproject_template import utils
+
+        monkeypatch.setenv("GITHUB_TOKEN", "from-env")
+        with patch.object(utils.subprocess, "run") as run:
+            assert utils.github_token() == "from-env"
+        run.assert_not_called()
+
+    def test_falls_back_to_gh(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from tools.pyproject_template import utils
+
+        monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+        result = MagicMock(returncode=0, stdout="from-gh\n")
+        with patch.object(utils.subprocess, "run", return_value=result) as run:
+            assert utils.github_token() == "from-gh"
+        assert run.call_args.args[0] == ["gh", "auth", "token"]
+
+    def test_none_when_gh_is_logged_out(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from tools.pyproject_template import utils
+
+        monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+        result = MagicMock(returncode=1, stdout="")
+        with patch.object(utils.subprocess, "run", return_value=result):
+            assert utils.github_token() is None
+
+    def test_none_when_gh_is_missing(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        from tools.pyproject_template import utils
+
+        monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+        with patch.object(utils.subprocess, "run", side_effect=FileNotFoundError("gh")):
+            assert utils.github_token() is None
+
+
+class TestDownloadAndExtractArchive:
+    """A new extract replaces the old one only once it has fully extracted (#1026)."""
+
+    @staticmethod
+    def _zip(path: Path, root: str) -> None:
+        import zipfile
+
+        with zipfile.ZipFile(path, "w") as zf:
+            zf.writestr(f"{root}/README.md", "hello")
+
+    @staticmethod
+    def _previous(target: Path) -> Path:
+        reviewed = target / "extracted" / ("pyproject-template-" + "a" * 40)
+        reviewed.mkdir(parents=True)
+        (reviewed / ".template_commit").write_text("a" * 40 + "\nunknown\n", encoding="utf-8")
+        return reviewed
+
+    def test_a_successful_extract_replaces_the_previous_one(self, tmp_path: Path) -> None:
+        from tools.pyproject_template import utils
+
+        previous = self._previous(tmp_path)
+        root = "pyproject-template-" + "b" * 40
+
+        def _retrieve(_url: str, dest: Path) -> None:
+            self._zip(dest, root)
+
+        with patch.object(utils.urllib.request, "urlretrieve", _retrieve):
+            extracted = utils.download_and_extract_archive("https://x/a.zip", tmp_path)
+
+        assert extracted == tmp_path / "extracted" / root
+        assert (extracted / "README.md").read_text(encoding="utf-8") == "hello"
+        assert not previous.exists()
+        assert not (tmp_path / "extracted.tmp").exists()
+
+    def test_a_failed_extract_keeps_the_previous_one(self, tmp_path: Path) -> None:
+        from tools.pyproject_template import utils
+
+        previous = self._previous(tmp_path)
+
+        def _retrieve(_url: str, dest: Path) -> None:
+            dest.write_bytes(b"not an archive")
+
+        with (
+            patch.object(utils.urllib.request, "urlretrieve", _retrieve),
+            pytest.raises(SystemExit),
+        ):
+            utils.download_and_extract_archive("https://x/a.zip", tmp_path)
+
+        assert (previous / ".template_commit").exists()
+        assert not (tmp_path / "extracted.tmp").exists()
+
+    def test_a_failed_download_keeps_the_previous_one(self, tmp_path: Path) -> None:
+        from tools.pyproject_template import utils
+
+        previous = self._previous(tmp_path)
+        with (
+            patch.object(utils.urllib.request, "urlretrieve", side_effect=OSError("offline")),
+            pytest.raises(SystemExit),
+        ):
+            utils.download_and_extract_archive("https://x/a.zip", tmp_path)
+
+        assert (previous / ".template_commit").exists()
