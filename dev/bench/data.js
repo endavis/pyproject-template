@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793010469061,
+  "lastUpdate": 1793013958485,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18349,6 +18349,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.331578781111864e-7",
             "extra": "mean: 1.302715789855341 usec\nrounds: 82933"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9aa90e4490ad8a33504bc8d22c04a2b5f0b434e6",
+          "message": "fix: stop the template drift check when the ref cannot be pinned (merges PR #1028, addresses #1026)\n\nWhen the GitHub API rate-limited the ref lookup, manage.py check continued\nagainst the moving main, replaced the reviewed SHA-named extract under\ntmp/extracted/, and left nothing sync could record, so sync failed with a\nbare \"No reviewed template found\".\n\n- resolve_template_ref raises TemplateRefError naming the cause and the\n  GITHUB_TOKEN remedy; run_check_updates stops before downloading\n- github_token() falls back to `gh auth token`; the ref, commit-date and\n  commits-since lookups all send it\n- download_and_extract_archive extracts into a staging directory and swaps\n  it in only on success\n- action_check stops on a failed check; sync explains a moving-ref extract\n- ADR-9020 consequence 4 now applies to bootstrap.py only\n\nAddresses #1026\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T11:25:11Z",
+          "tree_id": "6ac0331053ee8528aed082383461d9beab61839f",
+          "url": "https://github.com/endavis/pyproject-template/commit/9aa90e4490ad8a33504bc8d22c04a2b5f0b434e6"
+        },
+        "date": 1793013957399,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8921866.48163733,
+            "unit": "iter/sec",
+            "range": "stddev: 2.527578655423247e-8",
+            "extra": "mean: 112.08417006219095 nsec\nrounds: 102586"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10061229.59411983,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2755255510783449e-8",
+            "extra": "mean: 99.39143030633537 nsec\nrounds: 105397"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6600932.460621186,
+            "unit": "iter/sec",
+            "range": "stddev: 1.646395584842181e-8",
+            "extra": "mean: 151.49374818870578 nsec\nrounds: 68321"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2233347.506412163,
+            "unit": "iter/sec",
+            "range": "stddev: 7.861233984698565e-8",
+            "extra": "mean: 447.7583524860778 nsec\nrounds: 194932"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 571940.8257137361,
+            "unit": "iter/sec",
+            "range": "stddev: 3.586818136149829e-7",
+            "extra": "mean: 1.7484326263159837 usec\nrounds: 61196"
           }
         ]
       }
