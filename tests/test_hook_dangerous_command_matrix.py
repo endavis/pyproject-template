@@ -1499,6 +1499,30 @@ HEREDOC_BODY_CASES: list[tuple[str, str, str]] = [
         "ALLOW",
         "an interpreter not in _STDIN_INTERPRETERS is left alone",
     ),
+    # A here-string or an arithmetic `<<` is no heredoc, so the lines after it
+    # are checked like any other command (#1025).
+    ("cat <<<EOF\ncat ~/.netrc", "BLOCK", "here-string glued to its word"),
+    ("cat <<< x\ncat ~/.netrc", "BLOCK", "here-string with a space"),
+    ("cat <<<EOF\nprintenv", "BLOCK", "here-string then an env dump"),
+    ("echo $((1<<EOF))\ncat ~/.netrc", "BLOCK", "arithmetic shift by a name"),
+    ("echo $((1<<X))\nprintenv", "BLOCK", "arithmetic shift then an env dump"),
+    ("echo $((1<<2))\ncat ~/.netrc", "BLOCK", "arithmetic shift by a digit"),
+    ("((x = 1<<EOF))\ncat ~/.netrc", "BLOCK", "arithmetic command"),
+    ("echo $(( (1<<EOF) ))\ncat ~/.netrc", "BLOCK", "nested parentheses in arithmetic"),
+    ("cat <<<EOF\ngit push --force origin main", "BLOCK", "here-string then a force push"),
+    ("echo $((1<<EOF\ncat ~/.netrc", "BLOCK", "arithmetic left open fails closed"),
+    ('cat <<< "$x"', "ALLOW", "a here-string alone"),
+    ("echo $((1<<4))", "ALLOW", "an arithmetic shift alone"),
+    (
+        "cat <<<x\ncat > notes.md <<EOF\ncat ~/.netrc\nEOF",
+        "ALLOW",
+        "a real data heredoc after a here-string is still data",
+    ),
+    (
+        "echo $((1<<2)) && cat > notes.md <<EOF\ncat ~/.netrc\nEOF",
+        "ALLOW",
+        "a real data heredoc after arithmetic on the same line is still data",
+    ),
 ]
 
 

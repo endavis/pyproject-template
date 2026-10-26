@@ -498,11 +498,45 @@ def _heredoc_marker_match(line: str, quote: str = "") -> tuple[re.Match[str] | N
             continue
         if char == "#" and word_start:
             break  # the rest of the line is a comment
+        if line.startswith("<<<", index):
+            # A here-string, not a heredoc: its word is on this line and
+            # nothing after it is a body. Matching from the second `<` read
+            # `<<<EOF` as a heredoc on EOF (#1025).
+            index += 3
+            word_start = True
+            continue
+        if line.startswith("$((", index) or (word_start and line.startswith("((", index)):
+            # Arithmetic, where `<<` is a left shift: `$((1<<EOF))` is no
+            # heredoc (#1025). Skip to the matching `))`. Arithmetic left open
+            # at the end of the line is unclear, so fail closed.
+            end = _arithmetic_end(line, index + (1 if char == "$" else 0))
+            if end is None:
+                return found, _QUOTING_UNCLEAR
+            index = end
+            word_start = False
+            continue
         if found is None and char == "<" and line[index + 1 : index + 2] == "<":
             found = _HEREDOC_START.match(line, index)
         word_start = char in _COMMENT_WORD_BOUNDARY
         index += 1
     return found, quote
+
+
+def _arithmetic_end(line: str, start: int) -> int | None:
+    """Return the index just past the ``))`` closing the ``((`` at *start*.
+
+    Counts parentheses, so ``$(( (1<<2) ))`` closes at the outer pair. Returns
+    None when the line ends first.
+    """
+    depth = 0
+    for index in range(start, len(line)):
+        if line[index] == "(":
+            depth += 1
+        elif line[index] == ")":
+            depth -= 1
+            if depth == 0:
+                return index + 1
+    return None
 
 
 def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:

@@ -170,6 +170,17 @@ echo "<<EOF" ;
 cat ~/.netrc
 ```
 
+Two other shapes contain `<<` without starting a heredoc: a here-string (`cat <<< "$x"`), whose
+word is on the same line, and a left shift inside arithmetic (`$((1<<n))`, `((x <<= 2))`). The
+marker scan skips both, so the lines after them are not mistaken for a body (#1025). Arithmetic left
+open at the end of a line is treated like tangled quoting: stripping stops there.
+
+```bash
+# BLOCKED - a here-string has no body, so the read on the next line is still seen
+cat <<<EOF
+cat ~/.netrc
+```
+
 The checks that need to know where a command *starts* (the merge rule, the credential-read check
 and the env-dump check) see the command with every heredoc body and terminator line removed.
 Without that, an unbalanced quote inside a heredoc body could open a quote that swallows everything
