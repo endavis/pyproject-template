@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792972998316,
+  "lastUpdate": 1792975446309,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18172,6 +18172,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.6387523546165093e-7",
             "extra": "mean: 984.5834883897278 nsec\nrounds: 107597"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1193659dbb3e12c7d8c25f66c81cb9a387a5d041",
+          "message": "feat: let the doc link and path tests honor sync-exclude.toml and skip untracked files (merges PR #1014, addresses #1012)\n\n* feat: let the doc link and path tests honor sync-exclude.toml and skip untracked files\n\nThe three shipped doc-scanning tests walked the filesystem with rglob\nminus a hardcoded SKIP_DIRS, so they read git-ignored trees, and a\ndownstream project could not exempt links into template-only files it\nchose not to adopt. They now list markdown with `git ls-files --cached\n--others --exclude-standard`, and skip a missing link or path target\nthat matches .config/pyproject_template/sync-exclude.toml.\n\nThe exclude reader is duplicated in tests/doc_scan.py rather than\nimported, because tools/pyproject_template/ is shed downstream. A parity\ntest in the template-owned tests/template/test_check_template_updates.py\nkeeps the two copies in step. ADR-9026 records the decision, and\nADR-9022's walker rule is amended to match.\n\nAddresses #1012\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n* docs: stop naming pytest's cache README as a path in ADR-9026\n\ntest_documented_paths_exist checks every backticked path in the docs,\nand .pytest_cache/README.md exists only after a local pytest run, so the\ntest failed on CI's fresh checkout. The ADR now describes the file\ninstead of naming it.\n\nAddresses #1012\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T00:43:22Z",
+          "tree_id": "a62398b15c25be430867531b9e1d7ac641583fba",
+          "url": "https://github.com/endavis/pyproject-template/commit/1193659dbb3e12c7d8c25f66c81cb9a387a5d041"
+        },
+        "date": 1792975444972,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13019204.693741418,
+            "unit": "iter/sec",
+            "range": "stddev: 7.71258840274915e-9",
+            "extra": "mean: 76.80960730886422 nsec\nrounds: 137742"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13768430.061224034,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0906388750693643e-8",
+            "extra": "mean: 72.62992189765305 nsec\nrounds: 143658"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8791137.3514079,
+            "unit": "iter/sec",
+            "range": "stddev: 1.622567826762737e-8",
+            "extra": "mean: 113.7509243715604 nsec\nrounds: 89953"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3036338.595193198,
+            "unit": "iter/sec",
+            "range": "stddev: 4.6717787115659606e-8",
+            "extra": "mean: 329.3440334958333 nsec\nrounds: 196541"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 783272.248525013,
+            "unit": "iter/sec",
+            "range": "stddev: 2.815103151154482e-7",
+            "extra": "mean: 1.2766953021546583 usec\nrounds: 83634"
           }
         ]
       }
