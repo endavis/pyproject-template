@@ -289,7 +289,7 @@ Antigravity (`agy`) does not use repo-defined slash commands in this template. I
 - The shared `dead-code-triage` skill triages a `doit deadcode` finding against `[tool.vulture]` in `pyproject.toml` — unused import, unused variable, or unreachable code — before fixing it, adding a documented exception, or asking
 - The shared `perf-change` skill takes a measured baseline before a performance change, profiles with `cProfile`, and compares after, so a speedup claim is backed by a pasted table
 
-**Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`/`write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
+**Config and safety:** `.agents/hooks.json` wires the shared dangerous-command hook at `tools/hooks/ai/block-dangerous-commands.py` for Antigravity (a `PreToolUse` matcher on `run_command`, `write_file`, `edit_file` and `write_to_file`). Unlike the exit-code-2 CLIs, `agy` blocks by printing `{"decision":"deny"}` on stdout, which holds even under `--dangerously-skip-permissions`. Because `agy` only loads workspace customizations for an active/trusted workspace, headless `agy -p` invocations must pass `--add-dir <repo-root>`.
 
 **Out of scope for Antigravity in this phase:** cross-agent delegation bridges and multi-agent orchestration for `agy` land in a later phase.
 

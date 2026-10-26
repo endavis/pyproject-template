@@ -1068,7 +1068,8 @@ def check_env_persistence_in_file_edit(
     tool_name: str, tool_input: dict[str, object]
 ) -> tuple[bool, str]:
     """Block file-edit operations (Edit/Write/MultiEdit for Claude/Codex,
-    write_file/replace for Gemini, write_to_file for Antigravity) that would
+    write_file/replace for Gemini, write_to_file/write_file/edit_file for
+    Antigravity) that would
     persist ALLOW_AI_READY_TO_MERGE to a protected file.
 
     Triggers when:
@@ -1090,15 +1091,17 @@ def check_env_persistence_in_file_edit(
     tool_lower = tool_name.lower()
 
     if tool_lower in ("write", "write_file", "write_to_file", "apply_patch"):
-        # Write/write_file (Claude/Gemini) and write_to_file (agy, normalized in
-        # _parse_input): full file content lives in the 'content' key.
+        # Write/write_file (Claude/Gemini/agy) and write_to_file (agy), with
+        # agy's args normalized in _parse_input: full file content lives in the
+        # 'content' key.
         # apply_patch (Codex) is normalised into the same shape by
         # check_env_persistence_in_apply_patch, one entry per patch target.
         content = str(tool_input.get("content", "") or "")
         new_content_parts.append(content)
 
-    elif tool_lower in ("edit", "replace"):
-        # Edit (Claude/Codex) and replace (Gemini): new_string key
+    elif tool_lower in ("edit", "replace", "edit_file"):
+        # Edit (Claude/Codex), replace (Gemini) and edit_file (agy, its
+        # Replacement normalized in _parse_input): new_string key
         new_content_parts.append(str(tool_input.get("new_string", "") or ""))
 
     elif tool_lower == "multiedit":
@@ -1549,7 +1552,10 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
     """
     # Antigravity CLI (agy) format: a nested toolCall with PascalCase args
     # (protojson camelCase envelope). run_command -> args.CommandLine;
-    # write_to_file -> args.TargetFile / args.CodeContent.
+    # write_to_file -> args.TargetFile / args.CodeContent. agy 1.4.3 writes with
+    # write_file -> args.Path / args.Content and edits in place with
+    # edit_file -> args.Path / args.Target / args.Replacement, both observed
+    # from a live session (#1006).
     if "toolCall" in input_data:
         tool_call = input_data.get("toolCall") or {}
         tool_name = tool_call.get("name", "")
@@ -1559,8 +1565,9 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
         tool_input = {
             **args,
             "command": args.get("CommandLine", "") or "",
-            "file_path": args.get("TargetFile", "") or "",
-            "content": args.get("CodeContent", "") or "",
+            "file_path": args.get("TargetFile", "") or args.get("Path", "") or "",
+            "content": args.get("CodeContent", "") or args.get("Content", "") or "",
+            "new_string": args.get("Replacement", "") or "",
         }
         return tool_name, tool_input["command"], tool_input
 
@@ -1629,13 +1636,13 @@ _BASH_TOOL_NAMES = frozenset({"Bash", "run_shell_command", "bash", "run_command"
 # File-edit tool names across all supported AI CLIs
 # Claude/Codex: Edit, Write, MultiEdit
 # Gemini: write_file, replace
-# Antigravity (agy): write_to_file
+# Antigravity (agy): write_to_file (older releases), write_file and edit_file (#1006)
 # Codex: apply_patch. Handled on its own path -- see the parser above -- because
 # its payload is command-shaped rather than file_path/content.
 _APPLY_PATCH_TOOL_NAME = "apply_patch"
 
 _FILE_EDIT_TOOL_NAMES = frozenset(
-    {"Edit", "Write", "MultiEdit", "write_file", "replace", "write_to_file"}
+    {"Edit", "Write", "MultiEdit", "write_file", "replace", "write_to_file", "edit_file"}
 )
 
 
