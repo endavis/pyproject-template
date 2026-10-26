@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792975446309,
+  "lastUpdate": 1792975976074,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18231,6 +18231,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.815103151154482e-7",
             "extra": "mean: 1.2766953021546583 usec\nrounds: 83634"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "da86e910a0f28950926001b0d46cac6e139edc83",
+          "message": "fix: route Antigravity's write_file and edit_file through the dangerous-command hook (merges PR #1015, addresses #1006)\n\nA live agy 1.4.3 session, logged through a hook, writes files with\nwrite_file (Path/Content) and edits in place with edit_file\n(Path/Target/Replacement). It never called write_to_file. The\n.agents/hooks.json matcher named only run_command and write_to_file, so\nboth file tools skipped the hook, and with it the env-persistence guard\nthat keeps an AI from persisting ALLOW_AI_READY_TO_MERGE.\n\nThe matcher now covers write_file and edit_file too. _parse_input maps\nPath, Content and Replacement, and edit_file joins the file-edit checks.\nA test pins that the matcher reaches every guarded agy tool.\n\nAddresses #1006\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T00:52:14Z",
+          "tree_id": "6e71bad57175cde4d0deb9a714c3e54559180d39",
+          "url": "https://github.com/endavis/pyproject-template/commit/da86e910a0f28950926001b0d46cac6e139edc83"
+        },
+        "date": 1792975975238,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9683825.88944479,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3836930292437477e-8",
+            "extra": "mean: 103.26497103691045 nsec\nrounds: 101854"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10057742.472722951,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2284749923194002e-8",
+            "extra": "mean: 99.4258903240011 nsec\nrounds: 102575"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6716557.291268485,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5786792153809587e-8",
+            "extra": "mean: 148.88579917273967 nsec\nrounds: 68696"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2206502.652981879,
+            "unit": "iter/sec",
+            "range": "stddev: 7.490161919021412e-8",
+            "extra": "mean: 453.2058906199795 nsec\nrounds: 192716"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 598574.3960485152,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7518929506909815e-7",
+            "extra": "mean: 1.670636109064292 usec\nrounds: 62422"
           }
         ]
       }
