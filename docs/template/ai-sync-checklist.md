@@ -97,6 +97,7 @@ drift checker will offer them:
 | File | Adopt? |
 | :--- | :--- |
 | `tests/agent_roster.py` | Yes — a helper, not a test. Required by the roster-aware tests below. |
+| `tests/doc_scan.py` | Yes — a helper, not a test. Required by `test_markdown_links.py`, `test_documented_paths.py` and `test_instruction_pointers.py` below; adopt it together with them. |
 | `tests/test_cross_agent_contract.py` | Yes if you wire more than one AI agent; it derives its scope from the roster and checks nothing for agents you dropped. |
 | `tests/test_instruction_pointers.py` | Yes — catches instruction files pointing at sections and commands that do not exist. |
 | `tests/test_workflow_action_pinning.py` | Yes if you keep `.github/workflows/`. |

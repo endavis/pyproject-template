@@ -240,6 +240,19 @@ customization on top of the context-file convention rather than the old inline `
 and [Cross-Agent Delegation Matrix — Context-file
 convention](../development/ai/cross-agent-delegation.md#context-file-convention).
 
+### The doc-link and doc-path tests honor `sync-exclude.toml` and skip git-ignored markdown
+
+`tests/test_markdown_links.py`, `tests/test_documented_paths.py` and `tests/test_instruction_pointers.py`
+now discover markdown through `git ls-files` instead of walking the filesystem with a hardcoded
+skip list, and skip a link or documented-path target that matches a pattern in
+`.config/pyproject_template/sync-exclude.toml`. If you adopted a shared skill or a 9xxx ADR that
+links to a template-only page you chose not to adopt (`docs/template/*.md`,
+`src/package_name/core.py`, and so on), add that path to `sync-exclude.toml` rather than editing
+the adopted file. A new helper module, `tests/doc_scan.py`, ships alongside the three tests and
+must be adopted with them — see
+[AI Sync Checklist](ai-sync-checklist.md#phase-1-sync-template-management-tools-always-run-first).
+See [ADR-9026](../decisions/9026-doc-scanning-tests-honor-sync-excludetoml-and-discover-markdown-via-git.md).
+
 ### `doit release_tag`'s next steps depend on `release.yml`
 
 Without `.github/workflows/release.yml`, `doit release_tag` no longer tells you to monitor GitHub

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+import sys
 import types
 from pathlib import Path
 from unittest import mock
@@ -21,6 +22,17 @@ from tools.pyproject_template.check_template_updates import (
 from tools.pyproject_template.utils import TEMPLATE_OWNED_TEST_FILES
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
+TESTS_DIR = REPO_ROOT / "tests"
+
+# tests/doc_scan.py duplicates load_sync_excludes rather than importing it --
+# see its module docstring and ADR-9026. `tests/` is already on sys.path by
+# the time pytest collects this file (the same "prepend" mechanism that lets
+# `tests/test_markdown_links.py` do `from agent_roster import ...`), so this
+# just makes the dependency explicit rather than relying on collection order.
+if str(TESTS_DIR) not in sys.path:
+    sys.path.insert(0, str(TESTS_DIR))
+
+from doc_scan import load_sync_excludes as duplicated_load_sync_excludes  # noqa: E402
 
 
 def _make_template(
@@ -814,3 +826,55 @@ class TestCheckToSyncHandoff:
         monkeypatch.chdir(tmp_path)
 
         assert manage.action_mark_synced(mock.MagicMock(), dry_run=True, yes=True) == 1
+
+
+class TestDocScanParity:
+    """`tests/doc_scan.py` duplicates `load_sync_excludes` rather than importing it (ADR-9026).
+
+    `tests/doc_scan.py` cannot import `tools.pyproject_template.check_template_updates`:
+    that module is removed from a downstream project when it sheds the template
+    suite (ADR-9017), and `tests/doc_scan.py` ships to every downstream project
+    because the doc/link tests that use it do. These tests keep the duplicate
+    honest by running both copies against the same fixtures and asserting they
+    agree -- this file is template-owned (`TEMPLATE_OWNED_TEST_FILES`), so it is
+    never shed and can import both sides safely.
+    """
+
+    @pytest.mark.parametrize(
+        "patterns",
+        [
+            [],
+            ["examples/api/**"],
+            ["src/package_name/core.py", "tests/test_core.py"],
+        ],
+    )
+    def test_valid_file_agrees(self, tmp_path: Path, patterns: list[str]) -> None:
+        _write_exclude_file(tmp_path, patterns)
+        assert duplicated_load_sync_excludes(tmp_path) == load_sync_excludes(tmp_path)
+
+    def test_missing_file_agrees(self, tmp_path: Path) -> None:
+        assert duplicated_load_sync_excludes(tmp_path) == load_sync_excludes(tmp_path) == []
+
+    def test_malformed_toml_agrees(self, tmp_path: Path) -> None:
+        settings_dir = tmp_path / ".config" / "pyproject_template"
+        settings_dir.mkdir(parents=True)
+        (settings_dir / "sync-exclude.toml").write_text("not = valid toml [[\n", encoding="utf-8")
+        assert duplicated_load_sync_excludes(tmp_path) == load_sync_excludes(tmp_path) == []
+
+    def test_non_list_exclude_agrees(self, tmp_path: Path) -> None:
+        settings_dir = tmp_path / ".config" / "pyproject_template"
+        settings_dir.mkdir(parents=True)
+        (settings_dir / "sync-exclude.toml").write_text('exclude = "oops"\n', encoding="utf-8")
+        assert duplicated_load_sync_excludes(tmp_path) == load_sync_excludes(tmp_path) == []
+
+    def test_non_string_entries_agrees(self, tmp_path: Path) -> None:
+        settings_dir = tmp_path / ".config" / "pyproject_template"
+        settings_dir.mkdir(parents=True)
+        (settings_dir / "sync-exclude.toml").write_text(
+            'exclude = ["keep.py", 42, "also.py"]\n', encoding="utf-8"
+        )
+        assert duplicated_load_sync_excludes(tmp_path) == load_sync_excludes(tmp_path)
+
+    def test_the_real_repo_file_agrees(self) -> None:
+        """Against this repository's own (absent) sync-exclude.toml, not a fixture."""
+        assert duplicated_load_sync_excludes(REPO_ROOT) == load_sync_excludes(REPO_ROOT)
