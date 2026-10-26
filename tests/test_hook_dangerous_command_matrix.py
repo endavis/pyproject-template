@@ -563,6 +563,31 @@ BASH_CASES = [
         "ALLOW",
         "python -c print var name only",
     ),
+    # A separator glued to the next command still ends the one before it (#1023).
+    # `shlex.split` keeps `true;git` as one word, so the checks that look for a
+    # `git` or `gh` token missed every command glued to `;`, `&&`, `||`, `|` or `&`.
+    ("true;git push --force origin main", "BLOCK", "force push glued to ;"),
+    ("true;git push -f origin main", "BLOCK", "short force push glued to ;"),
+    ("true&&git push --force origin main", "BLOCK", "force push glued to &&"),
+    (
+        "true&&git push --force-with-lease origin main",
+        "BLOCK",
+        "force-with-lease push glued to &&",
+    ),
+    ("true||git push --force origin main", "BLOCK", "force push glued to ||"),
+    ("true|git push --force origin main", "BLOCK", "force push glued to |"),
+    ("true&git push --force origin main", "BLOCK", "force push glued to &"),
+    ("true;git push origin main", "BLOCK", "push to main glued to ;"),
+    ("true;git push origin --delete main", "BLOCK", "delete main glued to ;"),
+    ("true;git branch -D main", "BLOCK", "branch -D main glued to ;"),
+    ("true;gh pr create --fill", "BLOCK", "gh pr create glued to ;"),
+    (
+        "true;gh pr edit 123 --add-label ready-to-merge",
+        "BLOCK",
+        "governance label glued to ;",
+    ),
+    ("true;git push origin feature", "ALLOW", "push to a feature branch glued to ;"),
+    ("true;git status", "ALLOW", "safe command glued to ;"),
 ]
 
 # --- Governance label bypass cases (ALLOW_AI_READY_TO_MERGE=1 injected) ---

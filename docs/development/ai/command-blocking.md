@@ -45,11 +45,14 @@ The hook uses Python's `shlex` module to properly parse shell quoting:
 
 #### Key Feature: Chained Command Detection
 
-The hook scans all token positions, so chained commands using `&&` or `;` are caught:
+The hook scans all token positions, so chained commands using `&&` or `;` are caught. The scan
+also runs on tokens where every `;`, `&&`, `||`, `|` and `&` is its own token, so a separator glued
+to the next command still ends the one before it (#1023):
 
 ```bash
 # BLOCKED - dangerous command after safe one
 git status; git push --force origin main
+true;git push --force origin main
 cd /path && doit release
 
 # ALLOWED - all commands in the chain are safe

@@ -1488,15 +1488,22 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             if is_dangerous:
                 return True, reason
 
-    # Check for push to protected branches (regular or force)
-    is_dangerous, reason = check_push_to_protected(tokens)
-    if is_dangerous:
-        return True, reason
-
-    # Check for deletion of protected branches
-    is_dangerous, reason = check_delete_protected_branch(tokens)
-    if is_dangerous:
-        return True, reason
+    # Checks that find a `git` or `gh` command by scanning token positions. Each
+    # runs on the `tokenize()` tokens and on the structural tokens of the full
+    # command: `shlex.split` keeps a glued `true;git` as one word, so the scan
+    # missed any command glued to `;`, `&&`, `||`, `|` or `&` (#1023). The
+    # first pass keeps every block these checks had before.
+    command_structural = _structural_tokens(command)
+    for check in (
+        check_push_to_protected,
+        check_delete_protected_branch,
+        check_blocked_workflow_commands,
+        check_governance_labels,
+    ):
+        for check_tokens in (tokens, command_structural):
+            is_dangerous, reason = check(check_tokens)
+            if is_dangerous:
+                return True, reason
 
     # Check for merge commits on protected branches. The stripped command keeps
     # a heredoc body's stray quote from hiding a later `git merge` (#1011, gap
@@ -1507,16 +1514,6 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
         is_dangerous, reason = check_merge_to_protected(source)
         if is_dangerous:
             return True, reason
-
-    # Check for blocked workflow commands
-    is_dangerous, reason = check_blocked_workflow_commands(tokens)
-    if is_dangerous:
-        return True, reason
-
-    # Check for governance labels
-    is_dangerous, reason = check_governance_labels(tokens)
-    if is_dangerous:
-        return True, reason
 
     # Check for attempts to persist ALLOW_AI_READY_TO_MERGE via Bash
     is_dangerous, reason = check_env_persistence_in_bash(tokens)
