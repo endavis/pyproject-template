@@ -21,7 +21,7 @@ already on for everyone — see [AI Agent Setup Guide](../AI_SETUP.md).
 Add-ons here are additional investments: each has setup cost, operational burden, and in some cases
 a trust trade-off. Read the tipping-point guidance before adopting any of them.
 
-Most projects built on this template do not need these. The audience is operators running
+Most projects built on pyproject-template do not need these. The audience is operators running
 multi-hour sessions against large codebases where the baseline defaults are not enough.
 
 ## When to consider an add-on
@@ -305,7 +305,7 @@ enough to prevent the gate from becoming permanently open after a single CBM cal
 
 **Prerequisites:** install and configure the CBM MCP server. Follow the upstream instructions at
 [github.com/DeusData/codebase-memory-mcp](https://github.com/DeusData/codebase-memory-mcp). The
-hooks in this template assume the server is named `codebase-memory` in your MCP config.
+hooks in this project assume the server is named `codebase-memory` in your MCP config.
 
 **Step 1** — Index the repository once:
 
@@ -525,7 +525,7 @@ Claude Code offers two ways to get instructions in front of the model:
 | Survives autocompact / context drift | No | Yes |
 | Best for | Rich, project-specific content | Narrow rules that "the model knows but forgets" |
 
-**Auto-load** is how this template ships `AGENTS.md` — comprehensive project context loaded once
+**Auto-load** is how this project ships `AGENTS.md` — comprehensive project context loaded once
 per session. It works well for the bulk of project rules. **The failure mode is drift**: after an
 autocompact event, or deep in a long conversation, the model may stop honoring a specific rule
 even though `AGENTS.md` is still nominally in context.
@@ -586,7 +586,7 @@ as the skill-gate trigger — Codex auto-loads the skill when the task descripti
 no `@import` directive. See [`.agents/skills/README.md`](../../../.agents/skills/README.md) for the
 full pattern and a worked example.
 
-## Related primitives in this template
+## Related primitives in this project
 
 These are not add-ons (they ship with the template) but they interact with the tools above:
 
@@ -598,7 +598,7 @@ These are not add-ons (they ship with the template) but they interact with the t
   `CLAUDE_CODE_SUBAGENT_MODEL` are already set via `.claude/settings.json`. Headroom and Caveman
   layer on top of these defaults, not instead of them. See
   [AI Agent Setup: Environment Variables](../AI_SETUP.md#environment-variables).
-- **PreCompact handoff hook** — ships with this template. Autocompact events now synthesize a
+- **PreCompact handoff hook** — ships with this project. Autocompact events now synthesize a
   checkpoint automatically to `tmp/checkpoints/{inv_epoch}-auto-precompact.md` and the
   `SessionStart` hook restores it into the next session, reducing context loss without any manual
   `/checkpoint` invocation. See [Auto-Checkpoint and Session-Restore Hooks](auto-checkpoint-hook.md).
@@ -606,5 +606,5 @@ These are not add-ons (they ship with the template) but they interact with the t
 
 - No code is shipped here. All three tools are external; install them from their respective repos.
 - Equivalent add-ons for Codex CLI and GitHub Copilot CLI. Most of these tools are Claude Code-specific. RTK is the notable exception with universal support.
-- Shipping tool configuration in this template's committed files. All snippets above go into
+- Shipping tool configuration in this project's committed files. All snippets above go into
   `.claude/settings.local.json` (not committed) to keep individual operator preferences local.

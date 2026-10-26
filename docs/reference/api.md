@@ -43,7 +43,7 @@ Centralized logging configuration with console and structured file output.
 
 ## Extending the Package
 
-This template provides a starting point. To add your own functionality:
+The package provides a starting point. To add your own functionality:
 
 ### Adding a New Module
 

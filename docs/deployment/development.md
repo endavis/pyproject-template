@@ -12,7 +12,7 @@ tags:
 
 # Development Deployment Guide
 
-This guide covers setting up and running Python applications built with this template in development environments.
+This guide covers setting up and running this project in development environments.
 
 ## Quick Start
 

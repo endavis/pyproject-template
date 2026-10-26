@@ -1658,7 +1658,7 @@ def _log(entry: dict) -> None:
 # Claude: Bash · Codex/Copilot: bash · Antigravity: run_command
 #
 # ``run_shell_command`` (and ``write_file``/``replace`` below) are Gemini CLI's
-# tool names. This template no longer ships a Gemini integration, but the names
+# tool names. This project no longer ships a Gemini integration, but the names
 # are kept on purpose: a downstream project with enterprise Gemini access can
 # still point that CLI at this hook, and matching an extra name costs nothing
 # while failing to match one would silently remove protection.

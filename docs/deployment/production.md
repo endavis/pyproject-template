@@ -12,7 +12,7 @@ tags:
 
 # Production Deployment Guide
 
-This guide covers best practices for deploying Python applications built with this template to production environments.
+This guide covers best practices for deploying this project to production environments.
 
 ## Pre-deployment Checklist
 
@@ -678,7 +678,7 @@ uv pip install --python /tmp/test-install __PYPI_NAME__
 
 ### Version Management
 
-This template uses git tags as the source of truth for versions:
+This project uses git tags as the source of truth for versions:
 
 ```bash
 # Create a release (updates version from git tag)
