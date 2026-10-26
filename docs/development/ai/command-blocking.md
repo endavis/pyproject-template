@@ -151,6 +151,38 @@ for why the scanner is not taught to recognise prose instead — the short versi
 bodies for a list of trusted receivers turns a mistake in that list into a bypass, and the flat
 scan is what covers interpreters nobody has listed.
 
+Finding the marker itself has to be quote-aware too: `echo "<<EOF"` is not a heredoc, it is an
+ordinary argument that happens to contain the characters `<<EOF`. `_heredoc_marker_match` walks
+each line with the same quote-tracking the comment stripper uses, carrying an open quote from one
+line to the next, and only tries the marker pattern outside a quote. A quoted `<<WORD`, including
+one that closes a string opened on an earlier line, is left alone, and the lines after it are not
+mistaken for its body (#1011). Where the quoting is too tangled to follow (a marker line that ends
+inside a quote, or a `$(...)`, `${...}` or backtick expansion inside a double quote, whose own
+quotes nest), the hook stops stripping heredoc bodies from that point on, so every later line is still
+scanned.
+
+```bash
+# BLOCKED - the quoted "<<EOF" is not a heredoc marker, so the read after it is still seen
+echo "<<EOF" ;
+cat ~/.netrc
+```
+
+The checks that need to know where a command *starts* (the merge rule, the credential-read check
+and the env-dump check) see the command with every heredoc body and terminator line removed.
+Without that, an unbalanced quote inside a heredoc body could open a quote that swallows everything
+after the terminator, hiding a real `git merge` or credential read from the scan meant to catch it.
+The merge rule also scans the full command, so a merge inside a body whose receiver the hook does not
+recognise as running it, such as `env -i bash <<EOF`, is still blocked:
+
+```bash
+# BLOCKED - the merge rule sees the heredoc-stripped command, so the quote in the
+# body does not swallow the `git merge` after the terminator
+cat <<'EOF'
+"
+EOF
+git merge feature "
+```
+
 ### Files
 
 | File | Description |
@@ -477,6 +509,14 @@ everyone:
 | `printenv PATH` | Allowed — not secret-shaped |
 | `env -u FORCE_COLOR doit check`, `env VAR=1 make` | Allowed — an *invocation*, not a dump |
 | `cat ~/.pypirc`, `~/.netrc`, `~/.aws/credentials`, `~/.docker/config.json`, `gh/hosts.yml` | **Blocked** — credential stores |
+| `echo hi; cat ~/.netrc`, `echo hi` *(newline)* `cat ~/.netrc`, `true` *(newline)* `printenv` | **Blocked** — a command position after a glued `;` or an unquoted newline counts (#1011) |
+
+Both checks above are anchored on where a command *starts*, so they need a tokenizer that treats an
+unquoted newline and a glued `;`/`&&`/`|` as separators of their own — `shlex.split` (what
+`tokenize()` uses) treats a newline as ordinary whitespace and leaves a glued separator stuck to
+its neighbour, so `hi;cat` never produced a `cat` in command position. `_structural_tokens` (built
+for the merge rule, and now shared by these two checks) is a plain `shlex.shlex` lex instead, with
+`;`, `&`, `|` and `\n` as punctuation characters.
 
 **What this is and is not.** It reduces *accidental* exposure — a secret dumped into a transcript
 that is then pasted into an issue, or read by a later summarisation step. It is not a boundary
@@ -585,6 +625,7 @@ Force push, delete, and merge operations are only blocked when targeting protect
 | `git --attr-source HEAD merge branch` (on main) | BLOCKED (`--attr-source` is a value-taking global option) |
 | `git log --grep merge` (on main) | ALLOWED (a `git log`, not a merge) |
 | `git merge branch` (on feature) | ALLOWED |
+| `cat <<'EOF'` *(newline)* `"` *(newline)* `EOF` *(newline)* `git merge branch "` (on main) | BLOCKED (the merge rule reads the heredoc-stripped command, so the quote in the body doesn't swallow the merge after the terminator — #1011) |
 
 #### Blocked Workflow Commands
 

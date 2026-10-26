@@ -727,6 +727,16 @@ def test_redirect_fires_only_on_a_commit_heredoc(
         # subcommand, so the merge rule never fired.
         ("git --attr-source HEAD merge feature", 2),
         ("git --config-env foo.bar=baz merge feature", 2),
+        # Gap 3 (#1011): the merge rule used to lex the whole command,
+        # heredoc bodies included. An unbalanced `"` in a body opened a quote
+        # that swallowed the `git merge` after the terminator. Passing the
+        # merge rule the command with heredoc bodies already stripped fixes
+        # it.
+        ("cat <<'EOF'\n\"\nEOF\ngit merge feature \"", 2),
+        # A merge in a heredoc body is still seen when the hook does not
+        # recognise the receiver as running it (#1011): bodies are skipped
+        # only in addition to the full scan, never instead of it.
+        ("env -i bash <<EOF\ngit merge feature\nEOF", 2),
     ],
 )
 def test_merge_rule_on_main_reads_each_command(

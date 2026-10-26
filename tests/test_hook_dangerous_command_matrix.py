@@ -1202,6 +1202,81 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "ALLOW",
         "a credential read written to a file by a data heredoc is not run",
     ),
+    # Gap 1 (#1011, regression from #1010): a quoted `<<WORD` was mistaken for
+    # a real heredoc marker, so `_without_heredoc_bodies` dropped the lines
+    # after it -- the credential read following the quoted `"<<EOF"` was never
+    # scanned.
+    (
+        'echo "<<EOF" ;\ncat ~/.netrc',
+        "BLOCK",
+        "a quoted heredoc marker does not hide the read after it",
+    ),
+    # Gap 2 (#1011, predates #1010): `_command_start_indices`'s callers got
+    # `tokenize()` tokens, which treat a newline as whitespace and keep a
+    # glued `;` stuck to its neighbour -- so a command position after either
+    # was invisible to the credential-read and env-dump checks.
+    ("echo hi; cat ~/.netrc", "BLOCK", "credential read after a glued semicolon"),
+    ("echo hi\ncat ~/.netrc", "BLOCK", "credential read after an unquoted newline"),
+    (
+        'echo "<<EOF"\ncat ~/.netrc',
+        "BLOCK",
+        "credential read after a newline, with a quoted << earlier on the line",
+    ),
+    ("true\nprintenv", "BLOCK", "bare printenv after an unquoted newline"),
+    # Should still block after the tokenizer swap to `_structural_tokens`:
+    # that tokenizer splits `2>&1` into `2>`, `&`, `1`, so the redirect-skip
+    # logic in `check_credential_file_read` must still see `2>` as a single
+    # redirect token and the env-dump command-start scan must still treat `&`
+    # as a separator rather than part of a word.
+    ("cat foo 2>&1 ~/.netrc", "BLOCK", "credential path survives a 2>&1 redirect"),
+    (
+        "cat foo 2>&1 && printenv MY_API_KEY",
+        "BLOCK",
+        "env dump survives a 2>&1 redirect before it",
+    ),
+    # `&>` is one redirect, not a background `&` followed by `>` (#1011). The
+    # structural tokenizer splits it, so the tokenize() pass has to catch it.
+    ("cat &>/tmp/x ~/.netrc", "BLOCK", "credential path follows a glued &> redirect"),
+    ("cat &> /tmp/x ~/.netrc", "BLOCK", "credential path follows a standalone &> redirect"),
+    ("cat &>>/tmp/x ~/.netrc", "BLOCK", "credential path follows a glued &>> redirect"),
+    # A `<<EOF` that closes a quote opened on an earlier line is not a marker,
+    # so the line after it is still a command (#1011).
+    ('echo "x\n<<EOF"\ncat ~/.netrc\nEOF', "BLOCK", "marker closes a multi-line double quote"),
+    ("echo 'x\n<<EOF'\ncat ~/.netrc\nEOF", "BLOCK", "marker closes a multi-line single quote"),
+    (
+        'echo "a\nb"\ncat >> notes.md <<EOF\ncat ~/.netrc\nEOF',
+        "ALLOW",
+        "a closed multi-line quote does not hide a real data heredoc after it",
+    ),
+    # A marker line that ends inside a quote leaves where the body starts
+    # unclear, so nothing after it is stripped (#1011).
+    (
+        'cat <<EOF "\nx\nEOF\n"<<EOF\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker line ends inside a double quote",
+    ),
+    (
+        "cat <<EOF '\nx\nEOF\n'<<EOF\ncat ~/.netrc\nEOF",
+        "BLOCK",
+        "marker line ends inside a single quote",
+    ),
+    # A command substitution inside a double quote nests its own quotes, so
+    # nothing after it is stripped as a heredoc body (#1011).
+    (
+        'echo "$(echo "x\n<<EOF")"\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker inside a quote nested in a command substitution",
+    ),
+    (
+        'echo "`echo "x\n<<EOF"`"\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker inside a quote nested in a backtick substitution",
+    ),
+    (
+        'echo "${x:-"x\n<<EOF"}"\ncat ~/.netrc\nEOF',
+        "BLOCK",
+        "marker inside a quote nested in a parameter expansion",
+    ),
 ]
 
 
