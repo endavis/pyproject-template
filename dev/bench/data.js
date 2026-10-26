@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1792975976074,
+  "lastUpdate": 1793010469061,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18290,6 +18290,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7518929506909815e-7",
             "extra": "mean: 1.670636109064292 usec\nrounds: 62422"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "21a1094a1a7fc213cc9a47f805d3cbc6b33f2495",
+          "message": "fix: catch git and gh commands glued to a preceding separator (merges PR #1024, addresses #1023)\n\nThe push, branch-delete, blocked-workflow and governance-label checks\nfind a command by scanning token positions for `git` or `gh`, on\nshlex.split tokens. Those keep `true;git` as one word, so each check\nmissed any command glued to `;`, `&&`, `||`, `|` or `&`. The four checks\nnow also run on the structural tokens, which make every separator its\nown token, and block if either pass matches.\n\nAddresses #1023\n\n\nClaude-Session: https://claude.ai/code/session_01TA4T5eTA8v2wSJcWfr5b9r\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-26T10:27:00Z",
+          "tree_id": "f1e083624fdd9e513232dbaf26c156440daffdb3",
+          "url": "https://github.com/endavis/pyproject-template/commit/21a1094a1a7fc213cc9a47f805d3cbc6b33f2495"
+        },
+        "date": 1793010467997,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12837385.760477653,
+            "unit": "iter/sec",
+            "range": "stddev: 9.461210344780948e-9",
+            "extra": "mean: 77.89747995878501 nsec\nrounds: 133851"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13579449.778087214,
+            "unit": "iter/sec",
+            "range": "stddev: 8.58398779993413e-9",
+            "extra": "mean: 73.640686209074 nsec\nrounds: 139083"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8601347.084662825,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3843367371472891e-8",
+            "extra": "mean: 116.26085892791296 nsec\nrounds: 89961"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3074419.028147948,
+            "unit": "iter/sec",
+            "range": "stddev: 6.408734142667555e-8",
+            "extra": "mean: 325.2647055734647 nsec\nrounds: 190950"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 767627.1430708952,
+            "unit": "iter/sec",
+            "range": "stddev: 2.331578781111864e-7",
+            "extra": "mean: 1.302715789855341 usec\nrounds: 82933"
           }
         ]
       }
