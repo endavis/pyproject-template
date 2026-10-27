@@ -1759,7 +1759,9 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
 
 
 # Key ``_parse_input`` stores a bare patch-string payload under. Prefixed so it
-# cannot collide with a real tool argument name (#1042).
+# cannot collide with a real tool argument name (#1042). ``_parse_input`` also
+# strips it from every dict payload, so a tool call cannot set it itself to
+# steer ``main()`` past the checks its real tool name would get.
 _RAW_PATCH_KEY = "_raw_patch"
 
 
@@ -1823,6 +1825,7 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
             "content": args.get("CodeContent", "") or args.get("Content", "") or "",
             "new_string": args.get("Replacement", "") or "",
         }
+        tool_input.pop(_RAW_PATCH_KEY, None)
         return tool_name, tool_input["command"], tool_input
 
     # Copilot CLI format uses camelCase keys
@@ -1837,6 +1840,8 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
             tool_input = (
                 json.loads(tool_args_raw) if isinstance(tool_args_raw, str) else tool_args_raw
             )
+            if isinstance(tool_input, dict):
+                tool_input.pop(_RAW_PATCH_KEY, None)
         except json.JSONDecodeError:
             tool_input = _raw_patch_input(tool_args_raw)
         return tool_name, tool_input.get("command", ""), tool_input
@@ -1844,7 +1849,9 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
     # Claude/Gemini format uses snake_case keys
     tool_name = input_data.get("tool_name", "")
     tool_input = input_data.get("tool_input", {})
-    if not isinstance(tool_input, dict):
+    if isinstance(tool_input, dict):
+        tool_input.pop(_RAW_PATCH_KEY, None)
+    else:
         tool_input = _raw_patch_input(tool_input)
     return tool_name, tool_input.get("command", ""), tool_input
 
@@ -2019,13 +2026,13 @@ def main() -> int:
     #
     # Only the env-persistence check runs: the payload is file content, not a
     # shell command, so scanning it with check_command would block a patch that
-    # merely mentions a dangerous command in a doc (#1042).
+    # merely mentions a dangerous command in a doc (#1042). A clean patch falls
+    # through rather than returning, so the checks below still see the call.
     raw_patch = tool_input.get(_RAW_PATCH_KEY)
     if isinstance(raw_patch, str):
         is_dangerous, reason = check_env_persistence_in_apply_patch(raw_patch)
         if is_dangerous:
             return _block_response(fmt, reason, f"{tool_name} {raw_patch[:60]}")
-        return 0
 
     # --- Codex apply_patch path ---
     #

@@ -487,6 +487,48 @@ def test_patch_text_mentioning_dangerous_command_is_allowed(
     assert out.strip() == ""
 
 
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {
+            "tool_name": "apply_patch",
+            "tool_input": {
+                "command": "apply_patch <<PATCH\n" + _BASHRC_PATCH + "PATCH",
+                "_raw_patch": "",
+            },
+        },
+        {
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": "/home/user/.bashrc",
+                "content": "export ALLOW_AI_READY_TO_MERGE=1",
+                "_raw_patch": "",
+            },
+        },
+        {
+            "toolName": "create",
+            "toolArgs": json.dumps(
+                {
+                    "_raw_patch": "",
+                    "path": "/home/user/.bashrc",
+                    "content": "export ALLOW_AI_READY_TO_MERGE=1",
+                }
+            ),
+        },
+    ],
+    ids=["codex-apply-patch", "claude-write", "copilot-json"],
+)
+def test_caller_supplied_raw_patch_key_does_not_skip_checks(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    payload: dict[str, object],
+) -> None:
+    """A tool call that sets the internal ``_raw_patch`` key itself is still checked."""
+    code, out = _run_raw(hook, monkeypatch, capsys, json.dumps(payload))
+    assert code == 2 or json.loads(out)["permissionDecision"] == "deny"
+
+
 def test_raw_patch_input_ignores_non_patch_strings(hook: types.ModuleType) -> None:
     """Only a string naming a patch target is wrapped; anything else stays empty."""
     assert hook._raw_patch_input("{not valid json") == {}
