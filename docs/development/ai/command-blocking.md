@@ -257,7 +257,9 @@ git merge feature "
 }
 ```
 
-No change needed for Copilot — the hook fires on every tool call (no `matcher` field), so Edit/Write variants are automatically covered.
+No change needed to this config for Copilot — the hook fires on every tool call (no `matcher` field). But firing on the call is not the same as being understood: before #1037, the hook only recognised Claude/Codex's `Edit`/`Write`/`MultiEdit` names, Gemini's `write_file`/`replace`, and Antigravity's `write_to_file`/`write_file`/`edit_file` — none of which are Copilot's. Copilot's real file-edit tool names, from its shipped SDK docs rather than a live probe, are `create` and `edit`, with the target path under a `path` key. Its content key is not confirmed, so rather than guess one, the hook scans every string value in `tool_input` for the bypass var name when it sees Copilot's `create`/`edit`. See [Env-Var Persistence Blocks](#env-var-persistence-blocks) below.
+
+An unrecognised tool name — Copilot's or any other CLI's — no longer falls through to "allow" either: `tool_input` carrying both a path-shaped key (`file_path`, `path`, `filename`) and a content-shaped key (`content`, `new_string`, `new_text`, `file_text`, `edits`) is routed into the same persistence check on shape alone.
 
 #### Codex CLI
 
@@ -695,24 +697,36 @@ The hook reads `os.environ` at hook-startup time (the AI CLI's process environme
 
 #### Env-Var Persistence Blocks
 
-The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write_file**/**replace** (retained for Gemini compatibility), and **write_file**/**edit_file**/**write_to_file** (Antigravity) in addition to Bash commands. Any operation whose payload contains the literal string `ALLOW_AI_READY_TO_MERGE` **and** whose target is a known persistence file is blocked.
+The hook fires on **Edit**, **Write**, and **MultiEdit** (Claude/Codex), **write_file**/**replace** (retained for Gemini compatibility), **write_file**/**edit_file**/**write_to_file** (Antigravity), and **create**/**edit** (Copilot, `path` key — see [Copilot CLI](#copilot-cli) above) in addition to Bash commands. Tool names are matched case-insensitively. Any other tool name is still checked when its input has the *shape* of a write — a path-shaped key (`file_path`, `path`, `filename`) plus a content-shaped key (`content`, `new_string`, `new_text`, `file_text`, `edits`) — rather than being allowed by default (#1037).
 
-**Protected file basenames** (Bash redirect target or `file_path` argument):
+**Protected file basenames** (Bash redirect/`tee`/`cp`/`mv`/`dd`/`sed -i` target, or a file-edit tool's path argument):
 
-| File | Notes |
-|------|-------|
-| `.bashrc`, `.zshrc`, `.profile`, `.bash_profile`, `.bash_login`, `.zshenv` | Shell init files |
-| `config.fish` | Only when parent path contains `.config/fish` |
-| `.envrc`, `.env`, `.env.local`, `.env.development`, `.env.production` | Project env files |
-| `settings.json`, `settings.local.json` | Only when parent dir is `.claude` or `.copilot` |
-| `config.toml` | Only when parent dir is `.codex` |
-| `copilot-hooks.json` | Any path (Copilot's env-injection vector) |
+| File | Notes | Bash write blocked |
+|------|-------|---------------------|
+| `.bashrc`, `.zshrc`, `.profile`, `.bash_profile`, `.bash_login`, `.zshenv` | Shell init files | Always, whatever the content |
+| `config.fish` | Only when parent path contains `.config/fish` | Always, whatever the content |
+| `.envrc`, `.env`, `.env.local`, `.env.development`, `.env.production` | Project env files | Always, whatever the content |
+| `copilot-hooks.json` | Any path (Copilot's env-injection vector) | Always, whatever the content |
+| `.envrc.local` | Loaded by `.envrc` on every directory entry | Only when `ALLOW_AI_READY_TO_MERGE` is literally present |
+| `settings.json`, `settings.local.json` | Only when parent dir is `.claude` or `.copilot` | Only when `ALLOW_AI_READY_TO_MERGE` is literally present |
+| `config.toml` | Only when parent dir is `.codex` | Only when `ALLOW_AI_READY_TO_MERGE` is literally present |
 
-**Example blocked Bash command:**
+The first group — shell rc files, env files, `copilot-hooks.json` — blocks a confirmed Bash write (redirect, `tee`/`cp`/`mv`/`dd`, `sed -i`) outright, whatever it writes, rather than only when the literal `ALLOW_AI_READY_TO_MERGE` string appears. That closes a gap where the shell assembles the name at run time (`v=ALLOW_AI_; echo "export ${v}READY_TO_MERGE=1" >> ~/.bashrc`) and no token ever contains the literal name (#1037). The second group — `.envrc.local` and AI CLI settings files — keeps the literal-name requirement, because this project documents legitimate shell writes to them (`cp .envrc.local.example .envrc.local`, the `ENABLE_LSP_TOOL` line and `cp .codex/config.toml ~/.codex/config.toml` in [AI Agent Setup](../AI_SETUP.md)) that must stay allowed. A script interpreter invoked inline (`python -c`, `perl -e`, …) whose script only *mentions* a target's basename is a "might write" heuristic rather than a confirmed write, and also keeps the literal-name requirement for every target, confirmed or not.
+
+A file-edit tool's content check stays literal-string-based for every known tool except Copilot's `create`/`edit`: AI agents edit `.claude/`, `.github/hooks/`, `.agents/` and `.codex/` through their edit tools as normal, sanctioned work, and a blunter check there would make that impossible. For Copilot, whose content key the hook has not confirmed, every string value in `tool_input` is scanned instead of one guessed key name.
+
+**Example blocked Bash commands:**
 
 ```bash
 # BLOCKED — AI cannot persist the variable via shell redirect
 echo "export ALLOW_AI_READY_TO_MERGE=1" >> ~/.bashrc
+
+# BLOCKED — any write to a shell rc file is blocked, not only one carrying
+# the literal variable name
+echo "PATH=/foo" >> ~/.bashrc
+
+# ALLOWED — a documented, legitimate shell write to an AI CLI settings file
+cp .codex/config.toml ~/.codex/config.toml
 ```
 
 **Example blocked file edit:**
