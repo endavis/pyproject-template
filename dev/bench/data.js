@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793125076941,
+  "lastUpdate": 1793128248187,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18821,6 +18821,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6626060577365716e-7",
             "extra": "mean: 1.6730673392011226 usec\nrounds: 62500"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f282e0b792517fd56a846dff62c52c73f668a06b",
+          "message": "fix: make manage.py repo turn off CodeQL default setup, update existing rulesets and labels, and check admin access first (merges PR #1045, addresses #1034)\n\nA repo that syncs the template after using GitHub's own settings diverged\nfrom a fresh template repo in ways manage.py repo did not handle:\n\n- CodeQL default setup stayed on, so every run of the synced codeql.yml\n  failed. manage.py repo now turns it off (default-setup API). A 403 warns\n  and names the possible causes: missing Administration permission, GHAS\n  not enabled, or an archived repo\n- An up-front check of the token's Administration permission stops the run\n  with one message instead of a 403 on every step\n- configure_branch_protection matched rulesets only by name, so a\n  differently named ruleset covering the default branch got a duplicate.\n  It now also matches on target and ~DEFAULT_BRANCH and updates that\n  ruleset in place, keeping its name\n- Labels: replicate_labels only created labels and swallowed the 422 for\n  existing ones. manage.py repo now runs `uv run doit labels_sync` as a\n  subprocess, keeping tools/pyproject_template stdlib-only, and falls back\n  to replicate_labels when uv or .github/labels.yml is missing\n- doit labels_sync names only the fields that changed\n- Sync docs: turn off default setup when adopting codeql.yml; let the\n  template's codeql.yml win an add/add conflict\n\nAddresses #1034\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T19:09:55Z",
+          "tree_id": "5a94df8e4093378710ed7d18cd7f997c71747cdf",
+          "url": "https://github.com/endavis/pyproject-template/commit/f282e0b792517fd56a846dff62c52c73f668a06b"
+        },
+        "date": 1793128246679,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 14164463.208869636,
+            "unit": "iter/sec",
+            "range": "stddev: 8.438146483996892e-9",
+            "extra": "mean: 70.59921616894107 nsec\nrounds: 144572"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 14586656.14379834,
+            "unit": "iter/sec",
+            "range": "stddev: 7.931642210205021e-9",
+            "extra": "mean: 68.55580814011029 nsec\nrounds: 147493"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9726723.844564667,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0395902555969238e-8",
+            "extra": "mean: 102.80953957162093 nsec\nrounds: 100211"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2889189.513150402,
+            "unit": "iter/sec",
+            "range": "stddev: 4.513317688026825e-8",
+            "extra": "mean: 346.11782835581107 nsec\nrounds: 183319"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 744309.0835835235,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5504067614285423e-7",
+            "extra": "mean: 1.343527873105399 usec\nrounds: 89807"
           }
         ]
       }
