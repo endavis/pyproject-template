@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793115790002,
+  "lastUpdate": 1793121838754,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18644,6 +18644,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.446587386857072e-7",
             "extra": "mean: 1.3454238169935453 usec\nrounds: 89856"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "486845585b233342fb004d5994e211994b0c17f1",
+          "message": "fix: bump msgpack to 1.2.4 to fix CVE-2026-114613 (merges PR #1041, addresses #1040)\n\nmsgpack is a transitive dependency (pip-audit -> cachecontrol, security\nextra). 1.2.1 made doit audit, and with it the CI lint job, fail on\nevery PR. Lockfile-only change.\n\nAddresses #1040\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T17:22:51Z",
+          "tree_id": "27fb72baa445d59e77b7823eac09c10acb8f6bdd",
+          "url": "https://github.com/endavis/pyproject-template/commit/486845585b233342fb004d5994e211994b0c17f1"
+        },
+        "date": 1793121837312,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12829971.386671154,
+            "unit": "iter/sec",
+            "range": "stddev: 7.81789557681522e-9",
+            "extra": "mean: 77.94249650773841 nsec\nrounds: 132433"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12849111.636242505,
+            "unit": "iter/sec",
+            "range": "stddev: 1.163309657194784e-8",
+            "extra": "mean: 77.82639207362605 nsec\nrounds: 138678"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8610314.968394315,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7228762262450934e-8",
+            "extra": "mean: 116.13976999339478 nsec\nrounds: 91693"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3204006.237493812,
+            "unit": "iter/sec",
+            "range": "stddev: 3.9376057847755575e-8",
+            "extra": "mean: 312.10925506256336 nsec\nrounds: 198887"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 785457.723586763,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8424038006385786e-7",
+            "extra": "mean: 1.2731429967147534 usec\nrounds: 84339"
           }
         ]
       }
