@@ -36,10 +36,10 @@ AI_SETUP = REPO_ROOT / "docs" / "development" / "AI_SETUP.md"
 # accepted claude-sonnet-4-6 forever.
 CURRENT_MODEL_IDS = frozenset(
     {
-        "claude-opus-5",
-        "claude-sonnet-5",
-        "claude-fable-5",
-        "claude-haiku-4-5-20251001",
+        "claude-opus-5-5",
+        "claude-sonnet-5-5",
+        "claude-fable-5-1",
+        "claude-haiku-5-5",
     }
 )
 
