@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793128909612,
+  "lastUpdate": 1793130538826,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18939,6 +18939,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7782787885499546e-7",
             "extra": "mean: 1.667469403259102 usec\nrounds: 62657"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "61448b25c0c454f3fe445997482f44e145efd462",
+          "message": "fix: load Copilot repo hooks in headless -p runs and check its patch-text apply_patch edits (merges PR #1047, addresses #1042)\n\n* fix: load Copilot repo hooks in headless -p runs and check its patch-text apply_patch edits\n\nCopilot CLI 1.0.104 skips .github/hooks/ in prompt mode unless\nGITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS is the literal string \"true\" (or\nCOPILOT_ALLOW_ALL=true, or the folder is trusted). Every documented Copilot\ninvocation now sets it, so delegated runs get the dangerous-command hook.\n\nOnce the hook ran, a live probe showed Copilot edits files through\napply_patch with the bare patch text as toolArgs, and also sends it through\nthe Claude-format hooks as tool_name \"Edit\" with a string tool_input. Both\nparsed to an empty dict and were allowed. The hook now checks each patch\ntarget against the env-var persistence rules.\n\nAddresses #1042\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\n* fix: strip caller-supplied _raw_patch key so it cannot skip the hook's checks\n\nThe patch-text marker lived in the tool_input dict, so a tool call that set\n_raw_patch itself took the early return and skipped the checks its real tool\nname gets. _parse_input now strips the key from every dict payload, and a\nclean patch falls through to the remaining checks instead of returning.\n\nAddresses #1042\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T19:48:08Z",
+          "tree_id": "00fec9b35636d991c7c0b317805193fdcabbc52e",
+          "url": "https://github.com/endavis/pyproject-template/commit/61448b25c0c454f3fe445997482f44e145efd462"
+        },
+        "date": 1793130537003,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9152135.269832222,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0848291589896274e-8",
+            "extra": "mean: 109.26411930298448 nsec\nrounds: 96628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10166862.439019796,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1884079420631275e-8",
+            "extra": "mean: 98.35876171217397 nsec\nrounds: 107794"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6828581.673373944,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5816682029397906e-8",
+            "extra": "mean: 146.44329493768925 nsec\nrounds: 71449"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2302991.8946352797,
+            "unit": "iter/sec",
+            "range": "stddev: 6.393839119876515e-8",
+            "extra": "mean: 434.21776790854403 nsec\nrounds: 188324"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 581852.8583643918,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7176487626292996e-7",
+            "extra": "mean: 1.7186475680656343 usec\nrounds: 60898"
           }
         ]
       }
