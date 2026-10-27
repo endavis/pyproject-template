@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793022923868,
+  "lastUpdate": 1793115790002,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18585,6 +18585,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.1729266815887204e-7",
             "extra": "mean: 1.6792620800203577 usec\nrounds: 62384"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e7571f7f3f306a2af8ecab1601aedacc281c0089",
+          "message": "chore: remove Claude hooks made redundant by native CLI features (merges PR #1038, addresses #1036)\n\nRemove the precompact-checkpoint and session-resume-restore hooks and\nthe opt-in bash-ban-raw-tools hook, along with their tests, the\nauto-checkpoint doc and every reference to them.\n\nNative compaction already re-reads CLAUDE.md, the rules and recent\nfiles, and a PreCompact hook cannot change its summary. The checkpoint\nhook therefore spent up to 90s on a headless claude -p for a duplicate\nsummary. The restore hook could inject a stale checkpoint from another\nsession. /checkpoint and /restore are unchanged.\n\nAddresses #1036\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T15:42:28Z",
+          "tree_id": "594500a7287bee87ee5cc0794968d3e60da7db8a",
+          "url": "https://github.com/endavis/pyproject-template/commit/e7571f7f3f306a2af8ecab1601aedacc281c0089"
+        },
+        "date": 1793115788704,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 14703626.514305694,
+            "unit": "iter/sec",
+            "range": "stddev: 7.921980924119877e-9",
+            "extra": "mean: 68.01043259818002 nsec\nrounds: 155063"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 14848888.899137393,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0503150941015033e-8",
+            "extra": "mean: 67.3451062091314 nsec\nrounds: 164204"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 10251505.211359771,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0819527878240295e-8",
+            "extra": "mean: 97.54665089492346 nsec\nrounds: 111173"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2947515.2631051745,
+            "unit": "iter/sec",
+            "range": "stddev: 4.8772994066837405e-8",
+            "extra": "mean: 339.2688114349274 nsec\nrounds: 197824"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 743260.2183560107,
+            "unit": "iter/sec",
+            "range": "stddev: 1.446587386857072e-7",
+            "extra": "mean: 1.3454238169935453 usec\nrounds: 89856"
           }
         ]
       }
