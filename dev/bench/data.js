@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793130919344,
+  "lastUpdate": 1793131229974,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19057,6 +19057,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.103895103115951e-8",
             "extra": "mean: 895.9814287586801 nsec\nrounds: 115835"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e1f39e6415ef1640c639061c47e692b095d21ee8",
+          "message": "fix: check an apply_patch call that carries path/content instead of a patch command (merges PR #1050, addresses #1048)\n\nThe Codex apply_patch branch returned 0 whenever `command` was empty, so a\npath + content payload under that tool name skipped the shape-based\nfallback and could persist ALLOW_AI_READY_TO_MERGE. An empty command now\nfalls through to the fallback.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T19:59:44Z",
+          "tree_id": "ae49dae8ef39b489de207dc618b4c28da2188957",
+          "url": "https://github.com/endavis/pyproject-template/commit/e1f39e6415ef1640c639061c47e692b095d21ee8"
+        },
+        "date": 1793131228362,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13273412.120305208,
+            "unit": "iter/sec",
+            "range": "stddev: 9.829949628029609e-9",
+            "extra": "mean: 75.33857842553041 nsec\nrounds: 144551"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13740307.45215738,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2737663600396294e-8",
+            "extra": "mean: 72.77857525982716 nsec\nrounds: 147276"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9177736.39306673,
+            "unit": "iter/sec",
+            "range": "stddev: 2.122333145993544e-8",
+            "extra": "mean: 108.9593290950745 nsec\nrounds: 97838"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2685602.985963736,
+            "unit": "iter/sec",
+            "range": "stddev: 6.387155537487469e-8",
+            "extra": "mean: 372.3558564785953 nsec\nrounds: 196580"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 687484.1568554657,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9658448124848938e-7",
+            "extra": "mean: 1.454578974698084 usec\nrounds: 80503"
           }
         ]
       }
