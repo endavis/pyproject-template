@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793130538826,
+  "lastUpdate": 1793130919344,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18998,6 +18998,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7176487626292996e-7",
             "extra": "mean: 1.7186475680656343 usec\nrounds: 60898"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8cb84a9ba8e1734615f3eaa2ca43fa5b76ea0dd4",
+          "message": "fix: block reads of AI CLI credential stores, starting with Copilot's ~/.copilot/config.json (merges PR #1049, addresses #1043)\n\nCREDENTIAL_FILE_BASENAMES now maps each basename to a tuple of allowed\nparents, so config.json is a credential store under both .docker and\n.copilot. Also covers Codex ~/.codex/auth.json, Claude\n~/.claude/.credentials.json and Antigravity's\n~/.gemini/antigravity-cli/antigravity-oauth-token.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T19:54:39Z",
+          "tree_id": "c6cd3533d6a0a9373e66dfce6ed13475e1f8e15a",
+          "url": "https://github.com/endavis/pyproject-template/commit/8cb84a9ba8e1734615f3eaa2ca43fa5b76ea0dd4"
+        },
+        "date": 1793130918245,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19973196.429890223,
+            "unit": "iter/sec",
+            "range": "stddev: 5.086627374608038e-9",
+            "extra": "mean: 50.06709884971057 nsec\nrounds: 199681"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 21421240.747774348,
+            "unit": "iter/sec",
+            "range": "stddev: 4.760815337820088e-9",
+            "extra": "mean: 46.6826367237341 nsec\nrounds: 198531"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13579686.66803566,
+            "unit": "iter/sec",
+            "range": "stddev: 7.0071219492698935e-9",
+            "extra": "mean: 73.6394015889803 nsec\nrounds: 143246"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4634222.206687761,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1821280433951796e-8",
+            "extra": "mean: 215.78594107051563 nsec\nrounds: 47345"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1116094.561675715,
+            "unit": "iter/sec",
+            "range": "stddev: 7.103895103115951e-8",
+            "extra": "mean: 895.9814287586801 nsec\nrounds: 115835"
           }
         ]
       }
