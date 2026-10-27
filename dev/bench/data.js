@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793122080689,
+  "lastUpdate": 1793125076941,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18762,6 +18762,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8411698613587878e-7",
             "extra": "mean: 1.6525177877638813 usec\nrounds: 63212"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bcb38f8f810c136fb7c957ba29907e3533acc142",
+          "message": "fix: stop installing post-checkout and post-merge hooks so checking out a branch runs none of its code (merges PR #1044, addresses #1033)\n\nThe installed git hooks run pre-commit with a relative --config path, so\npost-checkout and post-merge hooks read .pre-commit-config.yaml from the\nbranch just checked out. Any such hook let an untrusted branch run its own\ncode on `git checkout` or `git pull`, whatever our hook did.\n\n- Remove post-merge/post-checkout from default_install_hook_types and drop\n  the uv-sync-on-pull/uv-sync-on-checkout hooks\n- Scope actionlint to the pre-commit stage (it had no stages and ran on\n  checkout)\n- setup_repo no longer installs the two hook types\n- doit pre_commit_install uninstalls them from existing repos\n- New doit env_check task, run first by doit check and doit test, warns when\n  the environment has drifted from uv.lock (uv sync --check)\n- Docs and SECURITY.md updated\n\nAddresses #1033\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T18:17:04Z",
+          "tree_id": "2e96a16dbf48bc7e93a45e3c2c6c86ae1d94479f",
+          "url": "https://github.com/endavis/pyproject-template/commit/bcb38f8f810c136fb7c957ba29907e3533acc142"
+        },
+        "date": 1793125075148,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9394182.761521999,
+            "unit": "iter/sec",
+            "range": "stddev: 2.147747260225761e-8",
+            "extra": "mean: 106.44885514639329 nsec\nrounds: 101751"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10278049.743310833,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1912106848870092e-8",
+            "extra": "mean: 97.29472273188993 nsec\nrounds: 107910"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6739970.626691353,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4016815764871295e-8",
+            "extra": "mean: 148.3685991211655 nsec\nrounds: 71912"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2216668.118281548,
+            "unit": "iter/sec",
+            "range": "stddev: 6.972748883790496e-8",
+            "extra": "mean: 451.1275241217621 nsec\nrounds: 195695"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 597704.5732525582,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6626060577365716e-7",
+            "extra": "mean: 1.6730673392011226 usec\nrounds: 62500"
           }
         ]
       }
