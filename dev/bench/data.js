@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793128248187,
+  "lastUpdate": 1793128909612,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18880,6 +18880,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5504067614285423e-7",
             "extra": "mean: 1.343527873105399 usec\nrounds: 89807"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9c580e679b193a28828badee151b3bd8726cbfb9",
+          "message": "chore: bump Claude model pins to the 5.5 family (merges PR #1046, addresses #1035)\n\n- CLAUDE_CODE_SUBAGENT_MODEL: claude-sonnet-5 -> claude-sonnet-5-5\n- AI_SETUP.md: env table row, per-agent override example\n  (claude-opus-5 -> claude-opus-5-5) and implement-worker prose now\n  match settings.json\n- test_model_pins.py: CURRENT_MODEL_IDS lists only the 5.5-era IDs\n  (claude-opus-5-5, claude-sonnet-5-5, claude-fable-5-1,\n  claude-haiku-5-5). The 5.0 IDs are dropped, so the currency check\n  fails if they come back\n\nAddresses #1035\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T19:20:34Z",
+          "tree_id": "ec7a5477ca6ff86c8c8b239be43291ae09de7917",
+          "url": "https://github.com/endavis/pyproject-template/commit/9c580e679b193a28828badee151b3bd8726cbfb9"
+        },
+        "date": 1793128908151,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9461205.246352911,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2033607598675192e-8",
+            "extra": "mean: 105.69477925505085 nsec\nrounds: 99821"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10202028.457583224,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3150203836892592e-8",
+            "extra": "mean: 98.01972266179031 nsec\nrounds: 108027"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6823197.559544668,
+            "unit": "iter/sec",
+            "range": "stddev: 1.484376681581928e-8",
+            "extra": "mean: 146.55885181004973 nsec\nrounds: 72967"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2291843.4567494346,
+            "unit": "iter/sec",
+            "range": "stddev: 7.001657903245059e-8",
+            "extra": "mean: 436.3299757908941 nsec\nrounds: 186568"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 599711.153947101,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7782787885499546e-7",
+            "extra": "mean: 1.667469403259102 usec\nrounds: 62657"
           }
         ]
       }
