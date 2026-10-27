@@ -529,6 +529,45 @@ def test_caller_supplied_raw_patch_key_does_not_skip_checks(
     assert code == 2 or json.loads(out)["permissionDecision"] == "deny"
 
 
+# --- apply_patch with JSON path/content instead of a command (issue #1048) --
+#
+# No CLI is known to send this shape. Without a ``command`` the Codex branch
+# must fall through to the shape-based fallback rather than allow.
+
+_BASHRC_WRITE = {"path": "/home/user/.bashrc", "content": "export ALLOW_AI_READY_TO_MERGE=1"}
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"tool_name": "apply_patch", "tool_input": _BASHRC_WRITE},
+        {"toolName": "apply_patch", "toolArgs": json.dumps(_BASHRC_WRITE)},
+    ],
+    ids=["claude-format", "copilot"],
+)
+def test_apply_patch_json_path_content_blocks_env_persistence(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    payload: dict[str, object],
+) -> None:
+    """An ``apply_patch`` call with path + content and no command is still checked."""
+    code, out = _run_raw(hook, monkeypatch, capsys, json.dumps(payload))
+    assert code == 2 or json.loads(out)["permissionDecision"] == "deny"
+
+
+def test_apply_patch_json_path_content_ordinary_write_is_allowed(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The fall-through does not block an ordinary path + content write."""
+    payload = {"tool_name": "apply_patch", "tool_input": {"path": "docs/x.md", "content": "hi"}}
+    code, out = _run_raw(hook, monkeypatch, capsys, json.dumps(payload))
+    assert code == 0
+    assert out.strip() == ""
+
+
 def test_raw_patch_input_ignores_non_patch_strings(hook: types.ModuleType) -> None:
     """Only a string naming a patch target is wrapped; anything else stays empty."""
     assert hook._raw_patch_input("{not valid json") == {}
