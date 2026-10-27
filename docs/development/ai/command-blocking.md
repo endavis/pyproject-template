@@ -314,7 +314,9 @@ Claude's `Write` was blocked.
 `apply_patch` is now checked on its own path, as **both** a command and a set of file edits: the
 envelope goes through the dangerous-flag scanning, and each `*** Add/Update/Delete File:` target is
 normalised into the `file_path`/`content` shape the env-persistence check expects, so the protected
-target list stays in one place.
+target list stays in one place. An `apply_patch` call with no `command` is not allowed by default:
+it goes on to the shape-based fallback, so a path + content payload under that name is checked like
+any other write (#1048).
 
 ##### Codex requires hook trust
 

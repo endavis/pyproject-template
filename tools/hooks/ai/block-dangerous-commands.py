@@ -2045,15 +2045,16 @@ def main() -> int:
     #
     # Checked as *both* a command and a file edit: the envelope is a shell
     # command (so the dangerous-flag scanning applies to it) and the patch body
-    # writes files (so the env-persistence check must see its targets).
-    if tool_lower == _APPLY_PATCH_TOOL_NAME:
-        if command:
-            is_dangerous, reason = check_command(command)
-            if is_dangerous:
-                return _block_response(fmt, reason, command)
-            is_dangerous, reason = check_env_persistence_in_apply_patch(command)
-            if is_dangerous:
-                return _block_response(fmt, reason, f"{tool_name} {command[:60]}")
+    # writes files (so the env-persistence check must see its targets). A call
+    # with no `command` falls through instead of returning, so a path + content
+    # payload under this name still reaches the shape-based fallback (#1048).
+    if tool_lower == _APPLY_PATCH_TOOL_NAME and command:
+        is_dangerous, reason = check_command(command)
+        if is_dangerous:
+            return _block_response(fmt, reason, command)
+        is_dangerous, reason = check_env_persistence_in_apply_patch(command)
+        if is_dangerous:
+            return _block_response(fmt, reason, f"{tool_name} {command[:60]}")
         return 0
 
     # --- File-edit tool path (Edit/Write/MultiEdit/write_file/replace/create) ---
