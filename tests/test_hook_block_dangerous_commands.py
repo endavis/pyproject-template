@@ -4,7 +4,7 @@ The hook script lives at ``tools/hooks/ai/block-dangerous-commands.py``. Its
 filename contains hyphens, so it isn't directly importable as a module — we
 load it via ``importlib`` and invoke ``main()`` directly with a stubbed stdin.
 
-Pattern mirrors ``tests/test_bash_ban_raw_tools.py``.
+Pattern mirrors ``tests/test_hook_cbm_code_discovery_gate.py``.
 """
 
 from __future__ import annotations
