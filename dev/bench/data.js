@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793121838754,
+  "lastUpdate": 1793122080689,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -18703,6 +18703,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8424038006385786e-7",
             "extra": "mean: 1.2731429967147534 usec\nrounds: 84339"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e3e734282292c2f906ebf9f4a5319a0fdbc329f6",
+          "message": "fix: check Copilot and unknown edit tools, and stop needing a literal var name for shell writes to env files (merges PR #1039, addresses #1037)\n\nThe env-persistence guard in block-dangerous-commands.py had three gaps.\nEach one let an agent persist ALLOW_AI_READY_TO_MERGE.\n\n- Copilot's file-edit tools (create/edit, with a path key) were not in\n  the tool-name set, and any unknown tool fell through to allow. Tool\n  names now match case-insensitively. Copilot create/edit scan every\n  string value, because its content key is unconfirmed. An unknown tool\n  that has a path key and a content key is checked as a file edit\n  instead of being allowed.\n- A shell write to a shell rc file, env file or copilot-hooks.json was\n  blocked only when the literal var name appeared, so a name assembled\n  at run time got through. A confirmed write (redirect, tee/cp/mv/dd,\n  sed -i) to those files is now blocked whatever its content. AI CLI\n  settings files keep the content gate, so the documented\n  `cp .codex/config.toml ~/.codex/config.toml` still works.\n- .envrc.local, which .envrc loads, was not protected at all. It is now\n  protected but content-gated, so the documented agent-runnable writes\n  to it still work.\n\n`echo \"PATH=/foo\" >> ~/.bashrc` changes on purpose from allowed to\nblocked.\n\nAddresses #1037\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf1Vpn8G6pqDPxovpa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-27T17:27:11Z",
+          "tree_id": "ac27613118338fa9c9f8f9475415c45cdfbcfe97",
+          "url": "https://github.com/endavis/pyproject-template/commit/e3e734282292c2f906ebf9f4a5319a0fdbc329f6"
+        },
+        "date": 1793122079278,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9476144.227858558,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3795829306774752e-8",
+            "extra": "mean: 105.52815321870447 nsec\nrounds: 102481"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10206728.24520356,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2190089572043832e-8",
+            "extra": "mean: 97.97458852398947 nsec\nrounds: 108366"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6773735.910896419,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0397726004660498e-8",
+            "extra": "mean: 147.62902084673428 nsec\nrounds: 74544"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2256554.433232089,
+            "unit": "iter/sec",
+            "range": "stddev: 8.250839446899625e-8",
+            "extra": "mean: 443.153502203662 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 605137.2078440128,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8411698613587878e-7",
+            "extra": "mean: 1.6525177877638813 usec\nrounds: 63212"
           }
         ]
       }
