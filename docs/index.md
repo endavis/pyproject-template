@@ -35,7 +35,7 @@ __PROJECT_NAME__ is a modern Python project template with comprehensive tooling 
 - ✅ **Documentation**: MkDocs with Material theme support
 - ✅ **CI/CD**: GitHub Actions with safe release workflows
 - ✅ **Pre-commit Hooks**: Automated code quality checks
-- ✅ **Auto Dependency Sync**: Post-merge and post-checkout hooks keep dependencies in sync
+- ✅ **Dependency Drift Reminder**: `doit check`/`doit test` warn when `uv.lock` has changed, without running anything from a branch you haven't reviewed
 - ✅ **Mutation Testing**: mutmut for test suite effectiveness analysis
 - ✅ **Property-Based Testing**: Hypothesis for invariant-based testing with random inputs
 - ✅ **Benchmark Tracking**: Historical CI benchmarks with regression detection

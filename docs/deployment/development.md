@@ -306,7 +306,8 @@ SQLite requires no external services and is suitable for most development work.
 The project uses pre-commit hooks for quality gates:
 
 ```bash
-# Install all hooks (pre-commit, post-merge, post-checkout)
+# Install hooks (pre-commit, commit-msg) and remove any post-merge/post-checkout
+# hook left by an earlier version of this project
 doit pre_commit_install
 
 # Run manually
@@ -316,7 +317,11 @@ doit pre_commit_run
 git commit --no-verify -m "WIP: work in progress"
 ```
 
-The project also includes **post-merge** and **post-checkout** hooks that automatically run `uv sync --all-extras --dev` when `uv.lock` changes after a `git pull` or branch switch. This keeps your local environment in sync without manual intervention.
+Earlier versions also installed **post-merge** and **post-checkout** hooks that automatically ran
+`uv sync --all-extras --dev` when `uv.lock` changed after a `git pull` or branch switch. Removed in
+#1033: `pre-commit` reads `.pre-commit-config.yaml` from whatever branch is checked out, so either
+hook type ran code from a branch before anyone had reviewed it. `doit check` and `doit test` now
+warn instead — without failing — when the environment has drifted from `uv.lock`.
 
 ### Type Checking
 
