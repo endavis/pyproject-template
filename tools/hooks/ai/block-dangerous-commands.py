@@ -1758,6 +1758,23 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     return False, ""
 
 
+# Key ``_parse_input`` stores a bare patch-string payload under. Prefixed so it
+# cannot collide with a real tool argument name (#1042).
+_RAW_PATCH_KEY = "_raw_patch"
+
+
+def _raw_patch_input(raw: object) -> dict:
+    """Wrap a bare patch-text payload so its targets can be checked.
+
+    Returns ``{_RAW_PATCH_KEY: raw}`` when *raw* is a string naming at least one
+    ``*** Add/Update/Delete File:`` target, else an empty dict -- the previous
+    fallback for any payload that is not a dict.
+    """
+    if isinstance(raw, str) and _APPLY_PATCH_TARGET_RE.search(raw):
+        return {_RAW_PATCH_KEY: raw}
+    return {}
+
+
 def _parse_input(input_data: dict) -> tuple[str, str, dict]:
     """
     Parse tool name, command, and tool_input from hook input.
@@ -1772,6 +1789,13 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
                      every string value instead of a guessed key name.
     - Antigravity:   {"toolCall": {"name": "run_command",
                       "args": {"CommandLine": "..."}}}
+
+    Copilot's file-edit tool is ``apply_patch``, and its ``toolArgs`` is the
+    bare patch text, not JSON. Copilot also runs the Claude-format hooks in
+    ``.claude/settings.json`` with ``tool_name: "Edit"`` and that same patch
+    text as ``tool_input``. Both were observed from a live ``-p`` session
+    (#1042). A patch-shaped string is returned as ``{_RAW_PATCH_KEY: text}``
+    so ``main()`` checks its targets instead of seeing an empty dict.
 
     Returns:
         (tool_name, command, tool_input) tuple where tool_input is the full
@@ -1814,14 +1838,14 @@ def _parse_input(input_data: dict) -> tuple[str, str, dict]:
                 json.loads(tool_args_raw) if isinstance(tool_args_raw, str) else tool_args_raw
             )
         except json.JSONDecodeError:
-            tool_input = {}
+            tool_input = _raw_patch_input(tool_args_raw)
         return tool_name, tool_input.get("command", ""), tool_input
 
     # Claude/Gemini format uses snake_case keys
     tool_name = input_data.get("tool_name", "")
     tool_input = input_data.get("tool_input", {})
     if not isinstance(tool_input, dict):
-        tool_input = {}
+        tool_input = _raw_patch_input(tool_input)
     return tool_name, tool_input.get("command", ""), tool_input
 
 
@@ -1876,6 +1900,9 @@ _BASH_TOOL_NAMES = frozenset({"bash", "run_shell_command", "run_command"})
 # value for these two rather than trusting a guessed key name.
 # Codex: apply_patch. Handled on its own path -- see the parser above -- because
 # its payload is command-shaped rather than file_path/content.
+# Copilot CLI 1.0.104 in -p mode also edits through apply_patch, with the bare
+# patch text as its payload (live probe, #1042); _parse_input wraps that under
+# _RAW_PATCH_KEY. create/edit stay listed in case another mode still uses them.
 _APPLY_PATCH_TOOL_NAME = "apply_patch"
 
 _FILE_EDIT_TOOL_NAMES = frozenset(
@@ -1986,6 +2013,18 @@ def main() -> int:
         is_dangerous, reason = check_command(command)
         if is_dangerous:
             return _block_response(fmt, redirect_reason(command, reason), command)
+        return 0
+
+    # --- Bare patch-text path (Copilot apply_patch, either hook format) ---
+    #
+    # Only the env-persistence check runs: the payload is file content, not a
+    # shell command, so scanning it with check_command would block a patch that
+    # merely mentions a dangerous command in a doc (#1042).
+    raw_patch = tool_input.get(_RAW_PATCH_KEY)
+    if isinstance(raw_patch, str):
+        is_dangerous, reason = check_env_persistence_in_apply_patch(raw_patch)
+        if is_dangerous:
+            return _block_response(fmt, reason, f"{tool_name} {raw_patch[:60]}")
         return 0
 
     # --- Codex apply_patch path ---
