@@ -191,7 +191,13 @@ Install hooks after cloning:
 doit pre_commit_install
 ```
 
-The **post-merge** and **post-checkout** hooks automatically run `uv sync --all-extras --dev` when `uv.lock` changes after a `git pull` or branch switch, keeping your environment in sync.
+`pre_commit_install` also uninstalls any `post-merge`/`post-checkout` hook from an earlier version of
+this project (see [Consumer Notes](../template/consumer-notes.md#re-run-doit-pre_commit_install)):
+either hook type ran `uv sync --all-extras --dev` automatically after a `git pull` or branch switch,
+which meant checking out a branch you had not reviewed could run that branch's dependency set and
+build before you looked at it (#1033). `doit check` and `doit test` now warn instead — "`uv.lock`
+changed — run: `doit install_dev`" — without failing, so you still get the reminder on a branch
+you've chosen to run `doit` on.
 
 ## Creating Custom doit Tasks
 

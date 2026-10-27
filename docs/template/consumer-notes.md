@@ -163,7 +163,7 @@ block that does not parse, why. An ADR must also replace the template's placehol
 **Who.** Every project that ran it *before* adopting the `.pre-commit-config.yaml` that declares
 `default_install_hook_types`.
 
-**Why.** The config now declares four hook types, and `commit-msg` is newly among them. A project
+**Why.** The config now declares two hook types, and `commit-msg` is newly among them. A project
 that installed hooks earlier has no `commit-msg` hook on disk, so **neither conventional-commit
 enforcement nor the branch/issue check runs for it** — silently, because nothing fails when a hook
 that was never installed does not fire.
@@ -172,8 +172,16 @@ that was never installed does not fire.
 doit pre_commit_install
 ```
 
-Verify with `ls .git/hooks/` — `commit-msg`, `pre-commit`, `post-merge` and `post-checkout` should
-all be present.
+Verify with `ls .git/hooks/` — `commit-msg` and `pre-commit` should be present.
+
+**#1033: this also removes `post-merge`/`post-checkout` if your project installed them.** Those two
+hook types ran `uv sync --all-extras --dev` automatically after a `git pull` or branch switch. They
+are gone, not fixed: `pre-commit` reads `.pre-commit-config.yaml` from whatever is checked out, so a
+hook of either type — ours, or one an untrusted branch supplies in its own copy of the file — runs
+before anyone has reviewed that branch. Running `doit pre_commit_install` again uninstalls both
+types (`pre-commit uninstall -t post-checkout -t post-merge`, a no-op if they were never installed).
+`doit check` and `doit test` now warn instead, without failing, when `uv.lock` has drifted from the
+installed environment.
 
 ## Behaviour you will notice
 
