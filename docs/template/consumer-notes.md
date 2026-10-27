@@ -91,6 +91,40 @@ where an implicit trust assumption should not be extended. See
 
 ## Needs a one-off action
 
+### `manage.py repo` now disables CodeQL default setup
+
+**Who.** Any repository that enabled GitHub's own CodeQL **default setup** (Settings →
+Code security → CodeQL analysis) before adopting the committed `.github/workflows/codeql.yml`
+advanced workflow. That is every repository that synced the template rather than being created
+fresh from it, if it ever used GitHub's own CodeQL setup.
+
+**What changed.** `update_all_repo_settings()` now checks `GET
+/repos/{owner}/{repo}/code-scanning/default-setup` and, if `state` is `configured`, disables it
+with `PATCH ... {"state": "not-configured"}`. GitHub refuses to process SARIF uploaded by an
+advanced workflow while default setup stays enabled, so every `CodeQL` check run failed until
+someone disabled it by hand (endavis/bastproxy#9).
+
+**What it looks like if you don't run `manage.py repo`.** The `Analyze (*)` jobs in
+`.github/workflows/codeql.yml` keep succeeding, but the `CodeQL` summary job fails with:
+
+```
+Code Scanning could not process the submitted SARIF file:
+CodeQL analyses from advanced configurations cannot be processed when the default setup is enabled
+```
+
+Since the template's ruleset requires the `CodeQL` check, this blocks every PR from merging.
+
+**The fix.** Run `python tools/pyproject_template/manage.py repo` once after adopting
+`codeql.yml` (if `tools/pyproject_template/` was already cleaned up, disable default setup by
+hand instead, at `https://github.com/<owner>/<repo>/settings/security_analysis`). The same run now
+also starts with an admin-access check (`check_admin_access()`) and fails with one clear message
+if the token lacks the repository's Administration permission, rather than a 403 on every later
+step -- see [GitHub Repository Settings → Required
+Permissions](../development/github-repository-settings.md#required-permissions).
+
+**Why it is not optional.** A synced repository that already had default setup enabled cannot
+merge any PR once `codeql.yml` is adopted, until this runs (or the equivalent manual change).
+
 ### `multi-plan`, `multi-review` and `multi-adversarial-review` moved to shared skills
 
 **Who.** Any project that customized `.claude/commands/multi-{plan,review,adversarial-review}.md` or

@@ -206,6 +206,21 @@ For each workflow file flagged as **Modified** or **Missing**:
 
 **Check for ADRs:** If the project has ADRs documenting intentional divergences from template workflows, respect those decisions.
 
+### 4.1 `codeql.yml`
+
+- [ ] **Add/add conflict:** if this project already has its own `codeql.yml`, prefer the
+      template's version when merging. Its `CodeQL` check-run name is what the replicated
+      branch-protection ruleset's required status check expects; a differently named job
+      leaves that required check permanently unsatisfied.
+- [ ] **Disable CodeQL default setup, once.** If this repository ever had GitHub's own CodeQL
+      **default setup** enabled (Settings → Code security → CodeQL analysis) -- which is likely
+      for any repository that predates adopting `codeql.yml` -- run
+      `python tools/pyproject_template/manage.py repo` after this sync lands. It checks and, if
+      needed, disables default setup via the API; GitHub otherwise refuses to process SARIF from
+      the advanced workflow while default setup stays enabled, and the `CodeQL` required check
+      never passes. See [Consumer Notes → `manage.py repo` now disables CodeQL default
+      setup](consumer-notes.md#managepy-repo-now-disables-codeql-default-setup).
+
 ---
 
 ## Phase 5: Doit Tasks (`tools/doit/`)
