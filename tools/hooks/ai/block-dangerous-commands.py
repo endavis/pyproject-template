@@ -87,13 +87,19 @@ SECRET_ENV_PATTERNS: tuple[str, ...] = (
 
 # Credential stores. Reading one dumps live secrets into the transcript, which
 # is the accidental-exposure case this guards; a determined agent has other
-# routes, so this is a guardrail rather than a boundary.
-CREDENTIAL_FILE_BASENAMES: dict[str, str] = {
-    ".pypirc": "",
-    ".netrc": "",
-    "credentials": ".aws",
-    "hosts.yml": "gh",
-    "config.json": ".docker",
+# routes, so this is a guardrail rather than a boundary. Each basename maps to
+# the parent directories it is a credential store under; an empty tuple means
+# any parent. `config.json` is a store under `.docker` and `.copilot` alone, so
+# an ordinary project `config.json` is still readable (#1043).
+CREDENTIAL_FILE_BASENAMES: dict[str, tuple[str, ...]] = {
+    ".pypirc": (),
+    ".netrc": (),
+    "credentials": (".aws",),
+    "hosts.yml": ("gh",),
+    "config.json": (".docker", ".copilot"),
+    "auth.json": (".codex",),
+    ".credentials.json": (".claude",),
+    "antigravity-oauth-token": ("antigravity-cli",),
 }
 
 # Commands that read a file's contents. The credential check is anchored on
@@ -1602,10 +1608,11 @@ def _is_credential_store(token: str) -> bool:
         path = Path(token).expanduser()
     except (ValueError, RuntimeError):
         return False
-    required_parent = CREDENTIAL_FILE_BASENAMES.get(path.name)
-    if required_parent is None:
+    required_parents = CREDENTIAL_FILE_BASENAMES.get(path.name)
+    if required_parents is None:
         return False
-    return not required_parent or required_parent in path.parent.as_posix()
+    parent = path.parent.as_posix()
+    return not required_parents or any(required in parent for required in required_parents)
 
 
 # A redirection does not end the command the way `&&`/`;`/`|` does -- it

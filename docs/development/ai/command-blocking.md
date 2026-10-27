@@ -539,6 +539,7 @@ everyone:
 | `printenv PATH` | Allowed — not secret-shaped |
 | `env -u FORCE_COLOR doit check`, `env VAR=1 make` | Allowed — an *invocation*, not a dump |
 | `cat ~/.pypirc`, `~/.netrc`, `~/.aws/credentials`, `~/.docker/config.json`, `gh/hosts.yml` | **Blocked** — credential stores |
+| `cat ~/.copilot/config.json`, `~/.codex/auth.json`, `~/.claude/.credentials.json`, `~/.gemini/antigravity-cli/antigravity-oauth-token` | **Blocked** — AI CLI credential stores (#1043) |
 | `echo hi; cat ~/.netrc`, `echo hi` *(newline)* `cat ~/.netrc`, `true` *(newline)* `printenv` | **Blocked** — a command position after a glued `;` or an unquoted newline counts (#1011) |
 
 Both checks above are anchored on where a command *starts*, so they need a tokenizer that treats an
