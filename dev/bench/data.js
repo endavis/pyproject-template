@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793190723090,
+  "lastUpdate": 1793194528790,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19529,6 +19529,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.1640075554791953e-7",
             "extra": "mean: 1.6802761919096012 usec\nrounds: 63092"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4cadf9787239968b7c48581f8a598ac009ec8d7b",
+          "message": "docs: tell agents to file unfixed security review findings as private draft advisories (merges PR #1068, addresses #1067)\n\n* docs: tell agents to log unfixed security review findings on the standing log issue\n\nBackground security reviews raise findings the current change won't fix.\nAgents either filed a one-off issue per finding (#1065) or kept extending\nthe PR (#1064 went three rounds).\n\nAGENTS.md now says to fix what belongs to the current change, reproduce the\nrest, and log each one as a comment on the open `security` issue titled\n\"chore: security review findings log\". The issue is found by label and\ntitle, not by number, because AGENTS.md ships to generated projects. The\nrule names the entry fields and how to create the log if it is missing.\nTriage stays with the repo admin.\n\nThe rule goes in AGENTS.md rather than .claude/CLAUDE.md so every agent\nlogs the same way.\n\nAddresses #1067\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\n* docs: file unfixed security review findings as private draft advisories, not a public log\n\nThe first commit sent unfixed findings to a standing public issue. The\nrepo is public, and .github/SECURITY.md says not to report vulnerabilities\nthrough public issues. For the dangerous-command hook it also handed agents\na list of working bypasses, in exactly the issue text they read as context.\n\nThe rule now says to:\n- never put an unfixed finding in a public issue, PR, comment or commit\n  message;\n- reproduce it, then file one private draft security advisory per finding\n  through the repository security-advisories API;\n- stop and ask when advisory creation is refused, never falling back to a\n  public issue.\n\nThe public log (#1066) is retired, and its one entry moved to a draft\nadvisory.\n\nAddresses #1067\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T13:34:46Z",
+          "tree_id": "7198048d4524dfe7b69ea63da6912f58e62c0348",
+          "url": "https://github.com/endavis/pyproject-template/commit/4cadf9787239968b7c48581f8a598ac009ec8d7b"
+        },
+        "date": 1793194527267,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9309670.242059303,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2375098577097013e-8",
+            "extra": "mean: 107.41519022684518 nsec\nrounds: 98146"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10192106.946862034,
+            "unit": "iter/sec",
+            "range": "stddev: 3.34800626072093e-8",
+            "extra": "mean: 98.11514000134015 nsec\nrounds: 108249"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6462128.991834852,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5720933556424394e-8",
+            "extra": "mean: 154.747762117336 nsec\nrounds: 68042"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2297907.9153139307,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1652433219606317e-7",
+            "extra": "mean: 435.17844789850244 nsec\nrounds: 189036"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 602782.2834731648,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7937173737993184e-7",
+            "extra": "mean: 1.6589737744747752 usec\nrounds: 62973"
           }
         ]
       }
