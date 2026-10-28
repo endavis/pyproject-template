@@ -14,7 +14,7 @@ from rich.text import Text
 # Configuration
 DOIT_CONFIG = {
     "verbosity": 2,
-    "default_tasks": ["list"],
+    "default_tasks": ["default"],
 }
 
 # Use direnv-managed UV_CACHE_DIR if available, otherwise use tmp/

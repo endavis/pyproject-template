@@ -14,6 +14,14 @@ from rich.text import Text
 from .base import UV_CACHE_DIR, verbatim
 
 
+def task_default() -> dict[str, Any]:
+    """List all available tasks (runs when no task is given)."""
+    return {
+        "actions": ["uv run doit list"],
+        "verbosity": 2,
+    }
+
+
 def task_cleanup() -> dict[str, Any]:
     """Clean build and cache artifacts (deep clean)."""
 
