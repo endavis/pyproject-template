@@ -19,6 +19,7 @@ For full documentation, see: docs/development/ai/command-blocking.md
 import fnmatch
 import json
 import os
+import posixpath
 import re
 import shlex
 import subprocess  # nosec B404 - needed for git branch detection
@@ -1064,11 +1065,17 @@ _COMMAND_SEPARATORS = {"&&", "||", ";", "|"}
 def _is_broad_pathspec(path: str) -> bool:
     """Return True when git pathspec *path* could cover a repo-root file.
 
-    ``.``, ``./``, ``..``, ``/`` and anything starting with ``:`` (``:/``,
-    ``:(top)``, ``:!x`` pathspec magic) reach the root. A subdirectory such as
-    ``src/`` cannot hold a root-level file, so it is not broad (#1061).
+    ``.``, ``./``, ``src/..``, anything above the repo (``..``, ``../x``), an
+    absolute path and anything starting with ``:`` (``:/``, ``:(top)``, ``:!x``
+    pathspec magic) can reach the root. A subdirectory such as ``src/`` cannot
+    hold a root-level file, so it is not broad (#1061).
     """
-    return bool(path) and (set(path) <= {".", "/"} or path.startswith(":"))
+    if not path:
+        return False
+    if path.startswith((":", "/")):
+        return True
+    norm = posixpath.normpath(path)
+    return norm in {".", ".."} or norm.startswith("../")
 
 
 def _envrc_example_modified() -> bool:
@@ -1090,14 +1097,50 @@ def _envrc_example_modified() -> bool:
 
 
 def _is_leading_dot_glob(path: str) -> bool:
-    """Return True when *path*'s basename starts with ``.`` plus a literal char.
+    """Return True when *path*'s basename starts with a literal ``.``.
 
     Bash ``*``, ``?`` and ``[`` never match a leading dot, so only a glob that
     spells the dot can reach a dotfile such as ``.envrc.local`` (#1061).
-    ``src/*`` and ``src/.*`` do not qualify; ``src/.envrc.loca?`` does.
+    ``src/*`` does not qualify, and neither does the everyday ``src/.*``;
+    ``src/.envrc.loca?``, ``src/.[e]nvrc.local`` and ``src/.?nvrc.local`` do.
     """
     base = path.rstrip("/").rsplit("/", 1)[-1]
-    return len(base) > 1 and base[0] == "." and base[1] not in _DYNAMIC_CHARS
+    return base.startswith(".") and base not in {".", "..", ".*"}
+
+
+_EXTGLOB_INTRODUCERS = frozenset("@+!?*")
+
+
+def _collapse_extglobs(tokens: list[str]) -> list[str]:
+    """Fold each extglob back into one wildcard token (#1061).
+
+    The lexer splits ``.envrc.@(local)`` into ``.envrc.@``, ``(``, ``local``,
+    ``)``. Rewrite the introducer as ``*`` and drop the group, so every write
+    pattern reads ``.envrc.*`` as one dynamic target. Fails closed: the whole
+    group becomes a wildcard whatever it holds.
+    """
+    out: list[str] = []
+    i = 0
+    n = len(tokens)
+    while i < n:
+        tok = tokens[i]
+        if i + 1 < n and tokens[i + 1] == "(" and tok[-1:] in _EXTGLOB_INTRODUCERS:
+            depth = 0
+            j = i + 1
+            while j < n:
+                if tokens[j] == "(":
+                    depth += 1
+                elif tokens[j] == ")":
+                    depth -= 1
+                    if depth == 0:
+                        break
+                j += 1
+            out.append(tok[:-1] + "*")
+            i = j + 1
+            continue
+        out.append(tok)
+        i += 1
+    return out
 
 
 def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
@@ -1177,19 +1220,14 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
     var-name requirement for every target, confirmed or not.
     """
     targets: list[str] = []
+    tokens = _collapse_extglobs(tokens)
     n = len(tokens)
     for i, tok in enumerate(tokens):
         # Pattern A: standalone redirect operator, including `>|`, `&>` and
         # `>&` as :func:`_redirect_tokens` yields them
         if tok in _WRITE_REDIRECTS or (">" in tok and set(tok) <= set(_REDIRECT_PUNCTUATION)):
-            if i + 1 < n:
-                target = tokens[i + 1]
-                # The lexer splits an extglob (`.envrc.@(local)`) into `.envrc.@`,
-                # `(`, ...: read the introducer as a wildcard (#1061)
-                if i + 2 < n and tokens[i + 2] == "(" and target[-1:] in {"@", "+", "!", "?"}:
-                    target = target[:-1] + "*"
-                if _is_env_persistence_target(target, dynamic=True):
-                    targets.append(target)
+            if i + 1 < n and _is_env_persistence_target(tokens[i + 1], dynamic=True):
+                targets.append(tokens[i + 1])
             continue
 
         # Pattern B: redirect operator concatenated with target (no whitespace)
@@ -1241,8 +1279,9 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
             continue
 
         # Pattern D: sed -i (in-place) with persistence target. Every operand
-        # after the script is a file, not just the last (#1061). The script
-        # (first operand, unless -e/-f supplies it) is never matched, as
+        # is matched literally, and every operand after the script is a file
+        # matched as dynamic too, not just the last (#1061). The script (first
+        # operand, unless -e/-f supplies it) skips only the dynamic match, as
         # `s/a/$/` would read as a wildcard.
         if tok == "sed":
             has_in_place = False
@@ -1255,21 +1294,33 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
                     break
                 if skip_next:
                     skip_next = False
-                elif t.startswith("-i"):
+                elif t == "--in-place" or t.startswith("--in-place="):
                     has_in_place = True
-                elif t in {"-e", "-f", "--expression", "--file"}:
+                elif t in {"--expression", "--file"}:
                     has_script_flag = True
                     skip_next = True
                 elif t.startswith(("--expression=", "--file=")):
                     has_script_flag = True
+                elif t.startswith("-") and not t.startswith("--"):
+                    # A short-option cluster: `-i` takes the rest as its
+                    # suffix, `-e`/`-f` the rest (or the next token) as script
+                    for k, ch in enumerate(t[1:], start=2):
+                        if ch == "i":
+                            has_in_place = True
+                            break
+                        if ch in {"e", "f"}:
+                            has_script_flag = True
+                            skip_next = k == len(t)
+                            break
                 elif not t.startswith("-"):
                     operands.append(t)
             if has_in_place:
                 files = operands if has_script_flag else operands[1:]
+                targets.extend(t for t in operands if _is_env_persistence_target(t))
                 targets.extend(
                     t
                     for t in files
-                    if _is_env_persistence_target(t) or _matches_dynamic_env_persistence_target(t)
+                    if t not in targets and _matches_dynamic_env_persistence_target(t)
                 )
             continue
 

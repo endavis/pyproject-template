@@ -962,6 +962,21 @@ _DYNAMIC_TARGET_BLOCKED = [
     "echo x > .envrc.@(local)",
     "echo x > .envrc.+(local)",
     "echo x > .envrc.?(local)",
+    # Review of #1064: attached sed scripts, wildcard after the dot, unnormalized
+    # pathspecs, extglob outside redirects
+    "sed -i -es/a/b/ .envrc.local",
+    "sed -i -nes/a/b/ .envrc.loca?",
+    "sed -ni s/a/b/ .envrc.local",
+    "sed --in-place s/a/b/ .envrc.loca?",
+    "sed -i -f script.sed .envrc.loca?",
+    "cp src/.[e]nvrc.local .",
+    "cp src/.?nvrc.local .",
+    "git checkout HEAD~1 -- src/..",
+    "git restore -s HEAD~1 ./.",
+    "git restore -s HEAD~1 ../repo",
+    "git checkout HEAD~1 -- /abs/repo",
+    "cp src/.envrc.@(local) .",
+    "tee .envrc.@(local) < x",
 ]
 
 _DYNAMIC_TARGET_ALLOWED = [
@@ -992,6 +1007,11 @@ _DYNAMIC_TARGET_ALLOWED = [
     "dd if=a of=out.img",
     "dd of=/dev/null",
     "git stash pop",  # the later `cp` is gated on HEAD instead
+    "sed -i -es/a/$/ file.txt",
+    "sed -n -e s/a/b/ .envrc.local",  # no -i: reads only
+    "sed -i -E s/a/b/ file.txt",
+    "git checkout main -- src/../src/foo.py",
+    "git restore -s HEAD src/sub/..foo",
 ]
 
 
