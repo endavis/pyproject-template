@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793180255606,
+  "lastUpdate": 1793183136519,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19293,6 +19293,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5891284817653328e-7",
             "extra": "mean: 1.2464249326275523 usec\nrounds: 84977"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2fafe3870a6e359fa4c61073f518a8c81f5f580b",
+          "message": "docs: tell AI agents to commit with git commit, since doit commit needs a terminal (merges PR #1058, addresses #1056)\n\n`doit commit` is only `uv run cz commit`, whose prompts exit with EOFError\nwithout a TTY, and an agent's shell tool never has one, interactive session\nor not. CLAUDE.md and CONTRIBUTING.md still told agents to use it, which\ncontradicted implement-issue and left agents to fall back to `git commit`\non their own. Agents now always commit with `git commit` and a\nconventional-format message; `doit commit` is described as the command for\nhumans at a terminal. AGENTS.md carries the same rule for the other agents.\n\nAddresses #1056\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scaSPTmSuKy7UkvPVi\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T10:24:52Z",
+          "tree_id": "c7ac6b8c05361d97fe62440dd75120437a022396",
+          "url": "https://github.com/endavis/pyproject-template/commit/2fafe3870a6e359fa4c61073f518a8c81f5f580b"
+        },
+        "date": 1793183135216,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 15162953.869450644,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0168697493930079e-8",
+            "extra": "mean: 65.95021053349879 nsec\nrounds: 158882"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 15844906.41169946,
+            "unit": "iter/sec",
+            "range": "stddev: 9.449333404173203e-9",
+            "extra": "mean: 63.1117643750566 nsec\nrounds: 167113"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 10756651.235169478,
+            "unit": "iter/sec",
+            "range": "stddev: 1.11643962423991e-8",
+            "extra": "mean: 92.96573609549073 nsec\nrounds: 114496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3145708.9343739734,
+            "unit": "iter/sec",
+            "range": "stddev: 4.400709809946423e-8",
+            "extra": "mean: 317.893365489967 nsec\nrounds: 197161"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 784876.2837723162,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3582124533491283e-7",
+            "extra": "mean: 1.2740861466647255 usec\nrounds: 92115"
           }
         ]
       }
