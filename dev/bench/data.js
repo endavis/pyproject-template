@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793131229974,
+  "lastUpdate": 1793175103182,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19116,6 +19116,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9658448124848938e-7",
             "extra": "mean: 1.454578974698084 usec\nrounds: 80503"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c90b633a1bdca693dd0c5ced8c9cd7c2ecf599a1",
+          "message": "docs: run implement-issue on approved agent-filed issues and code small changes inline (merges PR #1053, addresses #1052)\n\nApproving work on an issue, including a \"yes\" to a fix the agent filed,\nnow runs implement-issue and authorizes commit, push and PR. Small\nchanges are coded inline; a skill's own subagents need no separate consent.\n\nAddresses #1052\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sd5cKg3RTR5omqwcJi\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T08:10:51Z",
+          "tree_id": "b5de42b1b3a7e05417f5a4173762012d020b83e5",
+          "url": "https://github.com/endavis/pyproject-template/commit/c90b633a1bdca693dd0c5ced8c9cd7c2ecf599a1"
+        },
+        "date": 1793175102037,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9528341.778652968,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3917103630986406e-8",
+            "extra": "mean: 104.95005565820196 nsec\nrounds: 100614"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9436885.75062239,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3371958405503686e-8",
+            "extra": "mean: 105.9671618821969 nsec\nrounds: 102797"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6220044.8061292395,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3246764426678107e-8",
+            "extra": "mean: 160.77054606015034 nsec\nrounds: 66055"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2084108.732110896,
+            "unit": "iter/sec",
+            "range": "stddev: 8.099001849448628e-8",
+            "extra": "mean: 479.82141458960587 nsec\nrounds: 185874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 599649.6478603567,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1210372446774574e-7",
+            "extra": "mean: 1.6676404356579806 usec\nrounds: 62618"
           }
         ]
       }
