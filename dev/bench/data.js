@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793176684862,
+  "lastUpdate": 1793180255606,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19234,6 +19234,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.554495878879888e-7",
             "extra": "mean: 1.6411986213140346 usec\nrounds: 63176"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1a12d197321c4c4ffbd119e55c389a8145aad4b5",
+          "message": "fix: block shell-expanded write targets and git replacement of .envrc.local.example (merges PR #1057, addresses #1055)\n\n* fix: block shell-expanded write targets and git replacement of .envrc.local.example\n\nThe hook compared the literal text of a Bash write target, so a target the\nshell expands at run time (`${f}al`, `.envrc.loca?`, `{l,}`, `$(...)`,\nbackticks, a bare `$f`) wrote to `.envrc.local` unchecked. Read each\nexpansion as a wildcard and block when the target could name an\nENV_PERSISTENCE_TARGETS file; a target that is only an expansion is blocked\noutright. Only a copy's destination is read this way, so `cp src/* build/`\nstill works.\n\nTreat `git checkout <rev> -- <path>` and `git restore <path>` as writes, so\n`.envrc.local.example` cannot be swapped ahead of the allowed `cp`.\n\nAddresses #1055\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scaSPTmSuKy7UkvPVi\n\n* fix: fail closed on shell grammar the write-target scanner cannot mirror\n\nThe security-guidance commit review found four targets the scanner parsed\ndifferently from bash: `git checkout <rev> <path>` without `--`, ANSI-C\nquoting (`$'\\x2eenvrc.local'`), a bracket set holding `]` (`[]l]`) and\nnested braces (`{a{l,},}`). Read only `$name`, `*` and `?` exactly; every\nother expansion, and a backslash left by quoting, turns the rest of the\ntarget into a wildcard. Check every non-option `git checkout` argument as a\npath when there is no `--`.\n\nAddresses #1055\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scaSPTmSuKy7UkvPVi\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T09:36:52Z",
+          "tree_id": "55098dd292cfc27204cdcf76b1ac2b5862608acb",
+          "url": "https://github.com/endavis/pyproject-template/commit/1a12d197321c4c4ffbd119e55c389a8145aad4b5"
+        },
+        "date": 1793180254009,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13036437.33236888,
+            "unit": "iter/sec",
+            "range": "stddev: 8.886268901623124e-9",
+            "extra": "mean: 76.70807403162561 nsec\nrounds: 134753"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12998877.187458167,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9586412929584662e-8",
+            "extra": "mean: 76.92972135815235 nsec\nrounds: 140826"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8582808.834039927,
+            "unit": "iter/sec",
+            "range": "stddev: 2.115501912861864e-8",
+            "extra": "mean: 116.51197403278294 nsec\nrounds: 92886"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3111706.66216357,
+            "unit": "iter/sec",
+            "range": "stddev: 5.554466499425221e-8",
+            "extra": "mean: 321.3670530578547 nsec\nrounds: 194667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 802294.605814671,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5891284817653328e-7",
+            "extra": "mean: 1.2464249326275523 usec\nrounds: 84977"
           }
         ]
       }
