@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793194528790,
+  "lastUpdate": 1793211446229,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19588,6 +19588,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7937173737993184e-7",
             "extra": "mean: 1.6589737744747752 usec\nrounds: 62973"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8ec3e6e67a6dc0e2f6c5cc203c8c3b1335b9a541",
+          "message": "fix: make bare doit and doit clean run by giving default_tasks a real task (merges PR #1072, addresses #1071)\n\nDOIT_CONFIG named the \"list\" command in default_tasks, but default_tasks\nmust name tasks. Bare doit rejected it as an invalid parameter and doit\nclean raised KeyError: 'list'. Add a task_default that runs doit list and\npoint default_tasks at it, with a test that every default task is\ndiscovered.\n\nAddresses #1071\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbXFNDAf1X4tiM8eku\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T18:16:42Z",
+          "tree_id": "db21a9965ecf517e60e45296f2d5670e92a60f00",
+          "url": "https://github.com/endavis/pyproject-template/commit/8ec3e6e67a6dc0e2f6c5cc203c8c3b1335b9a541"
+        },
+        "date": 1793211444686,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10329480.522482477,
+            "unit": "iter/sec",
+            "range": "stddev: 1.138566347874047e-8",
+            "extra": "mean: 96.81028952264008 nsec\nrounds: 106451"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10574636.995177234,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1619634671413474e-8",
+            "extra": "mean: 94.56589388894099 nsec\nrounds: 109734"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7097138.755449395,
+            "unit": "iter/sec",
+            "range": "stddev: 1.454342828656387e-8",
+            "extra": "mean: 140.9018527687894 nsec\nrounds: 72675"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2416551.660274913,
+            "unit": "iter/sec",
+            "range": "stddev: 6.736060213498021e-8",
+            "extra": "mean: 413.81279632409655 nsec\nrounds: 195389"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 633350.7943254986,
+            "unit": "iter/sec",
+            "range": "stddev: 1.645641809124253e-7",
+            "extra": "mean: 1.5789038380617693 usec\nrounds: 66570"
           }
         ]
       }
