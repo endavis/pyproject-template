@@ -72,6 +72,8 @@ def _run(
     deterministic regardless of the actual checkout state (TRAP 2 from the plan).
     """
     monkeypatch.setattr(hook, "get_current_branch", lambda: branch)
+    # The allowed example copy asks git about the checkout (#1061)
+    monkeypatch.setattr(hook, "_envrc_example_modified", lambda: False)
     _set_stdin(monkeypatch, _bash_payload(command))
     # ``main()`` returns its exit code rather than calling ``sys.exit()``, so
     # call it directly. ``int()`` narrows the module attribute's ``Any`` type
@@ -942,6 +944,24 @@ _DYNAMIC_TARGET_BLOCKED = [
     "echo x >> $'\\x2eenvrc.local'",
     "echo x >> .envrc.loca[]l]",
     "echo x >> .envrc.loc{a{l,},}",
+    # Gaps from #1061: sources, later sed operands, broad pathspecs, dd, extglob
+    "cp src/.envrc.loca? .",
+    "cp src/.envrc.loca? ./",
+    "mv src/.envrc.l* .",
+    "sed -i s/a/b/ .envrc.loca? other.txt",
+    "sed -e s/a/b/ -i .envrc.loca? other",
+    "git checkout HEAD~1 -- .",
+    "git checkout HEAD~1 .",
+    "git restore --source=HEAD~1 :/",
+    "git restore -s HEAD~1 ./",
+    "git restore -s X ..",
+    "git restore --source=X --pathspec-from-file=p",
+    "git checkout other -- :(top).envrc.local.example",
+    "dd if=evil of=.envrc.loca?",
+    "dd if=evil of=.envrc.local",
+    "echo x > .envrc.@(local)",
+    "echo x > .envrc.+(local)",
+    "echo x > .envrc.?(local)",
 ]
 
 _DYNAMIC_TARGET_ALLOWED = [
@@ -956,6 +976,22 @@ _DYNAMIC_TARGET_ALLOWED = [
     "git checkout main -- src/foo.py",
     "git restore src/foo.py",
     'git commit -m "a >> $f"',
+    # Guard the everyday forms next to the #1061 gaps
+    "cp src/*.py build/",
+    "cp src/.* build/",  # documented residual: a bare `.*` is too common to block
+    "cp $src build/",
+    "sed -i s/a/b/ *.py",
+    "sed -i s/a/$/ file.txt",
+    "sed -i -e s/a/b/ file.txt",
+    "git checkout -- .",
+    "git checkout .",
+    "git restore .",
+    "git restore --staged .",
+    "git checkout main -- src/",
+    "git restore -s HEAD src/foo.py",
+    "dd if=a of=out.img",
+    "dd of=/dev/null",
+    "git stash pop",  # the later `cp` is gated on HEAD instead
 ]
 
 
@@ -971,3 +1007,57 @@ def test_write_target_that_cannot_be_protected_is_allowed(
     hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
 ) -> None:
     assert _run(hook, monkeypatch, command) == 0
+
+
+# ---------------------------------------------------------------------------
+# The allowed example copy is gated on the example matching HEAD (#1061)
+# ---------------------------------------------------------------------------
+
+_ENVRC_COPY = "cp .envrc.local.example .envrc.local"
+
+
+def _run_with_git(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+    outcome: int | BaseException,
+) -> int:
+    """Run the hook with ``subprocess.run`` faked: return code *outcome*, or raise it."""
+
+    def fake_run(args: list[str], **_kwargs: object) -> subprocess.CompletedProcess[bytes]:
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return subprocess.CompletedProcess(args, outcome)
+
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    monkeypatch.setattr(hook.subprocess, "run", fake_run)
+    _set_stdin(monkeypatch, _bash_payload(command))
+    return int(hook.main())
+
+
+@pytest.mark.parametrize(
+    ("outcome", "expected"),
+    [
+        (1, 2),  # example differs from HEAD
+        (0, 0),  # clean
+        (128, 0),  # not a repo: fail open
+        (FileNotFoundError("git"), 0),  # git missing: fail open
+        (subprocess.TimeoutExpired("git", 5), 0),  # timeout: fail open
+    ],
+)
+def test_example_copy_is_gated_on_head(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    outcome: int | BaseException,
+    expected: int,
+) -> None:
+    assert _run_with_git(hook, monkeypatch, _ENVRC_COPY, outcome) == expected
+
+
+@pytest.mark.parametrize("outcome", [1, 0])
+def test_other_documented_write_and_stash_pop_ignore_head(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, outcome: int
+) -> None:
+    echo = "echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local"
+    assert _run_with_git(hook, monkeypatch, echo, outcome) == 0
+    assert _run_with_git(hook, monkeypatch, "git stash pop", outcome) == 0
