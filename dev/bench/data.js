@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793175103182,
+  "lastUpdate": 1793176684862,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19175,6 +19175,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.1210372446774574e-7",
             "extra": "mean: 1.6676404356579806 usec\nrounds: 62618"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "556e130f5f4ff2bf34eea270bbf298e331e763b8",
+          "message": "fix: block every shell write to .envrc.local except the documented setup commands (merges PR #1054, addresses #1051)\n\n* fix: block every shell write to .envrc.local except the documented setup commands\n\n.envrc.local was content-gated on the Bash path: a write was blocked only\nwhen a token literally held the merge-gate var name, so a command that\nassembled the name at run time persisted it into a file .envrc loads.\n\nMove .envrc.local into ENV_PERSISTENCE_TARGETS, so a confirmed write is\nblocked whatever it writes, like .envrc. The two documented commands\n(cp .envrc.local.example .envrc.local and the ENABLE_LSP_TOOL echo) stay\nallowed through a whole-command allowlist, so nothing earlier in the same\ncommand can change what they write.\n\nAddresses #1051\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbcDmCnwMkEqadVvQM\n\n* fix: apply the .envrc.local allowlist only at top level and protect its cp source\n\nTwo bypasses of the previous commit's allowlist, both found by an\nautomated security review:\n\n- A bash -c payload matched the allowlist on its own, so a wrapper that\n  first exported a shell function shadowing echo could change what the\n  allowed write produced. The allowlist now applies only at depth 0.\n- The allowed cp copies .envrc.local.example, which was unprotected, so\n  writing the var into it first and then running the cp persisted it.\n  .envrc.local.example is now an ENV_PERSISTENCE_TARGETS file.\n\nAddresses #1051\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbcDmCnwMkEqadVvQM\n\n* fix: catch ln/install/rsync and every redirect spelling, and block file edits to sourced env files\n\nCloses the remaining gaps an automated security review found around the\n.envrc.local fix:\n\n- Bash write detection now treats ln, install and rsync as writes, and\n  finds a redirect spelled >|, &>, with an fd prefix (1>>) or glued to\n  the word before it (echo x>~/.bashrc), by also lexing the command with\n  shell operator characters as punctuation. `ln -sf` over\n  .envrc.local.example was also a way to redirect the allowed cp's source.\n- A file-edit tool (Write, Edit, apply_patch, ...) is now blocked from\n  every ENV_PERSISTENCE_TARGETS file whatever its content. bash or direnv\n  runs these files when loading them, so content that assembles the var\n  name persisted it without the literal string. AI CLI settings files,\n  which no shell runs, stay content-gated.\n\nAI agents can no longer Write or Edit shell rc files, .envrc, .env*,\n.envrc.local or .envrc.local.example through file-edit tools, even with\ncontent that does not name the var. A human edits them.\n\nAddresses #1051\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbcDmCnwMkEqadVvQM\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T08:37:18Z",
+          "tree_id": "e35538d6b8e58a992300639bf6e0cbf679cf7a14",
+          "url": "https://github.com/endavis/pyproject-template/commit/556e130f5f4ff2bf34eea270bbf298e331e763b8"
+        },
+        "date": 1793176683788,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9667131.756374476,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1507370648281415e-8",
+            "extra": "mean: 103.44329892272371 nsec\nrounds: 103649"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10089925.523191929,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0583642993363718e-8",
+            "extra": "mean: 99.10875929673382 nsec\nrounds: 109446"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6886147.595101334,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3886643665825825e-8",
+            "extra": "mean: 145.21907731274592 nsec\nrounds: 73015"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2297702.417448178,
+            "unit": "iter/sec",
+            "range": "stddev: 6.151660928960831e-8",
+            "extra": "mean: 435.2173686227815 nsec\nrounds: 186220"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 609310.7726347861,
+            "unit": "iter/sec",
+            "range": "stddev: 1.554495878879888e-7",
+            "extra": "mean: 1.6411986213140346 usec\nrounds: 63176"
           }
         ]
       }
