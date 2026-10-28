@@ -1072,7 +1072,7 @@ def _is_broad_pathspec(path: str) -> bool:
     """
     if not path:
         return False
-    if path.startswith((":", "/")):
+    if path.startswith((":", "/", "~")):
         return True
     norm = posixpath.normpath(path)
     return norm in {".", ".."} or norm.startswith("../")
@@ -1094,6 +1094,17 @@ def _envrc_example_modified() -> bool:
     except (subprocess.TimeoutExpired, OSError):
         return False
     return result.returncode == 1
+
+
+def _long_opt_matches(tok: str, full: str) -> bool:
+    """Return True when *tok* names long option *full*, abbreviated or not.
+
+    GNU getopt and git's parse-options both accept any unambiguous prefix
+    (``--in-pl`` for ``--in-place``), with or without ``=value`` (#1061). An
+    ambiguous prefix makes the tool error out, so matching it fails closed.
+    """
+    name = tok.split("=", 1)[0]
+    return len(name) >= 3 and full.startswith(name)
 
 
 def _is_leading_dot_glob(path: str) -> bool:
@@ -1183,17 +1194,23 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
         for t in rest:
             if skip:
                 skip = False
-            elif t in {"--source", "-s"}:
+            elif t == "-s" or (_long_opt_matches(t, "--source") and "=" not in t):
                 skip = True
                 has_source = True
-            elif t.startswith("--source=") or (t.startswith("-s") and not t.startswith("--")):
+            elif _long_opt_matches(t, "--source") or (
+                t.startswith("-s") and not t.startswith("--")
+            ):
                 has_source = True
             elif not t.startswith("-"):
                 paths.append(t)
     targets = [path for path in paths if _is_env_persistence_target(path, dynamic=True)]
+    # `-C`/`--work-tree` move where git resolves paths, so any pathspec may
+    # reach the root (`git -C .. checkout X -- repo/`)
+    moved = any(t == "-C" or t.startswith("--work-tree") for t in tokens[git_idx + 1 : sub])
     if has_source and (
-        any(_is_broad_pathspec(path) for path in paths)
-        or any(t.startswith("--pathspec-from-file") for t in rest)
+        moved
+        or any(_is_broad_pathspec(path) for path in paths)
+        or any(_long_opt_matches(t, "--pathspec-from-file") for t in rest)
     ):
         # Stand in the protected name the broad pathspec covers, so the
         # caller's match blocks it
@@ -1294,13 +1311,11 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
                     break
                 if skip_next:
                     skip_next = False
-                elif t == "--in-place" or t.startswith("--in-place="):
+                elif _long_opt_matches(t, "--in-place"):
                     has_in_place = True
-                elif t in {"--expression", "--file"}:
+                elif _long_opt_matches(t, "--expression") or _long_opt_matches(t, "--file"):
                     has_script_flag = True
-                    skip_next = True
-                elif t.startswith(("--expression=", "--file=")):
-                    has_script_flag = True
+                    skip_next = "=" not in t
                 elif t.startswith("-") and not t.startswith("--"):
                     # A short-option cluster: `-i` takes the rest as its
                     # suffix, `-e`/`-f` the rest (or the next token) as script

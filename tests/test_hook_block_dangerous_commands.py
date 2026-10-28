@@ -977,6 +977,15 @@ _DYNAMIC_TARGET_BLOCKED = [
     "git checkout HEAD~1 -- /abs/repo",
     "cp src/.envrc.@(local) .",
     "tee .envrc.@(local) < x",
+    # Second review of #1064: abbreviated long options, `~` paths, moved roots
+    "sed --in-pl s/a/b/ .envrc.loca?",
+    "sed -i --expr=s/a/b/ .envrc.loca?",
+    "sed -i --expr s/a/b/ .envrc.loca?",
+    "git restore --sour=HEAD~1 .",
+    "git restore --source=HEAD~1 --pathspec-from=p",
+    "git checkout HEAD~1 -- ~/src/repo",
+    "git -C .. checkout HEAD~1 -- repo/",
+    "git --work-tree=.. restore -s HEAD~1 repo/",
 ]
 
 _DYNAMIC_TARGET_ALLOWED = [
@@ -1012,6 +1021,9 @@ _DYNAMIC_TARGET_ALLOWED = [
     "sed -i -E s/a/b/ file.txt",
     "git checkout main -- src/../src/foo.py",
     "git restore -s HEAD src/sub/..foo",
+    "sed -n --quiet -e s/a/b/ file.txt",
+    "git -C sub checkout -- file.py",  # no source: content comes from the index
+    "git restore --staged src/foo.py",
 ]
 
 
