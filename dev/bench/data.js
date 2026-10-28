@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793187669959,
+  "lastUpdate": 1793190723090,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19470,6 +19470,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.0010526161443716e-7",
             "extra": "mean: 900.2448159403466 nsec\nrounds: 116646"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9804d9e7cf672dd78e72b79415e63b62ab4483f8",
+          "message": "fix: close glob-source, sed operand, broad pathspec and dd of= gaps in the env-file write guard (merges PR #1064, addresses #1061)\n\n* fix: close glob-source, sed operand, broad pathspec and dd of= gaps in the env-file write guard\n\nblock-dangerous-commands still let several shell write forms reach\n.envrc.local or .envrc.local.example. Most were siblings of the cases #1055\nclosed.\n\n- cp/mv/install/rsync/ln: a source glob is matched dynamically when its\n  basename spells a leading dot (cp src/.envrc.loca? .). Bash globs never\n  match a leading dot, so cp src/* build/ is unaffected.\n- sed -i: every operand after the script is checked, not just the last. The\n  script itself (the first operand, unless -e/-f supplies one) is never\n  matched.\n- git checkout/restore with an explicit source block broad pathspecs: ., ./,\n  .., \":\"-magic and --pathspec-from-file. Without a source the content comes\n  from the index, so git checkout -- . and git restore . still pass.\n- The allowed cp of the example onto .envrc.local is refused while the\n  example differs from HEAD. That cp is the sink for every git working-tree\n  writer (stash pop, apply, merge, aliases), so it is gated instead of\n  enumerating those subcommands. It fails open when git is missing, times\n  out, or the file is untracked.\n- dd strips of= and ignores if=, which also closes the literal\n  dd of=.envrc.local.\n- An extglob introducer (@( +( !( ?() before a redirect target reads as a\n  wildcard.\n\nAddresses #1061\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\n* fix: close the sed, dot-glob, pathspec and extglob holes found reviewing the env-file guard\n\nA security review of the first #1061 commit found one regression and three\nholes in its new rules:\n\n- sed: an attached script (-es/a/b/, -nes/a/b/) was taken for the first\n  operand, so the real target was skipped. main blocked\n  sed -i -es/a/b/ .envrc.local, and the branch allowed it. Every operand is\n  now matched literally again, and only the script skips the dynamic match.\n  -e/-f are read inside short-option clusters, and --in-place and -ni count\n  as in-place.\n- A source glob whose dot is followed by a wildcard (cp src/.[e]nvrc.local .,\n  cp src/.?nvrc.local .) is read dynamically. Only \".\", \"..\" and the\n  everyday \".*\" are left out.\n- Pathspecs are normalized before the broad check, so src/.., ./., ../repo\n  and absolute paths count as broad when an explicit source is given.\n- Extglob groups are folded into one wildcard token for every write pattern,\n  not only redirects (cp src/.envrc.@(local) .).\n\nThe docs now also say that committing a modified example defeats the HEAD\ngate, and that this is the line ADR-9019 draws.\n\nAddresses #1061\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\n* fix: read abbreviated long options, ~ paths and moved git roots in the env-file guard\n\nA second security review of PR #1064 found two more parser gaps:\n\n- GNU sed and git both accept any unambiguous prefix of a long option. So\n  sed --in-pl edited in place unseen, and sed -i --expr=... made the target\n  look like the script. git restore --sour=X . hid its source the same way.\n  A new _long_opt_matches helper reads every prefix of 3 or more characters\n  as the full option. An ambiguous prefix makes the tool error, so this\n  fails closed.\n- With an explicit source revision, a ~ path now counts as a broad pathspec.\n  Under git -C or --work-tree every pathspec does, since the root has moved\n  (git -C .. checkout X -- repo/).\n\nAddresses #1061\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T12:31:22Z",
+          "tree_id": "1181ae26147bf152d805674745ddcc43a6d12218",
+          "url": "https://github.com/endavis/pyproject-template/commit/9804d9e7cf672dd78e72b79415e63b62ab4483f8"
+        },
+        "date": 1793190722018,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9583678.37439624,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5064398345341913e-8",
+            "extra": "mean: 104.3440692533673 nsec\nrounds: 101338"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10419273.039076222,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4776667422831919e-8",
+            "extra": "mean: 95.97598568053847 nsec\nrounds: 106987"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6666607.160280214,
+            "unit": "iter/sec",
+            "range": "stddev: 1.776358684645118e-8",
+            "extra": "mean: 150.00133890564624 nsec\nrounds: 72380"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2300193.401458972,
+            "unit": "iter/sec",
+            "range": "stddev: 6.955192061217407e-8",
+            "extra": "mean: 434.7460519475091 nsec\nrounds: 187970"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 595140.2542123265,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1640075554791953e-7",
+            "extra": "mean: 1.6802761919096012 usec\nrounds: 63092"
           }
         ]
       }
