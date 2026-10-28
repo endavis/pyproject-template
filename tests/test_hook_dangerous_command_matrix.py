@@ -589,20 +589,50 @@ BASH_CASES = [
     ),
     (
         # .envrc sources .envrc.local, so persisting the var there is the
-        # issue's own repro (#1037). It is content-gated: blocked only when
-        # the literal var name is present.
+        # issue's own repro (#1037).
         "printf 'export ALLOW_AI_READY_TO_MERGE=1' > .envrc.local",
         "BLOCK",
         "var name write to .envrc.local",
     ),
     (
+        # Issue #1051's repro: the name is assembled at run time, so no token
+        # contains it. A confirmed write to .envrc.local is blocked whatever
+        # its content, like .envrc.
+        'v=ALLOW_AI_READY_TO; echo "export ${v}_MERGE=1" >> .envrc.local',
+        "BLOCK",
+        "runtime-assembled var name write to .envrc.local",
+    ),
+    (
+        'printf "export ALLOW_AI_READY_TO%s=1\\n" _MERGE >> .envrc.local',
+        "BLOCK",
+        "printf-assembled var name write to .envrc.local",
+    ),
+    ("echo hi >> .envrc.local", "BLOCK", "undocumented write to .envrc.local"),
+    (
+        # A shell function defined earlier in the same command could change
+        # what an allowed write produces, so only the whole command is allowed.
+        "echo(){ printf x; }; echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local",
+        "BLOCK",
+        "documented .envrc.local write preceded by other commands",
+    ),
+    (
         # Documented agent-runnable steps (AI_SETUP.md, README) that must
-        # stay allowed: no var name, so the content gate lets them through.
+        # stay allowed: each is a whole-command allowlist entry.
         "echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local",
         "ALLOW",
         "documented ENABLE_LSP_TOOL line to .envrc.local",
     ),
+    (
+        'echo "export ENABLE_LSP_TOOL=1" >> .envrc.local',
+        "ALLOW",
+        "documented ENABLE_LSP_TOOL line with double quotes",
+    ),
     ("cp .envrc.local.example .envrc.local", "ALLOW", "copy envrc.local example"),
+    (
+        "bash -c 'cp .envrc.local.example .envrc.local'",
+        "ALLOW",
+        "copy envrc.local example inside bash -c",
+    ),
     (
         # The interpreter heuristic only *might* write; mentioning a target
         # basename with no var name present stays allowed.

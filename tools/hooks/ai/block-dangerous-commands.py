@@ -156,6 +156,7 @@ ENV_PERSISTENCE_TARGETS: dict[str, str] = {
     ".zshenv": "",
     "config.fish": ".config/fish",
     ".envrc": "",
+    ".envrc.local": "",
     ".env": "",
     ".env.local": "",
     ".env.development": "",
@@ -163,13 +164,20 @@ ENV_PERSISTENCE_TARGETS: dict[str, str] = {
     "copilot-hooks.json": "",
 }
 
-# Env files that are protected but stay content-gated on the Bash path: a
-# write is blocked only when ALLOW_AI_READY_TO_MERGE is literally present.
-# `.envrc` loads `.envrc.local` on every directory entry, so it persists the
-# var as well as `.envrc` does, but this project documents agent-runnable
-# shell writes to it (`cp .envrc.local.example .envrc.local`, the
-# ENABLE_LSP_TOOL line in AI_SETUP.md) that must stay allowed (#1037).
-CONTENT_GATED_ENV_TARGETS: frozenset[str] = frozenset({".envrc.local"})
+# Whole Bash commands that may write an ENV_PERSISTENCE_TARGETS file anyway.
+# `.envrc` loads `.envrc.local` on every directory entry, so a confirmed write
+# to it is blocked whatever its content, like `.envrc` (#1051). This project
+# documents these agent-runnable writes to it (README, CONTRIBUTING.md,
+# AI_SETUP.md), so they stay allowed. The whole command must match: a token
+# list compares quoting-insensitively, and nothing before the write (such as a
+# shell function shadowing `echo`) can change what it writes.
+_ALLOWED_ENV_PERSISTENCE_WRITES: frozenset[tuple[str, ...]] = frozenset(
+    tuple(shlex.split(command))
+    for command in (
+        "cp .envrc.local.example .envrc.local",
+        "echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local",
+    )
+)
 
 # Settings files that are only protected when inside a known AI CLI config dir
 _AI_CLI_SETTINGS_TARGETS: dict[str, set[str]] = {
@@ -253,23 +261,8 @@ def _is_env_persistence_target(path_str: str) -> bool:
     - Basename + optional parent-path fragment (ENV_PERSISTENCE_TARGETS)
     - AI CLI settings files only when the immediate parent dir is in the
       corresponding allow-list (_AI_CLI_SETTINGS_TARGETS)
-    - Content-gated env files by basename (CONTENT_GATED_ENV_TARGETS)
     """
-    return (
-        _matches_env_persistence_target(path_str)
-        or _matches_ai_cli_settings_target(path_str)
-        or _matches_content_gated_env_target(path_str)
-    )
-
-
-def _matches_content_gated_env_target(path_str: str) -> bool:
-    """Return True when *path_str*'s basename is in ``CONTENT_GATED_ENV_TARGETS``."""
-    if not path_str:
-        return False
-    try:
-        return Path(path_str).expanduser().name in CONTENT_GATED_ENV_TARGETS
-    except (ValueError, RuntimeError):
-        return False
+    return _matches_env_persistence_target(path_str) or _matches_ai_cli_settings_target(path_str)
 
 
 def tokenize(command: str) -> list[str]:
@@ -1068,9 +1061,7 @@ def _bash_interpreter_mentions_target(tokens: list[str]) -> bool:
         )
         if not has_inline:
             continue
-        persistence_basenames = (
-            set(ENV_PERSISTENCE_TARGETS) | set(_AI_CLI_SETTINGS_TARGETS) | CONTENT_GATED_ENV_TARGETS
-        )
+        persistence_basenames = set(ENV_PERSISTENCE_TARGETS) | set(_AI_CLI_SETTINGS_TARGETS)
         for t in segment:
             for basename in persistence_basenames:
                 if basename in t:
@@ -1090,6 +1081,9 @@ def check_env_persistence_in_bash(tokens: list[str]) -> tuple[bool, str]:
       blocked whatever its content. A runtime-assembled variable name
       (``v=ALLOW_AI_; echo "export ${v}READY_TO_MERGE=1" >> ~/.bashrc``) is
       blocked this way without the literal string ever needing to appear.
+      The only exceptions are the whole commands in
+      ``_ALLOWED_ENV_PERSISTENCE_WRITES``, the documented ``.envrc.local``
+      setup steps (#1051).
     - A confirmed write to an ``_AI_CLI_SETTINGS_TARGETS`` file, and the
       script-interpreter *might-write* heuristic
       (:func:`_bash_interpreter_mentions_target`) against any target, still
@@ -1110,6 +1104,8 @@ def check_env_persistence_in_bash(tokens: list[str]) -> tuple[bool, str]:
 
     for target in _bash_confirmed_write_targets(tokens):
         if _matches_env_persistence_target(target):
+            if tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
+                continue
             return True, message
         if var_present:
             return True, message
