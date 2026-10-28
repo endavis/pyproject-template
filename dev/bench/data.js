@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793183136519,
+  "lastUpdate": 1793184954249,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19352,6 +19352,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3582124533491283e-7",
             "extra": "mean: 1.2740861466647255 usec\nrounds: 92115"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c68c20e894d066205b8b00b34cec34d6738d63e8",
+          "message": "chore: include the target template SHA in template-sync issue and PR titles (merges PR #1060, addresses #1059)\n\nThe template-sync skill titled its tracking issue \"synchronize with latest\npyproject-template\", so neither the issue nor the PR said which template commit\nthe sync targeted. \"Latest\" also goes stale once upstream main moves.\n\nStep 2 now resolves the target ref to a commit SHA with gh api before opening the\nissue, and puts the short SHA in the issue title. Step 4 always pins the drift\ncheck to that SHA, so the check, the recorded sync point and the titles all name\nthe same commit. Steps 6, 9 and 10 reuse the SHA in the plan header, the\nsync-point confirmation, and the commit and PR titles. The .claude/ and .agents/\ncopies of the skill stay identical, and docs/template/ai-sync-checklist.md gets\nthe same changes.\n\nAddresses #1059\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T10:55:11Z",
+          "tree_id": "5bf4e38c398f6e8a1a3554c47a0b146aa3ef50cc",
+          "url": "https://github.com/endavis/pyproject-template/commit/c68c20e894d066205b8b00b34cec34d6738d63e8"
+        },
+        "date": 1793184953310,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13487518.41439704,
+            "unit": "iter/sec",
+            "range": "stddev: 1.016784927820982e-8",
+            "extra": "mean: 74.14262351868715 nsec\nrounds: 138562"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 14085860.720915576,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0566152187013124e-8",
+            "extra": "mean: 70.9931767616541 nsec\nrounds: 147515"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9083470.093384061,
+            "unit": "iter/sec",
+            "range": "stddev: 2.135822846564343e-8",
+            "extra": "mean: 110.09008558616263 nsec\nrounds: 98030"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2666087.276947062,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1028629050074116e-7",
+            "extra": "mean: 375.08149438569785 nsec\nrounds: 199761"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 673211.6849623959,
+            "unit": "iter/sec",
+            "range": "stddev: 2.607355626769013e-7",
+            "extra": "mean: 1.4854168790249946 usec\nrounds: 79347"
           }
         ]
       }
