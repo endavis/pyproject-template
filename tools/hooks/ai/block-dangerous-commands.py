@@ -202,64 +202,40 @@ def _env_truthy(name: str) -> bool:
     return val in {"1", "true", "yes", "on"}
 
 
-_DYNAMIC_CHARS = frozenset("$`*?[{")
+_DYNAMIC_CHARS = frozenset("$`*?[{\\")
 
 
 def _scan_dynamic_path(path_str: str) -> list[tuple[str, str | None]]:
     """Split *path_str* into ``(literal_char, None)`` / ``("", regex)`` parts.
 
-    Each shell expansion (``$name``, ``${...}``, ``$(...)``, a backtick span,
-    ``*``, ``?``, ``[...]``, ``{...}``) becomes one wildcard part, so a caller
-    can ask whether the path *could* expand to a protected name (#1055). An
-    unterminated ``$(``, ``${`` or backtick runs to the end of the string: the
-    lexer splits ``$(printf .envrc.local)`` at the space, so the fragment it
-    sees is unbalanced.
+    Each shell expansion becomes a wildcard part, so a caller can ask whether
+    the path *could* expand to a protected name (#1055). Only ``$name``, ``*``
+    and ``?`` are read exactly. Every other expansion -- ``${...}``,
+    ``$(...)``, ``$'...'``, a special parameter, a backtick, ``[...]``,
+    ``{...}``, a backslash left by quoting -- turns the rest of the path into
+    one wildcard: their bash grammar (nesting, ``[]x]``, ANSI-C escapes) is
+    too easy to parse differently from the shell, so fail closed instead.
     """
     parts: list[tuple[str, str | None]] = []
     i = 0
     n = len(path_str)
-    closers = {"{": "}", "(": ")"}
     while i < n:
         ch = path_str[i]
-        if ch == "$" and i + 1 < n and path_str[i + 1] in closers:
-            opener = path_str[i + 1]
-            closer = closers[opener]
-            depth = 0
-            j = i + 1
-            while j < n:
-                if path_str[j] == opener:
-                    depth += 1
-                elif path_str[j] == closer:
-                    depth -= 1
-                    if depth == 0:
-                        break
-                j += 1
-            parts.append(("", ".*"))
-            i = j + 1
-        elif ch == "$":
+        if ch == "$" and i + 1 < n and (path_str[i + 1].isalpha() or path_str[i + 1] == "_"):
             j = i + 1
             while j < n and (path_str[j].isalnum() or path_str[j] == "_"):
                 j += 1
             parts.append(("", ".*"))
-            i = max(j, i + 1)
-        elif ch == "`":
-            j = path_str.find("`", i + 1)
-            parts.append(("", ".*"))
-            i = n if j == -1 else j + 1
+            i = j
         elif ch == "*":
             parts.append(("", ".*"))
             i += 1
         elif ch == "?":
             parts.append(("", "."))
             i += 1
-        elif ch == "[":
-            j = path_str.find("]", i + 1)
-            parts.append(("", "."))
-            i = n if j == -1 else j + 1
-        elif ch == "{":
-            j = path_str.find("}", i + 1)
+        elif ch in _DYNAMIC_CHARS:
             parts.append(("", ".*"))
-            i = n if j == -1 else j + 1
+            break
         else:
             parts.append((ch, None))
             i += 1
@@ -1086,8 +1062,9 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     ``git checkout <rev> -- <path>`` and ``git restore [--source=<rev>] <path>``
     replace the file with another version of it, so this carries content into
     ``.envrc.local.example`` ahead of the allowed ``cp`` onto ``.envrc.local``.
-    Without ``--`` only ``git restore`` counts: ``git checkout main`` is a
-    branch switch.
+    ``git checkout <rev> <path>`` needs no ``--``, so without one every
+    non-option argument is checked as a path; a branch is never named like a
+    protected file, so ``git checkout main`` still passes.
     """
     sub = _git_subcommand_index(tokens, git_idx)
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
@@ -1101,6 +1078,8 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     if tokens[sub] == "checkout":
         if "--" in rest:
             paths = rest[rest.index("--") + 1 :]
+        else:
+            paths = [t for t in rest if not t.startswith("-")]
     else:
         skip = False
         for t in rest:

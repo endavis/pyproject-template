@@ -937,6 +937,11 @@ _DYNAMIC_TARGET_BLOCKED = [
     "git -C . restore -s other .envrc.local.example",
     "git checkout other -- .envrc.l*",
     "echo x >> ~/.bash*",
+    # Grammar the scanner no longer tries to mirror: the rest is a wildcard
+    "git checkout other .envrc.local.example",
+    "echo x >> $'\\x2eenvrc.local'",
+    "echo x >> .envrc.loca[]l]",
+    "echo x >> .envrc.loc{a{l,},}",
 ]
 
 _DYNAMIC_TARGET_ALLOWED = [
