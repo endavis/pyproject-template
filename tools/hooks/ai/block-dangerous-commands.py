@@ -157,6 +157,9 @@ ENV_PERSISTENCE_TARGETS: dict[str, str] = {
     "config.fish": ".config/fish",
     ".envrc": "",
     ".envrc.local": "",
+    # The source of the allowed `cp` below: writing it first, then copying,
+    # would carry any content into `.envrc.local` (#1051).
+    ".envrc.local.example": "",
     ".env": "",
     ".env.local": "",
     ".env.development": "",
@@ -170,7 +173,9 @@ ENV_PERSISTENCE_TARGETS: dict[str, str] = {
 # documents these agent-runnable writes to it (README, CONTRIBUTING.md,
 # AI_SETUP.md), so they stay allowed. The whole command must match: a token
 # list compares quoting-insensitively, and nothing before the write (such as a
-# shell function shadowing `echo`) can change what it writes.
+# shell function shadowing `echo`) can change what it writes. For the same
+# reason it applies only to the top-level command, never to a `bash -c` or
+# heredoc payload, whose wrapper can export a function into it first.
 _ALLOWED_ENV_PERSISTENCE_WRITES: frozenset[tuple[str, ...]] = frozenset(
     tuple(shlex.split(command))
     for command in (
@@ -1069,7 +1074,7 @@ def _bash_interpreter_mentions_target(tokens: list[str]) -> bool:
     return False
 
 
-def check_env_persistence_in_bash(tokens: list[str]) -> tuple[bool, str]:
+def check_env_persistence_in_bash(tokens: list[str], _depth: int = 0) -> tuple[bool, str]:
     """Block Bash commands that would persist ALLOW_AI_READY_TO_MERGE, or
     that write to a protected file at all.
 
@@ -1083,7 +1088,8 @@ def check_env_persistence_in_bash(tokens: list[str]) -> tuple[bool, str]:
       blocked this way without the literal string ever needing to appear.
       The only exceptions are the whole commands in
       ``_ALLOWED_ENV_PERSISTENCE_WRITES``, the documented ``.envrc.local``
-      setup steps (#1051).
+      setup steps, and only when *_depth* is 0: a wrapped payload is never
+      the whole command (#1051).
     - A confirmed write to an ``_AI_CLI_SETTINGS_TARGETS`` file, and the
       script-interpreter *might-write* heuristic
       (:func:`_bash_interpreter_mentions_target`) against any target, still
@@ -1104,7 +1110,7 @@ def check_env_persistence_in_bash(tokens: list[str]) -> tuple[bool, str]:
 
     for target in _bash_confirmed_write_targets(tokens):
         if _matches_env_persistence_target(target):
-            if tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
+            if _depth == 0 and tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
                 continue
             return True, message
         if var_present:
@@ -1746,7 +1752,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             return True, reason
 
     # Check for attempts to persist ALLOW_AI_READY_TO_MERGE via Bash
-    is_dangerous, reason = check_env_persistence_in_bash(tokens)
+    is_dangerous, reason = check_env_persistence_in_bash(tokens, _depth)
     if is_dangerous:
         return True, reason
 

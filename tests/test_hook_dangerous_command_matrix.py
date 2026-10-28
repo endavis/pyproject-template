@@ -629,9 +629,23 @@ BASH_CASES = [
     ),
     ("cp .envrc.local.example .envrc.local", "ALLOW", "copy envrc.local example"),
     (
+        # The allowlist applies only to the top-level command: a wrapper can
+        # export a function into its payload first (`export -f`).
+        "f(){ printf x; }; export -f f; bash -c 'cp .envrc.local.example .envrc.local'",
+        "BLOCK",
+        "documented .envrc.local write inside bash -c after export -f",
+    ),
+    (
         "bash -c 'cp .envrc.local.example .envrc.local'",
-        "ALLOW",
-        "copy envrc.local example inside bash -c",
+        "BLOCK",
+        "documented .envrc.local write inside bash -c",
+    ),
+    (
+        # The example file is the allowed `cp`'s source, so writing it first
+        # would carry any content into .envrc.local.
+        'v=ALLOW_AI_READY_TO; echo "export ${v}_MERGE=1" >> .envrc.local.example',
+        "BLOCK",
+        "runtime-assembled var name write to .envrc.local.example",
     ),
     (
         # The interpreter heuristic only *might* write; mentioning a target
