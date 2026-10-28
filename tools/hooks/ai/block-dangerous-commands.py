@@ -958,8 +958,14 @@ def check_governance_labels(tokens: list[str]) -> tuple[bool, str]:
 # Shell write operators (as standalone tokens after shlex.split)
 _WRITE_REDIRECTS = {">", ">>"}
 
-# Shell commands that write to a file argument
-_WRITE_COMMANDS = {"tee", "cp", "mv", "dd"}
+# Shell commands that write to a file argument. `ln` points a protected name
+# at another file, `install` and `rsync` copy over it (#1051).
+_WRITE_COMMANDS = {"tee", "cp", "mv", "dd", "ln", "install", "rsync"}
+
+# Characters a redirect operator is made of. :func:`_redirect_tokens` lexes
+# them as punctuation so `>|`, `&>`, `1>>` and a redirect glued to a word
+# (`echo x>~/.bashrc`) each yield a standalone operator token (#1051).
+_REDIRECT_PUNCTUATION = "<>|&;()"
 
 # Script interpreters that can write files via -c/-e/--command
 _INTERPRETER_COMMANDS = {"python", "python3", "perl", "ruby", "node"}
@@ -989,8 +995,9 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
     targets: list[str] = []
     n = len(tokens)
     for i, tok in enumerate(tokens):
-        # Pattern A: standalone redirect operator
-        if tok in _WRITE_REDIRECTS:
+        # Pattern A: standalone redirect operator, including `>|`, `&>` and
+        # `>&` as :func:`_redirect_tokens` yields them
+        if tok in _WRITE_REDIRECTS or (">" in tok and set(tok) <= set(_REDIRECT_PUNCTUATION)):
             if i + 1 < n and _is_env_persistence_target(tokens[i + 1]):
                 targets.append(tokens[i + 1])
             continue
@@ -1037,6 +1044,23 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
             continue
 
     return targets
+
+
+def _redirect_tokens(command: str) -> list[str]:
+    """Tokenize *command* with shell operator characters as their own tokens.
+
+    :func:`tokenize` splits on whitespace only, so a redirect glued to a word
+    (`echo x>~/.bashrc`) or written as `>|` / `1>>` / `&>` never produced the
+    standalone `>`/`>>` token pattern A looks for (#1051). Quoted strings stay
+    one token, so `git commit -m "a >> .envrc"` is still not a redirect.
+    """
+    try:
+        lexer = shlex.shlex(command, posix=True, punctuation_chars=_REDIRECT_PUNCTUATION)
+        lexer.whitespace_split = True
+        lexer.commenters = ""
+        return list(lexer)
+    except ValueError:
+        return tokenize(command)
 
 
 def _bash_interpreter_mentions_target(tokens: list[str]) -> bool:
@@ -1293,10 +1317,10 @@ def check_env_persistence_in_file_edit(
     Antigravity, create/edit for Copilot) that would
     persist ALLOW_AI_READY_TO_MERGE to a protected file.
 
-    Triggers when:
-    - The target path (:func:`_resolve_file_path`) is a persistence-protected
-      target, AND
-    - The new content being written contains ALLOW_AI_READY_TO_MERGE.
+    Triggers when the target path (:func:`_resolve_file_path`) is:
+    - an ``ENV_PERSISTENCE_TARGETS`` file, whatever the content (#1051), or
+    - an ``_AI_CLI_SETTINGS_TARGETS`` file and the new content contains
+      ALLOW_AI_READY_TO_MERGE.
 
     *scan_all_values*: when True, every string value anywhere in *tool_input*
     is scanned instead of relying on a known key name -- set by ``main()``
@@ -1311,6 +1335,16 @@ def check_env_persistence_in_file_edit(
 
     if not _is_env_persistence_target(file_path_raw):
         return False, ""
+
+    # A shell rc or env file is run by bash or direnv when loaded, so content
+    # that assembles the name (`v=ALLOW_AI_; export ${v}READY_TO_MERGE=1`)
+    # persists it without the literal string. Block any edit, as the Bash
+    # path does; only AI CLI settings files stay content-gated (#1051).
+    if _matches_env_persistence_target(file_path_raw):
+        return True, (
+            f"Blocked: AI must not edit '{file_path_raw}', a file that could persist "
+            f"{var_name}. Only a human can edit this file."
+        )
 
     if scan_all_values:
         new_content_parts = _all_string_values(tool_input)
@@ -1752,9 +1786,13 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             return True, reason
 
     # Check for attempts to persist ALLOW_AI_READY_TO_MERGE via Bash
-    is_dangerous, reason = check_env_persistence_in_bash(tokens, _depth)
-    if is_dangerous:
-        return True, reason
+    # Checked on the `tokenize()` tokens and again on tokens that split out
+    # redirect operators, which find `>|`, `1>>`, `&>` and glued redirects
+    # (#1051). Heredoc bodies are stripped so a body's text is not a redirect.
+    for check_tokens in (tokens, _redirect_tokens(stripped)):
+        is_dangerous, reason = check_env_persistence_in_bash(check_tokens, _depth)
+        if is_dangerous:
+            return True, reason
 
     # Recurse into shell-wrapper payloads (bash/sh/zsh/dash -c <payload>, eval ...)
     # Depth cap of 3 prevents infinite loops on adversarial inputs.
