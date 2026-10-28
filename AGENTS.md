@@ -156,6 +156,16 @@ A test is template-owned when its target does not survive configuration ([ADR-90
 - **Refactoring**: Improving code structure without behavior change
 - **Tests**: Adding missing test coverage for existing code
 
+### Security Review Findings
+When a security review (a plugin, a review skill, another agent) reports findings, fix those that
+belong to the current change. Never put an unfixed finding in a public issue, PR, comment or commit
+message ([SECURITY.md](.github/SECURITY.md)). Reproduce it first, keeping the command and its
+output, then file it as a private draft security advisory, one per finding:
+`gh api -X POST repos/{owner}/{repo}/security-advisories --input <file>`, with `summary`,
+`description`, `severity` and `vulnerabilities` (package ecosystem `other`). If the call is refused,
+stop and ask the user; never fall back to a public issue. Do not keep extending the current PR;
+triage is the repo admin's call.
+
 ## Breaking Changes Policy
 
 **What Constitutes a Breaking Change:**
