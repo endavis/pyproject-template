@@ -156,6 +156,16 @@ A test is template-owned when its target does not survive configuration ([ADR-90
 - **Refactoring**: Improving code structure without behavior change
 - **Tests**: Adding missing test coverage for existing code
 
+### Security Review Findings
+When a security review (a plugin, a review skill, another agent) reports findings, fix those that
+belong to the current change. Log every finding you leave unfixed as one comment on the standing
+log issue — the open issue labelled `security` titled `chore: security review findings log`, found
+by label and title, never by number — with file and title, source, severity, repro, assessment and
+`Status: open`. If none exists, create it with `doit issue --type=chore`, add the `security` label
+and state that format in its body. Reproduce first: paste the command and its
+output, or say it was not reproduced. Do not open an issue per finding or keep extending the
+current PR; triage is the repo admin's call.
+
 ## Breaking Changes Policy
 
 **What Constitutes a Breaking Change:**
