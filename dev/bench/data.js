@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793184954249,
+  "lastUpdate": 1793187669959,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19411,6 +19411,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.607355626769013e-7",
             "extra": "mean: 1.4854168790249946 usec\nrounds: 79347"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "589c110c75eec62474e68eacb3acf200945370ef",
+          "message": "feat: add a merge-pr skill for merging green PRs and closing addressed issues (merges PR #1063, addresses #1062)\n\nMerging a finished PR took the same hand-typed request each time (\"N is\ngreen, merge it and close the related issue(s) if fully addressed\"), with\nthe checks and the \"fully addressed\" judgment redone by hand each run.\n\nThe new shared merge-pr skill, triggered by \"N is green\" or \"merge N\",\nworks in five steps:\n- Precondition check: the PR is open, mergeable, clean and labelled\n  ready-to-merge.\n- CI check: every job passes or is skipped.\n- Issue judgment: each linked issue's success criteria are compared with\n  the PR diff.\n- Merge: doit pr_merge runs from the main checkout, with --auto-close only\n  when every linked issue is fully addressed. Otherwise the skill closes the\n  addressed issues and comments on the rest.\n- Report.\nIt never adds the label and never bypasses a block.\n\n.agents/skills/merge-pr is the source, and doit skills_sync generates the\n.claude copy. AGENTS.md records that invoking the skill is consent to merge\nand close fully addressed issues. slash-commands.md, AI_SETUP.md and\n.copilot/README.md list the skill. tests/test_merge_pr_skill.py checks the\nskill's contract and that it is registered in the docs.\n\nAddresses #1062\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbMNJNbDLoEfHfYwso\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-28T11:40:28Z",
+          "tree_id": "c9238c3874ccb6d0ad3e4c67989536d7cc8a309e",
+          "url": "https://github.com/endavis/pyproject-template/commit/589c110c75eec62474e68eacb3acf200945370ef"
+        },
+        "date": 1793187668593,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19803154.01694971,
+            "unit": "iter/sec",
+            "range": "stddev: 9.429648144494296e-9",
+            "extra": "mean: 50.49700664571363 nsec\nrounds: 197746"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 21856542.140922945,
+            "unit": "iter/sec",
+            "range": "stddev: 2.25695447266793e-8",
+            "extra": "mean: 45.75289144789546 nsec\nrounds: 198531"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13764016.704912808,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0510447636237729e-8",
+            "extra": "mean: 72.65321028294515 nsec\nrounds: 141243"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4599259.1346895,
+            "unit": "iter/sec",
+            "range": "stddev: 3.098416754181967e-8",
+            "extra": "mean: 217.42632252607595 nsec\nrounds: 47345"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1110808.9514022411,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0010526161443716e-7",
+            "extra": "mean: 900.2448159403466 nsec\nrounds: 116646"
           }
         ]
       }
