@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793302151761,
+  "lastUpdate": 1793317878814,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21181,6 +21181,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4334417822265873e-7",
             "extra": "mean: 1.2340229136156102 usec\nrounds: 83985"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a788739389765b3264b4efe3766f486245daf684",
+          "message": "chore: keep every folded extglob group's original tokens in the hook (merges PR #1125, addresses #1120)\n\n_collapse_extglobs kept a closed group's original tokens after its\nwildcard token only when the group held a `|`. Every folded group now\nkeeps them, so a redirect inside a group whose parentheses were quoted\nstays visible to the later checks.\n\nTwo existing expectations in test_collapse_extglobs_needs_a_closing_paren\nchange to the wildcard token followed by the original tokens, with the\nmaintainer's agreement. New tests cover a group holding `>`, `>>`, `&>`\nand `>|`.\n\nAddresses #1120\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T23:50:24Z",
+          "tree_id": "b6dd0ab548c5752990d81b0b31641d6a7f1a5ca5",
+          "url": "https://github.com/endavis/pyproject-template/commit/a788739389765b3264b4efe3766f486245daf684"
+        },
+        "date": 1793317877226,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9224439.01843638,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2813147723034764e-8",
+            "extra": "mean: 108.40767639109055 nsec\nrounds: 102797"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10323033.180730203,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1892750963734474e-8",
+            "extra": "mean: 96.87075324592385 nsec\nrounds: 108132"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6521254.955306224,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9788135249352684e-8",
+            "extra": "mean: 153.34471767375368 nsec\nrounds: 70043"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2236825.566785526,
+            "unit": "iter/sec",
+            "range": "stddev: 8.111290656619728e-8",
+            "extra": "mean: 447.0621289603148 nsec\nrounds: 195734"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 585926.1395153087,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4007712534905054e-7",
+            "extra": "mean: 1.706699757118231 usec\nrounds: 61759"
           }
         ]
       }
