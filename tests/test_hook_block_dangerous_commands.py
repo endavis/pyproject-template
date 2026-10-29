@@ -1741,9 +1741,12 @@ def test_mover_without_a_source_stays_allowed(hook: types.ModuleType) -> None:
 @pytest.mark.parametrize(
     ("tokens", "expected"),
     [
-        # a closed group folds as before
-        ([".envrc.@", "(", "local", ")"], [".envrc.*"]),
-        # a group holding `|` also keeps its original tokens: it may be a pipe
+        # a closed group folds and keeps its original tokens after (#1120)
+        (
+            [".envrc.@", "(", "local", ")"],
+            [".envrc.*", ".envrc.@", "(", "local", ")"],
+        ),
+        # a group holding `|` keeps them too: it may be a pipe
         (
             [".envrc.+", "(", "a", "|", "b", ")", "x"],
             [".envrc.*", ".envrc.+", "(", "a", "|", "b", ")", "x"],
@@ -1752,7 +1755,10 @@ def test_mover_without_a_source_stays_allowed(hook: types.ModuleType) -> None:
             ["echo", "x@", "(", "|", "tee", ".envrc.local", ")"],
             ["echo", "x*", "x@", "(", "|", "tee", ".envrc.local", ")"],
         ),
-        ([".e?", "(", "(", "a", ")", ")"], [".e*"]),
+        (
+            [".e?", "(", "(", "a", ")", ")"],
+            [".e*", ".e?", "(", "(", "a", ")", ")"],
+        ),
         # no closing `)`: every later token stays (#1104)
         (["echo", "x@", "(", "y"], ["echo", "x@", "(", "y"]),
         (
@@ -1785,6 +1791,17 @@ def test_collapse_extglobs_needs_a_closing_paren(
 )
 def test_unclosed_extglob_keeps_later_commands(hook: types.ModuleType, command: str) -> None:
     assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize("op", [">", ">>", "&>", ">|"])
+def test_folded_extglob_keeps_a_redirect_inside(hook: types.ModuleType, op: str) -> None:
+    tokens = ["echo", "x@", "(", op, ".envrc.local", ")"]
+    assert hook._collapse_extglobs(tokens) == ["echo", "x*", *tokens[1:]]
+
+
+@pytest.mark.parametrize("op", [">", ">>", "&>", ">|"])
+def test_quoted_paren_around_a_redirect_is_blocked(hook: types.ModuleType, op: str) -> None:
+    assert hook.check_command(f"echo x@'(' {op} .envrc.local ')'")[0]
 
 
 @pytest.mark.parametrize(
