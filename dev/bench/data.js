@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793211446229,
+  "lastUpdate": 1793271522542,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19647,6 +19647,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.645641809124253e-7",
             "extra": "mean: 1.5789038380617693 usec\nrounds: 66570"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f32b5200eba6ce7c3a9653265403e9d1b3cb066",
+          "message": "fix: ignore every doit state database name the dbm backends write (merges PR #1073, addresses #1069)\n\nOn Python 3.13+, dbm prefers dbm.sqlite3, which writes doit's database as\n.doit.db exactly; .gitignore only listed .doit.db.db (dbm.ndbm). Ignore\n.doit.db and .doit.db.* so every backend's names are covered, and add a\ngit check-ignore test for each name.\n\nAddresses #1069\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T10:58:03Z",
+          "tree_id": "352f17dc9aede9bad36c1416507b370dd753fa14",
+          "url": "https://github.com/endavis/pyproject-template/commit/3f32b5200eba6ce7c3a9653265403e9d1b3cb066"
+        },
+        "date": 1793271521324,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8976905.199192569,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6094234687608555e-8",
+            "extra": "mean: 111.3969656368818 nsec\nrounds: 100311"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10272501.979538927,
+            "unit": "iter/sec",
+            "range": "stddev: 1.250151647101163e-8",
+            "extra": "mean: 97.34726768530487 nsec\nrounds: 109087"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6545639.79671812,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4283385754840501e-8",
+            "extra": "mean: 152.7734539412609 nsec\nrounds: 68597"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2202590.137588399,
+            "unit": "iter/sec",
+            "range": "stddev: 8.592827837414027e-7",
+            "extra": "mean: 454.01093146403224 nsec\nrounds: 186568"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 610743.8569079922,
+            "unit": "iter/sec",
+            "range": "stddev: 2.43653834261496e-7",
+            "extra": "mean: 1.6373476191192355 usec\nrounds: 63821"
           }
         ]
       }
