@@ -14,7 +14,7 @@ to the paths the guide's own later steps invoke.
 from __future__ import annotations
 
 import re
-import subprocess  # nosec B404 - reads the tracked file list, no shell
+import subprocess  # nosec B404  # reads the tracked file list, no shell
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -61,7 +61,7 @@ def _table_excludes() -> set[str]:
 
 
 def _tracked_top_level() -> set[str]:
-    result = subprocess.run(  # nosec B603 - fixed argv, no shell
+    result = subprocess.run(  # nosec B603  # fixed argv, no shell
         ["git", "ls-files"],
         cwd=REPO_ROOT,
         capture_output=True,

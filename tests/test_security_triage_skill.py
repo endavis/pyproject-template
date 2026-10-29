@@ -50,7 +50,7 @@ CONTRACT: tuple[tuple[str, str], ...] = (
     ("the tmp exclusion trap", "`[tool.bandit] exclude_dirs` in `pyproject.toml` excludes `tmp`"),
     ("bandit fix: subprocess", "`shell=True`"),
     ("bandit fix: yaml", "`yaml.safe_load`"),
-    ("bandit justify pattern", "`# nosec <ID> - <reason>`"),
+    ("bandit justify pattern", "`# nosec <ID> # <reason>`"),
     ("per-ID precision", "`# nosec B602` clears only"),
     ("bandit config pointer", "`[tool.bandit] skips` in `pyproject.toml`"),
     ("pip-audit locate: reverse-deps", "`uv tree --invert --package <package>`"),
@@ -285,3 +285,44 @@ def test_shared_skill_declares_the_frontmatter_agents_activate_on() -> None:
     # when it needs this, not just the skill's title.
     for phrase in ("bandit", "pip-audit", "nosec"):
         assert phrase in frontmatter.lower(), f"description never mentions {phrase!r}"
+
+
+# Bandit reads everything between `nosec` and the next `#` as a list of test IDs, so a reason
+# written inside that list prints a `Test in comment` warning per word (#1079).
+_NOSEC_COMMENT = re.compile(r"#\s*nosec\b([^#\n]*)")
+_NOSEC_ID_LIST = re.compile(r"(?:\s+B\d+)*\s*")
+
+
+def _noisy_nosec(line: str) -> bool:
+    """True when a `# nosec` comment carries anything but test IDs before its closing `#`."""
+    match = _NOSEC_COMMENT.search(line)
+    return match is not None and _NOSEC_ID_LIST.fullmatch(match.group(1)) is None
+
+
+def test_the_noisy_nosec_scanner_detects_a_violation() -> None:
+    noisy = "import os  # nosec B404 - " + "reason words"
+    quiet = "import os  # nosec B404  # " + "reason words"
+    assert _noisy_nosec(noisy)
+    assert not _noisy_nosec(quiet)
+    assert not _noisy_nosec("import os  # nosec B404 B603")
+    assert not _noisy_nosec("x = 1  # no suppression here")
+
+
+def test_no_nosec_comment_puts_its_reason_inside_the_id_list() -> None:
+    """Write `# nosec <ID>  # <reason>`; a reason before the second `#` is read as test IDs."""
+    this_file = Path(__file__).resolve()
+    offenders: list[str] = []
+    roots = [REPO_ROOT / name for name in ("src", "tools", "tests", "examples")]
+    paths = [REPO_ROOT / "bootstrap.py"]
+    for root in roots:
+        if root.is_dir():
+            paths.extend(root.rglob("*.py"))
+    for path in paths:
+        if not path.is_file() or path.resolve() == this_file:
+            continue
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            if _noisy_nosec(line):
+                offenders.append(f"{path.relative_to(REPO_ROOT)}:{number}")
+    assert not offenders, (
+        "put the reason after a second `#`, not inside the nosec ID list: " + ", ".join(offenders)
+    )
