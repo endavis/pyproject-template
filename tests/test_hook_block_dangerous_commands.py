@@ -1736,3 +1736,52 @@ def test_mover_without_a_source_stays_allowed(hook: types.ModuleType) -> None:
     command = "cd .. && git checkout -- src/"
     for tokens, flags in _restore_token_lists(hook, command):
         assert hook._git_restore_targets(tokens, tokens.index("git"), **flags) == []
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        # a closed group folds as before
+        ([".envrc.@", "(", "local", ")"], [".envrc.*"]),
+        # a group holding `|` also keeps its original tokens: it may be a pipe
+        (
+            [".envrc.+", "(", "a", "|", "b", ")", "x"],
+            [".envrc.*", ".envrc.+", "(", "a", "|", "b", ")", "x"],
+        ),
+        (
+            ["echo", "x@", "(", "|", "tee", ".envrc.local", ")"],
+            ["echo", "x*", "x@", "(", "|", "tee", ".envrc.local", ")"],
+        ),
+        ([".e?", "(", "(", "a", ")", ")"], [".e*"]),
+        # no closing `)`: every later token stays (#1104)
+        (["echo", "x@", "(", "y"], ["echo", "x@", "(", "y"]),
+        (
+            ["echo", "x@", "(", "y", ";", "tee", ".envrc.local"],
+            ["echo", "x@", "(", "y", ";", "tee", ".envrc.local"],
+        ),
+        # a `)` after the end of the command does not close the group
+        (
+            ["echo", "x@", "(", "&&", "tee", ".envrc.local", ")"],
+            ["echo", "x@", "(", "&&", "tee", ".envrc.local", ")"],
+        ),
+        (["a*", "(", "&", "b", ")"], ["a*", "(", "&", "b", ")"]),
+        (["a!", "(", "||", "b", ")"], ["a!", "(", "||", "b", ")"]),
+        (["a@", "(", "|&", "b", ")"], ["a@", "(", "|&", "b", ")"]),
+    ],
+)
+def test_collapse_extglobs_needs_a_closing_paren(
+    hook: types.ModuleType, tokens: list[str], expected: list[str]
+) -> None:
+    assert hook._collapse_extglobs(tokens) == expected
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "echo 'x@(' ; echo y > .envrc.local",
+        "echo x@'(' && cp a .envrc.local",
+        "echo x@\\( ; tee .envrc.local < f",
+    ],
+)
+def test_unclosed_extglob_keeps_later_commands(hook: types.ModuleType, command: str) -> None:
+    assert hook.check_command(command)[0]

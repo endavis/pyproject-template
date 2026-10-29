@@ -1556,6 +1556,9 @@ def _is_leading_dot_glob(path: str) -> bool:
 
 _EXTGLOB_INTRODUCERS = frozenset("@+!?*")
 
+# Tokens that end a command, so an extglob group never folds across them
+_EXTGLOB_COMMAND_END = frozenset({";", "&&", "||", "&", "|&"})
+
 
 def _collapse_extglobs(tokens: list[str]) -> list[str]:
     """Fold each extglob back into one wildcard token (#1061).
@@ -1564,6 +1567,13 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
     ``)``. Rewrite the introducer as ``*`` and drop the group, so every write
     pattern reads ``.envrc.*`` as one dynamic target. Fails closed: the whole
     group becomes a wildcard whatever it holds.
+
+    A group folds only when its closing ``)`` comes before the end of the
+    command. With no ``)`` before a ``;``, ``&&``, ``||``, ``&``, ``|&`` or
+    the end of the tokens, the tokens stay as they are (#1104). ``|`` is the
+    extglob alternative separator, so it does not end the search; but it may
+    also be a pipe, so a group holding one keeps its original tokens after
+    the folded one.
     """
     out: list[str] = []
     i = 0
@@ -1573,17 +1583,24 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
         if i + 1 < n and tokens[i + 1] == "(" and tok[-1:] in _EXTGLOB_INTRODUCERS:
             depth = 0
             j = i + 1
-            while j < n:
+            closed = False
+            while j < n and tokens[j] not in _EXTGLOB_COMMAND_END:
                 if tokens[j] == "(":
                     depth += 1
                 elif tokens[j] == ")":
                     depth -= 1
                     if depth == 0:
+                        closed = True
                         break
                 j += 1
-            out.append(tok[:-1] + "*")
-            i = j + 1
-            continue
+            if closed:
+                out.append(tok[:-1] + "*")
+                if "|" in tokens[i + 2 : j]:
+                    # the tokens lost their quoting, so `x@'(' | tee f ')'`
+                    # looks like `@(a|b)`: keep the original tokens as well
+                    out.extend(tokens[i : j + 1])
+                i = j + 1
+                continue
         out.append(tok)
         i += 1
     return out
