@@ -16,7 +16,6 @@ Exit codes:
 For full documentation, see: docs/development/ai/command-blocking.md
 """
 
-import codecs
 import fnmatch
 import json
 import os
@@ -624,15 +623,60 @@ def operator_tokens(command: str) -> list[tuple[str, bool]]:
         return [(word, False) for word in command.split()]
 
 
+_ANSI_C_SIMPLE = {
+    "a": "\a",
+    "b": "\b",
+    "e": "\x1b",
+    "E": "\x1b",
+    "f": "\f",
+    "n": "\n",
+    "r": "\r",
+    "t": "\t",
+    "v": "\v",
+    "\\": "\\",
+    "'": "'",
+    '"': '"',
+    "?": "?",
+}
+_ANSI_C_NUMERIC = re.compile(
+    r"([0-7]{1,3})|x([0-9a-fA-F]{1,2})|u([0-9a-fA-F]{1,4})|U([0-9a-fA-F]{1,8})"
+)
+
+
 def _decode_ansi_c(body: str) -> str | None:
-    """Return the text bash makes of a ``$'...'`` body, or None when unsure."""
-    if not body.isascii() or "\\c" in body:
+    """Return the text bash makes of a ``$'...'`` body, or None when unsure.
+
+    Only the escapes bash defines are decoded: the single-character ones,
+    1-3 octal digits (masked to a byte, as bash does), ``\\x`` with 1-2 hex
+    digits and ``\\u``/``\\U`` with up to 4/8. Any other escape (``\\c``,
+    ``\\N``, a bare ``\\x``) and any non-ASCII text or result give None.
+    """
+    if not body.isascii():
         return None
-    body = body.replace("\\e", "\\x1b").replace("\\E", "\\x1b")
-    try:
-        return codecs.decode(body, "unicode_escape")
-    except UnicodeDecodeError:
-        return None
+    out: list[str] = []
+    i = 0
+    while i < len(body):
+        if body[i] != "\\":
+            out.append(body[i])
+            i += 1
+            continue
+        if i + 1 >= len(body):
+            return None
+        nxt = body[i + 1]
+        if nxt in _ANSI_C_SIMPLE:
+            out.append(_ANSI_C_SIMPLE[nxt])
+            i += 2
+            continue
+        match = _ANSI_C_NUMERIC.match(body, i + 1)
+        if match is None:
+            return None
+        octal, hex2, hex4, hex8 = match.groups()
+        code = int(octal, 8) & 0xFF if octal is not None else int(hex2 or hex4 or hex8, 16)
+        if code > 0x7F:
+            return None
+        out.append(chr(code))
+        i = match.end()
+    return "".join(out)
 
 
 def _ansi_word(word: str) -> str | None:

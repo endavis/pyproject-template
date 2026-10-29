@@ -1542,6 +1542,33 @@ def test_exact_operator_tokens(
     assert hook._exact_operator_tokens(command) == expected
 
 
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        # each result is what bash 5.3 printf '%s' $'<body>' printed
+        ("\\456envrc", ".envrc"),  # octal is masked to a byte
+        ("\\056envrc", ".envrc"),
+        ("\\0056envrc", "\x056envrc"),  # at most 3 octal digits
+        ("\\x2envrc", ".nvrc"),  # at most 2 hex digits
+        ("\\u002eenvrc", ".envrc"),
+        ("\\x41F", "AF"),
+        ("\\?", "?"),
+        ("\\eX", "\x1bX"),
+        ("\\a\\b\\f\\n\\r\\t\\v", "\a\b\f\n\r\t\v"),
+        ("\\'q\\\"", "'q\""),
+        # escapes bash keeps or treats specially, and non-ASCII results
+        ("\\N{FULL STOP}envrc", None),
+        ("\\cA", None),
+        ("\\u2eenvrc", None),
+        ("\\xG", None),
+        ("é", None),
+        ("x\\", None),
+    ],
+)
+def test_decode_ansi_c(hook: types.ModuleType, body: str, expected: str | None) -> None:
+    assert hook._decode_ansi_c(body) == expected
+
+
 def _restore_token_lists(
     hook: types.ModuleType, command: str
 ) -> list[tuple[list[str], dict[str, bool]]]:
