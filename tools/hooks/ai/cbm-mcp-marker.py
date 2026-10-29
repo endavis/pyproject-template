@@ -40,7 +40,7 @@ def main() -> int:
         marker = Path(MARKER_FILE_TEMPLATE.format(ppid=os.getppid()))
         marker.touch()
 
-    except Exception:  # nosec B110  # hook must never raise
+    except Exception:  # hook must never raise
         return 0
 
     return 0

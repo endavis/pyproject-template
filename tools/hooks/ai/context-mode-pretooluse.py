@@ -29,7 +29,7 @@ def main() -> int:
 
         try:
             raw = sys.stdin.buffer.read()
-        except Exception:  # nosec B110
+        except Exception:
             return 0
 
         try:
@@ -50,7 +50,7 @@ def main() -> int:
             sys.stderr.buffer.flush()
         return result.returncode
 
-    except Exception:  # nosec B110  # hook must never raise
+    except Exception:  # hook must never raise
         return 0
 
 
