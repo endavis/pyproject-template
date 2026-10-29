@@ -1767,3 +1767,29 @@ def test_heredoc_body(
     """A heredoc an interpreter will execute is scanned; one consumed as text is not."""
     payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
     assert _outcome_exit_code(hook, monkeypatch, payload) == expected, description
+
+
+# Every character other than ``\n`` that ``str.splitlines()`` breaks a line at.
+# Bash ends a line only at ``\n``, so each stays inside its line (#1102).
+SPLITLINES_ONLY_BREAKS = ["\r", "\v", "\f", "\x1c", "\x1d", "\x1e", "\x85", "\u2028", "\u2029"]
+
+
+@pytest.mark.parametrize("char", SPLITLINES_ONLY_BREAKS, ids=lambda c: f"U+{ord(c):04X}")
+def test_heredoc_body_lines_split_only_at_newline(hook: types.ModuleType, char: str) -> None:
+    """A body line holding *char* stays one line, so ``EOF`` after it is not the terminator."""
+    command = f"cat > notes.md <<EOF\nalpha{char}EOF\nEOF\necho done"
+    assert hook._without_heredoc_bodies(command) == "cat > notes.md <<EOF\necho done"
+
+
+@pytest.mark.parametrize("char", SPLITLINES_ONLY_BREAKS, ids=lambda c: f"U+{ord(c):04X}")
+def test_heredoc_payload_lines_split_only_at_newline(hook: types.ModuleType, char: str) -> None:
+    """An executed body line holding *char* is yielded as the one line bash runs."""
+    command = f"bash <<EOF\necho a{char}echo b\nEOF"
+    assert hook._heredoc_payloads(command) == [f"echo a{char}echo b"]
+
+
+@pytest.mark.parametrize("char", SPLITLINES_ONLY_BREAKS, ids=lambda c: f"U+{ord(c):04X}")
+def test_heredocs_body_range_split_only_at_newline(hook: types.ModuleType, char: str) -> None:
+    """Given the command split at ``\\n``, the body is the single line bash reads."""
+    lines = f"cat <<EOF\nalpha{char}EOF\nEOF".split("\n")
+    assert hook._heredocs(lines) == [(0, ["cat"], 1, 2)]

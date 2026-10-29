@@ -822,6 +822,10 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
     the line holding the ``<<`` marker, the words of the command that owns it,
     and the body as the half-open line range ``[body_start, body_end)``. The
     terminator, when present, is line ``body_end``.
+
+    *lines* must be the command split at ``\\n`` only, as bash splits it, not
+    by ``str.splitlines()``, which also breaks at ``\\r``, ``\\v``, ``\\f`` and
+    other characters bash keeps inside a line (#1102).
     """
     found: list[tuple[int, list[str], int, int]] = []
     quote = ""  # a quote left open by an earlier line; a body never changes it
@@ -873,7 +877,7 @@ def _heredoc_payloads(command: str) -> list[str]:
     Each line is yielded separately because each is its own command to the
     shell, and a command position is what the missing checks require.
     """
-    lines = command.splitlines()
+    lines = command.split("\n")  # bash ends a line only at \n (#1102)
     payloads: list[str] = []
     for _marker, words, body_start, body_end in _heredocs(lines):
         if _reads_stdin_as_code(words):
@@ -890,7 +894,7 @@ def _without_heredoc_bodies(command: str) -> str:
     file names. A body that is run as code is still checked, line by line,
     through :func:`_heredoc_payloads`.
     """
-    lines = command.splitlines()
+    lines = command.split("\n")  # bash ends a line only at \n (#1102)
     dropped: set[int] = set()
     for _marker, _words, body_start, body_end in _heredocs(lines):
         dropped.update(range(body_start, body_end + 1))
