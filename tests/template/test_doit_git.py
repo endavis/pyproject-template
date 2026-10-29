@@ -400,6 +400,20 @@ def test_worktrees_directory_is_gitignored() -> None:
     assert result.returncode == 0
 
 
+@pytest.mark.parametrize(
+    "name",
+    [".doit.db", ".doit.db.db", ".doit.db.dat", ".doit.db.dir", ".doit.db.bak"],
+)
+def test_doit_state_database_is_gitignored(name: str) -> None:
+    """Every name a `dbm` backend gives doit's state database is ignored (#1069).
+
+    Python 3.13+ prefers `dbm.sqlite3`, which writes `.doit.db` as given;
+    `dbm.ndbm` appends `.db` and `dbm.dumb` writes `.dat`/`.dir`/`.bak`.
+    """
+    result = subprocess.run(["git", "check-ignore", "-q", name], cwd=REPO_ROOT, check=False)
+    assert result.returncode == 0
+
+
 def test_claude_code_worktrees_are_ignored_by_their_own_rule() -> None:
     """Claude Code's worktree tool uses `.claude/worktrees/` (#860).
 
