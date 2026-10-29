@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793300978086,
+  "lastUpdate": 1793302151761,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21122,6 +21122,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.0660123586294477e-7",
             "extra": "mean: 1.6638152761388263 usec\nrounds: 63537"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1b851bdd409eced0e8a0fcc8265b0239aef01089",
+          "message": "chore: recognise patch, git apply and git am as file writers in the hook's write detection (merges PR #1124, addresses #1105)\n\n* chore: recognise patch, git apply and git am as file writers in the hook's write detection\n\n- Pattern G (git apply / git am) and Pattern H (patch) in\n  _bash_confirmed_write_targets read the target paths from the patch's\n  headers when the patch is a literal, regular, bounded file read by the\n  first top-level command, and otherwise stand in a protected target.\n- Non-writing forms are allowed: apply --check/--stat/--numstat/--summary\n  without --apply, am --abort/--quit/--show-current-patch, patch --dry-run\n  without -o/-r. --unsafe-paths, am --continue/--skip/--retry, stdin\n  sources, encoded mboxes and patch backup naming are treated as\n  unresolvable.\n- patch ORIGFILE, -o and -r values, and apply --build-fake-ancestor, are\n  matched as write targets directly.\n- The checkout/restore argument scan moves into _scan_command_words(),\n  shared by the new detectors, with no change in behaviour.\n- command-blocking.md documents the new writers.\n\nAddresses #1105\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: widen patch header, mbox encoding and backup-name handling in the hook\n\n- Each blank-separated piece of a ---/+++/***/Index header line is also a\n  candidate path, as on a diff --git line.\n- An mbox with any transfer encoding other than 7bit/8bit/binary, a folded\n  one, or a multipart body is unresolvable.\n- SIMPLE_BACKUP_SUFFIX, VERSION_CONTROL or PATCH_VERSION_CONTROL, set on the\n  command line or inherited by the hook, makes patch unresolvable like the\n  backup-naming options.\n\nAddresses #1105\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: open patch files without O_NONBLOCK where the platform lacks it\n\nWindows has no os.O_NONBLOCK (and no FIFOs to block on), so the hook falls\nback to a plain read-only open there, and the FIFO test case runs only where\nos.mkfifo exists.\n\nAddresses #1105\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* test: name the patch path in POSIX form in the absolute-path apply test\n\nOn Windows the backslashes of a native path read as shell escapes, so the\ncommand named a different path and the hook rightly treated it as\nunresolvable.\n\nAddresses #1105\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T19:28:22Z",
+          "tree_id": "e1697400b8842aa3ad3e147db7d348512b61f885",
+          "url": "https://github.com/endavis/pyproject-template/commit/1b851bdd409eced0e8a0fcc8265b0239aef01089"
+        },
+        "date": 1793302150566,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13155237.28958196,
+            "unit": "iter/sec",
+            "range": "stddev: 9.972795555111756e-9",
+            "extra": "mean: 76.01535251606074 nsec\nrounds: 135852"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13006109.647484843,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0999497318086042e-8",
+            "extra": "mean: 76.88694214517734 nsec\nrounds: 135667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8926932.466079641,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3518377068617254e-8",
+            "extra": "mean: 112.02056292010471 nsec\nrounds: 92713"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3146196.523565375,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8866398102559404e-8",
+            "extra": "mean: 317.8440992194495 nsec\nrounds: 195046"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 810357.7242905988,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4334417822265873e-7",
+            "extra": "mean: 1.2340229136156102 usec\nrounds: 83985"
           }
         ]
       }
