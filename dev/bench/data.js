@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793277769376,
+  "lastUpdate": 1793278303597,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19942,6 +19942,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5869898640366693e-7",
             "extra": "mean: 1.653565791201605 usec\nrounds: 62937"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f73574fb36334c10868a5ccb44f6f2184d3a994f",
+          "message": "chore: end bandit's nosec ID list before the reason text (merges PR #1083, addresses #1079)\n\nBandit reads everything after `nosec` up to the next `#` as test IDs, so\nthe reason in `# nosec <ID> - <reason>` produced one \"Test in comment\"\nwarning per word (309 of 325 lines of output). Comments now use\n`# nosec <ID>  # <reason>`; a second `#` ends the ID list.\n\nConverts 74 comments, updates the security-triage skill and its docs,\nand adds a test that rejects reason text inside the ID list.\n\nAddresses #1079\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T12:50:55Z",
+          "tree_id": "b96d188f30d1a1fadcb11911107697528f576b43",
+          "url": "https://github.com/endavis/pyproject-template/commit/f73574fb36334c10868a5ccb44f6f2184d3a994f"
+        },
+        "date": 1793278302162,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9157502.78040597,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2580127828298021e-8",
+            "extra": "mean: 109.20007604471272 nsec\nrounds: 99020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10131335.284079796,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2048268726781853e-8",
+            "extra": "mean: 98.70367251307758 nsec\nrounds: 108261"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6108615.046497567,
+            "unit": "iter/sec",
+            "range": "stddev: 3.149931976603534e-8",
+            "extra": "mean: 163.70322771826318 nsec\nrounds: 64479"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2280849.0839739437,
+            "unit": "iter/sec",
+            "range": "stddev: 6.525850507333338e-8",
+            "extra": "mean: 438.43321639575163 nsec\nrounds: 186916"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 598439.4261787114,
+            "unit": "iter/sec",
+            "range": "stddev: 2.238786657782403e-7",
+            "extra": "mean: 1.6710128983068888 usec\nrounds: 63016"
           }
         ]
       }
