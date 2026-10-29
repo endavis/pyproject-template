@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793295560487,
+  "lastUpdate": 1793295937013,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20591,6 +20591,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1885637030174286e-7",
             "extra": "mean: 1.240289862322962 usec\nrounds: 84546"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bb5846d0c59b88f023c1783c8048bb95ce94299d",
+          "message": "chore: split hook command lines on newline only, as bash does (merges PR #1108, addresses #1102)\n\n* chore: split hook command lines on newline only, as bash does\n\n_heredoc_payloads() and _without_heredoc_bodies() split the command with\nstr.splitlines(), which also breaks at \\r, \\v, \\f, \\x1c-\\x1e, \\x85, U+2028\nand U+2029. Bash ends a line only at \\n. They now split with\ncommand.split(\"\\n\"), and _heredocs() documents that its lines must be split\nthat way. Tests cover each of those characters.\n\nAddresses #1102\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scikCLWX2ErCrLQMmJ\n\n* chore: match the shell's heredoc delimiter word in the hook\n\n_heredocs() now stops finding heredocs when the character after the\nmatched delimiter is not a blank or shell metacharacter, since the\nshell's delimiter word is then longer than the one matched. It also\nstops when a heredoc has no terminator line. In both cases the rest\nof the command stays in the scans, as it already does for a marker\nline ending inside a quote.\n\nAddresses #1102\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scikCLWX2ErCrLQMmJ\n\n* chore: re-scan an unclear heredoc body to the last line\n\nWhen a heredoc's delimiter is unclear or never terminated, _heredocs()\nnow lets each caller err toward checking more. The body-stripping\ncaller keeps every later line in its scans, as before. The payload\ncaller, which re-scans a body run as code, gets the body running to the\nlast line, as it did before an unterminated heredoc was left out.\n\nAddresses #1102\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scikCLWX2ErCrLQMmJ\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T17:44:50Z",
+          "tree_id": "93edd026534693e06d0d9fab1642b4290a8960f3",
+          "url": "https://github.com/endavis/pyproject-template/commit/bb5846d0c59b88f023c1783c8048bb95ce94299d"
+        },
+        "date": 1793295935593,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 11959535.062627224,
+            "unit": "iter/sec",
+            "range": "stddev: 7.677527933470081e-9",
+            "extra": "mean: 83.61529062487851 nsec\nrounds: 130856"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13078624.3991073,
+            "unit": "iter/sec",
+            "range": "stddev: 7.41787794546777e-9",
+            "extra": "mean: 76.46064062121522 nsec\nrounds: 137913"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8503616.82678014,
+            "unit": "iter/sec",
+            "range": "stddev: 9.850682503979041e-9",
+            "extra": "mean: 117.59702022917301 nsec\nrounds: 91601"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2893148.215103922,
+            "unit": "iter/sec",
+            "range": "stddev: 5.3754290647674895e-8",
+            "extra": "mean: 345.644234463833 nsec\nrounds: 193874"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 768448.4005904847,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2676108110014452e-7",
+            "extra": "mean: 1.3013235491564408 usec\nrounds: 83417"
           }
         ]
       }
