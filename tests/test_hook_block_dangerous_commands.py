@@ -1790,33 +1790,31 @@ def test_unclosed_extglob_keeps_later_commands(hook: types.ModuleType, command: 
 @pytest.mark.parametrize(
     ("command", "expected"),
     [
-        # each expectation matches where bash 5.3 ended the body (#1113)
-        # an unquoted delimiter: `E\` then `OF` joins into the terminator
-        ("cat <<EOF\nbody\nE\\\nOF\necho REAL\nEOF\n", "cat <<EOF\nOF\necho REAL\nEOF\n"),
-        ("cat <<EOF\nEO\\\nF\necho Z\nEOF\n", "cat <<EOF\nF\necho Z\nEOF\n"),
-        # a body line joins the delimiter line, so that line ends nothing
+        # When joining changes where the body ends (bash, dash and busybox sh
+        # all join), a shell that did not join would end it elsewhere, so the
+        # heredoc is unclear and nothing is stripped (#1113)
+        ("cat <<EOF\nbody\nE\\\nOF\necho REAL\nEOF\n", None),
+        ("cat <<EOF\nEO\\\nF\necho Z\nEOF\n", None),
+        ("cat <<EOF\nline1\\\nEOF\necho still-body\nEOF\necho after\n", None),
+        ("cat <<-EOF\nbody\n\tEO\\\nF\necho AFTER\nEOF\n", None),
+        # joining that leaves the end in place strips the body as before
         (
-            "cat <<EOF\nline1\\\nEOF\necho still-body\nEOF\necho after\n",
-            "cat <<EOF\necho after\n",
+            "cat <<-EOF\nbody\n\tE\\\n\tOF\necho AFTER1\nEOF\necho AFTER2\n",
+            "cat <<-EOF\necho AFTER2\n",
         ),
+        ("cat <<EOF\na\\\nb\nEOF\necho AFTER\n", "cat <<EOF\necho AFTER\n"),
         # an even count of backslashes joins nothing
         ("cat <<EOF\nbody\\\\\nEOF\necho AFTER\n", "cat <<EOF\necho AFTER\n"),
         # a quoted or escaped delimiter joins nothing
         ("cat <<'EOF'\nbody\nE\\\nOF\nEOF\necho AFTER\n", "cat <<'EOF'\necho AFTER\n"),
         ('cat <<"EOF"\nE\\\nOF\nEOF\necho AFTER\n', 'cat <<"EOF"\necho AFTER\n'),
         ("cat <<\\EOF\nE\\\nOF\nEOF\necho AFTER\n", "cat <<\\EOF\necho AFTER\n"),
-        # `<<-` strips tabs from the joined line's start only
-        (
-            "cat <<-EOF\nbody\n\tE\\\n\tOF\necho AFTER1\nEOF\necho AFTER2\n",
-            "cat <<-EOF\necho AFTER2\n",
-        ),
-        ("cat <<-EOF\nbody\n\tEO\\\nF\necho AFTER\nEOF\n", "cat <<-EOF\nF\necho AFTER\nEOF\n"),
     ],
 )
 def test_heredoc_body_ends_where_bash_joins_lines(
-    hook: types.ModuleType, command: str, expected: str
+    hook: types.ModuleType, command: str, expected: str | None
 ) -> None:
-    assert hook._without_heredoc_bodies(command) == expected
+    assert hook._without_heredoc_bodies(command) == (command if expected is None else expected)
 
 
 def test_heredoc_joined_terminator_keeps_later_commands(hook: types.ModuleType) -> None:

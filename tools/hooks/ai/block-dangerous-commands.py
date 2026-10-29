@@ -1150,6 +1150,21 @@ def _heredocs(
             cursor = terminator_end
         else:
             cursor = len(lines)
+        # The terminator matched line by line, without joining
+        plain = next(
+            (
+                k
+                for k in range(index + 1, len(lines))
+                if _heredoc_terminator(lines[k], strip_leading_tabs) == delimiter
+            ),
+            len(lines),
+        )
+        if join and plain != cursor:
+            # A shell that did not join lines would end the body elsewhere, so
+            # where it ends is unclear: treat it as for an unclear delimiter
+            if unclear_as_body:
+                found.append((index, words, index + 1, len(lines)))
+            break
         if cursor == len(lines) and not unclear_as_body:
             # No terminator. Should this scan's idea of the delimiter differ
             # from the shell's, the rest of the command is not body at all, so
