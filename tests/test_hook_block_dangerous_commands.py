@@ -1041,6 +1041,51 @@ def test_write_target_that_cannot_be_protected_is_allowed(
     assert _run(hook, monkeypatch, command) == 0
 
 
+# A redirect after `git checkout`/`git restore` is no checkout argument (#1088)
+_CHECKOUT_REDIRECT_ALLOWED = [
+    "git checkout -q main 2>/dev/null",
+    "git checkout -q main >/dev/null",
+    "git checkout -q main &>/dev/null",
+    "git checkout -q main 2>&1",
+    "git checkout main >/dev/null 2>&1",
+    "git checkout -q feature 2>/dev/null",
+    "git restore --staged src/foo.py 2>/dev/null",
+    "git checkout main </dev/null",
+    "git checkout main 2>/dev/null && git pull",
+]
+
+_CHECKOUT_REDIRECT_BLOCKED = [
+    "git checkout main -- .envrc.local.example 2>/dev/null",
+    "git checkout main . >/dev/null",
+    "git restore --source=main . 2>/dev/null",
+    "git checkout main > .envrc.local",
+    "git checkout main >/dev/null -- .envrc.local.example",
+    "git restore --source=main 2>/dev/null .envrc.local.example",
+    "git checkout main . 2>&1",
+    # quoted operators lose their quoting in the tokens: still blocked
+    "git checkout main '&' .envrc.local.example",
+    "git checkout main '(' .envrc.local.example",
+    "git checkout main '>' .envrc.local.example",
+    # a spaced fd number may be a revision, so it is not dropped
+    "git restore --source 2 >/dev/null .envrc.local.example",
+    "git checkout 2 >/dev/null .",
+]
+
+
+@pytest.mark.parametrize("command", _CHECKOUT_REDIRECT_ALLOWED)
+def test_checkout_with_redirect_is_allowed(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    assert _run(hook, monkeypatch, command) == 0
+
+
+@pytest.mark.parametrize("command", _CHECKOUT_REDIRECT_BLOCKED)
+def test_checkout_redirect_does_not_hide_protected_write(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    assert _run(hook, monkeypatch, command) == 2
+
+
 # ---------------------------------------------------------------------------
 # The allowed example copy is gated on the example matching HEAD (#1061)
 # ---------------------------------------------------------------------------
