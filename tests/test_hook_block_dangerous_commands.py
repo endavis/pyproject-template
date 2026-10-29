@@ -1935,10 +1935,11 @@ def test_read_patch_paths_rejects_what_it_cannot_trust(
 ) -> None:
     import os
 
-    os.mkfifo(patch_dir / "pipe.patch")
+    if hasattr(os, "mkfifo"):  # POSIX only
+        os.mkfifo(patch_dir / "pipe.patch")
+        assert hook._read_patch_paths("pipe.patch", base_dir=None, mbox=False) is None
     (patch_dir / "dir.patch").mkdir()
     (patch_dir / "empty.patch").write_bytes(b"")
-    assert hook._read_patch_paths("pipe.patch", base_dir=None, mbox=False) is None
     assert hook._read_patch_paths("dir.patch", base_dir=None, mbox=False) is None
     assert hook._read_patch_paths("missing.patch", base_dir=None, mbox=False) is None
     assert hook._read_patch_paths("empty.patch", base_dir=None, mbox=False) is None

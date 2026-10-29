@@ -2022,7 +2022,8 @@ def _read_patch_paths(path: str, *, base_dir: str | None, mbox: bool) -> list[st
     """
     full = posixpath.join(base_dir, path) if base_dir else path
     try:
-        fd = os.open(full, os.O_RDONLY | os.O_NONBLOCK)
+        # O_NONBLOCK is POSIX only; Windows has no FIFOs to block on
+        fd = os.open(full, os.O_RDONLY | getattr(os, "O_NONBLOCK", 0))
     except OSError:
         return None
     try:
