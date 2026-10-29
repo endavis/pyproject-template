@@ -2231,3 +2231,73 @@ def test_patch_naming_ai_cli_settings_is_a_target_without_blocking(
     for targets in _patch_targets(hook, "git apply settings.patch"):
         assert "b/.claude/settings.json" in targets
     assert hook.check_command("git apply settings.patch") == (False, "")
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        "+++ b/.bashrc 2024-01-01 00:00:00.000000000 +0000",
+        "--- a/.bashrc  extra",
+        "*** .bashrc Mon Jan  1 00:00:00 2024",
+    ],
+)
+def test_patch_header_paths_split_at_a_blank(hook: types.ModuleType, header: str) -> None:
+    paths = hook._patch_header_paths((header + "\n").encode())
+    assert paths is not None
+    assert any(hook._is_env_persistence_target(p) for p in paths)
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        "Content-Transfer-Encoding: base64",
+        "content-transfer-encoding:BASE64",
+        "Content-Transfer-Encoding:\n base64",
+        "Content-Transfer-Encoding: 7bit\n base64",
+        "Content-Transfer-Encoding: x-uuencode",
+        'Content-Type: multipart/mixed; boundary="b"',
+    ],
+)
+def test_read_patch_paths_mbox_decoded_bodies_are_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, headers: str
+) -> None:
+    (patch_dir / "m.mbox").write_bytes(f"From a\n{headers}\n\n".encode() + _unified("src/foo.py"))
+    assert hook._read_patch_paths("m.mbox", base_dir=None, mbox=True) is None
+
+
+@pytest.mark.parametrize(
+    "headers", ["Content-Transfer-Encoding: 8bit", "Content-Transfer-Encoding: 7bit"]
+)
+def test_read_patch_paths_mbox_plain_encodings_are_read(
+    hook: types.ModuleType, patch_dir: Path, headers: str
+) -> None:
+    (patch_dir / "m.mbox").write_bytes(f"From a\n{headers}\n\n".encode() + _unified("src/foo.py"))
+    assert hook._read_patch_paths("m.mbox", base_dir=None, mbox=True)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "SIMPLE_BACKUP_SUFFIX=.local patch -b -p1 -i ok.patch",
+        "env VERSION_CONTROL=simple patch -p1 -i ok.patch",
+        "PATCH_VERSION_CONTROL=t patch -p1 < ok.patch",
+    ],
+)
+def test_patch_backup_naming_from_the_environment_is_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, command: str
+) -> None:
+    for targets in _patch_targets(hook, command):
+        assert _PATCH_STAND_IN in targets
+    assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize(
+    "name", ["SIMPLE_BACKUP_SUFFIX", "VERSION_CONTROL", "PATCH_VERSION_CONTROL"]
+)
+def test_patch_backup_naming_inherited_by_the_hook_is_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    monkeypatch.setenv(name, ".local")
+    assert hook.check_command("patch -p1 -i ok.patch")[0]
+    monkeypatch.delenv(name)
+    assert not hook.check_command("patch -p1 -i ok.patch")[0]

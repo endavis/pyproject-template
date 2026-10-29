@@ -1922,8 +1922,13 @@ _PATCH_HEADER_PREFIXES = (
     "copy to ",
 )
 
+# A transfer encoding other than 7bit/8bit/binary (including a folded or
+# unrecognised one), or a multipart body, means git decodes the patch before
+# reading it, so the raw header lines are not the real paths
 _TRANSFER_ENCODING = re.compile(
-    r"^content-transfer-encoding:[ \t]*(?:base64|quoted-printable)", re.IGNORECASE | re.MULTILINE
+    r"^content-transfer-encoding:(?![ \t]*(?:7bit|8bit|binary)[ \t]*(?:\r?\n(?![ \t])|\Z))"
+    r"|^content-type:[ \t]*multipart",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 
@@ -1991,13 +1996,17 @@ def _patch_header_paths(data: bytes) -> list[str] | None:
             continue
         for prefix in _PATCH_HEADER_PREFIXES:
             if line.startswith(prefix):
-                raw = line[len(prefix) :].split("\t", 1)[0].strip()
+                rest = line[len(prefix) :]
+                raw = rest.split("\t", 1)[0].strip()
                 if not raw:
                     break
                 unquoted = _unquote_c_path(raw)
                 if unquoted is None:
                     return None
                 paths.append(unquoted)
+                # a name may also end at a space (a timestamp after a blank):
+                # each piece is a candidate as well, which only widens the match
+                paths.extend(piece.strip('"') for piece in rest.split() if piece != raw)
                 break
     return paths or None
 
@@ -2289,6 +2298,8 @@ _PATCH_LONG_VALUE = (
 _PATCH_LONG_FLAGS = ("--dry-run", "--help", "--version")
 # options that rename the backup files: a header name can become any name
 _PATCH_BACKUP_NAMING = {"B", "Y", "z", "--prefix", "--basename-prefix", "--suffix"}
+# environment variables that rename the backup files the same way
+_PATCH_BACKUP_ENV = ("SIMPLE_BACKUP_SUFFIX", "VERSION_CONTROL", "PATCH_VERSION_CONTROL")
 
 
 def _patch_command_targets(
@@ -2373,7 +2384,12 @@ def _patch_command_targets(
         return targets
     if "--dry-run" in flags:
         return targets
-    if _PATCH_BACKUP_NAMING & set(values):
+    if (
+        _PATCH_BACKUP_NAMING & set(values)
+        or any(name in t for t in tokens for name in _PATCH_BACKUP_ENV)
+        or any(os.environ.get(name) for name in _PATCH_BACKUP_ENV)
+    ):
+        # set on this command line or inherited from the hook's environment
         return [*targets, _ENVRC_EXAMPLE]
     operands, stdin_files, unresolvable, has_output = _split_stdin_sources(plain, redirects)
     if has_output:
