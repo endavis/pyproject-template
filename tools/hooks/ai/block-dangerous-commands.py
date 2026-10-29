@@ -1174,23 +1174,24 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
         return []
     rest: list[str] = []
+    redirect_targets: list[str] = []
     skip_target = False
     for t in tokens[sub + 1 :]:
         if skip_target:
-            # the file or fd a redirect points at is no checkout argument
+            # the file or fd a redirect points at is no checkout argument, but
+            # the tokens lost their quoting (`'>'`), so it is still checked
+            # against the protected names below: fail closed (#1088)
             skip_target = False
+            redirect_targets.append(t)
             continue
         if t in _COMMAND_SEPARATORS:
             break
-        if t and set(t) <= set(_REDIRECT_PUNCTUATION):
-            if "<" in t or ">" in t:
-                # a redirect operator as :func:`_redirect_tokens` yields it:
-                # drop it, its target and a preceding fd number (`2` of `2>`)
-                skip_target = True
-                if rest and rest[-1].isdigit():
-                    rest.pop()
-                continue
-            break  # `&`, `(`, `)`: ends the command
+        if t and set(t) <= set(_REDIRECT_PUNCTUATION) and ("<" in t or ">" in t):
+            # a redirect operator as :func:`_redirect_tokens` yields it. A
+            # preceding fd number (`2` of `2>`) stays: it can be neither a
+            # protected name nor a broad pathspec
+            skip_target = True
+            continue
         rest.append(t)
     paths: list[str] = []
     has_source = False
@@ -1217,7 +1218,9 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
                 has_source = True
             elif not t.startswith("-"):
                 paths.append(t)
-    targets = [path for path in paths if _is_env_persistence_target(path, dynamic=True)]
+    targets = [
+        path for path in paths + redirect_targets if _is_env_persistence_target(path, dynamic=True)
+    ]
     # `-C`/`--work-tree` move where git resolves paths, so any pathspec may
     # reach the root (`git -C .. checkout X -- repo/`)
     moved = any(t == "-C" or t.startswith("--work-tree") for t in tokens[git_idx + 1 : sub])

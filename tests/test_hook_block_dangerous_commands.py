@@ -1062,6 +1062,13 @@ _CHECKOUT_REDIRECT_BLOCKED = [
     "git checkout main >/dev/null -- .envrc.local.example",
     "git restore --source=main 2>/dev/null .envrc.local.example",
     "git checkout main . 2>&1",
+    # quoted operators lose their quoting in the tokens: still blocked
+    "git checkout main '&' .envrc.local.example",
+    "git checkout main '(' .envrc.local.example",
+    "git checkout main '>' .envrc.local.example",
+    # a spaced fd number may be a revision, so it is not dropped
+    "git restore --source 2 >/dev/null .envrc.local.example",
+    "git checkout 2 >/dev/null .",
 ]
 
 
