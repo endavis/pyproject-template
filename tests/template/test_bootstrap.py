@@ -564,21 +564,24 @@ class TestRunSync:
         pkg_dir = tmp_path / "tools" / "pyproject_template"
         pkg_dir.mkdir(parents=True)
         (pkg_dir / "manage.py").write_text("# old", encoding="utf-8")
-        source = (REPO_ROOT / "bootstrap.py").read_text(encoding="utf-8")
+        # Bytes, as curl pipes them: text mode would re-encode the UTF-8 source
+        # in the locale encoding (cp1252 on Windows), which Python then rejects.
+        source = (REPO_ROOT / "bootstrap.py").read_bytes()
 
         result = subprocess.run(  # nosec B603 - fixed argv, no shell
             [sys.executable, "-", "--sync"],
             input=source,
             capture_output=True,
-            text=True,
             cwd=tmp_path,
             check=False,
             timeout=60,
         )
+        stdout = result.stdout.decode(errors="replace")
+        stderr = result.stderr.decode(errors="replace")
 
         assert result.returncode == 1
-        assert "Traceback" not in result.stderr
-        assert "--yes" in result.stdout + result.stderr
+        assert "Traceback" not in stderr
+        assert "--yes" in stdout + stderr
 
 
 class TestRunSetup:
