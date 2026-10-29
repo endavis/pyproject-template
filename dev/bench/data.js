@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793294151130,
+  "lastUpdate": 1793295560487,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20532,6 +20532,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2299739085166543e-7",
             "extra": "mean: 1.260330020956084 usec\nrounds: 83002"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5dd5144affa04e2165b5da1202993dd5a8cf82fa",
+          "message": "chore: add a quote-aware operator tokenizer to the command hook (merges PR #1109, addresses #1107)\n\nAdd operator_tokens(), which splits a command into (text, is_operator)\npairs using stdlib shlex with punctuation_chars, keeping quotes in place\nand treating # as an ordinary character. It applies two shell rules shlex\nlacks: a backslash escapes the next character, and $'...' is one string.\nAdjacent punctuation that shlex returns as one token, such as \")&&\", is\nsplit into its operators. Unbalanced quotes give words only.\n\nNothing calls it yet; existing tokenizers and checks are unchanged.\n\nAddresses #1107\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T17:38:42Z",
+          "tree_id": "c63938b33ccd693b2245e3236b05a37823aacf6d",
+          "url": "https://github.com/endavis/pyproject-template/commit/5dd5144affa04e2165b5da1202993dd5a8cf82fa"
+        },
+        "date": 1793295559507,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13286194.982557477,
+            "unit": "iter/sec",
+            "range": "stddev: 7.616262246819817e-9",
+            "extra": "mean: 75.26609396541527 nsec\nrounds: 135667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13490375.697167244,
+            "unit": "iter/sec",
+            "range": "stddev: 9.906737751347792e-9",
+            "extra": "mean: 74.12691999452495 nsec\nrounds: 140253"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8333246.665470899,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2045129648414383e-8",
+            "extra": "mean: 120.00124803019875 nsec\nrounds: 86304"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3167714.601044163,
+            "unit": "iter/sec",
+            "range": "stddev: 3.708513769976564e-8",
+            "extra": "mean: 315.6850051044287 nsec\nrounds: 196541"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 806263.1408815045,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1885637030174286e-7",
+            "extra": "mean: 1.240289862322962 usec\nrounds: 84546"
           }
         ]
       }
