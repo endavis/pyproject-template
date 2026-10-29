@@ -381,6 +381,139 @@ def tokenize(command: str) -> list[str]:
             return command.split()
 
 
+_SHELL_OPERATORS = frozenset({"&", "|&", ";", "&&", "||", "|", "(", ")"})
+
+# Every punctuation token the shell reads, longest first, for splitting a run
+# that shlex returns as one token (``)&&``, ``;(``).
+_SHELL_PUNCTUATION = sorted(
+    _SHELL_OPERATORS
+    | {"&>>", ";;&", "<<<", ";;", ";&", ">>", "<<", ">&", "<&", "&>", ">|", "<>", "<", ">"},
+    key=len,
+    reverse=True,
+)
+
+
+def _split_punctuation(run: str) -> list[tuple[str, bool]]:
+    """Split a run of shell punctuation into its tokens, longest match first."""
+    tokens: list[tuple[str, bool]] = []
+    i = 0
+    while i < len(run):
+        token = next((p for p in _SHELL_PUNCTUATION if run.startswith(p, i)), run[i])
+        tokens.append((token, token in _SHELL_OPERATORS))
+        i += len(token)
+    return tokens
+
+
+def _open_construct(word: str) -> str | None:
+    """Report how *word* ends while a construct is still open.
+
+    Returns ``"escape"`` when the word ends in an unpaired backslash,
+    ``"ansi"`` when it ends inside an unclosed ``$'...'`` string, and
+    ``None`` otherwise. Plain quotes are skipped over so that a ``$'``
+    inside them is not mistaken for the start of an ANSI-C string.
+    """
+    i = 0
+    while i < len(word):
+        char = word[i]
+        if char == "\\":
+            if i + 1 >= len(word):
+                return "escape"
+            i += 2
+        elif char == "'":
+            end = word.find("'", i + 1)
+            if end == -1:
+                return None
+            i = end + 1
+        elif char == '"':
+            i += 1
+            while i < len(word) and word[i] != '"':
+                i += 2 if word[i] == "\\" else 1
+            i += 1
+        elif word.startswith("$'", i):
+            i += 2
+            while i < len(word) and word[i] != "'":
+                i += 2 if word[i] == "\\" else 1
+            if i >= len(word):
+                return "ansi"
+            i += 1
+        else:
+            i += 1
+    return None
+
+
+def operator_tokens(command: str) -> list[tuple[str, bool]]:
+    """
+    Split *command* into ``(text, is_operator)`` tokens.
+
+    Built on ``shlex`` with ``punctuation_chars=True``, so operators glued to
+    words (``a;b``, ``x&&y``) come out as separate tokens. ``is_operator`` is
+    True only for the control operators ``&``, ``|&``, ``;``, ``&&``, ``||``,
+    ``|``, ``(`` and ``)``. Redirect punctuation (``>``, ``>&``, ``&>``,
+    ``<``, ``;;``) is returned as a word.
+
+    shlex does not know two shell rules, so they are applied afterwards:
+    - A backslash escapes the character after it: ``\\;`` is one word.
+    - ``$'...'`` is one quoted string even when it holds spaces or operators.
+    Tokens joined this way are cut from the original string by position, so
+    their inner spacing is kept as written.
+
+    Quoted text stays inside its word, and ``#`` is not a comment. When the
+    quotes are unbalanced, every whitespace-separated piece is returned as a
+    word. Never raises.
+    """
+    lexer = shlex.shlex(command, posix=False, punctuation_chars=True)
+    lexer.whitespace_split = True
+    lexer.commenters = ""
+    try:
+        raw = list(lexer)
+    except ValueError:
+        return [(word, False) for word in command.split()]
+
+    # shlex yields substrings of the input in order; recover their positions.
+    spans: list[tuple[int, int]] = []
+    cursor = 0
+    for token in raw:
+        start = command.find(token, cursor)
+        cursor = start + len(token)
+        spans.append((start, cursor))
+
+    pending = list(reversed(spans))
+    pieces: list[list[int]] = []  # [start, end, merged, word continues]
+    while pending:
+        start, end = pending.pop()
+        punctuation = command[start] in "&|;()<>"
+        if pieces:
+            prev = pieces[-1]
+            state = _open_construct(command[prev[0] : prev[1]])
+            if state == "ansi":
+                prev[1], prev[2] = end, 1
+                continue
+            if start == prev[1] and (state == "escape" or (prev[3] and not punctuation)):
+                prev[2] = 1
+                prev[3] = 0
+                if punctuation:
+                    prev[1] = start + 1
+                    prev[3] = 1
+                    if end > start + 1:
+                        pending.append((start + 1, end))
+                else:
+                    prev[1] = end
+                continue
+        pieces.append([start, end, 0, 0])
+
+    result: list[tuple[str, bool]] = []
+    for start, end, merged, _ in pieces:
+        text = command[start:end]
+        if _open_construct(text) == "ansi":
+            return [(word, False) for word in command.split()]
+        if merged or not all(char in "&|;()<>" for char in text):
+            result.append((text, False))
+        else:
+            # shlex returns adjacent punctuation as one token: ``)&&`` is two.
+            result.extend(_split_punctuation(text))
+    return result
+
+
 def _normalize_branch_ref(token: str) -> str:
     """Return the destination branch name from a git refspec token.
 
