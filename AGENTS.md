@@ -166,6 +166,12 @@ output, then file it as a private draft security advisory, one per finding:
 stop and ask the user; never fall back to a public issue. Do not keep extending the current PR;
 triage is the repo admin's call.
 
+A fix for a development-tooling (`tools/`) finding, once the repo admin picks it up, takes the
+normal issue and PR flow, worded neutrally: it describes the change, never the bypass, reproduction
+commands or advisory ID. Close the advisory after the merge; do not publish it. Package (`src/`)
+findings keep the private-fork, publish-after-fix track. See
+[SECURITY.md — Security Update Process](.github/SECURITY.md#security-update-process).
+
 ## Breaking Changes Policy
 
 **What Constitutes a Breaking Change:**
