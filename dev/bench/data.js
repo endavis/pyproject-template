@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793279306128,
+  "lastUpdate": 1793282583817,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20060,6 +20060,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7668148339318867e-7",
             "extra": "mean: 930.5709337175364 nsec\nrounds: 113857"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4a0d9fd9b63b11893348419f4346cc8206c16396",
+          "message": "feat: notify at session start when the project is behind pyproject-template (merges PR #1087, addresses #1086)\n\nAdd tools/hooks/ai/template-update-check.py. It compares the template\ncommit recorded in .config/pyproject_template/settings.toml with the head\nof the template's main branch, which it reads with git ls-remote using a\n2s timeout. The result is cached for 24h in tmp/. When the two commits\ndiffer, it prints a one-line notice. It always exits 0, and stays silent\nwhen opted out (PYPROJECT_TEMPLATE_UPDATE_CHECK=0), when there are no\nsettings or no recorded commit, inside the template repo itself, and\nwhen offline.\n\nThe hook is wired for Claude Code (SessionStart, startup) and\nAntigravity, whose output shape was confirmed by a probe. Copilot already\nruns the Claude-format hook, so it gets no separate entry. The Codex\nblock is left commented out because the probe could not run.\n\nAddresses #1086\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T14:02:10Z",
+          "tree_id": "4b50b7c5428459795194260ca67416c1149fa624",
+          "url": "https://github.com/endavis/pyproject-template/commit/4a0d9fd9b63b11893348419f4346cc8206c16396"
+        },
+        "date": 1793282582429,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9240248.468405658,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1235964269641784e-8",
+            "extra": "mean: 108.22219807391642 nsec\nrounds: 102376"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10029640.752595318,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1062749101516407e-8",
+            "extra": "mean: 99.70446845179725 nsec\nrounds: 109087"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6536594.620330698,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5220978797555557e-8",
+            "extra": "mean: 152.98485803138396 nsec\nrounds: 71706"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2283236.2573312204,
+            "unit": "iter/sec",
+            "range": "stddev: 6.8407946225569e-8",
+            "extra": "mean: 437.97482489563225 nsec\nrounds: 185186"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 592608.8202059828,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9180391305994449e-7",
+            "extra": "mean: 1.6874537906007097 usec\nrounds: 62035"
           }
         ]
       }
