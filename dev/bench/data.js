@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793296235676,
+  "lastUpdate": 1793296935014,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20709,6 +20709,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.125465135582124e-7",
             "extra": "mean: 973.1192480686901 nsec\nrounds: 109159"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7455c62e6b76a84e38e1f94856d3dcad3dc98ed0",
+          "message": "chore: end the hook's checkout/restore argument scan where bash ends the command (merges PR #1115, addresses #1103)\n\nAdd _exact_operator_tokens(), built on the operator_tokens() scanner, which\nreturns None when a command cannot be read and otherwise keeps every real\noperator as its own token, with quoted or escaped operator text kept raw.\ncheck_command() runs the env-persistence check on these tokens as a third\npass, and the checkout/restore scan runs only on that pass, where it also\nends at &, |&, ( and ). When the command cannot be read, the two existing\npasses keep the scan as before.\n\nFor git checkout, every non-option argument is now classified as a\npossible path whether or not a -- appears; -- still decides whether a\nsource revision was given.\n\nAddresses #1103\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T18:01:33Z",
+          "tree_id": "16181d9fdbb777bdc5c34728f91fd2ca528e106f",
+          "url": "https://github.com/endavis/pyproject-template/commit/7455c62e6b76a84e38e1f94856d3dcad3dc98ed0"
+        },
+        "date": 1793296933632,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9212424.306419287,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3294217347486387e-8",
+            "extra": "mean: 108.54906013210794 nsec\nrounds: 97003"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10393974.9749047,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1613867208696806e-8",
+            "extra": "mean: 96.20958318779952 nsec\nrounds: 108850"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6408146.577042073,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9226620778632703e-8",
+            "extra": "mean: 156.0513618060198 nsec\nrounds: 68042"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2261733.7244055276,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0591261397944986e-7",
+            "extra": "mean: 442.13869617337 nsec\nrounds: 198334"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 603993.0403562572,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8638646085557198e-7",
+            "extra": "mean: 1.655648216426738 usec\nrounds: 63412"
           }
         ]
       }
