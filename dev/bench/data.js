@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793299823393,
+  "lastUpdate": 1793300785090,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21004,6 +21004,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.305093070728487e-8",
             "extra": "mean: 928.5599767231045 nsec\nrounds: 112562"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "39469d5884c26f07cf265dfac97a376ba78bfbaf",
+          "message": "chore: join backslash-continued lines before matching an unquoted heredoc delimiter in the hook (merges PR #1121, addresses #1113)\n\n* chore: join backslash-continued lines before matching an unquoted heredoc delimiter in the hook\n\nWith an unquoted delimiter, bash joins a body line ending in an odd number\nof backslashes with the next one before comparing it to the delimiter.\n_heredocs() now does the same through _heredoc_logical_line(), so the hook\nand bash agree on where the body ends. Quoted and escaped delimiters still\ncompare line by line, and <<- strips tabs from the joined line's start only.\n\nAddresses #1113\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: treat a heredoc as unclear when joining lines moves its end\n\nWhen the body end found by joining backslash-continued lines differs from\nthe one found line by line, a shell that did not join would end the body\nelsewhere. Such a heredoc is now handled like one with an unclear\ndelimiter: its body is not stripped, and it is re-checked to the end when\nit runs as code.\n\nAddresses #1113\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T19:05:35Z",
+          "tree_id": "65989b1b876a47f837a36cd773bd340fb8c23774",
+          "url": "https://github.com/endavis/pyproject-template/commit/39469d5884c26f07cf265dfac97a376ba78bfbaf"
+        },
+        "date": 1793300784073,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10626239.191580711,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1181809223883322e-8",
+            "extra": "mean: 94.10667141694977 nsec\nrounds: 108767"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11079970.462952605,
+            "unit": "iter/sec",
+            "range": "stddev: 8.6423279602883e-9",
+            "extra": "mean: 90.25294817740144 nsec\nrounds: 111496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7157060.401898475,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1233330850766587e-8",
+            "extra": "mean: 139.72216857842093 nsec\nrounds: 73758"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2376422.4531724467,
+            "unit": "iter/sec",
+            "range": "stddev: 4.7696506874836084e-8",
+            "extra": "mean: 420.800602462341 nsec\nrounds: 192160"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 620855.2914936544,
+            "unit": "iter/sec",
+            "range": "stddev: 1.478503873751579e-7",
+            "extra": "mean: 1.6106812870905856 usec\nrounds: 65885"
           }
         ]
       }
