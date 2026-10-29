@@ -649,6 +649,11 @@ _HEREDOC_START = re.compile(
 )
 
 
+# Characters that end the delimiter word after `<<`: a blank or a shell
+# metacharacter. Anything else, such as `\r`, is still part of the word.
+_HEREDOC_WORD_ENDS = frozenset(" \t|&;()<>")
+
+
 def _heredoc_terminator(line: str, strip_leading_tabs: bool) -> str:
     """Return *line* as the shell would compare it to the heredoc delimiter.
 
@@ -847,6 +852,13 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
             # here on is stripped, and every later line stays in the scans.
             break
 
+        after = lines[index][match.end() : match.end() + 1]
+        if after and after not in _HEREDOC_WORD_ENDS:
+            # The delimiter word goes on past what the marker regex took, e.g.
+            # a trailing `\r`, so the shell's delimiter is not the one matched
+            # here. Stop finding heredocs, as above (#1102).
+            break
+
         strip_leading_tabs = bool(match.group(1))
         delimiter = match.group(3) or match.group(4) or match.group(5)
         # The command owning this heredoc is the last segment before it.
@@ -858,6 +870,11 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
             and _heredoc_terminator(lines[cursor], strip_leading_tabs) != delimiter
         ):
             cursor += 1
+        if cursor == len(lines):
+            # No terminator. Should this scan's idea of the delimiter differ
+            # from the shell's, the rest of the command is not body at all, so
+            # leave it in the scans rather than drop it (#1102).
+            break
 
         found.append((index, words, index + 1, cursor))
         index = cursor + 1

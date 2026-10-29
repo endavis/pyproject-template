@@ -1793,3 +1793,31 @@ def test_heredocs_body_range_split_only_at_newline(hook: types.ModuleType, char:
     """Given the command split at ``\\n``, the body is the single line bash reads."""
     lines = f"cat <<EOF\nalpha{char}EOF\nEOF".split("\n")
     assert hook._heredocs(lines) == [(0, ["cat"], 1, 2)]
+
+
+@pytest.mark.parametrize("char", SPLITLINES_ONLY_BREAKS, ids=lambda c: f"U+{ord(c):04X}")
+def test_heredoc_delimiter_running_past_the_marker_is_not_stripped(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, char: str
+) -> None:
+    """A delimiter word bash reads past the marker regex leaves the rest in the scans."""
+    command = f"cat <<EOF{char}\nbody\nEOF{char}\ncat ~/.netrc"
+    assert hook._heredocs(command.split("\n")) == []
+    assert hook._without_heredoc_bodies(command) == command
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == "BLOCK"
+
+
+@pytest.mark.parametrize("delimiter_end", [" ", "\t", "|", "&", ";", "(", ")", "<", ">"])
+def test_heredoc_delimiter_ended_by_a_metacharacter_is_stripped(
+    hook: types.ModuleType, delimiter_end: str
+) -> None:
+    """A blank or metacharacter ends the delimiter word, so the heredoc is still found."""
+    lines = f"cat <<EOF{delimiter_end}x\nbody\nEOF".split("\n")
+    assert hook._heredocs(lines) == [(0, ["cat"], 1, 2)]
+
+
+def test_unterminated_heredoc_is_not_stripped(hook: types.ModuleType) -> None:
+    """With no terminator line, nothing after the marker is dropped from the scans."""
+    command = "cat > notes.md <<EOF\nbody\ncat ~/.netrc"
+    assert hook._heredocs(command.split("\n")) == []
+    assert hook._without_heredoc_bodies(command) == command
