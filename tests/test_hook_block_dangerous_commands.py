@@ -1461,3 +1461,68 @@ def test_operator_tokens(
     hook: types.ModuleType, command: str, expected: list[tuple[str, bool]]
 ) -> None:
     assert hook.operator_tokens(command) == expected
+
+
+@pytest.mark.parametrize("operator", ["&", "|&", "(", ")", ";", "&&", "||", "|"])
+def test_restore_scan_ends_at_each_command_operator(hook: types.ModuleType, operator: str) -> None:
+    """The checkout's arguments stop at the operator; the next command's do not count."""
+    tokens = hook._exact_operator_tokens(f"git checkout main {operator} cat .envrc.local.example")
+    assert tokens is not None
+    assert tokens[:4] == ["git", "checkout", "main", operator]
+    assert hook._git_restore_targets(tokens, 0, exact_operators=True) == []
+    # the checkout's own protected argument before the operator is still found
+    own = hook._exact_operator_tokens(f"git checkout .envrc.local.example {operator} cat x")
+    assert own is not None
+    assert hook._git_restore_targets(own, 0, exact_operators=True) == [".envrc.local.example"]
+
+
+@pytest.mark.parametrize("operator", ["&", ";"])
+@pytest.mark.parametrize("exact", [True, False])
+def test_later_dashes_do_not_change_checkout_arguments(
+    hook: types.ModuleType, operator: str, exact: bool
+) -> None:
+    command = f"git checkout .envrc.local.example {operator} x -- y"
+    tokens = hook._exact_operator_tokens(command) if exact else command.split()
+    assert tokens is not None
+    targets = hook._git_restore_targets(tokens, 0, exact_operators=exact)
+    assert ".envrc.local.example" in targets
+
+
+@pytest.mark.parametrize(
+    ("command", "blocked"),
+    [
+        ("git checkout main & cat .envrc.local.example", False),
+        ("git checkout main '&' .envrc.local.example", True),
+        ("git checkout main \\& .envrc.local.example", True),
+        ("git checkout $(echo main) .envrc.local.example", True),
+        ("git checkout main .envrc.local.example '", True),
+        # A quoted path built from a variable or substitution
+        ('git checkout main "$PWD/.envrc.local.example"', True),
+        ('git checkout main "$(pwd)/.envrc.local.example"', True),
+        ('git checkout main "`pwd`/.envrc.local.example"', True),
+        ('git restore -s main "$PWD/.envrc.local.example"', True),
+        ("git checkout main $'.envrc.local.example'", True),
+    ],
+)
+def test_check_command_checkout_operator_scan(
+    hook: types.ModuleType, command: str, blocked: bool
+) -> None:
+    assert hook.check_command(command)[0] is blocked
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("a '&' b", ["a", "'&'", "b"]),
+        ("git checkout 'ma'in", ["git", "checkout", "main"]),
+        ("git checkout $(echo main) x", ["git", "checkout", "$(echo main)", "x"]),
+        ("a & b", ["a", "&", "b"]),
+        ('a "$PWD/x" "`pwd`"y', ["a", "$PWD/x", "`pwd`y"]),
+        ("a $'x y'", ["a", "$'x y'"]),
+        ("a 'b", None),
+    ],
+)
+def test_exact_operator_tokens(
+    hook: types.ModuleType, command: str, expected: list[str] | None
+) -> None:
+    assert hook._exact_operator_tokens(command) == expected
