@@ -404,114 +404,218 @@ def _split_punctuation(run: str) -> list[tuple[str, bool]]:
     return tokens
 
 
-def _open_construct(word: str) -> str | None:
-    """Report how *word* ends while a construct is still open.
+class _OpenConstructError(Exception):
+    """Raised when a quote or substitution is not closed, or cannot be read safely."""
 
-    Returns ``"escape"`` when the word ends in an unpaired backslash,
-    ``"ansi"`` when it ends inside an unclosed ``$'...'`` string, and
-    ``None`` otherwise. Plain quotes are skipped over so that a ``$'``
-    inside them is not mistaken for the start of an ANSI-C string.
-    """
-    i = 0
-    while i < len(word):
-        char = word[i]
-        if char == "\\":
-            if i + 1 >= len(word):
-                return "escape"
+
+# Text inside a substitution that this scanner does not model: a ``case``
+# statement (its ``)`` pattern terminators) or a here-document (``<<``).
+_UNMODELLED_IN_SUBSTITUTION = re.compile(r"(?<!\w)case(?!\w)|(?<!<)<<(?!<)")
+
+
+def _skip_single(text: str, i: int) -> int:
+    """Return the index after the ``'`` that closes the string opened before *i*."""
+    end = text.find("'", i)
+    if end == -1:
+        raise _OpenConstructError
+    return end + 1
+
+
+def _skip_ansi(text: str, i: int) -> int:
+    """Return the index after the end of a ``$'...'`` string whose body starts at *i*."""
+    while i < len(text):
+        if text[i] == "\\":
             i += 2
-        elif char == "'":
-            end = word.find("'", i + 1)
-            if end == -1:
-                return None
-            i = end + 1
-        elif char == '"':
-            i += 1
-            while i < len(word) and word[i] != '"':
-                i += 2 if word[i] == "\\" else 1
-            i += 1
-        elif word.startswith("$'", i):
-            i += 2
-            while i < len(word) and word[i] != "'":
-                i += 2 if word[i] == "\\" else 1
-            if i >= len(word):
-                return "ansi"
-            i += 1
+        elif text[i] == "'":
+            return i + 1
         else:
             i += 1
-    return None
+    raise _OpenConstructError
+
+
+def _skip_backtick(text: str, i: int) -> int:
+    """Return the index after the backtick that closes the one opened before *i*."""
+    while i < len(text):
+        if text[i] == "\\":
+            i += 2
+        elif text[i] == "`":
+            return i + 1
+        else:
+            i += 1
+    raise _OpenConstructError
+
+
+def _skip_dollar(text: str, i: int, *, ansi: bool) -> int:
+    """Return the index after the ``$`` construct at *i* (``$(``, ``${``, ``$'``)."""
+    if ansi and text.startswith("$'", i):
+        return _skip_ansi(text, i + 2)
+    if text.startswith("$(", i):
+        return _skip_paren(text, i + 2)
+    if text.startswith("${", i):
+        return _skip_brace(text, i + 2)
+    return i + 1
+
+
+def _skip_double(text: str, i: int) -> int:
+    """Return the index after the ``"`` that closes the string opened before *i*."""
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            i += 2
+        elif char == '"':
+            return i + 1
+        elif char == "$":
+            i = _skip_dollar(text, i, ansi=False)
+        elif char == "`":
+            i = _skip_backtick(text, i + 1)
+        else:
+            i += 1
+    raise _OpenConstructError
+
+
+def _skip_brace(text: str, i: int) -> int:
+    """Return the index after the ``}`` that closes the ``${`` whose body starts at *i*."""
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            i += 2
+        elif char == "'":
+            i = _skip_single(text, i + 1)
+        elif char == '"':
+            i = _skip_double(text, i + 1)
+        elif char == "$":
+            i = _skip_dollar(text, i, ansi=True)
+        elif char == "`":
+            i = _skip_backtick(text, i + 1)
+        elif char == "}":
+            return i + 1
+        else:
+            i += 1
+    raise _OpenConstructError
+
+
+def _skip_paren(text: str, i: int) -> int:
+    """Return the index after the ``)`` that closes the construct whose body starts at *i*."""
+    start = i
+    depth = 1
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            i += 2
+        elif char == "'":
+            i = _skip_single(text, i + 1)
+        elif char == '"':
+            i = _skip_double(text, i + 1)
+        elif char == "$":
+            i = _skip_dollar(text, i, ansi=True)
+        elif char == "`":
+            i = _skip_backtick(text, i + 1)
+        elif char == "#" and (i == start or text[i - 1].isspace() or text[i - 1] in "&|;()<>"):
+            raise _OpenConstructError
+        elif char in "()":
+            depth += 1 if char == "(" else -1
+            i += 1
+            if depth == 0:
+                if _UNMODELLED_IN_SUBSTITUTION.search(text, start, i):
+                    raise _OpenConstructError
+                return i
+        else:
+            i += 1
+    raise _OpenConstructError
+
+
+def _scan_tokens(command: str) -> list[tuple[str, bool]]:
+    """Scan *command* left to right; raise ``_OpenConstructError`` when it cannot be read."""
+    punctuation = "&|;()<>"
+    result: list[tuple[str, bool]] = []
+    word_start: int | None = None
+    n = len(command)
+
+    def flush(end: int) -> None:
+        nonlocal word_start
+        if word_start is not None:
+            word = command[word_start:end]
+            if word in ("case", "[["):
+                raise _OpenConstructError
+            result.append((word, False))
+            word_start = None
+
+    def starts_substitution(at: int) -> bool:
+        return command[at] in "<>" and command.startswith("(", at + 1)
+
+    i = 0
+    while i < n:
+        char = command[i]
+        if char.isspace():
+            flush(i)
+            i += 1
+        elif char in punctuation and not starts_substitution(i):
+            flush(i)
+            j = i
+            while j < n and command[j] in punctuation and not starts_substitution(j):
+                j += 1
+            tokens = _split_punctuation(command[i:j])
+            if "((" in command[i:j] or any(text == "<<" for text, _ in tokens):
+                raise _OpenConstructError
+            result.extend(tokens)
+            i = j
+        else:
+            if word_start is None:
+                word_start = i
+                if char == "#":
+                    end = command.find("\n", i)
+                    end = n if end == -1 else end
+                    result.extend((piece, False) for piece in command[i:end].split())
+                    word_start = None
+                    i = end
+                    continue
+            if char == "\\":
+                i += 2
+            elif char == "'":
+                i = _skip_single(command, i + 1)
+            elif char == '"':
+                i = _skip_double(command, i + 1)
+            elif char == "$":
+                i = _skip_dollar(command, i, ansi=True)
+            elif char == "`":
+                i = _skip_backtick(command, i + 1)
+            elif starts_substitution(i):
+                i = _skip_paren(command, i + 2)
+            else:
+                i += 1
+            if i > n:
+                raise _OpenConstructError
+    flush(n)
+    return result
 
 
 def operator_tokens(command: str) -> list[tuple[str, bool]]:
     """
     Split *command* into ``(text, is_operator)`` tokens.
 
-    Built on ``shlex`` with ``punctuation_chars=True``, so operators glued to
+    A single left-to-right character scanner (``shlex`` is not used). Words end
+    at top-level whitespace and at top-level punctuation, so operators glued to
     words (``a;b``, ``x&&y``) come out as separate tokens. ``is_operator`` is
     True only for the control operators ``&``, ``|&``, ``;``, ``&&``, ``||``,
     ``|``, ``(`` and ``)``. Redirect punctuation (``>``, ``>&``, ``&>``,
     ``<``, ``;;``) is returned as a word.
 
-    shlex does not know two shell rules, so they are applied afterwards:
-    - A backslash escapes the character after it: ``\\;`` is one word.
-    - ``$'...'`` is one quoted string even when it holds spaces or operators.
-    Tokens joined this way are cut from the original string by position, so
-    their inner spacing is kept as written.
+    Text the shell reads as one unit stays inside its word, whatever it holds:
+    a backslash escape, ``'...'``, ``"..."`` (where ``\\"``, ``\\\\``, ``\\$`` and
+    a backslash before a backtick escape), ``$'...'``, ``$(...)``, ``$((...))``,
+    ``${...}``, backtick substitution and ``<(...)`` / ``>(...)``, all nested.
+    A ``#`` that starts a word begins a comment; its text is returned as words.
 
-    Quoted text stays inside its word, and ``#`` is not a comment. When the
-    quotes are unbalanced, every whitespace-separated piece is returned as a
-    word. Never raises.
+    The result never contains an operator the shell would not see. When the
+    command holds an unclosed construct, a top-level ``((`` or here-document
+    ``<<``, a ``[[`` or ``case`` word, or a substitution holding a comment,
+    ``case`` or ``<<``, every whitespace-separated piece is returned as a word.
+    Never raises.
     """
-    lexer = shlex.shlex(command, posix=False, punctuation_chars=True)
-    lexer.whitespace_split = True
-    lexer.commenters = ""
     try:
-        raw = list(lexer)
-    except ValueError:
+        return _scan_tokens(command)
+    except (_OpenConstructError, RecursionError):
         return [(word, False) for word in command.split()]
-
-    # shlex yields substrings of the input in order; recover their positions.
-    spans: list[tuple[int, int]] = []
-    cursor = 0
-    for token in raw:
-        start = command.find(token, cursor)
-        cursor = start + len(token)
-        spans.append((start, cursor))
-
-    pending = list(reversed(spans))
-    pieces: list[list[int]] = []  # [start, end, merged, word continues]
-    while pending:
-        start, end = pending.pop()
-        punctuation = command[start] in "&|;()<>"
-        if pieces:
-            prev = pieces[-1]
-            state = _open_construct(command[prev[0] : prev[1]])
-            if state == "ansi":
-                prev[1], prev[2] = end, 1
-                continue
-            if start == prev[1] and (state == "escape" or (prev[3] and not punctuation)):
-                prev[2] = 1
-                prev[3] = 0
-                if punctuation:
-                    prev[1] = start + 1
-                    prev[3] = 1
-                    if end > start + 1:
-                        pending.append((start + 1, end))
-                else:
-                    prev[1] = end
-                continue
-        pieces.append([start, end, 0, 0])
-
-    result: list[tuple[str, bool]] = []
-    for start, end, merged, _ in pieces:
-        text = command[start:end]
-        if _open_construct(text) == "ansi":
-            return [(word, False) for word in command.split()]
-        if merged or not all(char in "&|;()<>" for char in text):
-            result.append((text, False))
-        else:
-            # shlex returns adjacent punctuation as one token: ``)&&`` is two.
-            result.extend(_split_punctuation(text))
-    return result
 
 
 def _normalize_branch_ref(token: str) -> str:
