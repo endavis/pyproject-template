@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793291217075,
+  "lastUpdate": 1793292149247,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20355,6 +20355,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5933517689195824e-7",
             "extra": "mean: 1.6543920461944117 usec\nrounds: 62775"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fc93e8b068194ac407d065f053dbd23186578277",
+          "message": "feat: run implement-issue in a worktree per issue (merges PR #1098, addresses #1095)\n\nStep 1 of implement-issue ran `git checkout main && git pull &&\ngit checkout -b ...` in whatever checkout the session was in, so two\nsessions in the main checkout switched branches under each other.\n\nStep 1 now resumes in place on the issue branch, resumes an existing\nworktree for it, stops and asks when the branch exists with no worktree,\nor otherwise creates one with `uv run doit worktree` and works there.\nEvery later step runs from the worktree through `uv run`. The delegation\ncontext directory is an absolute path inside the worktree, the Planner\nand Coder briefs and agent definitions take the worktree root, and Step 8\nreports the worktree and the `pr_merge --pr` command for the main\ncheckout. The main checkout is never switched or pulled.\n\nADR-9027 records the decision and the rejected conditional-worktree\nalternative. The walkthrough, slash-command reference, delegation matrix,\ndoit task reference, docs table of contents and AGENTS.md Flow line are\nupdated.\n\nAddresses #1095\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T16:41:48Z",
+          "tree_id": "f87aea60ba184c706eb5b5d031a4f60d2949f743",
+          "url": "https://github.com/endavis/pyproject-template/commit/fc93e8b068194ac407d065f053dbd23186578277"
+        },
+        "date": 1793292148399,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13886144.05493051,
+            "unit": "iter/sec",
+            "range": "stddev: 8.650560484628481e-9",
+            "extra": "mean: 72.01423203188888 nsec\nrounds: 143782"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13956794.640491894,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0849137233080507e-8",
+            "extra": "mean: 71.64968932757444 nsec\nrounds: 146199"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9275566.86340192,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0460722010789488e-8",
+            "extra": "mean: 107.81012252152948 nsec\nrounds: 95575"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2752649.283367422,
+            "unit": "iter/sec",
+            "range": "stddev: 6.457899849716851e-8",
+            "extra": "mean: 363.28638233805856 nsec\nrounds: 187512"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 670340.9962033685,
+            "unit": "iter/sec",
+            "range": "stddev: 2.67168972134613e-7",
+            "extra": "mean: 1.4917780736427155 usec\nrounds: 79466"
           }
         ]
       }
