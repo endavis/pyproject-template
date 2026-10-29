@@ -662,6 +662,18 @@ doit issue --type=bug --title="Fix bug" --body-file=issue.md
 - `--title`: Issue title (non-interactive)
 - `--body`: Issue body content (non-interactive)
 - `--body-file`: File containing issue body (non-interactive)
+- `--upstream`: File the issue on the template repository (`endavis/pyproject-template`) instead of
+  this one, for a bug in template-shipped tooling in a project made from it. The body is validated
+  against the upstream issue templates fetched from its `main` (a failed fetch stops with nothing
+  filed), and the upstream template's labels are passed to `gh issue create -R`; whether GitHub
+  applies them for a user without triage access is unverified. A footer records the recorded
+  template commit (`[template].commit`) or "not recorded". Refused in the template repository itself,
+  when the repository cannot be identified, and for content naming a security term (vulnerability,
+  exploit, bypass, injection, ...): a security finding is never filed publicly, so draft it locally
+  and follow the template's security policy. Without `--upstream` the command is unchanged.
+  See [Reporting a template bug upstream](../template/updates.md#reporting-a-template-bug-upstream).
+- `--include-origin`: With `--upstream`, add this repository's `owner/repo` to the footer. Off by
+  default because a project may be private.
 
 ### `pr`
 

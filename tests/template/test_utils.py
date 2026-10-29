@@ -1012,3 +1012,11 @@ def test_template_update_check_hook_repo_constant_matches_utils() -> None:
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     assert module.TEMPLATE_REPO == TEMPLATE_REPO
+
+
+def test_doit_upstream_repo_constant_matches_utils() -> None:
+    """`tools/doit/upstream.py` keeps its own TEMPLATE_REPO (ADR-9017); no drift (#1090)."""
+    from tools.doit.upstream import TEMPLATE_REPO as DOIT_TEMPLATE_REPO
+    from tools.pyproject_template.utils import TEMPLATE_REPO
+
+    assert DOIT_TEMPLATE_REPO == TEMPLATE_REPO
