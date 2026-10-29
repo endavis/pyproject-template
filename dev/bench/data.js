@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793278303597,
+  "lastUpdate": 1793279306128,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20001,6 +20001,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.238786657782403e-7",
             "extra": "mean: 1.6710128983068888 usec\nrounds: 63016"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e7d0011d81cec5d38f3e97dbb3953407432e4cd4",
+          "message": "chore: remove nosec comments that suppress nothing (merges PR #1085, addresses #1084)\n\nSixteen `# nosec` comments sat on lines where bandit raises no finding:\n0o755 is not a mode B103 flags, `tarfile.open` is not the B202\n`extractall` call, and the B110 handlers `return 0` rather than `pass`.\nBandit printed a \"nosec encountered ... but no failed test\" warning for\neach. The comments are gone; reasons that explain the code stay as plain\ncomments.\n\nBandit has no setting that fails on a stale nosec, so a test now runs\nbandit and fails on that warning, with a second test proving the check\ncatches one. The security-triage skill says to remove or move such a\ncomment.\n\nAddresses #1084\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T13:07:43Z",
+          "tree_id": "cb4d3372e65e51d7830a2eb98087d2344a8b8b51",
+          "url": "https://github.com/endavis/pyproject-template/commit/e7d0011d81cec5d38f3e97dbb3953407432e4cd4"
+        },
+        "date": 1793279304556,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18813937.62119065,
+            "unit": "iter/sec",
+            "range": "stddev: 3.2854226831823984e-8",
+            "extra": "mean: 53.152084382042 nsec\nrounds: 181555"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 19814491.36608366,
+            "unit": "iter/sec",
+            "range": "stddev: 5.235100683318807e-8",
+            "extra": "mean: 50.46811353995661 nsec\nrounds: 196580"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13109500.68470591,
+            "unit": "iter/sec",
+            "range": "stddev: 2.633615956843601e-8",
+            "extra": "mean: 76.28055591519528 nsec\nrounds: 134391"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4465384.116200858,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0132317660268783e-8",
+            "extra": "mean: 223.94490014238653 nsec\nrounds: 45264"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1074609.1069114974,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7668148339318867e-7",
+            "extra": "mean: 930.5709337175364 nsec\nrounds: 113857"
           }
         ]
       }
