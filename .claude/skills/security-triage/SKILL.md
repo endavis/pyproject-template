@@ -95,5 +95,9 @@ When the task is done, return to the `implement-issue` run, or commit and open a
 - Keep the reason out of the ID list. Bandit reads every word between `nosec` and the next `#` as
   a candidate test ID, so `# nosec B404 - reason words` prints a `Test in comment` warning per
   word. A second `#` ends the list: `# nosec B404  # reason words`. Keep reasons short.
+- Remove a `# nosec` when bandit prints `nosec encountered (<ID>), but no failed test`: it
+  suppresses nothing, either because the code no longer matches the test or because the comment is
+  on a different line from the one bandit reports. Move it to that line, or delete it.
+  `tests/test_security_triage_skill.py` fails on this warning.
 - Write scratch files to `tmp/agents/<agent>/` with the issue number in the name, and delete them
   when the task is done.
