@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793300785090,
+  "lastUpdate": 1793300978086,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21063,6 +21063,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.478503873751579e-7",
             "extra": "mean: 1.6106812870905856 usec\nrounds: 65885"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e05d031bfa2d2b1fef5f964ed2839b885bc214d3",
+          "message": "chore: join backslash-continued lines in executed heredoc bodies before the hook re-checks them (merges PR #1123, addresses #1122)\n\n* chore: join backslash-continued lines in executed heredoc bodies before the hook re-checks them\n\n_heredoc_payloads() now also returns each body line ending in an odd number\nof backslashes joined with the next one, as the receiving shell runs it,\nfor quoted and unquoted delimiters alike. The physical lines stay too, so\nboth readings are checked.\n\nAddresses #1122\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: join tab-stripped heredoc body lines as well for <<-\n\nWith <<-, each body line loses its leading tabs before the receiving shell\njoins continued lines. _heredoc_payloads() now also joins the tab-stripped\nlines, so both readings are checked.\n\nAddresses #1122\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T19:08:56Z",
+          "tree_id": "ad350920d7761830af51abe42effb6a8d767e00b",
+          "url": "https://github.com/endavis/pyproject-template/commit/e05d031bfa2d2b1fef5f964ed2839b885bc214d3"
+        },
+        "date": 1793300976326,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9326376.746761655,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2142623141608446e-8",
+            "extra": "mean: 107.22277548429773 nsec\nrounds: 100523"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10413047.140779953,
+            "unit": "iter/sec",
+            "range": "stddev: 1.199360448624368e-8",
+            "extra": "mean: 96.0333691454986 nsec\nrounds: 109087"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5690102.893263818,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7830657157266396e-8",
+            "extra": "mean: 175.74374642396043 nsec\nrounds: 66765"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2242350.4014029377,
+            "unit": "iter/sec",
+            "range": "stddev: 6.990676745034716e-8",
+            "extra": "mean: 445.96063102998755 nsec\nrounds: 184163"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 601028.2597721271,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0660123586294477e-7",
+            "extra": "mean: 1.6638152761388263 usec\nrounds: 63537"
           }
         ]
       }
