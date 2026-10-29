@@ -1610,6 +1610,12 @@ def test_checkout_pathspec_from_file_without_revision_stays_allowed(hook: types.
         "git --work-tree=.. ",
         "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.worktree GIT_CONFIG_VALUE_0=.. git",
         "GIT_CONFIG_PARAMETERS=x git",
+        "read GIT_WORK_TREE < f; git",
+        "printf -v GIT_DIR %s ../.git; git",
+        "echo x >> .git/config; git",
+        "git -c include.path=../x.cfg ",
+        "git -cincludeIf.onbranch:main.path=x ",
+        "git --config-env=include.path=P ",
     ],
 )
 @pytest.mark.parametrize(
@@ -1643,6 +1649,9 @@ def test_working_tree_movers_block_a_sourced_restore(
         ("cd x && git checkout main -- '$UP'/", True),
         ("cd x && git checkout main -- :(top)src", True),
         ("popd && git checkout main -- ../", True),
+        ("env -C .. git checkout main -- ../", True),
+        ("env --chdir=x git restore -s main ../", True),
+        ("env -C /wt git checkout main -- src/foo.py", False),
         ("cd /wt && git checkout main -- src/foo.py", False),
         ("cd /wt && git restore -s main src/ README.md", False),
     ],

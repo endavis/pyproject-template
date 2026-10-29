@@ -1500,13 +1500,14 @@ def _working_tree_moved(tokens: list[str], git_idx: int, sub: int, paths: list[s
 
     Covers ``-C``/``--work-tree``/``--git-dir``/``-c core.worktree=``/
     ``--config-env core.worktree=`` between ``git`` and the subcommand, a
-    ``cd``/``pushd`` earlier in the command when a pathspec could climb out of
-    the new directory (a ``..`` segment, a ``/``, ``~`` or ``:`` start, or a
-    shell expansion: any other relative pathspec stays below it), and a
-    ``GIT_WORK_TREE=``,
-    ``GIT_DIR=`` or ``GIT_CONFIG*`` setting before ``git``. An earlier
-    ``core.worktree`` or include setting (``git config core.worktree ..``) can
-    move it through the repository config too. When unsure, this answers True.
+    ``cd``/``pushd``/``popd``/``env -C`` earlier in the command when a pathspec
+    could climb out of the new directory (a ``..`` segment, a ``/``, ``~`` or
+    ``:`` start, or a shell expansion: any other relative pathspec stays below
+    it), and any mention of ``GIT_WORK_TREE``, ``GIT_DIR`` or ``GIT_CONFIG``
+    before ``git`` (set by ``=``, ``read`` or ``printf -v``). An earlier
+    ``core.worktree`` or include setting (``git config core.worktree ..``) or a
+    path under ``.git/`` can move it through the repository config too. When
+    unsure, this answers True.
     """
     # a shell expansion (`.?`, `$UP`) or a git magic pathspec (`:(top)`) may
     # also climb, so either counts as climbing
@@ -1519,25 +1520,31 @@ def _working_tree_moved(tokens: list[str], git_idx: int, sub: int, paths: list[s
     for t in tokens[:git_idx]:
         lowered = t.lower()
         if (
-            (t in {"cd", "pushd", "popd"} and climbs)
-            or "GIT_WORK_TREE=" in t
-            or "GIT_DIR=" in t
+            ((t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C"))) and climbs)
+            or "GIT_WORK_TREE" in t
+            or "GIT_DIR" in t
             or "GIT_CONFIG" in t
             or "core.worktree" in lowered
             or "include" in lowered
+            or ".git/" in t
         ):
             return True
+
+    def moves(key: str) -> bool:
+        lowered = key.lower()
+        return lowered.startswith("core.worktree") or "include" in lowered
+
     opts = tokens[git_idx + 1 : sub]
     for k, t in enumerate(opts):
         if t.startswith(("-C", "--work-tree", "--git-dir")):
             return True
-        if t == "-c" and k + 1 < len(opts) and opts[k + 1].lower().startswith("core.worktree"):
+        if t == "-c" and k + 1 < len(opts) and moves(opts[k + 1]):
             return True
-        if t.lower().startswith("-ccore.worktree"):
+        if t.startswith("-c") and t != "-c" and moves(t[2:]):
             return True
         if t.startswith("--config-env"):
             value = t.partition("=")[2] or (opts[k + 1] if k + 1 < len(opts) else "")
-            if value.lower().startswith("core.worktree"):
+            if moves(value):
                 return True
     return False
 
