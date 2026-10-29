@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793288955925,
+  "lastUpdate": 1793291217075,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20296,6 +20296,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.4692919262830816e-7",
             "extra": "mean: 1.6754964415461888 usec\nrounds: 62190"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b93103f4f987c1c9e5095c5ede9211e43ca325de",
+          "message": "chore: let uv use its shared default cache instead of tmp/.uv_cache (merges PR #1096, addresses #1094)\n\n.envrc and tools/doit/base.py pointed UV_CACHE_DIR at each checkout's\ntmp/.uv_cache. doit cleanup empties tmp/, so it deleted the cache, and a\nworktree with direnv active used its own empty cache, so venvs never\nshared files.\n\nuv's default cache (~/.cache/uv) is now left in place. base.py no longer\nsets UV_CACHE_DIR, and the env overrides in maintenance.py and\nrelease.py that re-injected it are gone. A user-set value is still\nhonoured, and doit worktree still resolves a relative one. The ruff,\nmypy, coverage and pre-commit caches stay in tmp/.\n\nMeasured after the change: the main checkout's venv, a fresh worktree's\nvenv and the cache share one inode for rich/highlighter.py (3 links),\nand the worktree's venv adds 13M on disk against 324M for the main one.\n\nCI workflows set their own UV_CACHE_DIR and are unaffected. ADR-9022's\ncache-sharing note is amended.\n\nAddresses #1094\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T16:26:12Z",
+          "tree_id": "fd713e1d12dd914e077d83cb3757374392ca1d0f",
+          "url": "https://github.com/endavis/pyproject-template/commit/b93103f4f987c1c9e5095c5ede9211e43ca325de"
+        },
+        "date": 1793291215521,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9042991.886158217,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1633763475480854e-8",
+            "extra": "mean: 110.58287042484956 nsec\nrounds: 98630"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9010646.087217849,
+            "unit": "iter/sec",
+            "range": "stddev: 1.846288396528298e-8",
+            "extra": "mean: 110.97983322400832 nsec\nrounds: 100614"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6602184.206832549,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3804185094874162e-8",
+            "extra": "mean: 151.46502561456978 nsec\nrounds: 72224"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2266405.4737954307,
+            "unit": "iter/sec",
+            "range": "stddev: 6.831871175044095e-8",
+            "extra": "mean: 441.2273141598764 nsec\nrounds: 198020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 604451.6487493361,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5933517689195824e-7",
+            "extra": "mean: 1.6543920461944117 usec\nrounds: 62775"
           }
         ]
       }
