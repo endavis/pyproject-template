@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793277015663,
+  "lastUpdate": 1793277769376,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19883,6 +19883,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.804328312829051e-7",
             "extra": "mean: 1.660362412313541 usec\nrounds: 62579"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6acd8ed4f38553df2ef86d0d43de03ca249c2a58",
+          "message": "fix: let Copilot start implement-worker by dropping its model key (merges PR #1082, addresses #1081)\n\nCopilot's task tool reads .claude/agents/implement-worker.md and failed\nwith invalid_model on the `model: sonnet` line added in #1077, so the\nimplement-issue Coder step could not run in Copilot. Remove the key: in\nClaude Code the worker still gets Sonnet from CLAUDE_CODE_SUBAGENT_MODEL,\nand Copilot picks its own model. A test now forbids a model key on the\nworker, and the skill note and AI_SETUP.md say why.\n\nAddresses #1081\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T12:42:01Z",
+          "tree_id": "9fbfaeb02e2501c441ec09d932094a6d006fb4ba",
+          "url": "https://github.com/endavis/pyproject-template/commit/6acd8ed4f38553df2ef86d0d43de03ca249c2a58"
+        },
+        "date": 1793277768019,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9691056.566501496,
+            "unit": "iter/sec",
+            "range": "stddev: 1.06019331878155e-8",
+            "extra": "mean: 103.18792312663214 nsec\nrounds: 102481"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10169495.384017639,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0999800240368235e-8",
+            "extra": "mean: 98.33329602288805 nsec\nrounds: 108015"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6501388.711504538,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3896506290820972e-8",
+            "extra": "mean: 153.8132919556785 nsec\nrounds: 69363"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2251408.849614508,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1384584871626687e-7",
+            "extra": "mean: 444.1663273071094 nsec\nrounds: 185529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 604753.6816018217,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5869898640366693e-7",
+            "extra": "mean: 1.653565791201605 usec\nrounds: 62937"
           }
         ]
       }
