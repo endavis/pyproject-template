@@ -611,6 +611,52 @@ class TestRemoveMergedWorktree:
         assert f"  git worktree remove {path}" in lines
         assert f"  git branch -D {self.BRANCH}" in lines
 
+    def test_an_ignored_directory_holding_only_rebuildable_files_does_not_keep_it(
+        self, main_checkout: Path
+    ) -> None:
+        """git reports `!! tmp/agents/` as one entry; only its __pycache__ is inside (#1112)."""
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        cache = path / "tmp" / "agents" / "claude" / "__pycache__"
+        cache.mkdir(parents=True)
+        (cache / "old-hook.cpython-312.pyc").write_bytes(b"")
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert not path.exists()
+        assert not _has_branch(main_checkout, self.BRANCH)
+        assert "Removed worktree" in out
+
+    def test_a_real_file_in_an_ignored_directory_keeps_it(self, main_checkout: Path) -> None:
+        """A plan under `tmp/agents/` is work; it is listed by its own path (#1112)."""
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        agent = path / "tmp" / "agents" / "claude"
+        (agent / "__pycache__").mkdir(parents=True)
+        (agent / "__pycache__" / "x.cpython-312.pyc").write_bytes(b"")
+        (agent / "plan-1112.md").write_text("plan\n", encoding="utf-8")
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert (agent / "plan-1112.md").exists()
+        assert _has_branch(main_checkout, self.BRANCH)
+        lines = out.splitlines()
+        assert "  !! tmp/agents/claude/plan-1112.md" in lines
+        assert not any("__pycache__" in line for line in lines)
+
+    def test_a_symlinked_directory_in_an_ignored_directory_keeps_it(
+        self, main_checkout: Path, tmp_path: Path
+    ) -> None:
+        """A symlink is not walked, so what it points at is not judged; it is listed (#1112)."""
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        target = tmp_path / "elsewhere"
+        target.mkdir()
+        (path / "tmp" / "agents").mkdir(parents=True)
+        (path / "tmp" / "agents" / "linked").symlink_to(target, target_is_directory=True)
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.exists()
+        assert "  !! tmp/agents/linked" in out.splitlines()
+
     def test_a_branch_that_moved_past_the_merged_commit_is_kept(self, main_checkout: Path) -> None:
         """`-D` would drop the commit the PR never merged."""
         path, merged = _add_worktree(main_checkout, self.BRANCH)
