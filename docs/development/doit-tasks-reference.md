@@ -58,13 +58,14 @@ doit test
 
 **What it does:**
 - Depends on `env_check` first, which warns (without failing) if `uv.lock` has drifted (#1033)
-- Runs `pytest -n auto -v` for parallel test execution
+- Runs `pytest -n auto -q -rfE --tb=short` for parallel test execution with terse failure output: short tracebacks and a failure summary, no line per passing test (#1075)
 - Uses all available CPU cores
 
 **Equivalent command:**
 ```bash
-uv run pytest -n auto -v
+uv run pytest -n auto -q -rfE --tb=short
 ```
+For per-test output, run pytest directly: `uv run pytest -n auto -v`.
 
 ### `coverage`
 
@@ -221,11 +222,11 @@ doit lint
 
 **What it does:**
 - Runs ruff linter on source and test code
-- Reports violations without auto-fixing
+- Reports violations without auto-fixing, one line per violation (`--output-format=concise`, #1075)
 
 **Equivalent command:**
 ```bash
-uv run ruff check src/ tests/ tools/ bootstrap.py examples/
+uv run ruff check --output-format=concise src/ tests/ tools/ bootstrap.py examples/
 ```
 `bootstrap.py` and `examples/` are appended only when present at the repo root.
 
@@ -432,6 +433,7 @@ doit security
 - Scans Python code for security vulnerabilities
 - Uses configuration from `pyproject.toml` `[tool.bandit]`
 - Excludes tests, tmp, and .venv directories
+- Prints one line per finding (`-q -f custom --msg-template ...`, #1075)
 
 **Requires:** the `security` extra, which `doit install_dev` installs
 
