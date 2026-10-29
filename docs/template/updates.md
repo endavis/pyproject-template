@@ -86,6 +86,32 @@ pyproject-template has updates since 1a2b3c4. Run the template-sync skill to rev
   not wired yet. See [Command Blocking - Template Update Notice](../development/ai/command-blocking.md#template-update-notice)
   for the per-host evidence.
 
+## Reporting a template bug upstream
+
+A bug in a file the template shipped (`tools/doit/`, `tools/hooks/`, AI agent config, skills) is
+fixed upstream, not locally, where the fix drifts and is lost on the next sync. The
+`report-template-bug` skill walks an agent through it: diff the local file against the template at
+the recorded commit (a difference is a local customization, so the bug is the project's own),
+reproduce, check whether a newer template already fixes it, look for a duplicate, then file with:
+
+```bash
+doit issue --upstream --type=bug --title="bug: <subject>" --body-file=issue.md
+```
+
+- **Target:** `endavis/pyproject-template`, fixed. Refused in the template repository itself, and
+  when `gh` cannot say which repository this is.
+- **Validation:** the body is checked against the issue templates on the template's `main`, fetched
+  with `gh api`. If the fetch fails or the YAML is malformed, nothing is filed.
+- **Labels:** the upstream template's labels are passed to `gh issue create`. Whether GitHub applies
+  labels set by a user without triage access on that repository is unverified.
+- **Footer:** the recorded template commit, or "not recorded". The project's name appears only with
+  `--include-origin`, because a project may be private.
+- **Security:** content naming a vulnerability, exploit, bypass, injection and the like is refused,
+  and nothing public is filed. Report it by the template's
+  [security policy](https://github.com/endavis/pyproject-template/security/policy). Private
+  vulnerability reporting was disabled on the template repository when this was written, so the
+  policy page is the pointer, not a report form.
+
 ## When to Update
 
 Consider checking for template updates when:
