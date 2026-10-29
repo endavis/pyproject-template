@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793271522542,
+  "lastUpdate": 1793272798218,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19706,6 +19706,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.43653834261496e-7",
             "extra": "mean: 1.6373476191192355 usec\nrounds: 63821"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c94d6b5874790a6654ecc4b5eefc7e41898b2e3f",
+          "message": "fix: add --yes to bootstrap.py --sync so the piped command can refresh an installed suite (merges PR #1074, addresses #1070)\n\n* fix: add --yes to bootstrap.py --sync so the piped command can refresh an installed suite\n\nPiped to python3, the script is stdin, so the overwrite prompt's input()\nhit EOFError and every sync after the first exited 1 with a traceback.\n--yes / -y skips the prompt; without it, an EOF now exits 1 with a\nmessage naming the --yes command. Every documented --sync command now\npasses --yes.\n\nAddresses #1070\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\n* fix: pipe bootstrap.py source as bytes in the piped --sync test so Windows decodes it as UTF-8\n\nAddresses #1070\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T11:19:15Z",
+          "tree_id": "6f8a2e5f3db4a866af23898b576133feb4ab1223",
+          "url": "https://github.com/endavis/pyproject-template/commit/c94d6b5874790a6654ecc4b5eefc7e41898b2e3f"
+        },
+        "date": 1793272797101,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12879985.278594865,
+            "unit": "iter/sec",
+            "range": "stddev: 9.678274450531696e-9",
+            "extra": "mean: 77.63984029251114 nsec\nrounds: 133494"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13386850.612160252,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4640986426969133e-8",
+            "extra": "mean: 74.70016876797199 nsec\nrounds: 138889"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8718289.169031722,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2134159320205449e-8",
+            "extra": "mean: 114.70140306335614 nsec\nrounds: 88207"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3099894.436105017,
+            "unit": "iter/sec",
+            "range": "stddev: 7.462256778537396e-8",
+            "extra": "mean: 322.5916303319312 nsec\nrounds: 195389"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 797037.6557055169,
+            "unit": "iter/sec",
+            "range": "stddev: 1.775073425911587e-7",
+            "extra": "mean: 1.2546458662794622 usec\nrounds: 84984"
           }
         ]
       }
