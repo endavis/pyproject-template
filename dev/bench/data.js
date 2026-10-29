@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793273217522,
+  "lastUpdate": 1793277015663,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19824,6 +19824,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8777003863294362e-7",
             "extra": "mean: 1.6748458628806577 usec\nrounds: 62894"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7ff9c62180d07c32c4c9707a4d246709092bcbab",
+          "message": "feat: keep doit task failure output short so agents read only what matters (merges PR #1080, addresses #1075)\n\nA failing doit task dumps its whole captured output. With `pytest -v`\nover 2,712 tests, one failing test put ~5,500 lines into `doit check`.\n\n- test: `pytest -n auto -q -rfE --tb=short` instead of `-v`\n- lint: `ruff check --output-format=concise`\n- security: `bandit -q -f custom` with a one-line-per-finding template\n\nWith one failing test, `doit check` output drops from 5,498 to 94\nlines; success output is unchanged at 42. Other check tasks were\nreviewed and left as they are. Per-test output is still available via\n`uv run pytest -n auto -v`, which the docs now point to.\n\nThe bandit `# nosec` reason-text warnings that remain are #1079.\n\nAddresses #1075\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T12:29:36Z",
+          "tree_id": "e5422d20a86f6e19c269f085d1b7a54f99a2991f",
+          "url": "https://github.com/endavis/pyproject-template/commit/7ff9c62180d07c32c4c9707a4d246709092bcbab"
+        },
+        "date": 1793277014451,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9339655.18148937,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2936775404057316e-8",
+            "extra": "mean: 107.07033402924117 nsec\nrounds: 100111"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10341272.934755793,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2225157313525611e-8",
+            "extra": "mean: 96.69989432723689 nsec\nrounds: 108732"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6635910.06240209,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9872068295241416e-8",
+            "extra": "mean: 150.69523103783848 nsec\nrounds: 72802"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2314565.0409647655,
+            "unit": "iter/sec",
+            "range": "stddev: 6.912613459804537e-8",
+            "extra": "mean: 432.04661882527023 nsec\nrounds: 185186"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 602278.1487847612,
+            "unit": "iter/sec",
+            "range": "stddev: 1.804328312829051e-7",
+            "extra": "mean: 1.660362412313541 usec\nrounds: 62579"
           }
         ]
       }
