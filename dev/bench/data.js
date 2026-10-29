@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793295937013,
+  "lastUpdate": 1793296235676,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20650,6 +20650,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.2676108110014452e-7",
             "extra": "mean: 1.3013235491564408 usec\nrounds: 83417"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "259b98a8b9faf7ec53f6869a84da4b186d5fd697",
+          "message": "chore: keep substitutions and escaped quotes inside words in operator_tokens (merges PR #1111, addresses #1110)\n\nReplace the shlex-based operator_tokens() with a left-to-right scanner\nthat tracks backslash escapes, single, double and $'...' quotes,\n$(...), $((...)), ${...}, backticks and <(...)/>(...), all nested, so text\ninside them stays in its word. Inside double quotes \\\" and \\\\ are escapes.\n\nInput the scanner does not model gives words only: an unclosed construct,\na top-level (( or here-document <<, a [[ or case word, and a substitution\nholding a comment, case or <<. The helper so never marks text as an\noperator the shell would not read as one.\n\nAddresses #1110\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T17:49:54Z",
+          "tree_id": "36bb3bb96c67cf7c18d3f1d02d2c3cd3ed29d73d",
+          "url": "https://github.com/endavis/pyproject-template/commit/259b98a8b9faf7ec53f6869a84da4b186d5fd697"
+        },
+        "date": 1793296233523,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19418320.32277881,
+            "unit": "iter/sec",
+            "range": "stddev: 5.961341908180973e-9",
+            "extra": "mean: 51.497760021341406 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20979349.359457113,
+            "unit": "iter/sec",
+            "range": "stddev: 5.766355930635598e-9",
+            "extra": "mean: 47.6659205615077 nsec\nrounds: 198138"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12975237.493371826,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6097544385016983e-8",
+            "extra": "mean: 77.06988026314221 nsec\nrounds: 134211"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4301064.462185464,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3401876745763465e-8",
+            "extra": "mean: 232.50058416745475 nsec\nrounds: 45552"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1027623.2866472007,
+            "unit": "iter/sec",
+            "range": "stddev: 3.125465135582124e-7",
+            "extra": "mean: 973.1192480686901 nsec\nrounds: 109159"
           }
         ]
       }
