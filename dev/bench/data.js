@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793283329554,
+  "lastUpdate": 1793285644209,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20178,6 +20178,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4896111258027608e-7",
             "extra": "mean: 1.6486390809317835 usec\nrounds: 62977"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "864d4d52b89ff347a8cef7c924a1e47aea328622",
+          "message": "Merge commit from fork\n\n* fix: compare the env example to HEAD by content in the copy gate\n\nThe gate on the allowed `cp .envrc.local.example .envrc.local` asked\n`git diff --quiet HEAD` whether the example matched HEAD. That answer\ndepends on the index: with --skip-worktree or --assume-unchanged set on\nthe entry, git diff reports no difference for any content.\n\nThe gate now compares the file's bytes with\n`git cat-file --filters HEAD:./.envrc.local.example`. --filters applies\ncheckout's eol conversions, so a clean autocrlf checkout still matches.\nInside a repo, an example HEAD does not hold (untracked, or no commit)\nnow blocks the copy. Git missing, a timeout or no repo still fail open\n(ADR-9019). With no example in the working directory, the copy is left\nto fail on its own.\n\nThe faked `git diff` exit-code test is replaced by tests against real\nthrowaway repos, covering clean, modified, both index flags, untracked,\nno commit, no repo, no example and an autocrlf checkout.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* fix: compare the env example to the raw HEAD blob, without git filters\n\n`git cat-file --filters` runs whatever smudge filter a worktree\n.gitattributes and repo config assign to the path. Both can be written\nbefore the copy, so a filter could turn HEAD's blob into the swapped\ncontent and make it match. It also made the hook run that filter.\n\nThe gate now reads `git cat-file blob` and compares with CRLF read as\nLF on both sides, so a clean autocrlf checkout still matches.\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T14:53:20Z",
+          "tree_id": "010540ac4c9a38690f3e0f50eba5ad787527485c",
+          "url": "https://github.com/endavis/pyproject-template/commit/864d4d52b89ff347a8cef7c924a1e47aea328622"
+        },
+        "date": 1793285643338,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9282019.506552136,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6983523037015957e-8",
+            "extra": "mean: 107.73517544259678 nsec\nrounds: 104080"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10169653.672378825,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2288322232182842e-8",
+            "extra": "mean: 98.33176548735766 nsec\nrounds: 108378"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6982919.0553824715,
+            "unit": "iter/sec",
+            "range": "stddev: 1.584423720437716e-8",
+            "extra": "mean: 143.20658625266387 nsec\nrounds: 73992"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2258468.048862295,
+            "unit": "iter/sec",
+            "range": "stddev: 7.225229731887763e-8",
+            "extra": "mean: 442.77801516995146 nsec\nrounds: 194591"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 602482.8786527505,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7543351925203032e-7",
+            "extra": "mean: 1.6597982041185342 usec\nrounds: 63256"
           }
         ]
       }
