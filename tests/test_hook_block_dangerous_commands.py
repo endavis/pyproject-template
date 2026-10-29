@@ -1491,7 +1491,9 @@ def test_later_dashes_do_not_change_checkout_arguments(
 @pytest.mark.parametrize(
     ("command", "blocked"),
     [
-        ("git checkout main & cat .envrc.local.example", False),
+        # The scan runs on every token pass, and the older passes do not end
+        # it at `&` (#1117)
+        ("git checkout main & cat .envrc.local.example", True),
         ("git checkout main '&' .envrc.local.example", True),
         ("git checkout main \\& .envrc.local.example", True),
         ("git checkout $(echo main) .envrc.local.example", True),
@@ -1501,6 +1503,11 @@ def test_later_dashes_do_not_change_checkout_arguments(
         ('git checkout main "$(pwd)/.envrc.local.example"', True),
         ('git checkout main "`pwd`/.envrc.local.example"', True),
         ('git restore -s main "$PWD/.envrc.local.example"', True),
+        # words mixing quotes with `$'...'` segments (#1117)
+        ("git checkout main \".envrc\"$'.local.example'", True),
+        ("git checkout main '.envrc'$'.local'.example", True),
+        ("git checkout main .envrc$'\\x2elocal'.example", True),
+        ("git restore -s main x$'/../.envrc.local.example'", True),
         ("git checkout main $'.envrc.local.example'", True),
     ],
 )
@@ -1518,7 +1525,14 @@ def test_check_command_checkout_operator_scan(
         ("git checkout $(echo main) x", ["git", "checkout", "$(echo main)", "x"]),
         ("a & b", ["a", "&", "b"]),
         ('a "$PWD/x" "`pwd`"y', ["a", "$PWD/x", "`pwd`y"]),
-        ("a $'x y'", ["a", "$'x y'"]),
+        # a `$'` word gets the text bash passes (#1117)
+        ("a $'x y'", ["a", "x y"]),
+        ("a \".x\"$'.y'z", ["a", ".x.yz"]),
+        ("a '.x'$'\\x2e'y", ["a", ".x.y"]),
+        ("a $'\\056x'", ["a", ".x"]),
+        ("a $'\\ex'", ["a", "\x1bx"]),
+        ("a x$'\\c'y", ["a", "x$'\\c'y"]),
+        ("a $'&'", ["a", "$'&'"]),
         ("a 'b", None),
     ],
 )

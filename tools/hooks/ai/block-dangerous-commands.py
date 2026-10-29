@@ -16,6 +16,7 @@ Exit codes:
 For full documentation, see: docs/development/ai/command-blocking.md
 """
 
+import codecs
 import fnmatch
 import json
 import os
@@ -623,14 +624,62 @@ def operator_tokens(command: str) -> list[tuple[str, bool]]:
         return [(word, False) for word in command.split()]
 
 
+def _decode_ansi_c(body: str) -> str | None:
+    """Return the text bash makes of a ``$'...'`` body, or None when unsure."""
+    if not body.isascii() or "\\c" in body:
+        return None
+    body = body.replace("\\e", "\\x1b").replace("\\E", "\\x1b")
+    try:
+        return codecs.decode(body, "unicode_escape")
+    except UnicodeDecodeError:
+        return None
+
+
+def _ansi_word(word: str) -> str | None:
+    """Return the text bash passes for a word holding ``$'...'``, or None.
+
+    ``'...'`` is literal, ``$'...'`` is decoded, ``"..."`` loses its quotes and
+    the backslash before ``\\``, ``"``, ``$`` and a backtick, and a bare
+    backslash escapes the next character. Any ``$`` expansion other than
+    ``$'`` is kept as written, as the dynamic target match expects.
+    """
+    out: list[str] = []
+    i = 0
+    while i < len(word):
+        char = word[i]
+        if word.startswith("$'", i):
+            end = _skip_ansi(word, i + 2)
+            decoded = _decode_ansi_c(word[i + 2 : end - 1])
+            if decoded is None:
+                return None
+            out.append(decoded)
+            i = end
+        elif char == "'":
+            end = _skip_single(word, i + 1)
+            out.append(word[i + 1 : end - 1])
+            i = end
+        elif char == '"':
+            end = _skip_double(word, i + 1)
+            out.append(re.sub(r'\\([\\"$`])', r"\1", word[i + 1 : end - 1]))
+            i = end
+        elif char == "\\" and i + 1 < len(word):
+            out.append(word[i + 1])
+            i += 2
+        else:
+            out.append(char)
+            i += 1
+    return "".join(out)
+
+
 def _exact_operator_tokens(command: str) -> list[str] | None:
     """Return *command* as strings with each real operator as its own token.
 
     Unlike :func:`operator_tokens` it returns None when the command cannot be
     read, so the caller can tell that apart from a command with no operators.
-    An operator keeps its text, as does a word holding ``$'``. A word holding
-    ``$`` or a backtick loses its quote characters (``"$PWD/x"`` becomes
-    ``$PWD/x``). Any other word is dequoted, except that a word whose dequoted
+    An operator keeps its text. A word holding ``$'`` gets the text bash would
+    pass (:func:`_ansi_word`), or keeps its raw text when that can't be read. A
+    word holding another ``$`` or a backtick loses its quote characters
+    (``"$PWD/x"`` becomes ``$PWD/x``). Any other word is dequoted, except that a word whose dequoted
     text is empty or equals an operator string (``'&'``, ``\\&``) keeps its
     raw text, so a token equal to an operator string is always a real operator.
     """
@@ -640,8 +689,16 @@ def _exact_operator_tokens(command: str) -> list[str] | None:
         return None
     result: list[str] = []
     for text, is_operator in scanned:
-        if is_operator or "$'" in text:
+        if is_operator:
             result.append(text)
+            continue
+        if "$'" in text:
+            try:
+                decoded = _ansi_word(text)
+            except _OpenConstructError:
+                decoded = None
+            ok = decoded is not None and decoded and decoded not in _SHELL_OPERATORS
+            result.append(decoded if ok and decoded is not None else text)
             continue
         if "$" in text or "`" in text:
             # shlex would expand nothing but could split a substitution; drop
@@ -2577,8 +2634,8 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # Only the `tokenize()` tokens keep a `;` glued to a word; on the redirect
     # tokens such a word was quoted and is a literal argument (#1093).
     # A third pass runs on the exact operator tokens, where `&`, `|&`, `(` and
-    # `)` end a checkout/restore argument scan; the checkout/restore scan then
-    # runs only there. When the command cannot be read, the first two keep it.
+    # `)` also end a checkout/restore argument scan. The scan runs on every
+    # pass, so the exact pass only adds coverage (#1117).
     exact_tokens = _exact_operator_tokens(stripped)
     passes: list[tuple[list[str], bool, bool]] = [
         (tokens, True, False),
@@ -2592,7 +2649,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             _depth,
             glued_separators=glued,
             exact_operators=exact,
-            restore_scan=exact_tokens is None or exact,
+            restore_scan=True,
         )
         if is_dangerous:
             return True, reason
