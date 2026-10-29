@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793293920956,
+  "lastUpdate": 1793294151130,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20473,6 +20473,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.157600919867668e-7",
             "extra": "mean: 1.0208931283311882 usec\nrounds: 108649"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2cdcffe97aaded0ce2000ae97820b7f9e3341f66",
+          "message": "fix: end the checkout argument scan at a semicolon attached to a word (merges PR #1100, addresses #1093)\n\nThe hook blocked `git checkout main; ls .` as a config-file write. The\n`tokenize()` tokens keep a `;`, `&&` or `||` attached to the previous\nword (`main;`), so the checkout argument scan ran on into the next\ncommand, took `main;` as a source revision and `.` as a broad pathspec.\n\nOn the `tokenize()` pass the scan now ends at such an operator, keeping\nthe part before it as an argument. Because those tokens have lost their\nquoting, a protected name after the operator is still a target.\n\nThe redirect-token pass keeps its previous behaviour: `_redirect_tokens`\nsplits an unquoted operator into its own token and keeps a quoted one\ninside the word, so there a word holding `;` stays a literal argument.\nA command is blocked when either pass blocks it, so a quoted `'x;'`\nfollowed by a broad pathspec is still blocked as before.\n\nAddresses #1093\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T17:15:03Z",
+          "tree_id": "6befe194f33fb4f99ad09ed5117d06845dd12425",
+          "url": "https://github.com/endavis/pyproject-template/commit/2cdcffe97aaded0ce2000ae97820b7f9e3341f66"
+        },
+        "date": 1793294149618,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12864154.089709425,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3075090216536897e-8",
+            "extra": "mean: 77.73538726498478 nsec\nrounds: 118162"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13094052.583201528,
+            "unit": "iter/sec",
+            "range": "stddev: 8.709184693580779e-9",
+            "extra": "mean: 76.37055019031376 nsec\nrounds: 135117"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8690074.81827577,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3502749584010005e-8",
+            "extra": "mean: 115.07380786836697 nsec\nrounds: 88606"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2979864.556296728,
+            "unit": "iter/sec",
+            "range": "stddev: 5.0087116910041916e-8",
+            "extra": "mean: 335.5857224741668 nsec\nrounds: 194251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 793442.9739612185,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2299739085166543e-7",
+            "extra": "mean: 1.260330020956084 usec\nrounds: 83002"
           }
         ]
       }
