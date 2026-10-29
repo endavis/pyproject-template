@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import os
 import shutil
-import subprocess  # nosec B404 - used to import the module list in a clean interpreter
+import subprocess  # nosec B404  # used to import the module list in a clean interpreter
 import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
@@ -124,7 +124,7 @@ class TestConstants:
             "assert manage is not None\n"
         )
         env = {k: v for k, v in os.environ.items() if k != "PYTHONPATH"}
-        result = subprocess.run(  # nosec B603 - fixed argv, no shell
+        result = subprocess.run(  # nosec B603  # fixed argv, no shell
             [sys.executable, "-E", "-c", program],
             cwd=tmp_path,
             capture_output=True,
@@ -568,7 +568,7 @@ class TestRunSync:
         # in the locale encoding (cp1252 on Windows), which Python then rejects.
         source = (REPO_ROOT / "bootstrap.py").read_bytes()
 
-        result = subprocess.run(  # nosec B603 - fixed argv, no shell
+        result = subprocess.run(  # nosec B603  # fixed argv, no shell
             [sys.executable, "-", "--sync"],
             input=source,
             capture_output=True,
