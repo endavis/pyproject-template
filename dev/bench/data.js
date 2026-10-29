@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793298056844,
+  "lastUpdate": 1793298902087,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20827,6 +20827,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4032130879448356e-7",
             "extra": "mean: 1.1006169021636727 usec\nrounds: 111820"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f8eb91301ecd53dc9c0c1f1009864edbb2f39d7e",
+          "message": "chore: parse git checkout/restore options in the hook the way git does (merges PR #1116, addresses #1106)\n\n* chore: parse git checkout/restore options in the hook the way git does\n\n- restore: walk short-option clusters one character at a time; `s` sets\n  the source and takes the rest of the token or the next token (-Ws main,\n  -sHEAD).\n- checkout: --pathspec-from-file (any abbreviation) with a non-option\n  argument counts as having a source, as git then reads that argument as\n  the revision.\n- A new _working_tree_moved() helper treats these as moving the working\n  tree, alongside -C and --work-tree:\n  - --git-dir, -c core.worktree (glued or not) and --config-env naming it;\n  - a GIT_WORK_TREE=, GIT_DIR= or GIT_CONFIG* setting before git;\n  - an earlier core.worktree or include setting in the command;\n  - an earlier cd/pushd when a pathspec could climb out of the new\n    directory (a .. segment, or a / or ~ start).\n\nAddresses #1106\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: count expanding and magic pathspecs as climbing after a cd\n\nAfter a cd/pushd/popd, a pathspec with a shell expansion ($, a glob, a\nbrace) or a git magic prefix (:) may also reach above the new directory,\nso it counts as moving the working tree, as a .. segment already does.\n\nAddresses #1106\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: widen what counts as moving the working tree in the restore scan\n\n- Any mention of GIT_WORK_TREE, GIT_DIR or GIT_CONFIG before git counts,\n  so read and printf -v settings count as well as VAR= ones.\n- env -C/--chdir counts like cd when a pathspec could climb.\n- A path under .git/ before git counts, as it can carry core.worktree.\n- -c, -c<key> and --config-env treat include keys like core.worktree,\n  matching the check before git.\n\nAddresses #1106\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T18:34:17Z",
+          "tree_id": "0e2d30be3001cf59c9cd0fe6a419e16a01c444dc",
+          "url": "https://github.com/endavis/pyproject-template/commit/f8eb91301ecd53dc9c0c1f1009864edbb2f39d7e"
+        },
+        "date": 1793298900843,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13141588.73204914,
+            "unit": "iter/sec",
+            "range": "stddev: 9.256785748529827e-9",
+            "extra": "mean: 76.09430034598809 nsec\nrounds: 141084"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13733686.675319854,
+            "unit": "iter/sec",
+            "range": "stddev: 9.35944902094516e-9",
+            "extra": "mean: 72.81366057353353 nsec\nrounds: 147384"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8806380.359318009,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2406666349305506e-8",
+            "extra": "mean: 113.55403232633513 nsec\nrounds: 89896"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2709336.7829842367,
+            "unit": "iter/sec",
+            "range": "stddev: 4.759437853595027e-8",
+            "extra": "mean: 369.09401824107533 nsec\nrounds: 196464"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 630257.0241527001,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8602702204543167e-7",
+            "extra": "mean: 1.5866542722699075 usec\nrounds: 77137"
           }
         ]
       }
