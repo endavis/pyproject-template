@@ -1491,7 +1491,9 @@ def test_later_dashes_do_not_change_checkout_arguments(
 @pytest.mark.parametrize(
     ("command", "blocked"),
     [
-        ("git checkout main & cat .envrc.local.example", False),
+        # The scan runs on every token pass, and the older passes do not end
+        # it at `&` (#1117)
+        ("git checkout main & cat .envrc.local.example", True),
         ("git checkout main '&' .envrc.local.example", True),
         ("git checkout main \\& .envrc.local.example", True),
         ("git checkout $(echo main) .envrc.local.example", True),
@@ -1501,6 +1503,11 @@ def test_later_dashes_do_not_change_checkout_arguments(
         ('git checkout main "$(pwd)/.envrc.local.example"', True),
         ('git checkout main "`pwd`/.envrc.local.example"', True),
         ('git restore -s main "$PWD/.envrc.local.example"', True),
+        # words mixing quotes with `$'...'` segments (#1117)
+        ("git checkout main \".envrc\"$'.local.example'", True),
+        ("git checkout main '.envrc'$'.local'.example", True),
+        ("git checkout main .envrc$'\\x2elocal'.example", True),
+        ("git restore -s main x$'/../.envrc.local.example'", True),
         ("git checkout main $'.envrc.local.example'", True),
     ],
 )
@@ -1518,7 +1525,14 @@ def test_check_command_checkout_operator_scan(
         ("git checkout $(echo main) x", ["git", "checkout", "$(echo main)", "x"]),
         ("a & b", ["a", "&", "b"]),
         ('a "$PWD/x" "`pwd`"y', ["a", "$PWD/x", "`pwd`y"]),
-        ("a $'x y'", ["a", "$'x y'"]),
+        # a `$'` word gets the text bash passes (#1117)
+        ("a $'x y'", ["a", "x y"]),
+        ("a \".x\"$'.y'z", ["a", ".x.yz"]),
+        ("a '.x'$'\\x2e'y", ["a", ".x.y"]),
+        ("a $'\\056x'", ["a", ".x"]),
+        ("a $'\\ex'", ["a", "\x1bx"]),
+        ("a x$'\\c'y", ["a", "x$'\\c'y"]),
+        ("a $'&'", ["a", "$'&'"]),
         ("a 'b", None),
     ],
 )
@@ -1526,6 +1540,33 @@ def test_exact_operator_tokens(
     hook: types.ModuleType, command: str, expected: list[str] | None
 ) -> None:
     assert hook._exact_operator_tokens(command) == expected
+
+
+@pytest.mark.parametrize(
+    ("body", "expected"),
+    [
+        # each result is what bash 5.3 printf '%s' $'<body>' printed
+        ("\\456envrc", ".envrc"),  # octal is masked to a byte
+        ("\\056envrc", ".envrc"),
+        ("\\0056envrc", "\x056envrc"),  # at most 3 octal digits
+        ("\\x2envrc", ".nvrc"),  # at most 2 hex digits
+        ("\\u002eenvrc", ".envrc"),
+        ("\\x41F", "AF"),
+        ("\\?", "?"),
+        ("\\eX", "\x1bX"),
+        ("\\a\\b\\f\\n\\r\\t\\v", "\a\b\f\n\r\t\v"),
+        ("\\'q\\\"", "'q\""),
+        # escapes bash keeps or treats specially, and non-ASCII results
+        ("\\N{FULL STOP}envrc", None),
+        ("\\cA", None),
+        ("\\u2eenvrc", None),
+        ("\\xG", None),
+        ("é", None),
+        ("x\\", None),
+    ],
+)
+def test_decode_ansi_c(hook: types.ModuleType, body: str, expected: str | None) -> None:
+    assert hook._decode_ansi_c(body) == expected
 
 
 def _restore_token_lists(
