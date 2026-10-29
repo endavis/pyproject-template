@@ -611,11 +611,53 @@ def operator_tokens(command: str) -> list[tuple[str, bool]]:
     ``<<``, a ``[[`` or ``case`` word, or a substitution holding a comment,
     ``case`` or ``<<``, every whitespace-separated piece is returned as a word.
     Never raises.
+
+    The words-only result can miss an operator but never reports one the shell
+    would not see. It suits callers where a missed operator only widens what
+    they check (such as ending an argument scan), not callers that need every
+    command start. A newline is read as whitespace, not as a separator.
     """
     try:
         return _scan_tokens(command)
     except (_OpenConstructError, RecursionError):
         return [(word, False) for word in command.split()]
+
+
+def _exact_operator_tokens(command: str) -> list[str] | None:
+    """Return *command* as strings with each real operator as its own token.
+
+    Unlike :func:`operator_tokens` it returns None when the command cannot be
+    read, so the caller can tell that apart from a command with no operators.
+    An operator keeps its text, as does a word holding ``$'``. A word holding
+    ``$`` or a backtick loses its quote characters (``"$PWD/x"`` becomes
+    ``$PWD/x``). Any other word is dequoted, except that a word whose dequoted
+    text is empty or equals an operator string (``'&'``, ``\\&``) keeps its
+    raw text, so a token equal to an operator string is always a real operator.
+    """
+    try:
+        scanned = _scan_tokens(command)
+    except (_OpenConstructError, RecursionError):
+        return None
+    result: list[str] = []
+    for text, is_operator in scanned:
+        if is_operator or "$'" in text:
+            result.append(text)
+            continue
+        if "$" in text or "`" in text:
+            # shlex would expand nothing but could split a substitution; drop
+            # the quote characters so `"$PWD/x"` reads as `$PWD/x`, the form
+            # the dynamic target match expects
+            stripped = text.replace('"', "").replace("'", "")
+            result.append(stripped if stripped not in _SHELL_OPERATORS else text)
+            continue
+        try:
+            dequoted = "".join(shlex.split(text))
+        except ValueError:
+            dequoted = text
+        if not dequoted or dequoted in _SHELL_OPERATORS:
+            dequoted = text
+        result.append(dequoted)
+    return result
 
 
 def _normalize_branch_ref(token: str) -> str:
@@ -1450,8 +1492,15 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
 _GLUED_COMMAND_END = re.compile(r";|&&|\|\|")
 
 
+_EXACT_COMMAND_END = _COMMAND_SEPARATORS | {"&", "|&", "(", ")"}
+
+
 def _git_restore_targets(
-    tokens: list[str], git_idx: int, *, glued_separators: bool = False
+    tokens: list[str],
+    git_idx: int,
+    *,
+    glued_separators: bool = False,
+    exact_operators: bool = False,
 ) -> list[str]:
     """Return the protected paths a ``git checkout``/``git restore`` at
     *git_idx* would overwrite (#1055).
@@ -1473,6 +1522,10 @@ def _git_restore_targets(
     :func:`_redirect_tokens` splits an unquoted operator into its own token and
     keeps a quoted one (``'x;'``) inside the word, so on those tokens a word
     holding ``;`` is a literal argument and the flag stays off (#1093).
+
+    *exact_operators* is for :func:`_exact_operator_tokens`, where every token
+    equal to an operator string is a real operator: the scan then ends at
+    ``&``, ``|&``, ``(`` and ``)`` as well, as bash ends the command there.
     """
     sub = _git_subcommand_index(tokens, git_idx)
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
@@ -1489,9 +1542,9 @@ def _git_restore_targets(
             skip_target = False
             redirect_targets.append(t)
             continue
-        if t in _COMMAND_SEPARATORS:
+        if t in (_EXACT_COMMAND_END if exact_operators else _COMMAND_SEPARATORS):
             break
-        glued = _GLUED_COMMAND_END.search(t) if glued_separators else None
+        glued = _GLUED_COMMAND_END.search(t) if glued_separators and not exact_operators else None
         if glued:
             # `main;` / `main&&`: bash ends the command at the operator, so
             # keep the part before it and stop scanning (#1093)
@@ -1509,14 +1562,12 @@ def _git_restore_targets(
     paths: list[str] = []
     has_source = False
     if tokens[sub] == "checkout":
-        non_options = [t for t in rest if not t.startswith("-")]
+        paths = [t for t in rest if not t.startswith("-")]
         if "--" in rest:
             dashes = rest.index("--")
-            paths = rest[dashes + 1 :]
             has_source = any(not t.startswith("-") for t in rest[:dashes])
         else:
-            paths = non_options
-            has_source = len(non_options) >= 2
+            has_source = len(paths) >= 2
     else:
         skip = False
         for t in rest:
@@ -1555,7 +1606,11 @@ def _git_restore_targets(
 
 
 def _bash_confirmed_write_targets(
-    tokens: list[str], *, glued_separators: bool = False
+    tokens: list[str],
+    *,
+    glued_separators: bool = False,
+    exact_operators: bool = False,
+    restore_scan: bool = True,
 ) -> list[str]:
     """Return every persistence-protected path/basename targeted by a
     *confirmed* Bash write.
@@ -1679,8 +1734,15 @@ def _bash_confirmed_write_targets(
 
         # Pattern F: `git checkout ... -- <path>` and `git restore <path>`
         # overwrite <path> from the index or another commit (#1055)
-        if tok == "git":
-            targets.extend(_git_restore_targets(tokens, i, glued_separators=glued_separators))
+        if tok == "git" and restore_scan:
+            targets.extend(
+                _git_restore_targets(
+                    tokens,
+                    i,
+                    glued_separators=glued_separators,
+                    exact_operators=exact_operators,
+                )
+            )
 
     return targets
 
@@ -1738,7 +1800,12 @@ def _bash_interpreter_mentions_target(tokens: list[str]) -> bool:
 
 
 def check_env_persistence_in_bash(
-    tokens: list[str], _depth: int = 0, *, glued_separators: bool = False
+    tokens: list[str],
+    _depth: int = 0,
+    *,
+    glued_separators: bool = False,
+    exact_operators: bool = False,
+    restore_scan: bool = True,
 ) -> tuple[bool, str]:
     """Block Bash commands that would persist ALLOW_AI_READY_TO_MERGE, or
     that write to a protected file at all.
@@ -1773,7 +1840,12 @@ def check_env_persistence_in_bash(
         f"{var_name} are not allowed. Only a human can edit these files."
     )
 
-    for target in _bash_confirmed_write_targets(tokens, glued_separators=glued_separators):
+    for target in _bash_confirmed_write_targets(
+        tokens,
+        glued_separators=glued_separators,
+        exact_operators=exact_operators,
+        restore_scan=restore_scan,
+    ):
         if _matches_env_persistence_target(target, dynamic=True):
             if _depth == 0 and tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
                 if tuple(tokens) == _ALLOWED_ENVRC_COPY and _envrc_example_modified():
@@ -2438,9 +2510,23 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # (#1051). Heredoc bodies are stripped so a body's text is not a redirect.
     # Only the `tokenize()` tokens keep a `;` glued to a word; on the redirect
     # tokens such a word was quoted and is a literal argument (#1093).
-    for check_tokens, glued in ((tokens, True), (_redirect_tokens(stripped), False)):
+    # A third pass runs on the exact operator tokens, where `&`, `|&`, `(` and
+    # `)` end a checkout/restore argument scan; the checkout/restore scan then
+    # runs only there. When the command cannot be read, the first two keep it.
+    exact_tokens = _exact_operator_tokens(stripped)
+    passes: list[tuple[list[str], bool, bool]] = [
+        (tokens, True, False),
+        (_redirect_tokens(stripped), False, False),
+    ]
+    if exact_tokens is not None:
+        passes.append((exact_tokens, False, True))
+    for check_tokens, glued, exact in passes:
         is_dangerous, reason = check_env_persistence_in_bash(
-            check_tokens, _depth, glued_separators=glued
+            check_tokens,
+            _depth,
+            glued_separators=glued,
+            exact_operators=exact,
+            restore_scan=exact_tokens is None or exact,
         )
         if is_dangerous:
             return True, reason
