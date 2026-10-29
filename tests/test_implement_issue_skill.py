@@ -97,9 +97,10 @@ def test_implement_planner_exists_and_runs_on_opus() -> None:
     assert _frontmatter(text)["model"] == "opus"
 
 
-def test_implement_worker_runs_on_sonnet() -> None:
+def test_implement_worker_declares_no_model() -> None:
+    """Copilot's `task` tool reads this file; an unknown model fails `invalid_model` (#1081)."""
     text = IMPLEMENT_WORKER.read_text(encoding="utf-8")
-    assert _frontmatter(text)["model"] == "sonnet"
+    assert "model" not in _frontmatter(text)
 
 
 def test_claude_host_note_names_both_subagents() -> None:

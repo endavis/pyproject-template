@@ -215,8 +215,8 @@ run the brief in the session itself instead of failing the step.
 
 - **Claude Code:** the Agent tool with the `implement-planner` subagent
   (`.claude/agents/implement-planner.md`, `model: opus`) for the Planner brief, and the
-  `implement-worker` subagent (`.claude/agents/implement-worker.md`, `model: sonnet`) for the Coder
-  brief. Verified
+  `implement-worker` subagent (`.claude/agents/implement-worker.md`, no `model:` because Copilot shares the file; it gets Sonnet
+  from `CLAUDE_CODE_SUBAGENT_MODEL`) for the Coder brief. Verified
   with `claude -p --permission-mode plan "<prompt asking which skill handles 'implement issue N'>"`,
   which named `implement-issue`.
 - **Codex CLI:** `multi_agent`. `codex features list` reports `multi_agent` as `stable`/`true`

@@ -7,7 +7,6 @@ description: >-
   the parent wrote with `doit delegation_context`, edits files, writes tests,
   and runs `doit check`.
   Do NOT invoke directly — the implement-issue skill drives this subagent.
-model: sonnet
 tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite
 permissionMode: default
 ---
