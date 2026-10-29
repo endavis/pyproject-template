@@ -19,6 +19,7 @@ REPO_ROOT = Path(__file__).resolve().parents[1]
 SKILL_DIR = REPO_ROOT / ".agents" / "skills" / "implement-issue"
 SKILL_FILE = SKILL_DIR / "SKILL.md"
 IMPLEMENT_WORKER = REPO_ROOT / ".claude" / "agents" / "implement-worker.md"
+IMPLEMENT_PLANNER = REPO_ROOT / ".claude" / "agents" / "implement-planner.md"
 
 
 def _frontmatter(text: str) -> dict[str, object]:
@@ -87,3 +88,22 @@ def test_implement_worker_points_at_the_coder_brief() -> None:
     text = IMPLEMENT_WORKER.read_text(encoding="utf-8")
     assert "Coder brief" in text
     assert "implement-issue" in text
+
+
+def test_implement_planner_exists_and_runs_on_opus() -> None:
+    assert IMPLEMENT_PLANNER.is_file()
+    text = IMPLEMENT_PLANNER.read_text(encoding="utf-8")
+    assert "Planner brief" in text
+    assert _frontmatter(text)["model"] == "opus"
+
+
+def test_implement_worker_runs_on_sonnet() -> None:
+    text = IMPLEMENT_WORKER.read_text(encoding="utf-8")
+    assert _frontmatter(text)["model"] == "sonnet"
+
+
+def test_claude_host_note_names_both_subagents() -> None:
+    text = SKILL_FILE.read_text(encoding="utf-8")
+    note = text.split("## Per-host subagent notes", 1)[1].split("- **Codex CLI:**", 1)[0]
+    assert "implement-planner" in note
+    assert "implement-worker" in note

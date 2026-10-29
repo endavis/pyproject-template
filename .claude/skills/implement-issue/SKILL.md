@@ -213,8 +213,10 @@ name, and any issue-specific notes:
 Each host uses its own subagent mechanism for the Planner and Coder briefs. When a host has none,
 run the brief in the session itself instead of failing the step.
 
-- **Claude Code:** the Agent tool with a general-purpose subagent for the Planner brief, and the
-  `implement-worker` subagent (`.claude/agents/implement-worker.md`) for the Coder brief. Verified
+- **Claude Code:** the Agent tool with the `implement-planner` subagent
+  (`.claude/agents/implement-planner.md`, `model: opus`) for the Planner brief, and the
+  `implement-worker` subagent (`.claude/agents/implement-worker.md`, `model: sonnet`) for the Coder
+  brief. Verified
   with `claude -p --permission-mode plan "<prompt asking which skill handles 'implement issue N'>"`,
   which named `implement-issue`.
 - **Codex CLI:** `multi_agent`. `codex features list` reports `multi_agent` as `stable`/`true`
@@ -238,4 +240,5 @@ run the brief in the session itself instead of failing the step.
   workflow contract this skill's literals satisfy, the non-interactive invocation per host, and the
   `doit delegation_context` context-file convention Steps 3–4 use.
 - [Slash Commands and Workflows](../../../docs/development/ai/slash-commands.md) — command reference.
+- `.claude/agents/implement-planner.md` — Claude's Planner-brief subagent definition.
 - `.claude/agents/implement-worker.md` — Claude's Coder-brief subagent definition.

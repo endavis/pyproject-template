@@ -138,7 +138,7 @@ For complete setup instructions and troubleshooting, see `.claude/lsp-setup.md` 
 | :--- | :--- | :--- | :--- |
 | `ENABLE_PROMPT_CACHING_1H` | `1` | Extends prompt cache TTL from 5 minutes to 1 hour. Cuts cost on repeated reads of the same context within a session. | None — pure efficiency flag. |
 | `CLAUDE_AUTOCOMPACT_PCT_OVERRIDE` | `50` | Auto-compaction triggers at 50% of the context window instead of the default (~92%). Sessions compact earlier, leaving more headroom for the post-compact continuation. | More frequent compaction churn; native compaction already re-reads the project-root CLAUDE.md and recently used files, and `/checkpoint` is available for a manual checkpoint before a deliberate `/compact`. |
-| `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-5-5` | Subagents (e.g. `implement-worker`, spawned by the `implement-issue` skill) default to Sonnet 5.5 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
+| `CLAUDE_CODE_SUBAGENT_MODEL` | `claude-sonnet-5-5` | Subagents without their own `model:` default to Sonnet 5.5 instead of inheriting the parent's Opus model. | Subagent output quality drops below Opus on hard reasoning tasks. Mitigate per-agent (see below). |
 
 **Per-agent model overrides:**
 
@@ -151,7 +151,7 @@ model: claude-opus-5-5   # overrides the env-var default for this agent only
 ---
 ```
 
-Agents without a `model:` line inherit the env-var default. This project's `.claude/agents/implement-worker.md` deliberately does not override — implement-worker runs on Sonnet 5.5 as an explicit cost/quality trade-off. Future high-stakes subagents (e.g. design review, security review) can opt into Opus on a per-file basis.
+Agents without a `model:` line inherit the env-var default. The `implement-issue` subagents both override it, so the split does not depend on the env var: `.claude/agents/implement-planner.md` declares `model: opus` (planning is the reasoning-heavy step) and `.claude/agents/implement-worker.md` declares `model: sonnet` (coding against a plan is the cost/quality trade-off). The aliases `opus` / `sonnet` are used rather than full IDs so the files do not go stale on a model-family change. Other subagents keep the env-var default; future high-stakes ones (e.g. design review, security review) can opt into Opus on a per-file basis.
 
 **Per-developer overrides:**
 
@@ -212,7 +212,7 @@ copilot
 - `.github/skills/<target>-<action>/SKILL.md` — Copilot-host workflow skills (one self-action skill per action plus one bridge per target and action; placed under `.github/skills/` so Claude does not also surface them)
 - `.agents/skills/` — interoperable Codex skill path, also read by Copilot (provides `/implement-issue`, `/ghi-status`, `/multi-*`, and the 13 other shared workflow skills)
 - `.claude/skills/` — Claude's generated copies of the shared workflow skills (`doit skills_sync`), byte-identical to their `.agents/skills/` source. Copilot also reads this path, but prefers `.agents/skills/` when both carry the same name
-- `.claude/agents/implement-worker.md` — Shared subagent definition
+- `.claude/agents/implement-planner.md`, `.claude/agents/implement-worker.md` — Shared subagent definitions
 
 **Documentation:**
 - [GitHub Copilot CLI](https://github.com/github/copilot-cli)
