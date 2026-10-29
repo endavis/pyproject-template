@@ -914,6 +914,22 @@ def _heredoc_terminator(line: str, strip_leading_tabs: bool) -> str:
     return line.lstrip("\t") if strip_leading_tabs else line
 
 
+def _heredoc_logical_line(lines: list[str], start: int, join: bool) -> tuple[str, int]:
+    """Return the body line starting at *start* as bash reads it, and the next index.
+
+    With an unquoted delimiter (*join*), bash joins a line ending in an odd
+    number of backslashes with the next one, dropping that backslash, before
+    comparing it to the delimiter: ``EO\\`` then ``F`` ends a ``<<EOF`` body
+    (#1113). An even count is an escaped backslash and joins nothing.
+    """
+    text = lines[start]
+    index = start + 1
+    while join and index < len(lines) and (len(text) - len(text.rstrip("\\"))) % 2 == 1:
+        text = text[:-1] + lines[index]
+        index += 1
+    return text, index
+
+
 # Common prefixes that run another command without being an interpreter
 # themselves, e.g. `env bash <<EOF` and `sudo sh <<EOF` (#1007, gap 3). Known
 # limit: a wrapper's own flags (`env -i`, `sudo -u user`) are not skipped, so
@@ -1122,13 +1138,18 @@ def _heredocs(
 
         strip_leading_tabs = bool(match.group(1))
         delimiter = match.group(3) or match.group(4) or match.group(5)
+        # only a bare delimiter has its body lines joined at a trailing `\`
+        join = match.group(5) is not None
 
         cursor = index + 1
-        while (
-            cursor < len(lines)
-            and _heredoc_terminator(lines[cursor], strip_leading_tabs) != delimiter
-        ):
-            cursor += 1
+        terminator_end = cursor
+        while cursor < len(lines):
+            logical, terminator_end = _heredoc_logical_line(lines, cursor, join)
+            if _heredoc_terminator(logical, strip_leading_tabs) == delimiter:
+                break
+            cursor = terminator_end
+        else:
+            cursor = len(lines)
         if cursor == len(lines) and not unclear_as_body:
             # No terminator. Should this scan's idea of the delimiter differ
             # from the shell's, the rest of the command is not body at all, so
@@ -1136,7 +1157,8 @@ def _heredocs(
             break
 
         found.append((index, words, index + 1, cursor))
-        index = cursor + 1
+        # a terminator joined from several lines spans them all
+        index = max(cursor + 1, terminator_end)
     return found
 
 
