@@ -416,11 +416,14 @@ uv sync --all-extras --dev
 #### Dependency Conflicts
 
 ```bash
-# Clear cache and reinstall
-uv cache clean
+# Clear the cache for one package and reinstall
+uv cache clean <package>
 rm -rf .venv uv.lock
 uv sync --all-extras --dev
 ```
+
+`uv cache clean` with no package empties the uv cache shared by every project on the machine. Name
+the package, or use `uv cache prune` to drop only unused entries.
 
 ## IDE Setup
 
