@@ -995,3 +995,20 @@ class TestGithubApiRequest:
             )
         assert not request.has_header("Authorization")
         assert request.get_header("Accept") == "application/vnd.github.sha"
+
+
+def test_template_update_check_hook_repo_constant_matches_utils() -> None:
+    """The shipped hook keeps its own TEMPLATE_REPO (ADR-9017); it must not drift (#1086)."""
+    import importlib.util
+
+    from tools.pyproject_template.utils import TEMPLATE_REPO
+
+    hook_path = (
+        Path(__file__).resolve().parents[2] / "tools" / "hooks" / "ai" / "template-update-check.py"
+    )
+    spec = importlib.util.spec_from_file_location("template_update_check_copy", hook_path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    assert module.TEMPLATE_REPO == TEMPLATE_REPO

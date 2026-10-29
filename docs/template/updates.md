@@ -62,6 +62,30 @@ be recorded as a sync point, so continuing would only replace the reviewed extra
 uses `GITHUB_TOKEN`, or `gh auth token` when that is unset; if neither is available and the
 unauthenticated limit is spent, run `GITHUB_TOKEN=$(gh auth token) python tools/pyproject_template/manage.py check`.
 
+## Update notice at session start
+
+A project made from the template records the template commit it last synced to in
+`.config/pyproject_template/settings.toml` (`[template].commit`). At the start of an AI CLI session,
+`tools/hooks/ai/template-update-check.py` compares that commit to the head of the template's `main`
+and prints one line when they differ:
+
+```text
+pyproject-template has updates since 1a2b3c4. Run the template-sync skill to review them.
+```
+
+- **Check:** `git ls-remote https://github.com/endavis/pyproject-template refs/heads/main` with a
+  2-second timeout. It does not use the GitHub API, so it has no rate limit.
+- **Cache:** the result is stored in `tmp/template-update-check.json` for 24 hours. A failed check
+  (offline, timeout) is cached too, so an offline machine pays the timeout once a day, not at every
+  start. `doit cleanup` deletes the cache; the cost is one extra `ls-remote`.
+- **Silent** when `settings.toml` is missing or records no commit, when the project is the template
+  repo itself, when the check fails, and when opted out. The hook always exits 0.
+- **Opt out:** set `PYPROJECT_TEMPLATE_UPDATE_CHECK=0` in the environment that launches the CLI.
+- **Limitation:** a project synced to a commit that is not on `main` always shows as behind.
+- **Hosts:** Claude Code and Antigravity CLI are wired; Copilot CLI runs the Claude hook; Codex CLI is
+  not wired yet. See [Command Blocking - Template Update Notice](../development/ai/command-blocking.md#template-update-notice)
+  for the per-host evidence.
+
 ## When to Update
 
 Consider checking for template updates when:
