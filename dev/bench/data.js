@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793272798218,
+  "lastUpdate": 1793273217522,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -19765,6 +19765,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.775073425911587e-7",
             "extra": "mean: 1.2546458662794622 usec\nrounds: 84984"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c433d249bc638ac0278596ddf43fa625b36b8abb",
+          "message": "chore: run implement-issue's Planner on Opus and Coder on Sonnet in Claude Code (merges PR #1077, addresses #1076)\n\nBoth implement-issue subagents ran on the CLAUDE_CODE_SUBAGENT_MODEL\ndefault (Sonnet), so planning got no stronger model than coding. Add an\nimplement-planner agent with `model: opus` for the Planner brief, pin\nimplement-worker to `model: sonnet`, point the skill's Claude Code note\nat both, and update AI_SETUP.md and the other docs that list the\nsubagent files.\n\nAddresses #1076\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfZ9anmU8Q7j7H7grL\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T11:26:11Z",
+          "tree_id": "9c9fbd686166992c8d6a42369eb943cb2ea608f1",
+          "url": "https://github.com/endavis/pyproject-template/commit/c433d249bc638ac0278596ddf43fa625b36b8abb"
+        },
+        "date": 1793273216004,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9124370.702375334,
+            "unit": "iter/sec",
+            "range": "stddev: 2.780487159722474e-8",
+            "extra": "mean: 109.59659932927447 nsec\nrounds: 103756"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10211322.725870915,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1505028028434847e-8",
+            "extra": "mean: 97.93050585566631 nsec\nrounds: 108015"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6861351.244826449,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4569151327430947e-8",
+            "extra": "mean: 145.7438869281052 nsec\nrounds: 72538"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2270439.825362798,
+            "unit": "iter/sec",
+            "range": "stddev: 7.314691773205784e-8",
+            "extra": "mean: 440.4432959768965 nsec\nrounds: 198453"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 597069.8690326321,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8777003863294362e-7",
+            "extra": "mean: 1.6748458628806577 usec\nrounds: 62894"
           }
         ]
       }
