@@ -34,6 +34,10 @@ The parent prompt will provide:
 - **Do NOT switch branches.** The parent has already created or resumed the correct branch.
 - **Do NOT commit.** Committing and opening the PR are the parent `implement-issue` run's Step 6,
   not yours.
+- **Do NOT `cd` to the main checkout.** Inspect it with `git -C <main-checkout> …`.
+- **Never use a bare `git stash`.** The stash stack is shared with every worktree and session. To
+  compare against unchanged code, write `git show HEAD:<path>` to a scratch file under the
+  worktree's `tmp/`, or make a temporary WIP commit.
 - **Do NOT enter plan mode.** Do not call `EnterPlanMode`. You run with `permissionMode: default` so
   you can edit files directly.
 - **All new code must be type-annotated** (mypy strict mode is enforced by `doit check`).

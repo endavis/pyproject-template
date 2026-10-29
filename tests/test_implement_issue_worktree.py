@@ -87,3 +87,23 @@ def test_step8_reports_the_worktree_and_the_merge_command() -> None:
 def test_walkthrough_step3_mentions_the_worktree() -> None:
     text = WALKTHROUGH.read_text(encoding="utf-8")
     assert "worktrees/" in _section(text, '### 3. "implement issue 42"', "### 4.")
+
+
+def test_skill_never_cds_to_the_main_checkout() -> None:
+    text = SKILL.read_text(encoding="utf-8")
+    assert "Never `cd` to the main checkout" in text
+    assert "git -C <main-checkout>" in text
+
+
+def test_coder_brief_forbids_bare_git_stash() -> None:
+    text = SKILL.read_text(encoding="utf-8")
+    brief = text[text.index("## Coder brief") : text.index("## Per-host subagent notes")]
+    assert "Never use a bare `git stash`" in brief
+    assert "git show HEAD:<path>" in brief
+    assert "WIP commit" in brief
+
+
+def test_implement_worker_carries_both_rules() -> None:
+    text = (AGENTS_DIR / "implement-worker.md").read_text(encoding="utf-8")
+    assert "git -C <main-checkout>" in text
+    assert "Never use a bare `git stash`" in text
