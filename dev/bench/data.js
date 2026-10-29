@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793299383524,
+  "lastUpdate": 1793299823393,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20945,6 +20945,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.419882195392146e-7",
             "extra": "mean: 1.1125331930778097 usec\nrounds: 115741"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7451e1e37dc17bae090023eaa10755b6e36a427b",
+          "message": "chore: fold an extglob in the hook only when its closing parenthesis exists (merges PR #1119, addresses #1104)\n\n* chore: fold an extglob in the hook only when its closing parenthesis exists\n\n_collapse_extglobs() now searches for the closing ) only up to the end of\nthe command (;, &&, ||, &, |&). Without one it keeps the tokens unchanged,\ninstead of folding every later token into the pattern. Closed groups fold\nas before.\n\nAddresses #1104\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: keep the original tokens of an extglob group that holds a |\n\nThe tokens lost their quoting, so a | inside a folded group may be a pipe\n(x@'(' | tee f ')'). Such a group now emits the folded wildcard followed by\nits original tokens, so what follows a real pipe stays visible.\n\nAddresses #1104\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T18:49:43Z",
+          "tree_id": "26fe0724a00634a156041e834064bb756ef00742",
+          "url": "https://github.com/endavis/pyproject-template/commit/7451e1e37dc17bae090023eaa10755b6e36a427b"
+        },
+        "date": 1793299822320,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19134512.976255346,
+            "unit": "iter/sec",
+            "range": "stddev: 7.748622920215384e-9",
+            "extra": "mean: 52.26158623639564 nsec\nrounds: 189108"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20479466.164658956,
+            "unit": "iter/sec",
+            "range": "stddev: 7.934614792651408e-9",
+            "extra": "mean: 48.82939779581178 nsec\nrounds: 197707"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12419750.728488421,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1132498654623167e-8",
+            "extra": "mean: 80.51691389475316 nsec\nrounds: 135300"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4519391.288447108,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7372412824273292e-8",
+            "extra": "mean: 221.26873646818186 nsec\nrounds: 46465"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1076936.358520435,
+            "unit": "iter/sec",
+            "range": "stddev: 9.305093070728487e-8",
+            "extra": "mean: 928.5599767231045 nsec\nrounds: 112562"
           }
         ]
       }
