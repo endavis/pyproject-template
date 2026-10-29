@@ -71,7 +71,7 @@ uv run doit list
 ```bash
 # Run tests with parallel execution
 uv run doit test
-# or directly: uv run pytest -n auto -v
+# per-test output: uv run pytest -n auto -v
 
 # Run tests with coverage report
 uv run doit coverage
