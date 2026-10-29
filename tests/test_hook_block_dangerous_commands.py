@@ -21,7 +21,7 @@ from typing import TYPE_CHECKING
 import pytest
 
 if TYPE_CHECKING:
-    from collections.abc import Iterator
+    from collections.abc import Callable, Iterator
 
 HOOK_PATH = (
     Path(__file__).resolve().parents[1] / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
@@ -1112,23 +1112,133 @@ def _run_with_git(
     return int(hook.main())
 
 
+_EXAMPLE = ".envrc.local.example"
+
+
+def _git(root: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t", *args],
+        cwd=root,
+        capture_output=True,
+        check=True,
+    )
+
+
+def _repo_with_example(root: Path) -> None:
+    """Make *root* a repo whose HEAD holds the example as ``SAFE=1``."""
+    _git(root, "init", "-q")
+    # Windows runners set autocrlf globally; the LF bytes written here must match HEAD
+    _git(root, "config", "core.autocrlf", "false")
+    (root / _EXAMPLE).write_bytes(b"SAFE=1\n")
+    _git(root, "add", _EXAMPLE)
+    _git(root, "commit", "-qm", "example")
+
+
+def _swap(root: Path) -> None:
+    (root / _EXAMPLE).write_bytes(b"SWAPPED=1\n")
+
+
+def _no_commit(root: Path) -> None:
+    _git(root, "init", "-q")
+    _swap(root)
+
+
+def _untracked(root: Path) -> None:
+    _repo_with_example(root)
+    _git(root, "rm", "-q", "--cached", _EXAMPLE)
+    _git(root, "commit", "-qm", "untrack")
+
+
+def _flagged(flag: str) -> Callable[[Path], None]:
+    def setup(root: Path) -> None:
+        _repo_with_example(root)
+        _git(root, "update-index", flag, _EXAMPLE)
+        _swap(root)
+
+    return setup
+
+
+def _smudge_filter(root: Path) -> None:
+    """A worktree attribute and repo-local filter that turn HEAD's blob into the swap."""
+    _repo_with_example(root)
+    (root / ".gitattributes").write_text(f"{_EXAMPLE} filter=x\n")
+    _git(root, "config", "filter.x.smudge", "sed s/SAFE/SWAPPED/")
+    _swap(root)
+
+
+def _clean(root: Path) -> None:
+    _repo_with_example(root)
+
+
+def _modified(root: Path) -> None:
+    _repo_with_example(root)
+    _swap(root)
+
+
+def _not_a_repo(root: Path) -> None:
+    _swap(root)
+
+
+def _no_example(root: Path) -> None:
+    _git(root, "init", "-q")
+
+
 @pytest.mark.parametrize(
-    ("outcome", "expected"),
+    ("setup", "expected"),
     [
-        (1, 2),  # example differs from HEAD
-        (0, 0),  # clean
-        (128, 0),  # not a repo: fail open
-        (FileNotFoundError("git"), 0),  # git missing: fail open
-        (subprocess.TimeoutExpired("git", 5), 0),  # timeout: fail open
+        (_clean, 0),
+        (_modified, 2),
+        # index flags make `git diff` skip the worktree; the bytes still differ
+        (_flagged("--skip-worktree"), 2),
+        (_flagged("--assume-unchanged"), 2),
+        # git filters are repo-controlled, so the raw blob is compared
+        (_smudge_filter, 2),
+        # inside a repo, an example HEAD does not hold fails closed
+        (_untracked, 2),
+        (_no_commit, 2),
+        (_not_a_repo, 0),  # fail open
+        (_no_example, 0),  # nothing to copy: the `cp` fails on its own
     ],
 )
 def test_example_copy_is_gated_on_head(
     hook: types.ModuleType,
     monkeypatch: pytest.MonkeyPatch,
-    outcome: int | BaseException,
+    tmp_path: Path,
+    setup: Callable[[Path], None],
     expected: int,
 ) -> None:
-    assert _run_with_git(hook, monkeypatch, _ENVRC_COPY, outcome) == expected
+    setup(tmp_path)
+    # keep git from finding an enclosing repo above tmp_path
+    monkeypatch.setenv("GIT_CEILING_DIRECTORIES", str(tmp_path.parent))
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    _set_stdin(monkeypatch, _bash_payload(_ENVRC_COPY))
+    assert int(hook.main()) == expected
+
+
+def test_example_gate_matches_autocrlf_checkout(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """A clean Windows-style checkout (CRLF in the worktree, LF in HEAD) is not modified."""
+    _repo_with_example(tmp_path)
+    _git(tmp_path, "config", "core.autocrlf", "true")
+    (tmp_path / _EXAMPLE).unlink()
+    _git(tmp_path, "checkout", "--", _EXAMPLE)
+    assert (tmp_path / _EXAMPLE).read_bytes() == b"SAFE=1\r\n"
+    monkeypatch.chdir(tmp_path)
+    assert hook._envrc_example_modified() is False
+
+
+@pytest.mark.parametrize("error", [FileNotFoundError("git"), subprocess.TimeoutExpired("git", 5)])
+def test_example_gate_fails_open_when_git_cannot_answer(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    error: BaseException,
+) -> None:
+    _not_a_repo(tmp_path)
+    monkeypatch.chdir(tmp_path)
+    assert _run_with_git(hook, monkeypatch, _ENVRC_COPY, error) == 0
 
 
 @pytest.mark.parametrize("outcome", [1, 0])

@@ -1079,21 +1079,43 @@ def _is_broad_pathspec(path: str) -> bool:
 
 
 def _envrc_example_modified() -> bool:
-    """Return True when the example file differs from HEAD (#1061).
+    """Return True when the example file's bytes differ from HEAD's (#1061).
 
-    Fails open (False) when git is missing, times out, is not in a repo or the
-    file is untracked: the gated ``cp`` is a documented setup step and the hook
-    is a guardrail (ADR-9019).
+    The bytes are compared directly, not through ``git diff``: the index flags
+    ``--skip-worktree`` and ``--assume-unchanged`` make ``git diff`` skip the
+    worktree and report no difference for a swapped file.
+
+    Inside a repo, an example missing from HEAD (untracked, or no commit yet)
+    counts as modified: there is nothing to vouch for it. Fails open (False)
+    when git is missing, times out or the directory is not a repo: the gated
+    ``cp`` is a documented setup step and the hook is a guardrail (ADR-9019).
     """
     try:
-        result = subprocess.run(  # nosec B603 B607  # trusted git command
-            ["git", "diff", "--quiet", "HEAD", "--", _ENVRC_EXAMPLE],
+        current = Path(_ENVRC_EXAMPLE).read_bytes()
+    except OSError:
+        return False  # no example to copy, so the `cp` fails on its own
+    try:
+        inside = subprocess.run(  # nosec B603 B607  # trusted git command
+            ["git", "rev-parse", "--is-inside-work-tree"],
+            capture_output=True,
+            timeout=5,
+        )
+        if inside.returncode != 0:
+            return False
+        # The raw blob, never --filters: those run smudge filters a worktree
+        # .gitattributes and repo config choose, which can make swapped
+        # content match. Line endings are normalised below instead.
+        head = subprocess.run(  # nosec B603 B607  # trusted git command
+            ["git", "cat-file", "blob", f"HEAD:./{_ENVRC_EXAMPLE}"],
             capture_output=True,
             timeout=5,
         )
     except (subprocess.TimeoutExpired, OSError):
         return False
-    return result.returncode == 1
+    if head.returncode != 0:
+        return True
+    # a clean autocrlf checkout differs from the blob only in CRLF
+    return current.replace(b"\r\n", b"\n") != head.stdout.replace(b"\r\n", b"\n")
 
 
 def _long_opt_matches(tok: str, full: str) -> bool:
