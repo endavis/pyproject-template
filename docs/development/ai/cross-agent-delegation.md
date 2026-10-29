@@ -157,7 +157,10 @@ inaccessible issue/PR aborts the task with a clear error — never a silent empt
 for the full reference.
 
 By convention the output directory is `tmp/agents/<host>/<task>-<n>/` (for example
-`tmp/agents/claude/multi-review-123/`), per `AGENTS.md`'s temp-file convention. The delegated
+`tmp/agents/claude/multi-review-123/`), per `AGENTS.md`'s temp-file convention. `implement-issue`
+runs in a per-issue worktree, so it passes an absolute `--out` inside that worktree
+(`$WORKTREE/tmp/agents/<host>/implement-issue-<n>/`) and the directory never lands in the main
+checkout. The delegated
 prompt is told to read the files in that directory instead of calling `gh`, and to print
 `DELEGATION-ERROR:` and stop if the directory or a file in it is missing or unreadable — the
 `DELEGATION_ERROR_CHECK` half of the contract (below) is unchanged, only what triggers the marker

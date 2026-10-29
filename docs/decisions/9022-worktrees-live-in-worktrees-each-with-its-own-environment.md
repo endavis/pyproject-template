@@ -95,3 +95,5 @@ branch goes only if it still points at the commit the PR merged.
 - [ADR-9026](9026-doc-scanning-tests-honor-sync-excludetoml-and-discover-markdown-via-git.md) —
   the `git ls-files`-based discovery that now provides this skip for two of the three walkers
 - [CONTRIBUTING.md](../../.github/CONTRIBUTING.md) — Development Workflow, step 2
+- [ADR-9027](9027-implement-issue-works-in-a-per-issue-worktree.md) — `implement-issue` now creates
+  a worktree per issue with this task
