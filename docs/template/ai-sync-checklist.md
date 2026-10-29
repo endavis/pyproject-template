@@ -65,7 +65,7 @@ This ensures the tooling suite in `tools/pyproject_template/` matches the versio
 you are about to adopt. Applying file diffs with a stale tooling version can produce incorrect results.
 
 ```bash
-curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync
+curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync --yes
 ```
 
 This will:

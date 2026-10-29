@@ -23,7 +23,7 @@ Stay in sync with improvements to the pyproject-template.
 > consumer project starts with a clean tree. Reinstall it at any time with:
 > ```bash
 > curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py \
->     | python3 - --sync
+>     | python3 - --sync --yes
 > ```
 > This installs `tools/pyproject_template/` back into your project so you
 > can use `manage.py`, `check_template_updates.py`, and the rest of the
@@ -48,7 +48,7 @@ To pin deliberately — reviewing an update before taking it, or reproducing an 
 `PYPROJECT_TEMPLATE_REF` to a branch, tag or full SHA:
 
 ```bash
-PYPROJECT_TEMPLATE_REF=4ef5b9c... curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync
+PYPROJECT_TEMPLATE_REF=4ef5b9c... curl -sSL https://raw.githubusercontent.com/endavis/pyproject-template/main/bootstrap.py | python3 - --sync --yes
 ```
 
 If `api.github.com` is unreachable or rate-limited, the run **warns and continues** against the
