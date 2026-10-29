@@ -22,6 +22,7 @@ import os
 import posixpath
 import re
 import shlex
+import stat
 import subprocess  # nosec B404  # needed for git branch detection
 import sys
 from pathlib import Path
@@ -1737,6 +1738,65 @@ def _working_tree_moved(tokens: list[str], git_idx: int, sub: int, paths: list[s
     return False
 
 
+def _scan_command_words(
+    tokens: list[str],
+    start: int,
+    *,
+    glued_separators: bool = False,
+    exact_operators: bool = False,
+) -> tuple[list[str], list[tuple[str, str]], list[str]]:
+    """Return the words of the command whose arguments begin at *start*.
+
+    The scan ends where bash ends the command: at ``_COMMAND_SEPARATORS``, or
+    ``_EXACT_COMMAND_END`` when *exact_operators* is set, and, with
+    *glued_separators*, at a ``;``, ``&&`` or ``||`` attached to a word.
+    Returns ``(arguments, redirects, after_glued)``:
+
+    - *arguments*: the words, redirect operators and their targets left out
+    - *redirects*: ``(operator, target)`` pairs. The target is not an argument,
+      but the tokens lost their quoting (``'>'``), so callers still check it
+      against the protected names (#1088)
+    - *after_glued*: the tokens after a glued separator, which are no argument
+      but may have been quoted (``'x;'``): callers still check them (#1093)
+
+    *glued_separators* is for the ``tokenize()`` tokens, which keep a ``;``,
+    ``&&`` or ``||`` attached to a word (``main;``) and have lost its quoting.
+    :func:`_redirect_tokens` splits an unquoted operator into its own token and
+    keeps a quoted one (``'x;'``) inside the word, so on those tokens a word
+    holding ``;`` is a literal argument and the flag stays off (#1093).
+    *exact_operators* is for :func:`_exact_operator_tokens`, where every token
+    equal to an operator string is a real operator (#1117).
+    """
+    rest: list[str] = []
+    redirects: list[tuple[str, str]] = []
+    pending_op: str | None = None
+    glued_at: int | None = None
+    for idx, t in enumerate(tokens[start:]):
+        if pending_op is not None:
+            redirects.append((pending_op, t))
+            pending_op = None
+            continue
+        if t in (_EXACT_COMMAND_END if exact_operators else _COMMAND_SEPARATORS):
+            break
+        glued = _GLUED_COMMAND_END.search(t) if glued_separators and not exact_operators else None
+        if glued:
+            # `main;` / `main&&`: bash ends the command at the operator, so
+            # keep the part before it and stop scanning (#1093)
+            if glued.start():
+                rest.append(t[: glued.start()])
+            glued_at = idx
+            break
+        if t and set(t) <= set(_REDIRECT_PUNCTUATION) and ("<" in t or ">" in t):
+            # a redirect operator as :func:`_redirect_tokens` yields it. A
+            # preceding fd number (`2` of `2>`) stays: it can be neither a
+            # protected name nor a broad pathspec
+            pending_op = t
+            continue
+        rest.append(t)
+    after_glued = [] if glued_at is None else tokens[start + glued_at + 1 :]
+    return rest, redirects, after_glued
+
+
 def _git_restore_targets(
     tokens: list[str],
     git_idx: int,
@@ -1772,35 +1832,13 @@ def _git_restore_targets(
     sub = _git_subcommand_index(tokens, git_idx)
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
         return []
-    rest: list[str] = []
-    redirect_targets: list[str] = []
-    skip_target = False
-    glued_at: int | None = None
-    for idx, t in enumerate(tokens[sub + 1 :]):
-        if skip_target:
-            # the file or fd a redirect points at is no checkout argument, but
-            # the tokens lost their quoting (`'>'`), so it is still checked
-            # against the protected names below: fail closed (#1088)
-            skip_target = False
-            redirect_targets.append(t)
-            continue
-        if t in (_EXACT_COMMAND_END if exact_operators else _COMMAND_SEPARATORS):
-            break
-        glued = _GLUED_COMMAND_END.search(t) if glued_separators and not exact_operators else None
-        if glued:
-            # `main;` / `main&&`: bash ends the command at the operator, so
-            # keep the part before it and stop scanning (#1093)
-            if glued.start():
-                rest.append(t[: glued.start()])
-            glued_at = idx
-            break
-        if t and set(t) <= set(_REDIRECT_PUNCTUATION) and ("<" in t or ">" in t):
-            # a redirect operator as :func:`_redirect_tokens` yields it. A
-            # preceding fd number (`2` of `2>`) stays: it can be neither a
-            # protected name nor a broad pathspec
-            skip_target = True
-            continue
-        rest.append(t)
+    rest, redirects, after_glued = _scan_command_words(
+        tokens, sub + 1, glued_separators=glued_separators, exact_operators=exact_operators
+    )
+    # the file or fd a redirect points at is no checkout argument, but the
+    # tokens lost their quoting (`'>'`), so it is still checked against the
+    # protected names below: fail closed (#1088)
+    redirect_targets = [target for _, target in redirects]
     paths: list[str] = []
     has_source = False
     if tokens[sub] == "checkout":
@@ -1836,10 +1874,9 @@ def _git_restore_targets(
                         break
             elif not t.startswith("-"):
                 paths.append(t)
-    # The tokens lost their quoting, so a `;` glued to a word may have been
-    # quoted (`'x;'`) and bash not have ended the command. Fail closed: what
-    # follows is no argument, but a protected name there is still a target.
-    after_glued = [] if glued_at is None else tokens[sub + 2 + glued_at :]
+    # `after_glued`: the tokens lost their quoting, so a `;` glued to a word may
+    # have been quoted (`'x;'`) and bash not have ended the command. Fail closed:
+    # what follows is no argument, but a protected name there is still a target.
     targets = [
         path
         for path in paths + redirect_targets + after_glued
@@ -1859,12 +1896,517 @@ def _git_restore_targets(
     return targets
 
 
+# Largest patch file the hook reads. A bigger one reads as unresolvable.
+_PATCH_READ_LIMIT = 4 * 1024 * 1024
+
+_C_QUOTE_SIMPLE = {
+    "a": 7,
+    "b": 8,
+    "f": 12,
+    "n": 10,
+    "r": 13,
+    "t": 9,
+    "v": 11,
+    '"': 34,
+    "\\": 92,
+}
+
+_PATCH_HEADER_PREFIXES = (
+    "--- ",
+    "+++ ",
+    "*** ",
+    "Index: ",
+    "rename from ",
+    "rename to ",
+    "copy from ",
+    "copy to ",
+)
+
+_TRANSFER_ENCODING = re.compile(
+    r"^content-transfer-encoding:[ \t]*(?:base64|quoted-printable)", re.IGNORECASE | re.MULTILINE
+)
+
+
+def _unquote_c_path(text: str) -> str | None:
+    """Undo git's C-quoting of a path (``"a/\\303\\251"``).
+
+    *text* is latin-1 decoded, so each character is one byte. A text that is
+    not quoted is returned unchanged; a quoting that cannot be undone gives
+    ``None``.
+    """
+    if not text.startswith('"'):
+        return text
+    if len(text) < 2 or not text.endswith('"'):
+        return None
+    body = text[1:-1]
+    out = bytearray()
+    i = 0
+    while i < len(body):
+        ch = body[i]
+        if ch == '"':
+            return None
+        if ch != "\\":
+            out.append(ord(ch) & 0xFF)
+            i += 1
+            continue
+        i += 1
+        if i >= len(body):
+            return None
+        ch = body[i]
+        if ch in _C_QUOTE_SIMPLE:
+            out.append(_C_QUOTE_SIMPLE[ch])
+            i += 1
+        elif ch in "0123":
+            digits = body[i : i + 3]
+            if len(digits) < 3 or any(d not in "01234567" for d in digits):
+                return None
+            out.append(int(digits, 8))
+            i += 3
+        else:
+            return None
+    return out.decode("utf-8", "replace")
+
+
+def _patch_header_paths(data: bytes) -> list[str] | None:
+    """Return the file paths a patch's header lines name, or ``None``.
+
+    ``None`` means the paths cannot be told: a quoting that cannot be undone,
+    or no header line at all (an empty file, an ed script, a series file).
+    Reads ``diff --git``, ``---``/``+++``, ``***``, ``Index:`` and the rename
+    and copy lines. Matching is deliberately wide: a hunk line that looks like
+    a header adds a candidate, which can only block, never miss a write. A
+    leading ``a/``, ``b/`` or ``-p N`` strip is not applied, because it never
+    changes the basename and the unstripped path holds every parent fragment.
+    """
+    paths: list[str] = []
+    for line in data.decode("latin-1").split("\n"):
+        line = line.rstrip("\r")
+        if line.startswith("diff --git "):
+            # the only line naming the file in binary patches, mode changes
+            # and pure renames: check the whole remainder and each piece
+            rest = line[len("diff --git ") :]
+            for piece in [rest, *rest.split()]:
+                unquoted = _unquote_c_path(piece.strip())
+                paths.append(unquoted if unquoted is not None else piece.strip('"'))
+            continue
+        for prefix in _PATCH_HEADER_PREFIXES:
+            if line.startswith(prefix):
+                raw = line[len(prefix) :].split("\t", 1)[0].strip()
+                if not raw:
+                    break
+                unquoted = _unquote_c_path(raw)
+                if unquoted is None:
+                    return None
+                paths.append(unquoted)
+                break
+    return paths or None
+
+
+def _read_patch_paths(path: str, *, base_dir: str | None, mbox: bool) -> list[str] | None:
+    """Return the paths the patch file at *path* names, or ``None``.
+
+    ``None`` means unresolvable: the file is not a regular file (a FIFO, a
+    directory, ``/dev/stdin``), cannot be read, is over ``_PATCH_READ_LIMIT``,
+    names no path, or (with *mbox*) carries a transfer encoding git would
+    decode first. The file is opened non-blocking so a FIFO cannot hang the
+    hook.
+    """
+    full = posixpath.join(base_dir, path) if base_dir else path
+    try:
+        fd = os.open(full, os.O_RDONLY | os.O_NONBLOCK)
+    except OSError:
+        return None
+    try:
+        if not stat.S_ISREG(os.fstat(fd).st_mode):
+            return None
+        chunks: list[bytes] = []
+        total = 0
+        while total <= _PATCH_READ_LIMIT:
+            chunk = os.read(fd, min(65536, _PATCH_READ_LIMIT + 1 - total))
+            if not chunk:
+                break
+            chunks.append(chunk)
+            total += len(chunk)
+    except OSError:
+        return None
+    finally:
+        os.close(fd)
+    if total > _PATCH_READ_LIMIT:
+        return None
+    data = b"".join(chunks)
+    if mbox and _TRANSFER_ENCODING.search(data.decode("latin-1")):
+        return None
+    return _patch_header_paths(data)
+
+
+def _is_first_command(tokens: list[str], idx: int) -> bool:
+    """Return True when nothing in *tokens* before *idx* could run first.
+
+    The hook reads a patch file before any part of the command runs, so a
+    patch written by an earlier command (``printf x > p && git apply p``)
+    would be judged on stale content.
+    """
+    return not any(
+        t in _EXACT_COMMAND_END or any(c in t for c in ";&|()<>`$") for t in tokens[:idx]
+    )
+
+
+def _cwd_moved(tokens: list[str], idx: int) -> bool:
+    """Return True when a word before *idx* may change the working directory."""
+    return any(
+        t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in tokens[:idx]
+    )
+
+
+def _patch_source_targets(
+    sources: list[tuple[str, str | None]],
+    *,
+    read_files: bool,
+    cwd_moved: bool,
+    mbox: bool,
+    root: str | None,
+) -> list[str]:
+    """Return the protected paths the patch files in *sources* write.
+
+    *sources* holds ``(path, base_dir)`` pairs. When the files cannot be read
+    or trusted the targets are unresolvable and ``_ENVRC_EXAMPLE`` stands in
+    for them, as in Pattern F, so the caller blocks. *root* is a
+    ``--directory`` / ``-d`` prefix: both ``root/path`` and ``path`` are checked.
+    """
+    if not read_files or not sources:
+        return [_ENVRC_EXAMPLE]
+    named: list[str] = []
+    for src, base_dir in sources:
+        if any(c in _DYNAMIC_CHARS for c in src) or (
+            base_dir is not None and any(c in _DYNAMIC_CHARS for c in base_dir)
+        ):
+            return [_ENVRC_EXAMPLE]
+        absolute = posixpath.isabs(src) or (base_dir is not None and posixpath.isabs(base_dir))
+        if cwd_moved and not absolute:
+            return [_ENVRC_EXAMPLE]
+        paths = _read_patch_paths(src, base_dir=base_dir, mbox=mbox)
+        if paths is None:
+            return [_ENVRC_EXAMPLE]
+        named.extend(paths)
+    hits: list[str] = []
+    for path in named:
+        for candidate in (path, posixpath.join(root, path)) if root else (path,):
+            if _is_env_persistence_target(candidate):
+                hits.append(candidate)
+    return hits
+
+
+# `git apply` and `git am` options that take a value (`-p` and `-C` also glued)
+_GIT_PATCH_VALUE_OPTS = (
+    "--exclude",
+    "--include",
+    "--whitespace",
+    "--directory",
+    "--build-fake-ancestor",
+    "--patch-format",
+    "--resolvemsg",
+    "--quoted-cr",
+    "--empty",
+)
+_GIT_PATCH_SHORT_VALUE = "pC"
+# resolved last-one-wins, with their `--no-` forms
+_GIT_APPLY_TOGGLES = ("--check", "--stat", "--numstat", "--summary", "--apply", "--unsafe-paths")
+_GIT_AM_RESUME = ("--continue", "--resolved", "--skip", "--retry")
+_GIT_AM_STOP = ("--abort", "--quit", "--show-current-patch")
+
+# a redirect (`>out`, `2>&1`, `<in`) glued to a word on the `tokenize()` tokens
+_GLUED_REDIRECT = re.compile(r"^\d*[<>&]")
+
+
+def _first_long_match(name: str, names: tuple[str, ...]) -> str | None:
+    """Return the entry of *names* that *name* spells, exactly or abbreviated."""
+    if name.split("=", 1)[0] in names:
+        return name.split("=", 1)[0]
+    return next((full for full in names if _long_opt_matches(name, full)), None)
+
+
+def _split_stdin_sources(
+    args: list[str], redirects: list[tuple[str, str]]
+) -> tuple[list[str], list[str], bool, bool]:
+    """Sort a command's arguments into operands and stdin sources.
+
+    Returns ``(operands, stdin_files, stdin_unresolvable, has_output_redirect)``.
+    A ``<`` redirect names a file; ``<<``, ``<<<``, ``<(`` and ``<&`` do not.
+    """
+    operands: list[str] = []
+    stdin_files: list[str] = []
+    unresolvable = False
+    has_output = False
+    for op, target in redirects:
+        if "<" in op:
+            if op == "<":
+                stdin_files.append(target)
+            else:
+                unresolvable = True
+        else:
+            has_output = True
+    for t in args:
+        if _GLUED_REDIRECT.match(t):
+            if t.startswith("<"):
+                if t.startswith(("<<", "<(", "<&")):
+                    unresolvable = True
+                else:
+                    stdin_files.append(t[1:])
+            else:
+                has_output = True
+        else:
+            operands.append(t)
+    return operands, stdin_files, unresolvable, has_output
+
+
+def _git_patch_targets(
+    tokens: list[str],
+    git_idx: int,
+    *,
+    glued_separators: bool = False,
+    exact_operators: bool = False,
+    read_files: bool = False,
+) -> list[str]:
+    """Return the protected paths a ``git apply`` / ``git am`` at *git_idx*
+    would write (#1105).
+
+    The patch files are read for their header paths (:func:`_patch_header_paths`),
+    only when *read_files* is set and the command is the first of the line, at
+    a literal path that the command has not moved. Anything the hook cannot
+    resolve (stdin, an unreadable or encoded file, ``--unsafe-paths``,
+    ``git am --continue``/``--skip``/``--retry``) adds ``_ENVRC_EXAMPLE`` as a
+    stand-in target, so the caller blocks it.
+
+    No write: ``--check``/``--stat``/``--numstat``/``--summary`` without
+    ``--apply`` (resolved last-one-wins with their ``--no-`` forms), and
+    ``git am --abort``/``--quit``/``--show-current-patch``. A
+    ``--build-fake-ancestor`` file is written even then.
+
+    Limitation: the file can change between the hook reading it and the
+    command running. The hook is a guardrail, not a boundary (ADR-9019).
+    """
+    sub = _git_subcommand_index(tokens, git_idx)
+    if sub is None or tokens[sub] not in {"apply", "am"}:
+        return []
+    is_am = tokens[sub] == "am"
+    args, redirects, after_glued = _scan_command_words(
+        tokens, sub + 1, glued_separators=glued_separators, exact_operators=exact_operators
+    )
+    targets = [
+        t
+        for t in [target for _, target in redirects] + after_glued
+        if _is_env_persistence_target(t, dynamic=True)
+    ]
+    toggles: dict[str, bool] = {}
+    fake_ancestors: list[str] = []
+    root: str | None = None
+    resume = stop = False
+    plain: list[str] = []
+    i = 0
+    while i < len(args):
+        t = args[i]
+        i += 1
+        if t == "--":
+            plain.extend(args[i:])
+            break
+        if _GLUED_REDIRECT.match(t) or t == "-" or not t.startswith("-"):
+            plain.append(t)
+        elif t.startswith("--"):
+            name = t.partition("=")[0]
+            negated = name.startswith("--no-")
+            base = "--" + name[len("--no-") :] if negated else name
+            has_value = "=" in t
+            if is_am and (full := _first_long_match(base, _GIT_AM_RESUME)):
+                resume = resume or not negated
+            elif is_am and _first_long_match(base, _GIT_AM_STOP):
+                stop = stop or not negated
+            elif full := _first_long_match(base, _GIT_APPLY_TOGGLES):
+                toggles[full] = not negated
+            elif not negated and (full := _first_long_match(base, _GIT_PATCH_VALUE_OPTS)):
+                value = t.partition("=")[2] if has_value else (args[i] if i < len(args) else "")
+                i += 0 if has_value else 1
+                if full == "--directory":
+                    root = value
+                elif full == "--build-fake-ancestor":
+                    fake_ancestors.append(value)
+        else:
+            if is_am and t == "-r":
+                resume = True
+            for pos, ch in enumerate(t[1:], start=1):
+                if ch in _GIT_PATCH_SHORT_VALUE:
+                    i += 1 if pos == len(t) - 1 else 0
+                    break
+    targets.extend(v for v in fake_ancestors if _is_env_persistence_target(v, dynamic=True))
+    if is_am:
+        if resume:
+            return [*targets, _ENVRC_EXAMPLE]
+        if stop:
+            return targets
+    elif any(toggles.get(k, False) for k in _GIT_APPLY_TOGGLES[:4]) and not toggles.get(
+        "--apply", False
+    ):
+        return targets
+    if toggles.get("--unsafe-paths", False):
+        return [*targets, _ENVRC_EXAMPLE]
+    operands, stdin_files, unresolvable, has_output = _split_stdin_sources(plain, redirects)
+    if has_output:
+        # an fd number (`2` of `2>`) is no patch file
+        operands = [t for t in operands if not t.isdigit()]
+    needs_stdin = not [t for t in operands if t != "-"] or "-" in operands
+    operands = [t for t in operands if t != "-"]
+    if unresolvable or (needs_stdin and not stdin_files):
+        return [*targets, _ENVRC_EXAMPLE]
+    opts = tokens[git_idx + 1 : sub]
+    cwd_moved = _cwd_moved(tokens, git_idx) or any(t.startswith("-C") for t in opts)
+    return targets + _patch_source_targets(
+        [(src, None) for src in operands + stdin_files],
+        read_files=read_files and _is_first_command(tokens, git_idx),
+        cwd_moved=cwd_moved,
+        mbox=is_am,
+        root=root,
+    )
+
+
+# GNU `patch` options that take a value, as short characters and long names
+_PATCH_SHORT_VALUE = "pFiorDBYzVgd"
+_PATCH_LONG_VALUE = (
+    "--strip",
+    "--fuzz",
+    "--input",
+    "--output",
+    "--reject-file",
+    "--ifdef",
+    "--prefix",
+    "--basename-prefix",
+    "--suffix",
+    "--version-control",
+    "--get",
+    "--directory",
+    "--quoting-style",
+    "--reject-format",
+    "--read-only",
+)
+_PATCH_LONG_FLAGS = ("--dry-run", "--help", "--version")
+# options that rename the backup files: a header name can become any name
+_PATCH_BACKUP_NAMING = {"B", "Y", "z", "--prefix", "--basename-prefix", "--suffix"}
+
+
+def _patch_command_targets(
+    tokens: list[str],
+    patch_idx: int,
+    *,
+    glued_separators: bool = False,
+    exact_operators: bool = False,
+    read_files: bool = False,
+) -> list[str]:
+    """Return the protected paths a ``patch`` at *patch_idx* would write (#1105).
+
+    Checked against GNU patch 2.8. ORIGFILE takes every hunk, so when it is
+    given it is the only target and the patch file is not read. ``-o FILE``
+    replaces the original as the write, and stays a write under ``--dry-run``;
+    ``-r FILE`` is a target as well. Without ORIGFILE or ``-o`` the targets
+    are the header paths of the patch file (:func:`_read_patch_paths`), under
+    the same conditions as :func:`_git_patch_targets`. Backup naming options
+    (``-B``, ``-Y``, ``-z``) and a patch read from stdin are unresolvable and
+    add ``_ENVRC_EXAMPLE`` as a stand-in.
+    """
+    args, redirects, after_glued = _scan_command_words(
+        tokens, patch_idx + 1, glued_separators=glued_separators, exact_operators=exact_operators
+    )
+    targets = [
+        t
+        for t in [target for _, target in redirects] + after_glued
+        if _is_env_persistence_target(t, dynamic=True)
+    ]
+    plain: list[str] = []
+    values: dict[str, list[str]] = {}
+    flags: set[str] = set()
+
+    def note(key: str, value: str) -> None:
+        values.setdefault(key, []).append(value)
+
+    i = 0
+    while i < len(args):
+        t = args[i]
+        i += 1
+        if t == "--":
+            plain.extend(args[i:])
+            break
+        if _GLUED_REDIRECT.match(t) or t == "-" or not t.startswith("-"):
+            plain.append(t)
+        elif t.startswith("--"):
+            full = _first_long_match(t.partition("=")[0], _PATCH_LONG_VALUE + _PATCH_LONG_FLAGS)
+            if full in _PATCH_LONG_FLAGS:
+                flags.add(full)
+            elif full is not None:
+                if "=" in t:
+                    note(full, t.partition("=")[2])
+                else:
+                    note(full, args[i] if i < len(args) else "")
+                    i += 1
+        elif t == "-v":
+            flags.add("--version")
+        else:
+            for pos, ch in enumerate(t[1:], start=1):
+                if ch in _PATCH_SHORT_VALUE:
+                    if pos < len(t) - 1:
+                        note(ch, t[pos + 1 :])
+                    else:
+                        note(ch, args[i] if i < len(args) else "")
+                        i += 1
+                    break
+    short_long = {"i": "--input", "o": "--output", "r": "--reject-file", "d": "--directory"}
+    merged: dict[str, list[str]] = {}
+    for key, vals in values.items():
+        merged.setdefault(short_long.get(key, key), []).extend(vals)
+    targets.extend(
+        v for v in merged.get("--reject-file", []) if _is_env_persistence_target(v, dynamic=True)
+    )
+    if "--help" in flags or "--version" in flags:
+        return targets
+    if "--output" in merged:
+        targets.extend(
+            v
+            for v in merged["--output"]
+            if v != "-" and _is_env_persistence_target(v, dynamic=True)
+        )
+        return targets
+    if "--dry-run" in flags:
+        return targets
+    if _PATCH_BACKUP_NAMING & set(values):
+        return [*targets, _ENVRC_EXAMPLE]
+    operands, stdin_files, unresolvable, has_output = _split_stdin_sources(plain, redirects)
+    if has_output:
+        operands = [t for t in operands if not t.isdigit()]
+    if operands and operands[0] != "-":
+        if _is_env_persistence_target(operands[0], dynamic=True):
+            targets.append(operands[0])
+        return targets
+    directory = merged.get("--directory", [None])[-1]
+    sources: list[tuple[str, str | None]] = [(f, None) for f in stdin_files]
+    inputs = merged.get("--input", [])
+    if len(operands) > 1:
+        inputs = [*inputs, operands[1]]
+    sources += [(f, directory) for f in inputs if f != "-"]
+    needs_stdin = not inputs or "-" in inputs
+    if unresolvable or (needs_stdin and not stdin_files):
+        return [*targets, _ENVRC_EXAMPLE]
+    return targets + _patch_source_targets(
+        sources,
+        read_files=read_files and _is_first_command(tokens, patch_idx),
+        cwd_moved=_cwd_moved(tokens, patch_idx),
+        mbox=False,
+        root=directory,
+    )
+
+
 def _bash_confirmed_write_targets(
     tokens: list[str],
     *,
     glued_separators: bool = False,
     exact_operators: bool = False,
     restore_scan: bool = True,
+    read_patch_files: bool = False,
 ) -> list[str]:
     """Return every persistence-protected path/basename targeted by a
     *confirmed* Bash write.
@@ -1875,6 +2417,13 @@ def _bash_confirmed_write_targets(
     - C:  ``tee`` / ``cp`` / ``mv`` / ``dd`` with a persistence target as a
           positional argument before the next command separator
     - D:  ``sed -i`` (in-place edit) with a persistence target as a positional
+    - F:  ``git checkout`` / ``git restore`` of a persistence target (#1055)
+    - G:  ``git apply`` / ``git am``: the paths the patch file names (#1105)
+    - H:  ``patch``: its file operand, ``-o`` / ``-r`` values, or the paths the
+          patch file names (#1105)
+
+    *read_patch_files* lets G and H open the patch file; by default they treat
+    it as unresolvable and add ``_ENVRC_EXAMPLE`` as a stand-in target.
 
     Split from the script-interpreter heuristic (:func:`_bash_interpreter_mentions_target`,
     formerly pattern E of this function) so :func:`check_env_persistence_in_bash`
@@ -1998,6 +2547,31 @@ def _bash_confirmed_write_targets(
                 )
             )
 
+        # Pattern G: `git apply` / `git am` write the paths the patch names
+        if tok == "git":
+            targets.extend(
+                _git_patch_targets(
+                    tokens,
+                    i,
+                    glued_separators=glued_separators,
+                    exact_operators=exact_operators,
+                    read_files=read_patch_files,
+                )
+            )
+
+        # Pattern H: `patch` writes its file operand, `-o` / `-r` or the
+        # paths its patch names, wherever the word sits (ADR-9019, rule 1)
+        if tok == "patch":
+            targets.extend(
+                _patch_command_targets(
+                    tokens,
+                    i,
+                    glued_separators=glued_separators,
+                    exact_operators=exact_operators,
+                    read_files=read_patch_files,
+                )
+            )
+
     return targets
 
 
@@ -2060,6 +2634,7 @@ def check_env_persistence_in_bash(
     glued_separators: bool = False,
     exact_operators: bool = False,
     restore_scan: bool = True,
+    read_patch_files: bool = False,
 ) -> tuple[bool, str]:
     """Block Bash commands that would persist ALLOW_AI_READY_TO_MERGE, or
     that write to a protected file at all.
@@ -2099,6 +2674,7 @@ def check_env_persistence_in_bash(
         glued_separators=glued_separators,
         exact_operators=exact_operators,
         restore_scan=restore_scan,
+        read_patch_files=read_patch_files,
     ):
         if _matches_env_persistence_target(target, dynamic=True):
             if _depth == 0 and tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
@@ -2768,6 +3344,10 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # `)` also end a checkout/restore argument scan. The scan runs on every
     # pass, so the exact pass only adds coverage (#1117).
     exact_tokens = _exact_operator_tokens(stripped)
+    # A patch file is read only for the top-level command, and not when the
+    # command has several lines: the tokens lose a newline, so an earlier line
+    # could have written the file (#1105).
+    read_patch_files = _depth == 0 and "\n" not in stripped.strip()
     passes: list[tuple[list[str], bool, bool]] = [
         (tokens, True, False),
         (_redirect_tokens(stripped), False, False),
@@ -2781,6 +3361,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             glued_separators=glued,
             exact_operators=exact,
             restore_scan=True,
+            read_patch_files=read_patch_files,
         )
         if is_dangerous:
             return True, reason
