@@ -1821,3 +1821,19 @@ def test_unterminated_heredoc_is_not_stripped(hook: types.ModuleType) -> None:
     command = "cat > notes.md <<EOF\nbody\ncat ~/.netrc"
     assert hook._heredocs(command.split("\n")) == []
     assert hook._without_heredoc_bodies(command) == command
+
+
+@pytest.mark.parametrize("char", SPLITLINES_ONLY_BREAKS, ids=lambda c: f"U+{ord(c):04X}")
+def test_heredoc_payload_with_unclear_delimiter_runs_to_the_end(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, char: str
+) -> None:
+    """A body run as code is re-scanned to the last line when its delimiter is unclear."""
+    command = f"bash <<EOF{char}\ngit push --force\nEOF{char}"
+    assert hook._heredoc_payloads(command) == ["git push --force", f"EOF{char}"]
+    payload = json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
+    assert _outcome_exit_code(hook, monkeypatch, payload) == "BLOCK"
+
+
+def test_unterminated_heredoc_payload_runs_to_the_end(hook: types.ModuleType) -> None:
+    """A body run as code with no terminator is re-scanned to the last line."""
+    assert hook._heredoc_payloads("bash <<EOF\ngit push --force") == ["git push --force"]

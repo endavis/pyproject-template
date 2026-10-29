@@ -820,7 +820,9 @@ def _arithmetic_end(line: str, start: int) -> int | None:
     return None
 
 
-def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
+def _heredocs(
+    lines: list[str], *, unclear_as_body: bool = False
+) -> list[tuple[int, list[str], int, int]]:
     """Find each heredoc in *lines*.
 
     Returns ``(marker_line, owner_words, body_start, body_end)`` per heredoc:
@@ -831,6 +833,13 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
     *lines* must be the command split at ``\\n`` only, as bash splits it, not
     by ``str.splitlines()``, which also breaks at ``\\r``, ``\\v``, ``\\f`` and
     other characters bash keeps inside a line (#1102).
+
+    When the delimiter is unclear or never terminated, where the body ends is
+    unknown. By default the heredoc is then left out, so a caller stripping
+    bodies keeps every later line in its scans. With *unclear_as_body* it is
+    returned with its body running to the last line, so a caller re-scanning
+    bodies as code checks every later line too. Either way the guess errs
+    toward checking more.
     """
     found: list[tuple[int, list[str], int, int]] = []
     quote = ""  # a quote left open by an earlier line; a body never changes it
@@ -852,17 +861,20 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
             # here on is stripped, and every later line stays in the scans.
             break
 
+        # The command owning this heredoc is the last segment before it.
+        words = re.split(r"[;&|]", lines[index][: match.start()])[-1].split()
+
         after = lines[index][match.end() : match.end() + 1]
         if after and after not in _HEREDOC_WORD_ENDS:
             # The delimiter word goes on past what the marker regex took, e.g.
             # a trailing `\r`, so the shell's delimiter is not the one matched
-            # here. Stop finding heredocs, as above (#1102).
+            # here and where the body ends is unknown (#1102).
+            if unclear_as_body:
+                found.append((index, words, index + 1, len(lines)))
             break
 
         strip_leading_tabs = bool(match.group(1))
         delimiter = match.group(3) or match.group(4) or match.group(5)
-        # The command owning this heredoc is the last segment before it.
-        words = re.split(r"[;&|]", lines[index][: match.start()])[-1].split()
 
         cursor = index + 1
         while (
@@ -870,7 +882,7 @@ def _heredocs(lines: list[str]) -> list[tuple[int, list[str], int, int]]:
             and _heredoc_terminator(lines[cursor], strip_leading_tabs) != delimiter
         ):
             cursor += 1
-        if cursor == len(lines):
+        if cursor == len(lines) and not unclear_as_body:
             # No terminator. Should this scan's idea of the delimiter differ
             # from the shell's, the rest of the command is not body at all, so
             # leave it in the scans rather than drop it (#1102).
@@ -896,7 +908,7 @@ def _heredoc_payloads(command: str) -> list[str]:
     """
     lines = command.split("\n")  # bash ends a line only at \n (#1102)
     payloads: list[str] = []
-    for _marker, words, body_start, body_end in _heredocs(lines):
+    for _marker, words, body_start, body_end in _heredocs(lines, unclear_as_body=True):
         if _reads_stdin_as_code(words):
             payloads += [line for line in lines[body_start:body_end] if line.strip()]
     return payloads
