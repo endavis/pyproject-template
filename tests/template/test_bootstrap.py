@@ -152,6 +152,12 @@ class TestParseArgs:
         args = parse_args(["--sync"])
         assert args.sync is True
 
+    def test_yes_flag(self) -> None:
+        """--yes and -y are accepted and default to False (#1070)."""
+        assert parse_args(["--sync"]).yes is False
+        assert parse_args(["--sync", "--yes"]).yes is True
+        assert parse_args(["--sync", "-y"]).yes is True
+
 
 class TestDownloadFile:
     """Tests for download_file function."""
@@ -506,6 +512,73 @@ class TestRunSync:
 
         assert settings_path.read_text(encoding="utf-8") == existing
         assert (pkg_dir / "manage.py").read_text(encoding="utf-8") == "# new content"
+
+    def test_assume_yes_skips_prompt_and_overwrites(self, tmp_path: Path) -> None:
+        """assume_yes=True never prompts and downloads over the install (#1070)."""
+        from bootstrap import run_sync
+
+        pkg_dir = tmp_path / "tools" / "pyproject_template"
+        pkg_dir.mkdir(parents=True)
+        (pkg_dir / "manage.py").write_text("# old", encoding="utf-8")
+
+        mock_response = MagicMock()
+        mock_response.read.return_value = b"# new content"
+        mock_response.__enter__ = MagicMock(return_value=mock_response)
+        mock_response.__exit__ = MagicMock(return_value=False)
+
+        with (
+            patch("builtins.input") as mock_input,
+            patch("bootstrap.urllib.request.urlopen", return_value=mock_response),
+            patch("subprocess.run") as mock_subprocess,
+        ):
+            mock_subprocess.return_value = MagicMock(returncode=0, stderr="")
+            run_sync(tmp_path, assume_yes=True)
+
+        mock_input.assert_not_called()
+        assert (pkg_dir / "manage.py").read_text(encoding="utf-8") == "# new content"
+
+    def test_eof_on_prompt_exits_with_hint(
+        self, tmp_path: Path, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """No terminal to answer from exits 1 pointing at --yes, no download (#1070)."""
+        from bootstrap import run_sync
+
+        pkg_dir = tmp_path / "tools" / "pyproject_template"
+        pkg_dir.mkdir(parents=True)
+        (pkg_dir / "manage.py").write_text("# old", encoding="utf-8")
+
+        with (
+            patch("builtins.input", side_effect=EOFError),
+            patch("bootstrap.urllib.request.urlopen") as mock_urlopen,
+            pytest.raises(SystemExit) as exc_info,
+        ):
+            run_sync(tmp_path)
+
+        assert exc_info.value.code == 1
+        assert "--yes" in capsys.readouterr().err
+        mock_urlopen.assert_not_called()
+        assert (pkg_dir / "manage.py").read_text(encoding="utf-8") == "# old"
+
+    def test_piped_script_fails_cleanly_without_yes(self, tmp_path: Path) -> None:
+        """Piping the script to python3 --sync exits 1 with a hint, not a traceback (#1070)."""
+        pkg_dir = tmp_path / "tools" / "pyproject_template"
+        pkg_dir.mkdir(parents=True)
+        (pkg_dir / "manage.py").write_text("# old", encoding="utf-8")
+        source = (REPO_ROOT / "bootstrap.py").read_text(encoding="utf-8")
+
+        result = subprocess.run(  # nosec B603 - fixed argv, no shell
+            [sys.executable, "-", "--sync"],
+            input=source,
+            capture_output=True,
+            text=True,
+            cwd=tmp_path,
+            check=False,
+            timeout=60,
+        )
+
+        assert result.returncode == 1
+        assert "Traceback" not in result.stderr
+        assert "--yes" in result.stdout + result.stderr
 
 
 class TestRunSetup:
