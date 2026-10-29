@@ -1176,7 +1176,13 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
     return out
 
 
-def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
+# A `;`, `&&` or `||` attached to a word still ends the command there (#1093).
+_GLUED_COMMAND_END = re.compile(r";|&&|\|\|")
+
+
+def _git_restore_targets(
+    tokens: list[str], git_idx: int, *, glued_separators: bool = False
+) -> list[str]:
     """Return the protected paths a ``git checkout``/``git restore`` at
     *git_idx* would overwrite (#1055).
 
@@ -1191,6 +1197,12 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     ``--pathspec-from-file``) covers the example too and counts as a write to it
     (#1061). Without one the content comes from the index, so ``git checkout .``
     and ``git restore .`` stay allowed.
+
+    *glued_separators* is for the ``tokenize()`` tokens, which keep a ``;``,
+    ``&&`` or ``||`` attached to a word (``main;``) and have lost its quoting.
+    :func:`_redirect_tokens` splits an unquoted operator into its own token and
+    keeps a quoted one (``'x;'``) inside the word, so on those tokens a word
+    holding ``;`` is a literal argument and the flag stays off (#1093).
     """
     sub = _git_subcommand_index(tokens, git_idx)
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
@@ -1198,7 +1210,8 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     rest: list[str] = []
     redirect_targets: list[str] = []
     skip_target = False
-    for t in tokens[sub + 1 :]:
+    glued_at: int | None = None
+    for idx, t in enumerate(tokens[sub + 1 :]):
         if skip_target:
             # the file or fd a redirect points at is no checkout argument, but
             # the tokens lost their quoting (`'>'`), so it is still checked
@@ -1207,6 +1220,14 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
             redirect_targets.append(t)
             continue
         if t in _COMMAND_SEPARATORS:
+            break
+        glued = _GLUED_COMMAND_END.search(t) if glued_separators else None
+        if glued:
+            # `main;` / `main&&`: bash ends the command at the operator, so
+            # keep the part before it and stop scanning (#1093)
+            if glued.start():
+                rest.append(t[: glued.start()])
+            glued_at = idx
             break
         if t and set(t) <= set(_REDIRECT_PUNCTUATION) and ("<" in t or ">" in t):
             # a redirect operator as :func:`_redirect_tokens` yields it. A
@@ -1240,8 +1261,14 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
                 has_source = True
             elif not t.startswith("-"):
                 paths.append(t)
+    # The tokens lost their quoting, so a `;` glued to a word may have been
+    # quoted (`'x;'`) and bash not have ended the command. Fail closed: what
+    # follows is no argument, but a protected name there is still a target.
+    after_glued = [] if glued_at is None else tokens[sub + 2 + glued_at :]
     targets = [
-        path for path in paths + redirect_targets if _is_env_persistence_target(path, dynamic=True)
+        path
+        for path in paths + redirect_targets + after_glued
+        if _is_env_persistence_target(path, dynamic=True)
     ]
     # `-C`/`--work-tree` move where git resolves paths, so any pathspec may
     # reach the root (`git -C .. checkout X -- repo/`)
@@ -1257,7 +1284,9 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     return targets
 
 
-def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
+def _bash_confirmed_write_targets(
+    tokens: list[str], *, glued_separators: bool = False
+) -> list[str]:
     """Return every persistence-protected path/basename targeted by a
     *confirmed* Bash write.
 
@@ -1381,7 +1410,7 @@ def _bash_confirmed_write_targets(tokens: list[str]) -> list[str]:
         # Pattern F: `git checkout ... -- <path>` and `git restore <path>`
         # overwrite <path> from the index or another commit (#1055)
         if tok == "git":
-            targets.extend(_git_restore_targets(tokens, i))
+            targets.extend(_git_restore_targets(tokens, i, glued_separators=glued_separators))
 
     return targets
 
@@ -1438,7 +1467,9 @@ def _bash_interpreter_mentions_target(tokens: list[str]) -> bool:
     return False
 
 
-def check_env_persistence_in_bash(tokens: list[str], _depth: int = 0) -> tuple[bool, str]:
+def check_env_persistence_in_bash(
+    tokens: list[str], _depth: int = 0, *, glued_separators: bool = False
+) -> tuple[bool, str]:
     """Block Bash commands that would persist ALLOW_AI_READY_TO_MERGE, or
     that write to a protected file at all.
 
@@ -1472,7 +1503,7 @@ def check_env_persistence_in_bash(tokens: list[str], _depth: int = 0) -> tuple[b
         f"{var_name} are not allowed. Only a human can edit these files."
     )
 
-    for target in _bash_confirmed_write_targets(tokens):
+    for target in _bash_confirmed_write_targets(tokens, glued_separators=glued_separators):
         if _matches_env_persistence_target(target, dynamic=True):
             if _depth == 0 and tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
                 if tuple(tokens) == _ALLOWED_ENVRC_COPY and _envrc_example_modified():
@@ -2135,8 +2166,12 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # Checked on the `tokenize()` tokens and again on tokens that split out
     # redirect operators, which find `>|`, `1>>`, `&>` and glued redirects
     # (#1051). Heredoc bodies are stripped so a body's text is not a redirect.
-    for check_tokens in (tokens, _redirect_tokens(stripped)):
-        is_dangerous, reason = check_env_persistence_in_bash(check_tokens, _depth)
+    # Only the `tokenize()` tokens keep a `;` glued to a word; on the redirect
+    # tokens such a word was quoted and is a literal argument (#1093).
+    for check_tokens, glued in ((tokens, True), (_redirect_tokens(stripped), False)):
+        is_dangerous, reason = check_env_persistence_in_bash(
+            check_tokens, _depth, glued_separators=glued
+        )
         if is_dangerous:
             return True, reason
 
