@@ -1642,9 +1642,9 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
     A group folds only when its closing ``)`` comes before the end of the
     command. With no ``)`` before a ``;``, ``&&``, ``||``, ``&``, ``|&`` or
     the end of the tokens, the tokens stay as they are (#1104). ``|`` is the
-    extglob alternative separator, so it does not end the search; but it may
-    also be a pipe, so a group holding one keeps its original tokens after
-    the folded one.
+    extglob alternative separator, so it does not end the search. Since the
+    group's `|` may be a pipe and its other tokens may be a redirect, every
+    folded group keeps its original tokens after the folded one.
     """
     out: list[str] = []
     i = 0
@@ -1666,10 +1666,10 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
                 j += 1
             if closed:
                 out.append(tok[:-1] + "*")
-                if "|" in tokens[i + 2 : j]:
-                    # the tokens lost their quoting, so `x@'(' | tee f ')'`
-                    # looks like `@(a|b)`: keep the original tokens as well
-                    out.extend(tokens[i : j + 1])
+                # the tokens lost their quoting, so `x@'(' | tee f ')'` or
+                # `x@'(' > f ')'` looks like a group: keep the original tokens
+                # after the wildcard, so an operator inside stays visible (#1120)
+                out.extend(tokens[i : j + 1])
                 i = j + 1
                 continue
         out.append(tok)
