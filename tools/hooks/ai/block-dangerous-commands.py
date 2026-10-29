@@ -1202,11 +1202,14 @@ def _heredoc_payloads(command: str) -> list[str]:
         if _reads_stdin_as_code(words):
             body = lines[body_start:body_end]
             payloads += [line for line in body if line.strip()]
-            payloads += [
-                line
-                for line in _joined_continuation_lines(body)
-                if line.strip() and line not in body
-            ]
+            # `<<-` strips each line's leading tabs before the shell joins
+            # them; joining both readings covers either operator
+            for reading in (body, [line.lstrip("\t") for line in body]):
+                payloads += [
+                    line
+                    for line in _joined_continuation_lines(reading)
+                    if line.strip() and line not in body and line not in payloads
+                ]
     return payloads
 
 

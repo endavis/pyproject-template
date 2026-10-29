@@ -1831,7 +1831,13 @@ def test_heredoc_joined_terminator_keeps_later_commands(hook: types.ModuleType) 
         ("bash <<'EOF'\ncat ~/.ne\\\ntrc\nEOF", ["cat ~/.ne\\", "trc", "cat ~/.netrc"]),
         (
             "bash <<-EOF\n\tcat ~/.n\\\n\\\netrc\nEOF",
-            ["\tcat ~/.n\\", "\\", "etrc", "\tcat ~/.netrc"],
+            ["\tcat ~/.n\\", "\\", "etrc", "\tcat ~/.netrc", "cat ~/.netrc"],
+        ),
+        # `<<-` strips each line's tab before the shell joins (bash 5.3
+        # ran `<<-EOF` and `<<-'EOF'` bodies `\techo ab\`, `\tcd` as `echo abcd`)
+        (
+            "bash <<-EOF\n\tcat ~/.ne\\\n\ttrc\nEOF",
+            ["\tcat ~/.ne\\", "\ttrc", "\tcat ~/.ne\ttrc", "cat ~/.netrc"],
         ),
         # an even count of backslashes joins nothing
         ("sh <<EOF\necho a\\\\\nls\nEOF", ["echo a\\\\", "ls"]),
@@ -1850,6 +1856,8 @@ def test_heredoc_payloads_join_continued_lines(
         "bash <<EOF\ncat ~/.ne\\\ntrc\nEOF",
         "bash <<'EOF'\ncat ~/.ne\\\ntrc\nEOF",
         "sh <<-EOF\n\tcat ~/.n\\\n\\\netrc\nEOF",
+        "bash <<-EOF\n\tcat ~/.ne\\\n\ttrc\nEOF",
+        "bash <<-'EOF'\n\tcat ~/.ne\\\n\ttrc\nEOF",
     ],
 )
 def test_heredoc_continued_command_is_checked(hook: types.ModuleType, command: str) -> None:
