@@ -1292,3 +1292,84 @@ def test_other_documented_write_and_stash_pop_ignore_head(
     echo = "echo 'export ENABLE_LSP_TOOL=1' >> .envrc.local"
     assert _run_with_git(hook, monkeypatch, echo, outcome) == 0
     assert _run_with_git(hook, monkeypatch, "git stash pop", outcome) == 0
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("", []),
+        ("a ; b", [("a", False), (";", True), ("b", False)]),
+        ("a;b", [("a", False), (";", True), ("b", False)]),
+        ("x&&y", [("x", False), ("&&", True), ("y", False)]),
+        ("a||b", [("a", False), ("||", True), ("b", False)]),
+        ("a|b", [("a", False), ("|", True), ("b", False)]),
+        ("a|&b", [("a", False), ("|&", True), ("b", False)]),
+        ("a & b", [("a", False), ("&", True), ("b", False)]),
+        ("(a)", [("(", True), ("a", False), (")", True)]),
+        # shlex returns adjacent punctuation as one token; it is split here.
+        (
+            "(cd x)&&y;(z)&",
+            [
+                ("(", True),
+                ("cd", False),
+                ("x", False),
+                (")", True),
+                ("&&", True),
+                ("y", False),
+                (";", True),
+                ("(", True),
+                ("z", False),
+                (")", True),
+                ("&", True),
+            ],
+        ),
+        ("a&;b", [("a", False), ("&", True), (";", True), ("b", False)]),
+        ("a>&2|b", [("a", False), (">&", False), ("2", False), ("|", True), ("b", False)]),
+        ("echo \\;&&x", [("echo", False), ("\\;", False), ("&&", True), ("x", False)]),
+        (
+            'echo \'&\' "a;b" "$(x & y)"',
+            [("echo", False), ("'&'", False), ('"a;b"', False), ('"$(x & y)"', False)],
+        ),
+        ("echo \\;", [("echo", False), ("\\;", False)]),
+        ("a\\;b", [("a\\;b", False)]),
+        ("echo \\&&x", [("echo", False), ("\\&", False), ("&", True), ("x", False)]),
+        # An even count of backslashes escapes itself, not the operator.
+        ("a\\\\&b", [("a\\\\", False), ("&", True), ("b", False)]),
+        ("a\\\\\\&b", [("a\\\\\\&b", False)]),
+        (
+            "echo $'a&b' ; ls",
+            [("echo", False), ("$'a&b'", False), (";", True), ("ls", False)],
+        ),
+        (
+            "echo $'a  &  b'x ; ls",
+            [("echo", False), ("$'a  &  b'x", False), (";", True), ("ls", False)],
+        ),
+        (
+            "echo $'a\\'b & c' ; ls",
+            [("echo", False), ("$'a\\'b & c'", False), (";", True), ("ls", False)],
+        ),
+        ("echo $'ab' & ls", [("echo", False), ("$'ab'", False), ("&", True), ("ls", False)]),
+        ("echo $'a&b", [("echo", False), ("$'a&b", False)]),
+        ("echo $'a&b ; ls", [("echo", False), ("$'a&b", False), (";", False), ("ls", False)]),
+        ("echo 'a & b", [("echo", False), ("'a", False), ("&", False), ("b", False)]),
+        ('echo "a;b', [("echo", False), ('"a;b', False)]),
+        ("a#b ; ls", [("a#b", False), (";", True), ("ls", False)]),
+        (
+            "ls >&2 &> f ;; <x",
+            [
+                ("ls", False),
+                (">&", False),
+                ("2", False),
+                ("&>", False),
+                ("f", False),
+                (";;", False),
+                ("<", False),
+                ("x", False),
+            ],
+        ),
+    ],
+)
+def test_operator_tokens(
+    hook: types.ModuleType, command: str, expected: list[tuple[str, bool]]
+) -> None:
+    assert hook.operator_tokens(command) == expected
