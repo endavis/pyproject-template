@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793292149247,
+  "lastUpdate": 1793293920956,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20414,6 +20414,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.67168972134613e-7",
             "extra": "mean: 1.4917780736427155 usec\nrounds: 79466"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "37a63fe62f665337a20feee9a553f64fd21b4d7b",
+          "message": "feat: add doit issue --upstream and the report-template-bug skill (merges PR #1101, addresses #1090)\n\n`doit issue --upstream` files an issue on endavis/pyproject-template from a\nproject made from it. The body is validated against the upstream issue\ntemplate fetched from main (a failed fetch stops), the upstream labels are\napplied, and a footer records the template commit. The downstream repo is\nnamed only with --include-origin. Security-related content is refused with a\npointer to the template's security policy, and the command is refused in the\ntemplate repo itself. Without --upstream, `doit issue` is unchanged.\n\nThe template repo name lives once in tools/doit/upstream.py, pinned to\nTEMPLATE_REPO by a template-owned test. The shared report-template-bug skill\ntells agents when and how to use it.\n\nAddresses #1090\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scikCLWX2ErCrLQMmJ\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T17:11:19Z",
+          "tree_id": "7728034a5092856bd51b6137213c686f968e3135",
+          "url": "https://github.com/endavis/pyproject-template/commit/37a63fe62f665337a20feee9a553f64fd21b4d7b"
+        },
+        "date": 1793293919673,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18810469.705242116,
+            "unit": "iter/sec",
+            "range": "stddev: 6.4628468257528924e-9",
+            "extra": "mean: 53.16188355048461 nsec\nrounds: 197356"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20475664.036840376,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6735933885482523e-8",
+            "extra": "mean: 48.83846493089419 nsec\nrounds: 197356"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12254304.211283924,
+            "unit": "iter/sec",
+            "range": "stddev: 3.94335394830438e-8",
+            "extra": "mean: 81.60398034506005 nsec\nrounds: 127195"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4334551.029104678,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7368072677808215e-8",
+            "extra": "mean: 230.7044012829524 nsec\nrounds: 44896"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 979534.4608055681,
+            "unit": "iter/sec",
+            "range": "stddev: 7.157600919867668e-7",
+            "extra": "mean: 1.0208931283311882 usec\nrounds: 108649"
           }
         ]
       }
