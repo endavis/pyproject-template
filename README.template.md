@@ -144,7 +144,7 @@ uv venv
 source .venv/bin/activate
 
 # Set environment variables manually
-export UV_CACHE_DIR="$(pwd)/tmp/.uv_cache"
+# uv keeps its default cache, shared by every checkout and project
 
 # Install dependencies
 uv sync --all-extras --dev

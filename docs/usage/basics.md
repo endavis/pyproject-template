@@ -716,7 +716,7 @@ direnv allow
 
 Once configured, direnv automatically:
 - Activates the virtual environment
-- Sets cache directories (UV_CACHE_DIR, RUFF_CACHE_DIR, etc.)
+- Sets cache directories (RUFF_CACHE_DIR, MYPY_CACHE_DIR, etc.); uv keeps its default shared cache
 - Loads project-specific environment variables
 
 #### Manual Environment Setup
@@ -727,8 +727,7 @@ Without direnv:
 # Activate virtual environment
 source .venv/bin/activate
 
-# Set cache directories (optional)
-export UV_CACHE_DIR="$(pwd)/tmp/.uv_cache"
+# Set cache directories (optional); uv keeps its default shared cache
 export RUFF_CACHE_DIR="$(pwd)/tmp/.ruff_cache"
 export MYPY_CACHE_DIR="$(pwd)/tmp/.mypy_cache"
 export COVERAGE_FILE="$(pwd)/tmp/.coverage"

@@ -223,7 +223,7 @@ class TestWorktree:
         tmp_path: Path,
         monkeypatch: pytest.MonkeyPatch,
     ) -> None:
-        """base.py's relative default would otherwise resolve inside the new worktree."""
+        """A user-set relative value would otherwise resolve inside the new worktree."""
         _, mock_sync = mocks
         monkeypatch.chdir(tmp_path)
         monkeypatch.setenv("UV_CACHE_DIR", "tmp/.uv_cache")
@@ -231,6 +231,18 @@ class TestWorktree:
 
         env = mock_sync.call_args.kwargs["env"]
         assert env["UV_CACHE_DIR"] == str((tmp_path / "tmp" / ".uv_cache").resolve())
+
+    def test_an_unset_uv_cache_stays_unset(
+        self,
+        mocks: tuple[MagicMock, MagicMock],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        """No UV_CACHE_DIR is injected, so uv uses its shared default cache (#1094)."""
+        _, mock_sync = mocks
+        monkeypatch.delenv("UV_CACHE_DIR", raising=False)
+        self._create(self.BRANCH)
+
+        assert "UV_CACHE_DIR" not in mock_sync.call_args.kwargs["env"]
 
     def test_prints_how_to_work_there_and_how_to_remove_it(
         self,

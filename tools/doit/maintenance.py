@@ -11,7 +11,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.text import Text
 
-from .base import UV_CACHE_DIR, verbatim
+from .base import verbatim
 
 
 def task_default() -> dict[str, Any]:
@@ -122,7 +122,6 @@ def task_update_deps() -> dict[str, Any]:
         print()
         subprocess.run(
             ["uv", "pip", "list", "--outdated"],
-            env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
             check=False,
         )
 
@@ -135,7 +134,6 @@ def task_update_deps() -> dict[str, Any]:
         # Update dependencies and refresh lockfile
         result = subprocess.run(
             ["uv", "sync", "--all-extras", "--dev", "--upgrade"],
-            env={**os.environ, "UV_CACHE_DIR": UV_CACHE_DIR},
         )
 
         if result.returncode != 0:

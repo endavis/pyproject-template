@@ -354,9 +354,9 @@ def task_worktree() -> dict[str, Any]:
         console.print(verbatim(f"Created {path} on {branch}, from origin/main.", "green"))
 
         env = {key: value for key, value in os.environ.items() if key != "VIRTUAL_ENV"}
-        # base.py defaults UV_CACHE_DIR to a relative path. Resolved here, before
-        # uv runs in the worktree, it keeps pointing at this checkout's cache
-        # instead of a new, empty one inside the worktree.
+        # A user-set relative UV_CACHE_DIR is resolved here, before uv runs in the
+        # worktree, so it keeps pointing at this checkout's cache instead of a
+        # new, empty one inside the worktree. Unset, uv uses its shared default.
         if "UV_CACHE_DIR" in env:
             env["UV_CACHE_DIR"] = str(Path(env["UV_CACHE_DIR"]).resolve())
         try:

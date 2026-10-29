@@ -1293,6 +1293,7 @@ doit cleanup
 - Removes `__pycache__/` directories
 - Removes `tmp/` directory
 - Removes `.pytest_cache/`, `.mypy_cache/`, `.ruff_cache/`
+- Does not touch the shared uv cache (`~/.cache/uv`)
 
 ### `template_clean`
 
