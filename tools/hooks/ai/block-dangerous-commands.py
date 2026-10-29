@@ -1495,6 +1495,60 @@ _GLUED_COMMAND_END = re.compile(r";|&&|\|\|")
 _EXACT_COMMAND_END = _COMMAND_SEPARATORS | {"&", "|&", "(", ")"}
 
 
+def _working_tree_moved(tokens: list[str], git_idx: int, sub: int, paths: list[str]) -> bool:
+    """Return True when git may resolve paths against another working tree.
+
+    Covers ``-C``/``--work-tree``/``--git-dir``/``-c core.worktree=``/
+    ``--config-env core.worktree=`` between ``git`` and the subcommand, a
+    ``cd``/``pushd``/``popd``/``env -C`` earlier in the command when a pathspec
+    could climb out of the new directory (a ``..`` segment, a ``/``, ``~`` or
+    ``:`` start, or a shell expansion: any other relative pathspec stays below
+    it), and any mention of ``GIT_WORK_TREE``, ``GIT_DIR`` or ``GIT_CONFIG``
+    before ``git`` (set by ``=``, ``read`` or ``printf -v``). An earlier
+    ``core.worktree`` or include setting (``git config core.worktree ..``) or a
+    path under ``.git/`` can move it through the repository config too. When
+    unsure, this answers True.
+    """
+    # a shell expansion (`.?`, `$UP`) or a git magic pathspec (`:(top)`) may
+    # also climb, so either counts as climbing
+    climbs = any(
+        path.startswith(("/", "~", ":"))
+        or ".." in path.replace("\\", "/").split("/")
+        or any(c in "$`{}*?[]~" for c in path)
+        for path in paths
+    )
+    for t in tokens[:git_idx]:
+        lowered = t.lower()
+        if (
+            ((t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C"))) and climbs)
+            or "GIT_WORK_TREE" in t
+            or "GIT_DIR" in t
+            or "GIT_CONFIG" in t
+            or "core.worktree" in lowered
+            or "include" in lowered
+            or ".git/" in t
+        ):
+            return True
+
+    def moves(key: str) -> bool:
+        lowered = key.lower()
+        return lowered.startswith("core.worktree") or "include" in lowered
+
+    opts = tokens[git_idx + 1 : sub]
+    for k, t in enumerate(opts):
+        if t.startswith(("-C", "--work-tree", "--git-dir")):
+            return True
+        if t == "-c" and k + 1 < len(opts) and moves(opts[k + 1]):
+            return True
+        if t.startswith("-c") and t != "-c" and moves(t[2:]):
+            return True
+        if t.startswith("--config-env"):
+            value = t.partition("=")[2] or (opts[k + 1] if k + 1 < len(opts) else "")
+            if moves(value):
+                return True
+    return False
+
+
 def _git_restore_targets(
     tokens: list[str],
     git_idx: int,
@@ -1567,19 +1621,31 @@ def _git_restore_targets(
             dashes = rest.index("--")
             has_source = any(not t.startswith("-") for t in rest[:dashes])
         else:
-            has_source = len(paths) >= 2
+            # `--pathspec-from-file` reads the paths from a file, so the one
+            # non-option argument is then the revision
+            has_source = len(paths) >= 2 or (
+                len(paths) >= 1 and any(_long_opt_matches(t, "--pathspec-from-file") for t in rest)
+            )
     else:
         skip = False
         for t in rest:
             if skip:
                 skip = False
-            elif t == "-s" or (_long_opt_matches(t, "--source") and "=" not in t):
+            elif _long_opt_matches(t, "--source") and "=" not in t:
                 skip = True
                 has_source = True
-            elif _long_opt_matches(t, "--source") or (
-                t.startswith("-s") and not t.startswith("--")
-            ):
+            elif _long_opt_matches(t, "--source"):
                 has_source = True
+            elif t.startswith("-") and not t.startswith("--") and t != "-":
+                # a short-option cluster: walk it one character at a time.
+                # `s` takes a value, the rest of the token or the next token.
+                # `U` also takes one; its characters are still walked, which
+                # can only read a source where git reads a number
+                for pos, ch in enumerate(t[1:], start=1):
+                    if ch == "s":
+                        has_source = True
+                        skip = pos == len(t) - 1
+                        break
             elif not t.startswith("-"):
                 paths.append(t)
     # The tokens lost their quoting, so a `;` glued to a word may have been
@@ -1593,7 +1659,7 @@ def _git_restore_targets(
     ]
     # `-C`/`--work-tree` move where git resolves paths, so any pathspec may
     # reach the root (`git -C .. checkout X -- repo/`)
-    moved = any(t == "-C" or t.startswith("--work-tree") for t in tokens[git_idx + 1 : sub])
+    moved = _working_tree_moved(tokens, git_idx, sub, paths)
     if has_source and (
         moved
         or any(_is_broad_pathspec(path) for path in paths)

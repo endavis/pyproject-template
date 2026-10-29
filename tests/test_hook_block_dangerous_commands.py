@@ -1526,3 +1526,172 @@ def test_exact_operator_tokens(
     hook: types.ModuleType, command: str, expected: list[str] | None
 ) -> None:
     assert hook._exact_operator_tokens(command) == expected
+
+
+def _restore_token_lists(
+    hook: types.ModuleType, command: str
+) -> list[tuple[list[str], dict[str, bool]]]:
+    """The token lists the checkout/restore scan runs on, with its flags."""
+    exact = hook._exact_operator_tokens(command)
+    assert exact is not None
+    return [
+        (exact, {"exact_operators": True}),
+        (hook._redirect_tokens(command), {}),
+        (command.split(), {"glued_separators": True}),
+    ]
+
+
+_RESTORE_PROTECTED = ".envrc.local.example"
+
+
+@pytest.mark.parametrize("pathspec", [".", _RESTORE_PROTECTED])
+@pytest.mark.parametrize(
+    "options",
+    ["-Ws HEAD~1", "-WsHEAD~1", "-sHEAD~1", "-s HEAD~1", "-SWs main", "-SWsmain", "-pWs main"],
+)
+def test_restore_short_option_cluster_source(
+    hook: types.ModuleType, options: str, pathspec: str
+) -> None:
+    command = f"git restore {options} {pathspec}"
+    for tokens, flags in _restore_token_lists(hook, command):
+        assert hook._git_restore_targets(tokens, 0, **flags), (command, flags)
+    blocked, _ = hook.check_command(command)
+    assert blocked
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["git restore .", "git restore -W .", "git restore -SW .", "git restore -qp ."],
+)
+def test_restore_cluster_without_source_stays_allowed(hook: types.ModuleType, command: str) -> None:
+    for tokens, flags in _restore_token_lists(hook, command):
+        assert hook._git_restore_targets(tokens, 0, **flags) == []
+    assert hook.check_command(command) == (False, "")
+
+
+def test_restore_cluster_source_value_is_not_a_path(hook: types.ModuleType) -> None:
+    """The value after a trailing `s` is skipped, so it is no pathspec."""
+    for tokens, flags in _restore_token_lists(hook, f"git restore -Ws {_RESTORE_PROTECTED} x"):
+        assert hook._git_restore_targets(tokens, 0, **flags) == []
+
+
+@pytest.mark.parametrize("option", ["--pathspec-from-file=f", "--pathspec-from=f", "--path=f"])
+def test_checkout_pathspec_from_file_with_revision_counts_as_source(
+    hook: types.ModuleType, option: str
+) -> None:
+    command = f"git checkout main {option}"
+    for tokens, flags in _restore_token_lists(hook, command):
+        assert hook._git_restore_targets(tokens, 0, **flags) == [_RESTORE_PROTECTED]
+    assert hook.check_command(command)[0]
+
+
+def test_checkout_pathspec_from_file_without_revision_stays_allowed(hook: types.ModuleType) -> None:
+    command = "git checkout --pathspec-from-file=f"
+    for tokens, flags in _restore_token_lists(hook, command):
+        assert hook._git_restore_targets(tokens, 0, **flags) == []
+    assert hook.check_command(command) == (False, "")
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        "GIT_WORK_TREE=.. git",
+        "GIT_DIR=../.git git",
+        "env GIT_WORK_TREE=.. git",
+        "export GIT_WORK_TREE=..; git",
+        "git -c core.worktree=.. ",
+        "git -c Core.WorkTree=.. ",
+        "git -ccore.worktree=.. ",
+        "git --git-dir=../.git ",
+        "git --git-dir ../.git ",
+        "git --config-env=core.worktree=WT ",
+        "git --config-env core.worktree=WT ",
+        "git -C .. ",
+        "git --work-tree=.. ",
+        "GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=core.worktree GIT_CONFIG_VALUE_0=.. git",
+        "GIT_CONFIG_PARAMETERS=x git",
+        "read GIT_WORK_TREE < f; git",
+        "printf -v GIT_DIR %s ../.git; git",
+        "echo x >> .git/config; git",
+        "git -c include.path=../x.cfg ",
+        "git -cincludeIf.onbranch:main.path=x ",
+        "git --config-env=include.path=P ",
+    ],
+)
+@pytest.mark.parametrize(
+    "tail",
+    ["checkout main -- src/", "restore --source=main src/", "restore -Ws main src/"],
+)
+def test_working_tree_movers_block_a_sourced_restore(
+    hook: types.ModuleType, prefix: str, tail: str
+) -> None:
+    command = f"{prefix.strip()} {tail}"
+    for tokens, flags in _restore_token_lists(hook, command):
+        idx = tokens.index("git")
+        assert hook._git_restore_targets(tokens, idx, **flags) == [_RESTORE_PROTECTED], (
+            command,
+            flags,
+        )
+    assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize(
+    ("command", "blocked"),
+    [
+        # after a cd, only a pathspec that climbs out of the new directory can
+        # reach another tree's root
+        ("cd .. && git checkout main -- ../", True),
+        ("pushd x ; git restore -s main ../..", True),
+        ("cd x ; git -c user.name=x checkout main -- /repo/", True),
+        ("cd x && git restore -Ws main ~/repo/", True),
+        ("cd x && git checkout main -- a/../../", True),
+        ("cd x && git checkout main -- .?/", True),
+        ("cd x && git checkout main -- '$UP'/", True),
+        ("cd x && git checkout main -- :(top)src", True),
+        ("popd && git checkout main -- ../", True),
+        ("env -C .. git checkout main -- ../", True),
+        ("env --chdir=x git restore -s main ../", True),
+        ("env -C /wt git checkout main -- src/foo.py", False),
+        ("cd /wt && git checkout main -- src/foo.py", False),
+        ("cd /wt && git restore -s main src/ README.md", False),
+    ],
+)
+def test_cd_moves_the_working_tree_for_climbing_pathspecs(
+    hook: types.ModuleType, command: str, blocked: bool
+) -> None:
+    assert hook.check_command(command)[0] is blocked
+
+
+@pytest.mark.parametrize(
+    "setup",
+    ["git config core.worktree ..", "git config include.path ../x.cfg"],
+)
+def test_earlier_repo_config_moves_the_working_tree(hook: types.ModuleType, setup: str) -> None:
+    # git honours a core.worktree written to the repository config
+    command = f"{setup} && git checkout main -- src/"
+    tokens = hook._exact_operator_tokens(command)
+    idx = len(tokens) - 1 - tokens[::-1].index("git")
+    assert hook._git_restore_targets(tokens, idx, exact_operators=True) == [_RESTORE_PROTECTED]
+    assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git checkout main -- src/",
+        "git restore --source=main src/",
+        "git -c user.name=x checkout main -- src/",
+    ],
+)
+def test_sourced_restore_without_a_mover_stays_allowed(
+    hook: types.ModuleType, command: str
+) -> None:
+    for tokens, flags in _restore_token_lists(hook, command):
+        assert hook._git_restore_targets(tokens, 0, **flags) == []
+    assert hook.check_command(command) == (False, "")
+
+
+def test_mover_without_a_source_stays_allowed(hook: types.ModuleType) -> None:
+    command = "cd .. && git checkout -- src/"
+    for tokens, flags in _restore_token_lists(hook, command):
+        assert hook._git_restore_targets(tokens, tokens.index("git"), **flags) == []
