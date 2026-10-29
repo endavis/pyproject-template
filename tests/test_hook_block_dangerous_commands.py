@@ -1086,6 +1086,50 @@ def test_checkout_redirect_does_not_hide_protected_write(
     assert _run(hook, monkeypatch, command) == 2
 
 
+# A `;`, `&&` or `||` glued to the last checkout argument ends the command (#1093)
+_CHECKOUT_GLUED_SEPARATOR_ALLOWED = [
+    "git checkout -b docs/x; grep -rl foo . 2>/dev/null",
+    "git checkout -b docs/x; grep -rl foo .",
+    "git checkout main; ls .",
+    "git checkout -b docs/x ; grep -rl foo .",
+    "git checkout -b docs/x && grep -rl foo . 2>/dev/null",
+    "git checkout -b docs/x; grep -rl foo src 2>/dev/null",
+    "git checkout main&& ls .",
+    "git checkout main|| ls .",
+]
+
+_CHECKOUT_GLUED_SEPARATOR_BLOCKED = [
+    "git checkout main -- .envrc.local.example; ls",
+    "git checkout main .envrc.local.example; ls .",
+    "git checkout main .; ls",
+    "git restore --source=main .; ls",
+    "git checkout main .&& ls",
+    "git checkout main . || ls",
+    "git checkout main; git checkout other -- .envrc.local.example",
+    # a quoted `;` is no separator: a protected name after it stays a target
+    "git checkout main 'x;' .envrc.local.example",
+    # ... and a broad pathspec after it still counts, with the source before it
+    "git checkout main 'x;' .",
+    'git checkout main "x;" .',
+    "git checkout main 'x&&' .",
+    "git restore --source=main 'x;' .",
+]
+
+
+@pytest.mark.parametrize("command", _CHECKOUT_GLUED_SEPARATOR_ALLOWED)
+def test_checkout_glued_separator_ends_scan(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    assert _run(hook, monkeypatch, command) == 0
+
+
+@pytest.mark.parametrize("command", _CHECKOUT_GLUED_SEPARATOR_BLOCKED)
+def test_checkout_glued_separator_keeps_protected_write_blocked(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    assert _run(hook, monkeypatch, command) == 2
+
+
 # ---------------------------------------------------------------------------
 # The allowed example copy is gated on the example matching HEAD (#1061)
 # ---------------------------------------------------------------------------
