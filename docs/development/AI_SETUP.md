@@ -151,7 +151,7 @@ model: claude-opus-5-5   # overrides the env-var default for this agent only
 ---
 ```
 
-Agents without a `model:` line inherit the env-var default. The `implement-issue` subagents both override it, so the split does not depend on the env var: `.claude/agents/implement-planner.md` declares `model: opus` (planning is the reasoning-heavy step) and `.claude/agents/implement-worker.md` declares `model: sonnet` (coding against a plan is the cost/quality trade-off). The aliases `opus` / `sonnet` are used rather than full IDs so the files do not go stale on a model-family change. Other subagents keep the env-var default; future high-stakes ones (e.g. design review, security review) can opt into Opus on a per-file basis.
+Agents without a `model:` line inherit the env-var default. The `implement-issue` planner overrides it: `.claude/agents/implement-planner.md` declares `model: opus` (planning is the reasoning-heavy step). `.claude/agents/implement-worker.md` deliberately declares no `model:` and gets Sonnet from the env var (coding against a plan is the cost/quality trade-off), because Copilot's `task` tool reads the same file and fails with `invalid_model` for a model it cannot resolve (#1081). The alias `opus` is used rather than a full ID so the file does not go stale on a model-family change. Other subagents keep the env-var default; future high-stakes ones (e.g. design review, security review) can opt into Opus on a per-file basis.
 
 **Per-developer overrides:**
 
