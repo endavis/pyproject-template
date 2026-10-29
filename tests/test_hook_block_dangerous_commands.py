@@ -2055,7 +2055,8 @@ def test_git_apply_wrapped_payload_is_unresolvable(hook: types.ModuleType, patch
 
 
 def test_git_apply_after_cd_allows_absolute_path(hook: types.ModuleType, patch_dir: Path) -> None:
-    command = f"git apply {patch_dir}/ok.patch"
+    # as_posix(): a shell reads the backslashes of a Windows path as escapes
+    command = f"git apply {patch_dir.as_posix()}/ok.patch"
     _assert_patch_allows(hook, command)
 
 
