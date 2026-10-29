@@ -1501,19 +1501,25 @@ def _working_tree_moved(tokens: list[str], git_idx: int, sub: int, paths: list[s
     Covers ``-C``/``--work-tree``/``--git-dir``/``-c core.worktree=``/
     ``--config-env core.worktree=`` between ``git`` and the subcommand, a
     ``cd``/``pushd`` earlier in the command when a pathspec could climb out of
-    the new directory (a ``..`` segment, or a ``/`` or ``~`` start: any other
-    relative pathspec stays below it), and a ``GIT_WORK_TREE=``,
+    the new directory (a ``..`` segment, a ``/``, ``~`` or ``:`` start, or a
+    shell expansion: any other relative pathspec stays below it), and a
+    ``GIT_WORK_TREE=``,
     ``GIT_DIR=`` or ``GIT_CONFIG*`` setting before ``git``. An earlier
     ``core.worktree`` or include setting (``git config core.worktree ..``) can
     move it through the repository config too. When unsure, this answers True.
     """
+    # a shell expansion (`.?`, `$UP`) or a git magic pathspec (`:(top)`) may
+    # also climb, so either counts as climbing
     climbs = any(
-        path.startswith(("/", "~")) or ".." in path.replace("\\", "/").split("/") for path in paths
+        path.startswith(("/", "~", ":"))
+        or ".." in path.replace("\\", "/").split("/")
+        or any(c in "$`{}*?[]~" for c in path)
+        for path in paths
     )
     for t in tokens[:git_idx]:
         lowered = t.lower()
         if (
-            (t in {"cd", "pushd"} and climbs)
+            (t in {"cd", "pushd", "popd"} and climbs)
             or "GIT_WORK_TREE=" in t
             or "GIT_DIR=" in t
             or "GIT_CONFIG" in t
