@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793285644209,
+  "lastUpdate": 1793288955925,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20237,6 +20237,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7543351925203032e-7",
             "extra": "mean: 1.6597982041185342 usec\nrounds: 63256"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "86cba74f365037e8efdfd84568469bb1156ce794",
+          "message": "docs: fix dev-tooling advisories in the open and close them unpublished (merges PR #1092, addresses #1091)\n\nSECURITY.md had one security update process, which ends in publishing\nevery advisory. It now has two tracks.\n\nThe package (src/) keeps the private-fork, publish-after-fix process.\n\nDevelopment tooling (tools/) findings are filed as private draft\nadvisories and fixed through the normal issue and PR flow, so CI runs on\nthe fix. Issue, PR and commit wording describes the change, never the\nbypass, reproduction commands or advisory ID. The advisory is then\nclosed, not published, and no CVE is requested.\n\nAGENTS.md's Security Review Findings gains the same rule and points at\nSECURITY.md.\n\nAddresses #1091\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T15:48:24Z",
+          "tree_id": "6a04bffb38ad6d9932b56d31314998472f8bec18",
+          "url": "https://github.com/endavis/pyproject-template/commit/86cba74f365037e8efdfd84568469bb1156ce794"
+        },
+        "date": 1793288954313,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9354590.434573932,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1334656074142872e-8",
+            "extra": "mean: 106.89938880745306 nsec\nrounds: 101441"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10073663.10653755,
+            "unit": "iter/sec",
+            "range": "stddev: 1.123607994547852e-8",
+            "extra": "mean: 99.26875550871118 nsec\nrounds: 107562"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6639147.14563697,
+            "unit": "iter/sec",
+            "range": "stddev: 3.196690283318893e-8",
+            "extra": "mean: 150.62175578638397 nsec\nrounds: 73665"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2207855.91641404,
+            "unit": "iter/sec",
+            "range": "stddev: 6.61910415956779e-8",
+            "extra": "mean: 452.92810666023087 nsec\nrounds: 195695"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 596838.032718933,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4692919262830816e-7",
+            "extra": "mean: 1.6754964415461888 usec\nrounds: 62190"
           }
         ]
       }
