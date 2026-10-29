@@ -1244,7 +1244,8 @@ uv run cz commit
 ### `worktree`
 
 Create a git worktree with its own environment, for working on a branch while the main checkout
-holds other work.
+holds other work. The `implement-issue` skill uses it to give every issue its own worktree
+([ADR-9027](../decisions/9027-implement-issue-works-in-a-per-issue-worktree.md)).
 
 ```bash
 doit worktree --branch=feat/42-add-export

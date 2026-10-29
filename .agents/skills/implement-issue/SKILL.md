@@ -24,17 +24,32 @@ the open PR, not approving each step along the way.
    If it is closed, tell the user and stop.
 2. Determine the branch type from labels (`enhancement`→`feat`, `bug`→`fix`, `refactor`→`refactor`,
    `documentation`→`docs`, `chore`→`chore`, default→`issue`).
-3. Check the current branch:
+3. Find or create the issue's worktree. Every run works in a worktree under `worktrees/`, so two
+   sessions can run two issues at once and the main checkout is never switched or pulled. Check, in
+   order:
    ```bash
    git branch --show-current
+   git worktree list --porcelain
+   git branch --list '<type>/<n>-*'
    ```
-   - If already on `<type>/<n>-*`, resume on it — skip branch creation. If it carries uncommitted
-     changes, treat them as prior work to continue, not to discard.
-   - Otherwise create it from fresh `main`:
+   - If already on `<type>/<n>-*`, resume on it — skip branch creation. This holds in the main
+     checkout and in a worktree. If it carries uncommitted changes, treat them as prior work to
+     continue, not to discard.
+   - If `git worktree list --porcelain` shows a worktree on `<type>/<n>-*`, `cd` into it and resume
+     there. Uncommitted changes in it count as prior work too.
+   - If a local branch `<type>/<n>-*` exists with no worktree, stop and ask the user. `doit
+     worktree` uses `git worktree add -b`, which fails on an existing branch.
+   - Otherwise create the worktree from the main checkout. `doit worktree` fetches `origin/main`
+     itself and branches from it with no upstream, so there is no `git pull` here:
      ```bash
-     git checkout main && git pull
-     git checkout -b <type>/<n>-<short-description>
+     uv run doit worktree --branch=<type>/<n>-<short-description>
+     cd <main-checkout>/worktrees/<type>/<n>-<short-description>
      ```
+4. Record the worktree's absolute path as `WORKTREE` (`git rev-parse --show-toplevel` from inside
+   it). Every later step runs from `$WORKTREE` through `uv run`; never pass `--active`, which would
+   install the worktree into the main checkout's `.venv`. Treat the shell's working directory as
+   non-persistent on every host: start each shell command with `cd "$WORKTREE" &&`, or use absolute
+   paths. See [Per-host subagent notes](#per-host-subagent-notes).
 
 ### Step 2: Decide whether to plan
 
@@ -58,11 +73,12 @@ gh api repos/{owner}/{repo}/issues/<n>/comments --jq '.[] | select(.body | test(
 Fetch the context the Planner brief reads, so the brief never has to call `gh` itself:
 
 ```bash
-doit delegation_context --kind=issue --n=<n> --out=tmp/agents/<host>/implement-issue-<n>/
+uv run doit delegation_context --kind=issue --n=<n> --out=$WORKTREE/tmp/agents/<host>/implement-issue-<n>/
 ```
 
 Run the **Planner brief** below in a subagent, using the host's subagent tool (see
-[Per-host subagent notes](#per-host-subagent-notes)), telling it the context directory above. Post
+[Per-host subagent notes](#per-host-subagent-notes)), telling it the context directory above (an absolute path inside the worktree) and the worktree root
+`$WORKTREE`. Post
 what it returns with:
 
 ```bash
@@ -90,34 +106,35 @@ Otherwise, re-fetch the context into the same directory — Step 3 posted a comm
 fetch, so `comments.json` needs to pick it up (when Step 3 did not run, this is the first fetch):
 
 ```bash
-doit delegation_context --kind=issue --n=<n> --out=tmp/agents/<host>/implement-issue-<n>/
+uv run doit delegation_context --kind=issue --n=<n> --out=$WORKTREE/tmp/agents/<host>/implement-issue-<n>/
 ```
 
-Run the **Coder brief** below in a subagent, telling it the context directory above. When the user
+Run the **Coder brief** below in a subagent, telling it the context directory above and the worktree
+root `$WORKTREE`. When the user
 says **"implement issue N with \<agent\>"**, run the Coder brief through that agent's CLI instead,
 using the non-interactive invocation for that host documented in
 [cross-agent-delegation.md — Non-interactive flags per CLI](../../../docs/development/ai/cross-agent-delegation.md#non-interactive-flags-per-cli)
 — the delegated agent reads the context directory instead of calling `gh` itself, so the invocation
-needs no `gh`-specific guidance. "With \<agent\>" hands off only this step; every other step still
+needs no `gh`-specific guidance. Run that CLI from `$WORKTREE`. "With \<agent\>" hands off only this step; every other step still
 runs in the host that received "implement issue N". Delete
-`tmp/agents/<host>/implement-issue-<n>/` once this step returns; it has served its purpose (an inline
+`$WORKTREE/tmp/agents/<host>/implement-issue-<n>/` once this step returns; it has served its purpose (an inline
 run that never fetched it has nothing to delete).
 
 ### Step 5: Check the work
 
 - Diff the branch against the issue's success criteria; anything missing is a gap to close before
   committing, not a note for the PR description.
-- Run `doit check` and `doit docs_build`, and fix whatever either one finds.
+- Run `uv run doit check` and `uv run doit docs_build` from `$WORKTREE`, and fix whatever either one finds.
 - Confirm ADR, nav (`mkdocs.yml`) and documentation updates landed if the plan called for them.
 
 ### Step 6: Commit and open the PR
 
-Commit with `git commit` in the format from `.github/CONTRIBUTING.md` — not `doit commit`, which
+From `$WORKTREE`, commit with `git commit` in the format from `.github/CONTRIBUTING.md` — not `doit commit`, which
 asks interactive questions this run cannot answer. Then:
 
 ```bash
 git push -u origin <type>/<n>-<short-description>
-doit pr --title="<type>: <subject>" --body-file=<pr-body-file>
+uv run doit pr --title="<type>: <subject>" --body-file=<pr-body-file>
 ```
 
 The PR body follows `.github/pull_request_template.md` and includes `Addresses #<n>`.
@@ -137,6 +154,8 @@ The PR body follows `.github/pull_request_template.md` and includes `Addresses #
 
 Report: the PR URL, a summary of the change, whether a plan was posted and why (or why not), whether
 coding ran inline or in a subagent, any deviations from the plan, and the CI state (green, or the round-capped failures from Step 7).
+Also report the worktree path (`$WORKTREE`) and the merge command, which the user runs from the main
+checkout: `uv run doit pr_merge --pr=<pr> --auto-close`. It removes the worktree and its branch.
 
 ## Ask-first triggers
 
@@ -150,9 +169,13 @@ it is implementing. Those stay the user's decisions.
 
 ## Planner brief
 
-Give this to the planning subagent, with the issue number:
+Give this to the planning subagent, with the issue number and the worktree root as an absolute
+path:
 
-1. Read `AGENTS.md` and `.claude/CLAUDE.md` (or the host's equivalent) for workflow, conventions, and
+1. Work only under the worktree root you were given. A subagent's working directory resets between
+   shell calls and its file tools default to the session's primary directory, so use absolute paths
+   under the worktree root and start each shell command with `cd <root> &&`. Read `AGENTS.md` and
+   `.claude/CLAUDE.md` (or the host's equivalent) for workflow, conventions, and
    the mandatory test requirement.
 2. Read the issue from `<context-dir>/issue.json` (title/body/labels/assignees) — the caller fetched
    it with `doit delegation_context --kind=issue --n=<n> --out=<context-dir>` before invoking this
@@ -190,9 +213,11 @@ Give this to the planning subagent, with the issue number:
 ## Coder brief
 
 Give this to the coding subagent (or the delegated agent's CLI), with the issue number, the branch
-name, and any issue-specific notes:
+name, the worktree root as an absolute path, and any issue-specific notes:
 
-1. Read `AGENTS.md` and the host's agent-specific instructions file for workflow, conventions, code
+1. Edit only under the worktree root. A subagent's working directory resets between shell calls and
+   its file tools default to the session's primary directory, so use absolute paths under the
+   worktree root and start every shell command with `cd <root> &&`. Read `AGENTS.md` and the host's agent-specific instructions file for workflow, conventions, code
    style, and the mandatory test requirement.
 2. Read `<context-dir>/comments.json` for the most recent comment matching `Implementation Plan
    for` — the caller fetched it with `doit delegation_context --kind=issue --n=<n>
@@ -203,12 +228,17 @@ name, and any issue-specific notes:
 3. Implement the plan (or the issue): create and edit files, follow existing patterns, and write
    tests — this is mandatory whenever there is code to test, with no exceptions for "small" changes.
    All new code is type-annotated for mypy strict mode.
-4. Run `doit check`. Fix failures and re-run; do not stop at the first failure.
+4. Run `uv run doit check` from the worktree root. Fix failures and re-run; do not stop at the first failure.
 5. Return a summary: files created or modified, test results, and any deviations from the plan.
 6. Never switch branches, never commit, never enter plan mode. The parent step handles validation
    doubling, commit, and PR.
 
 ## Per-host subagent notes
+
+Directory change: the skill assumes no host keeps the working directory between shell calls, so
+every command is `cd "$WORKTREE" && …` or uses absolute paths, which is correct either way. Claude
+Code's main-session `cd` persists inside the repo (verified). Copilot (`-C`/`--add-dir`), Codex
+(not installed here) and `agy` (`--add-dir`) are unverified; start a delegated run from `$WORKTREE`.
 
 Each host uses its own subagent mechanism for the Planner and Coder briefs. When a host has none,
 run the brief in the session itself instead of failing the step.

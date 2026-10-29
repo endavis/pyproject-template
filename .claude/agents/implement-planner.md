@@ -22,6 +22,8 @@ The parent prompt will provide:
 - The **issue number**.
 - The **context directory** the parent filled with `doit delegation_context --kind=issue` —
   `issue.json` and `comments.json`. Read it; do not call `gh`.
+- The **worktree root**, an absolute path. Read code under it and prefix every shell call with
+  `cd <root> &&`: your working directory resets between calls.
 - Any **issue-specific notes** or scope clarifications.
 
 ## Constraints

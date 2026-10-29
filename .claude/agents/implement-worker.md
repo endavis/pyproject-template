@@ -24,6 +24,9 @@ The parent prompt will provide:
   `issue.json` and `comments.json`, where you find the plan (the most recent `Implementation Plan
   for` comment) or, without one, the issue body. Read it; do not call `gh`.
 - The **branch name** (for context only — you will not switch branches).
+- The **worktree root**, an absolute path. Edit only under it, and prefix every shell call with
+  `cd <root> &&`: your working directory resets between calls and your file tools default to the
+  session's primary directory.
 - Any **issue-specific notes** or scope clarifications.
 
 ## Constraints

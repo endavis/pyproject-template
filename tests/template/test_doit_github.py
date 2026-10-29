@@ -2356,6 +2356,20 @@ class TestDelegationContext:
         assert (out_dir / "issue.json").exists()
         assert (out_dir / "comments.json").exists()
 
+    def test_absolute_out_directory_receives_the_files(
+        self, tmp_path: Path, mock_subprocess: MagicMock
+    ) -> None:
+        """An absolute ``--out`` (a worktree's context dir, #1095) is written exactly there."""
+        mock_subprocess.register(
+            {("gh", "issue", "view"): {"stdout": json.dumps({"number": 1, "comments": []})}}
+        )
+        out_dir = (tmp_path / "worktrees" / "feat" / "1-x" / "tmp" / "agents" / "claude").resolve()
+        assert out_dir.is_absolute()
+
+        self._action()(kind="issue", n="1", out=str(out_dir))
+
+        assert sorted(p.name for p in out_dir.iterdir()) == ["comments.json", "issue.json"]
+
     def test_fetch_issue_context_helper_used_directly(
         self, tmp_path: Path, mock_subprocess: MagicMock
     ) -> None:
