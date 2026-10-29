@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793296935014,
+  "lastUpdate": 1793298056844,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20768,6 +20768,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8638646085557198e-7",
             "extra": "mean: 1.655648216426738 usec\nrounds: 63412"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d9b4f2991db2ffb9dd4b57c412b86a49bd5cf1b1",
+          "message": "fix: judge an ignored directory by its files when removing a worktree (merges PR #1114, addresses #1112)\n\ngit status --ignored collapses an ignored directory into one entry, so\n_worktree_leftovers judged tmp/agents/ by its name and kept a merged\nPR's worktree when that directory held only __pycache__. An ignored\ndirectory entry is now walked, and only files that are not rebuildable\ncount as leftovers, each listed by its own path. A symlinked directory\nis listed rather than walked.\n\nAddresses #1112\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scikCLWX2ErCrLQMmJ\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T18:20:17Z",
+          "tree_id": "efcbbfed3b0d12b681cf05ff3bdeee318e928955",
+          "url": "https://github.com/endavis/pyproject-template/commit/d9b4f2991db2ffb9dd4b57c412b86a49bd5cf1b1"
+        },
+        "date": 1793298055439,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16344100.625074184,
+            "unit": "iter/sec",
+            "range": "stddev: 8.798185465031845e-9",
+            "extra": "mean: 61.18415585779357 nsec\nrounds: 171233"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 18863031.30566721,
+            "unit": "iter/sec",
+            "range": "stddev: 6.336259564820109e-9",
+            "extra": "mean: 53.013748627960965 nsec\nrounds: 197707"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11606196.767447248,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3403585358515434e-8",
+            "extra": "mean: 86.16086906304857 nsec\nrounds: 133316"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3605300.768241097,
+            "unit": "iter/sec",
+            "range": "stddev: 4.329862820816933e-8",
+            "extra": "mean: 277.36936923791404 nsec\nrounds: 195351"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 908581.3583583238,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4032130879448356e-7",
+            "extra": "mean: 1.1006169021636727 usec\nrounds: 111820"
           }
         ]
       }
