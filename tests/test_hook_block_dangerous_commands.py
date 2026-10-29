@@ -1743,7 +1743,15 @@ def test_mover_without_a_source_stays_allowed(hook: types.ModuleType) -> None:
     [
         # a closed group folds as before
         ([".envrc.@", "(", "local", ")"], [".envrc.*"]),
-        ([".envrc.+", "(", "a", "|", "b", ")", "x"], [".envrc.*", "x"]),
+        # a group holding `|` also keeps its original tokens: it may be a pipe
+        (
+            [".envrc.+", "(", "a", "|", "b", ")", "x"],
+            [".envrc.*", ".envrc.+", "(", "a", "|", "b", ")", "x"],
+        ),
+        (
+            ["echo", "x@", "(", "|", "tee", ".envrc.local", ")"],
+            ["echo", "x*", "x@", "(", "|", "tee", ".envrc.local", ")"],
+        ),
         ([".e?", "(", "(", "a", ")", ")"], [".e*"]),
         # no closing `)`: every later token stays (#1104)
         (["echo", "x@", "(", "y"], ["echo", "x@", "(", "y"]),
