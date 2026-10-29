@@ -1189,13 +1189,43 @@ def _heredoc_payloads(command: str) -> list[str]:
 
     Each line is yielded separately because each is its own command to the
     shell, and a command position is what the missing checks require.
+
+    The receiving shell joins a line ending in an odd number of backslashes
+    with the next one, whether or not the delimiter was quoted, so the joined
+    lines are yielded too (#1122). The physical lines stay as well: inside a
+    quoted string in the script a backslash-newline is kept, and checking both
+    readings covers either.
     """
     lines = command.split("\n")  # bash ends a line only at \n (#1102)
     payloads: list[str] = []
     for _marker, words, body_start, body_end in _heredocs(lines, unclear_as_body=True):
         if _reads_stdin_as_code(words):
-            payloads += [line for line in lines[body_start:body_end] if line.strip()]
+            body = lines[body_start:body_end]
+            payloads += [line for line in body if line.strip()]
+            payloads += [
+                line
+                for line in _joined_continuation_lines(body)
+                if line.strip() and line not in body
+            ]
     return payloads
+
+
+def _joined_continuation_lines(lines: list[str]) -> list[str]:
+    """Join each line ending in an odd number of backslashes with the next one.
+
+    The trailing backslash is dropped, as the shell drops a backslash-newline.
+    An even count is an escaped backslash and joins nothing.
+    """
+    joined: list[str] = []
+    current: str | None = None
+    for line in lines:
+        current = line if current is None else current[:-1] + line
+        if (len(current) - len(current.rstrip("\\"))) % 2 == 0:
+            joined.append(current)
+            current = None
+    if current is not None:
+        joined.append(current)
+    return joined
 
 
 def _without_heredoc_bodies(command: str) -> str:

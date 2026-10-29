@@ -1821,3 +1821,36 @@ def test_heredoc_joined_terminator_keeps_later_commands(hook: types.ModuleType) 
     # bash ends the body at the joined `E\` + `OF`, so `cat ~/.netrc` runs
     command = "cat <<EOF\nbody\nE\\\nOF\ncat ~/.netrc\nEOF\n"
     assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        # the receiving shell joins a trailing `\` with the next line (#1122)
+        ("bash <<EOF\ncat ~/.ne\\\ntrc\nEOF", ["cat ~/.ne\\", "trc", "cat ~/.netrc"]),
+        ("bash <<'EOF'\ncat ~/.ne\\\ntrc\nEOF", ["cat ~/.ne\\", "trc", "cat ~/.netrc"]),
+        (
+            "bash <<-EOF\n\tcat ~/.n\\\n\\\netrc\nEOF",
+            ["\tcat ~/.n\\", "\\", "etrc", "\tcat ~/.netrc"],
+        ),
+        # an even count of backslashes joins nothing
+        ("sh <<EOF\necho a\\\\\nls\nEOF", ["echo a\\\\", "ls"]),
+        ("bash <<EOF\necho ok\nEOF", ["echo ok"]),
+    ],
+)
+def test_heredoc_payloads_join_continued_lines(
+    hook: types.ModuleType, command: str, expected: list[str]
+) -> None:
+    assert hook._heredoc_payloads(command) == expected
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "bash <<EOF\ncat ~/.ne\\\ntrc\nEOF",
+        "bash <<'EOF'\ncat ~/.ne\\\ntrc\nEOF",
+        "sh <<-EOF\n\tcat ~/.n\\\n\\\netrc\nEOF",
+    ],
+)
+def test_heredoc_continued_command_is_checked(hook: types.ModuleType, command: str) -> None:
+    assert hook.check_command(command)[0]
