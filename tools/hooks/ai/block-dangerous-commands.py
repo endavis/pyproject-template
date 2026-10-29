@@ -1174,9 +1174,23 @@ def _git_restore_targets(tokens: list[str], git_idx: int) -> list[str]:
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
         return []
     rest: list[str] = []
+    skip_target = False
     for t in tokens[sub + 1 :]:
+        if skip_target:
+            # the file or fd a redirect points at is no checkout argument
+            skip_target = False
+            continue
         if t in _COMMAND_SEPARATORS:
             break
+        if t and set(t) <= set(_REDIRECT_PUNCTUATION):
+            if "<" in t or ">" in t:
+                # a redirect operator as :func:`_redirect_tokens` yields it:
+                # drop it, its target and a preceding fd number (`2` of `2>`)
+                skip_target = True
+                if rest and rest[-1].isdigit():
+                    rest.pop()
+                continue
+            break  # `&`, `(`, `)`: ends the command
         rest.append(t)
     paths: list[str] = []
     has_source = False
