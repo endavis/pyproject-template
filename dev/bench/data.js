@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793282583817,
+  "lastUpdate": 1793283329554,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20119,6 +20119,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9180391305994449e-7",
             "extra": "mean: 1.6874537906007097 usec\nrounds: 62035"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c7611c0b7f5cae60f9087436eee17ac3711fa0c7",
+          "message": "fix: let git checkout with a redirect past the config-write check (merges PR #1089, addresses #1088)\n\n* fix: let git checkout with a redirect past the config-write check\n\n_redirect_tokens splits `2>/dev/null` into `2`, `>`, `/dev/null`.\n_git_restore_targets read those as checkout arguments, so `main` became\na source revision and the absolute `/dev/null` became a broad pathspec.\nThe hook then reported `git checkout -q main 2>/dev/null` as a write to\n.envrc.local.example.\n\nThe argument scan now drops a redirect operator, its target and a\npreceding fd number, and keeps scanning after the redirect, so a\nprotected path placed after one is still caught.\n\nAddresses #1088\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* fix: fail closed on quoted operators in the checkout redirect scan\n\nThe tokens _git_restore_targets reads have lost their quoting, so a\nquoted '&' or '(' ended the argument scan early. That let\n`git checkout main '&' .envrc.local.example` through, although main\nblocked it.\n\nThe scan no longer ends early on punctuation. It also keeps a spaced fd\nnumber, which could be a revision name, and still checks every skipped\nredirect target against the protected names.\n\nAddresses #1088\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T14:14:47Z",
+          "tree_id": "86e8c3e35be569d7ce089849f816cdc0117feff9",
+          "url": "https://github.com/endavis/pyproject-template/commit/c7611c0b7f5cae60f9087436eee17ac3711fa0c7"
+        },
+        "date": 1793283327055,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9721558.989366388,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1458959847206465e-8",
+            "extra": "mean: 102.8641600687521 nsec\nrounds: 99020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10268187.560291769,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1198677956246419e-8",
+            "extra": "mean: 97.38817041744659 nsec\nrounds: 107090"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6472631.987820062,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7521388426896903e-8",
+            "extra": "mean: 154.4966563651015 nsec\nrounds: 67304"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2241975.074011935,
+            "unit": "iter/sec",
+            "range": "stddev: 6.417106079668218e-8",
+            "extra": "mean: 446.035288969799 nsec\nrounds: 198060"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 606560.8971460366,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4896111258027608e-7",
+            "extra": "mean: 1.6486390809317835 usec\nrounds: 62977"
           }
         ]
       }
