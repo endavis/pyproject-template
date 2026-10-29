@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793298902087,
+  "lastUpdate": 1793299383524,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -20886,6 +20886,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8602702204543167e-7",
             "extra": "mean: 1.5866542722699075 usec\nrounds: 77137"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a59de4cdcf419037e9b0f6c06f4899337d7ccd16",
+          "message": "chore: run the hook's checkout/restore scan on every token pass and read $' words as bash does (merges PR #1118, addresses #1117)\n\n* chore: run the hook's checkout/restore scan on every token pass and read $' words as bash does\n\n- check_command() runs the checkout/restore argument scan on the\n  tokenize() and redirect-token passes again, as well as on the exact\n  operator tokens, so that pass only adds coverage.\n- _exact_operator_tokens() gives a word holding $'...' the text bash\n  passes: single quotes are literal, double quotes lose their quotes and\n  escapes, $'...' segments are ANSI-C decoded (\\xHH, octal, \\e, ...) and a\n  bare backslash escapes the next character. A word it cannot read that\n  way (non-ASCII, \\c, a malformed escape) keeps its raw text.\n\nTwo #1103 tests change with this: `git checkout main & cat\n.envrc.local.example` is blocked again, because the older passes don't end\nthe scan at `&`, and `a $'x y'` now reads as `x y`.\n\nAddresses #1117\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n* chore: decode $'...' bodies in the hook with only the escapes bash defines\n\nReplace the unicode_escape codec with _decode_ansi_c(), which handles the\nsingle-character escapes, 1-3 octal digits masked to a byte, \\x with 1-2\nhex digits and \\u/\\U, as bash does. Any other escape (\\N, \\c, a bare \\x)\nor a non-ASCII result returns None, so the word keeps its raw text.\n\nAddresses #1117\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbVAcEwCz54qUS345z\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-29T18:42:21Z",
+          "tree_id": "44169368ac8eacf56b077e8dc8346f6bf4caa65d",
+          "url": "https://github.com/endavis/pyproject-template/commit/a59de4cdcf419037e9b0f6c06f4899337d7ccd16"
+        },
+        "date": 1793299382427,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 17175690.37510818,
+            "unit": "iter/sec",
+            "range": "stddev: 7.979648829469423e-9",
+            "extra": "mean: 58.2218227134117 nsec\nrounds: 185564"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 18824341.637887295,
+            "unit": "iter/sec",
+            "range": "stddev: 5.749748527367832e-9",
+            "extra": "mean: 53.12270778104262 nsec\nrounds: 196541"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11387647.0799931,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0485845654475054e-8",
+            "extra": "mean: 87.81445306264321 nsec\nrounds: 127894"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3911833.656093918,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9379214442319907e-8",
+            "extra": "mean: 255.63459183449274 nsec\nrounds: 41417"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 898849.5859916881,
+            "unit": "iter/sec",
+            "range": "stddev: 1.419882195392146e-7",
+            "extra": "mean: 1.1125331930778097 usec\nrounds: 115741"
           }
         ]
       }
