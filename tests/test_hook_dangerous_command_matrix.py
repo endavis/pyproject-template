@@ -637,6 +637,28 @@ BASH_CASES = [
     ("dd if=evil of=.envrc.local", "BLOCK", "dd of= literal"),
     ("echo x > .envrc.@(local)", "BLOCK", "extglob redirect target"),
     ("cp src/* build/", "ALLOW", "star source glob into a directory"),
+    # Patch writers (#1105): forms that need no file on disk
+    ("patch -o .bashrc a b", "BLOCK", "patch -o names a protected file"),
+    ("patch --dry-run -o .envrc.local a b", "BLOCK", "patch --dry-run still writes -o"),
+    ("patch .envrc.local fix.patch", "BLOCK", "patch ORIGFILE is protected"),
+    ("patch -p1", "BLOCK", "patch from stdin is unresolvable"),
+    ("sudo patch -p1 < missing.patch", "BLOCK", "unreadable patch file is unresolvable"),
+    ("xargs patch -p1", "BLOCK", "xargs patch has no patch source"),
+    ("patch -b -z .local -p1 < missing.patch", "BLOCK", "backup suffix is unresolvable"),
+    ("git apply", "BLOCK", "git apply from stdin"),
+    ("git apply --unsafe-paths fix.patch", "BLOCK", "git apply --unsafe-paths"),
+    ("git am --continue", "BLOCK", "git am --continue applies queued patches"),
+    ("git apply --check fix.patch", "ALLOW", "git apply --check writes nothing"),
+    ("git apply --stat fix.patch", "ALLOW", "git apply --stat writes nothing"),
+    ("git am --abort", "ALLOW", "git am --abort applies no patch"),
+    ("patch --dry-run -p1 < x.patch", "ALLOW", "patch --dry-run without -o writes nothing"),
+    ("patch src/a.py fix.patch", "ALLOW", "patch an unprotected ORIGFILE"),
+    ("echo the patch is ready", "ALLOW", "patch word followed by other words"),
+    (
+        "uv version --bump patch",
+        "BLOCK",
+        "accepted over-match: a bare trailing `patch` word reads as patch from stdin",
+    ),
     ("git checkout -- .", "ALLOW", "checkout the index over the root"),
     (
         # The allowlist applies only to the top-level command: a wrapper can

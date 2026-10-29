@@ -1850,6 +1850,123 @@ def test_heredoc_payloads_join_continued_lines(
     assert hook._heredoc_payloads(command) == expected
 
 
+# --- patch / git apply / git am as file writers (#1105) ---
+
+_PATCH_STAND_IN = ".envrc.local.example"
+
+
+def _unified(*paths: str) -> bytes:
+    return "".join(f"--- a/{p}\n+++ b/{p}\n@@ -1 +1 @@\n-a\n+b\n" for p in paths).encode()
+
+
+@pytest.fixture
+def patch_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    """A working directory holding a safe and a protected patch file."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "ok.patch").write_bytes(_unified("src/foo.py"))
+    (tmp_path / "bad.patch").write_bytes(_unified(".bashrc"))
+    (tmp_path / "example.patch").write_bytes(_unified(".envrc.local.example"))
+    (tmp_path / "settings.patch").write_bytes(_unified(".claude/settings.json"))
+    (tmp_path / "fish.patch").write_bytes(_unified("a/.config/fish/config.fish"))
+    (tmp_path / "bare.patch").write_bytes(_unified("config.fish"))
+    return tmp_path
+
+
+def _patch_targets(hook: types.ModuleType, command: str, *, read: bool = True) -> list[list[str]]:
+    """The write targets on each of the three token passes."""
+    return [
+        hook._bash_confirmed_write_targets(tokens, read_patch_files=read, **flags)
+        for tokens, flags in _restore_token_lists(hook, command)
+    ]
+
+
+def _assert_patch_blocks(hook: types.ModuleType, command: str, *, read: bool = True) -> None:
+    for targets in _patch_targets(hook, command, read=read):
+        assert any(hook._matches_env_persistence_target(t, dynamic=True) for t in targets), command
+    if read:
+        assert hook.check_command(command)[0], command
+
+
+def _assert_patch_allows(hook: types.ModuleType, command: str) -> None:
+    for targets in _patch_targets(hook, command):
+        assert targets == [], command
+    assert hook.check_command(command) == (False, ""), command
+
+
+@pytest.mark.parametrize(
+    ("data", "expected"),
+    [
+        (_unified("src/a.py"), {"a/src/a.py", "b/src/a.py"}),
+        (
+            b"diff --git a/x b/y\nsimilarity index 100%\nrename from x\nrename to y\n",
+            {"x", "y", "a/x", "b/y"},
+        ),
+        (b"diff --git a/.bashrc b/.bashrc\nGIT binary patch\nliteral 0\n", {"a/.bashrc"}),
+        (b"diff --git a/f b/f\nold mode 100644\nnew mode 100755\n", {"a/f", "b/f"}),
+        (b"*** old/f.txt\t2020-01-01\n--- new/f.txt\n", {"old/f.txt", "new/f.txt"}),
+        (b"Index: sub/f.txt\n====\n", {"sub/f.txt"}),
+        (b"+++ b/f.txt\t2020-01-01 00:00:00\n", {"b/f.txt"}),
+        (b'+++ "b/\\303\\251.txt"\n', {"b/\u00e9.txt"}),
+        (b'+++ "b/bad\\q.txt"\n', None),
+        (b'+++ "unterminated\n', None),
+        (b"", None),
+        (b"1,3c\nfoo\n.\nw\nq\n", None),
+    ],
+)
+def test_patch_header_paths(hook: types.ModuleType, data: bytes, expected: set[str] | None) -> None:
+    paths = hook._patch_header_paths(data)
+    if expected is None:
+        assert paths is None
+    else:
+        assert paths is not None
+        assert expected <= set(paths)
+
+
+def test_unquote_c_path(hook: types.ModuleType) -> None:
+    assert hook._unquote_c_path("plain") == "plain"
+    assert hook._unquote_c_path('"a\\tb"') == "a\tb"
+    assert hook._unquote_c_path('"a\\12"') is None
+    assert hook._unquote_c_path('"a"b"') is None
+    assert hook._unquote_c_path('"a\\"') is None
+
+
+def test_read_patch_paths_rejects_what_it_cannot_trust(
+    hook: types.ModuleType, patch_dir: Path
+) -> None:
+    import os
+
+    if hasattr(os, "mkfifo"):  # POSIX only
+        os.mkfifo(patch_dir / "pipe.patch")
+        assert hook._read_patch_paths("pipe.patch", base_dir=None, mbox=False) is None
+    (patch_dir / "dir.patch").mkdir()
+    (patch_dir / "empty.patch").write_bytes(b"")
+    assert hook._read_patch_paths("dir.patch", base_dir=None, mbox=False) is None
+    assert hook._read_patch_paths("missing.patch", base_dir=None, mbox=False) is None
+    assert hook._read_patch_paths("empty.patch", base_dir=None, mbox=False) is None
+    assert hook._read_patch_paths("/dev/null", base_dir=None, mbox=False) is None
+    assert hook._read_patch_paths("ok.patch", base_dir=None, mbox=False)
+    assert hook._read_patch_paths("ok.patch", base_dir=str(patch_dir), mbox=False)
+
+
+def test_read_patch_paths_size_limit(
+    hook: types.ModuleType, patch_dir: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    monkeypatch.setattr(hook, "_PATCH_READ_LIMIT", len(_unified("src/foo.py")) - 1)
+    assert hook._read_patch_paths("ok.patch", base_dir=None, mbox=False) is None
+    monkeypatch.setattr(hook, "_PATCH_READ_LIMIT", len(_unified("src/foo.py")))
+    assert hook._read_patch_paths("ok.patch", base_dir=None, mbox=False)
+
+
+@pytest.mark.parametrize("encoding", ["base64", "Quoted-Printable", "BASE64"])
+def test_read_patch_paths_mbox_transfer_encoding(
+    hook: types.ModuleType, patch_dir: Path, encoding: str
+) -> None:
+    body = f"From a\nContent-Transfer-Encoding: {encoding}\n\n".encode() + _unified("src/foo.py")
+    (patch_dir / "enc.mbox").write_bytes(body)
+    assert hook._read_patch_paths("enc.mbox", base_dir=None, mbox=True) is None
+    assert hook._read_patch_paths("enc.mbox", base_dir=None, mbox=False)
+
+
 @pytest.mark.parametrize(
     "command",
     [
@@ -1862,3 +1979,327 @@ def test_heredoc_payloads_join_continued_lines(
 )
 def test_heredoc_continued_command_is_checked(hook: types.ModuleType, command: str) -> None:
     assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git apply bad.patch",
+        "git apply example.patch",
+        "git apply fish.patch",
+        "git apply -R bad.patch",
+        "git apply -p0 bad.patch",
+        "git apply -p1 bad.patch",
+        "git apply -Rp1 bad.patch",
+        "git apply --cached bad.patch",
+        "git apply --index bad.patch",
+        "git apply --3way bad.patch",
+        "git apply --check --apply bad.patch",
+        "git apply --stat --apply bad.patch",
+        "git apply --check --no-check bad.patch",
+        "git apply --directory=.config/fish bare.patch",
+        "git apply --directory .config/fish bare.patch",
+        "git apply --build-fake-ancestor=.envrc.local ok.patch",
+        "git apply --check --build-fake-ancestor=.envrc.local ok.patch",
+        "git apply < bad.patch",
+        "git apply - < bad.patch",
+        "git apply<bad.patch",
+        "git apply ok.patch bad.patch",
+        "sudo git apply bad.patch",
+        "git apply bad.patch 2>/dev/null",
+        "git apply --exclude x bad.patch",
+    ],
+)
+def test_git_apply_blocks_protected_targets(
+    hook: types.ModuleType, patch_dir: Path, command: str
+) -> None:
+    if command == "git apply<bad.patch":
+        # glued: only the redirect-splitting passes see the subcommand
+        for tokens, flags in _restore_token_lists(hook, command)[:2]:
+            assert hook._bash_confirmed_write_targets(tokens, read_patch_files=True, **flags)
+        assert hook.check_command(command)[0]
+        return
+    _assert_patch_blocks(hook, command)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git apply",
+        "git apply -",
+        "git apply < missing.patch",
+        "git apply --unsafe-paths ok.patch",
+        "git apply --unsafe-paths --no-unsafe-paths --unsafe-paths ok.patch",
+        'git apply "$P"',
+        "git apply *.patch",
+        "git apply ok.patch <<EOF",
+        "git apply missing.patch",
+        "printf x > ok.patch && git apply ok.patch",
+        "cd sub && git apply ok.patch",
+        "git -C sub apply ok.patch",
+        "env -C sub git apply ok.patch",
+        "xargs git apply",
+        "cat ok.patch | git apply",
+        "git apply --apply --check --no-check",
+    ],
+)
+def test_git_apply_unresolvable_is_blocked(
+    hook: types.ModuleType, patch_dir: Path, command: str
+) -> None:
+    assert hook.check_command(command)[0], command
+
+
+def test_git_apply_wrapped_payload_is_unresolvable(hook: types.ModuleType, patch_dir: Path) -> None:
+    assert hook.check_command("bash -c 'git apply ok.patch'")[0]
+    assert hook.check_command("git apply ok.patch") == (False, "")
+
+
+def test_git_apply_after_cd_allows_absolute_path(hook: types.ModuleType, patch_dir: Path) -> None:
+    # as_posix(): a shell reads the backslashes of a Windows path as escapes
+    command = f"git apply {patch_dir.as_posix()}/ok.patch"
+    _assert_patch_allows(hook, command)
+
+
+def test_patch_not_read_for_multiline_command(hook: types.ModuleType, patch_dir: Path) -> None:
+    assert hook.check_command("echo hi\ngit apply ok.patch")[0]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git apply ok.patch",
+        "git apply < ok.patch",
+        "git apply - < ok.patch",
+        "git apply -p1 ok.patch",
+        "git apply --unsafe-paths --no-unsafe-paths ok.patch",
+        "git apply --check bad.patch",
+        "git apply --stat bad.patch",
+        "git apply --numstat bad.patch",
+        "git apply --summary bad.patch",
+        "git apply --stat --no-apply bad.patch",
+        "git apply --check --unsafe-paths bad.patch",
+        "git apply --check",
+        "git apply --stat < nothing.patch",
+        "git apply ok.patch 2>/dev/null",
+    ],
+)
+def test_git_apply_allowed(hook: types.ModuleType, patch_dir: Path, command: str) -> None:
+    _assert_patch_allows(hook, command)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git am bad.patch",
+        "git am --3way bad.patch",
+        "git am -3 -s bad.patch",
+        "git am < bad.patch",
+        "git am --continue",
+        "git am --resolved",
+        "git am -r",
+        "git am --skip",
+        "git am --retry",
+        "git am",
+        "git am enc.mbox",
+        "git am maildir",
+    ],
+)
+def test_git_am_blocks(hook: types.ModuleType, patch_dir: Path, command: str) -> None:
+    body = b"From a\nContent-Transfer-Encoding: base64\n\n" + _unified("src/foo.py")
+    (patch_dir / "enc.mbox").write_bytes(body)
+    (patch_dir / "maildir").mkdir()
+    for targets in _patch_targets(hook, command):
+        assert any(hook._matches_env_persistence_target(t, dynamic=True) for t in targets), command
+    assert hook.check_command(command)[0], command
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git am --abort",
+        "git am --quit",
+        "git am --show-current-patch",
+        "git am --show-current-patch=diff",
+        "git am ok.patch",
+        "git am -3 ok.patch",
+        "git am --directory=src ok.patch",
+    ],
+)
+def test_git_am_allowed(hook: types.ModuleType, patch_dir: Path, command: str) -> None:
+    _assert_patch_allows(hook, command)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "patch .envrc.local fix.patch",
+        "patch -p1 .bashrc",
+        "patch -o .bashrc a b",
+        "patch --output=.envrc.local a b",
+        "patch --output .envrc a b",
+        "patch --dry-run -o .envrc.local a b",
+        "patch -r .envrc x y",
+        "patch --reject-file=.envrc x y",
+        "patch -p1 < bad.patch",
+        "patch -p1 <bad.patch",
+        "patch -i bad.patch",
+        "patch --input=bad.patch",
+        "patch -ibad.patch",
+        "patch -d . -i bad.patch",
+        "patch -d sub -i ../bad.patch",
+        "patch -p1",
+        "patch",
+        "patch -b -z .local -p1 < ok.patch",
+        "patch -B x -p1 < ok.patch",
+        "patch -Y x -p1 < ok.patch",
+        "patch --suffix=.x -p1 < ok.patch",
+        "patch .envrc.loca? fix.patch",
+        "sudo patch -p1 < bad.patch",
+        "timeout 5 patch -p1 < bad.patch",
+        "env X=1 patch -p1 < bad.patch",
+        "xargs patch -p1",
+        "cat bad.patch | patch -p1",
+        "patch -p1 < ok.patch && echo done; patch -p1 < bad.patch",
+        "patch -p1 -i bad.patch 2>/dev/null",
+    ],
+)
+def test_patch_command_blocks(hook: types.ModuleType, patch_dir: Path, command: str) -> None:
+    (patch_dir / "sub").mkdir(exist_ok=True)
+    if command in {"patch -p1 <bad.patch"}:
+        for tokens, flags in _restore_token_lists(hook, command)[:2]:
+            assert hook._bash_confirmed_write_targets(tokens, read_patch_files=True, **flags)
+        assert hook.check_command(command)[0]
+        return
+    if "&&" in command:
+        assert hook.check_command(command)[0]
+        return
+    _assert_patch_blocks(hook, command)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "patch src/a.py fix.patch",
+        "patch -o out.py src/a.py fix.patch",
+        "patch -o - src/a.py fix.patch",
+        "patch --dry-run -p1 < x.patch",
+        "patch --dry-run -p1",
+        "patch -s --dry-run src/a.py",
+        "patch -p1 < ok.patch",
+        "patch -Np1 -i ok.patch",
+        "patch -p 1 -i ok.patch",
+        "patch -p1 < ok.patch 2>/dev/null",
+        "patch --version",
+        "patch --help",
+        "patch -v",
+        "echo the patch is ready",
+    ],
+)
+def test_patch_command_allowed(hook: types.ModuleType, patch_dir: Path, command: str) -> None:
+    _assert_patch_allows(hook, command)
+
+
+def test_patch_without_read_permission_uses_stand_in(
+    hook: types.ModuleType, patch_dir: Path
+) -> None:
+    for command in ("git apply ok.patch", "patch -p1 < ok.patch", "git am ok.patch"):
+        for targets in _patch_targets(hook, command, read=False):
+            assert targets == [_PATCH_STAND_IN], command
+
+
+def test_patch_command_separator_ends_the_scan(hook: types.ModuleType, patch_dir: Path) -> None:
+    for command in ("git apply ok.patch; echo bad.patch", "patch -p1 < ok.patch && echo x"):
+        _assert_patch_allows(hook, command)
+
+
+def test_patch_glued_separators_do_not_hide_a_target(
+    hook: types.ModuleType, patch_dir: Path
+) -> None:
+    for command in ("true;git apply bad.patch", "x&&patch -p1 <bad.patch;", "true;patch -p1"):
+        assert hook.check_command(command)[0], command
+
+
+def test_patch_reader_is_not_used_in_nested_payload(
+    hook: types.ModuleType, patch_dir: Path
+) -> None:
+    assert hook.check_command("patch -p1 < ok.patch", _depth=1)[0]
+    assert not hook.check_command("patch -p1 < ok.patch", _depth=0)[0]
+
+
+def test_patch_naming_ai_cli_settings_is_a_target_without_blocking(
+    hook: types.ModuleType, patch_dir: Path
+) -> None:
+    """Like `cp`, a settings file needs the literal variable name to block."""
+    for targets in _patch_targets(hook, "git apply settings.patch"):
+        assert "b/.claude/settings.json" in targets
+    assert hook.check_command("git apply settings.patch") == (False, "")
+
+
+@pytest.mark.parametrize(
+    "header",
+    [
+        "+++ b/.bashrc 2024-01-01 00:00:00.000000000 +0000",
+        "--- a/.bashrc  extra",
+        "*** .bashrc Mon Jan  1 00:00:00 2024",
+    ],
+)
+def test_patch_header_paths_split_at_a_blank(hook: types.ModuleType, header: str) -> None:
+    paths = hook._patch_header_paths((header + "\n").encode())
+    assert paths is not None
+    assert any(hook._is_env_persistence_target(p) for p in paths)
+
+
+@pytest.mark.parametrize(
+    "headers",
+    [
+        "Content-Transfer-Encoding: base64",
+        "content-transfer-encoding:BASE64",
+        "Content-Transfer-Encoding:\n base64",
+        "Content-Transfer-Encoding: 7bit\n base64",
+        "Content-Transfer-Encoding: x-uuencode",
+        'Content-Type: multipart/mixed; boundary="b"',
+    ],
+)
+def test_read_patch_paths_mbox_decoded_bodies_are_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, headers: str
+) -> None:
+    (patch_dir / "m.mbox").write_bytes(f"From a\n{headers}\n\n".encode() + _unified("src/foo.py"))
+    assert hook._read_patch_paths("m.mbox", base_dir=None, mbox=True) is None
+
+
+@pytest.mark.parametrize(
+    "headers", ["Content-Transfer-Encoding: 8bit", "Content-Transfer-Encoding: 7bit"]
+)
+def test_read_patch_paths_mbox_plain_encodings_are_read(
+    hook: types.ModuleType, patch_dir: Path, headers: str
+) -> None:
+    (patch_dir / "m.mbox").write_bytes(f"From a\n{headers}\n\n".encode() + _unified("src/foo.py"))
+    assert hook._read_patch_paths("m.mbox", base_dir=None, mbox=True)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "SIMPLE_BACKUP_SUFFIX=.local patch -b -p1 -i ok.patch",
+        "env VERSION_CONTROL=simple patch -p1 -i ok.patch",
+        "PATCH_VERSION_CONTROL=t patch -p1 < ok.patch",
+    ],
+)
+def test_patch_backup_naming_from_the_environment_is_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, command: str
+) -> None:
+    for targets in _patch_targets(hook, command):
+        assert _PATCH_STAND_IN in targets
+    assert hook.check_command(command)[0]
+
+
+@pytest.mark.parametrize(
+    "name", ["SIMPLE_BACKUP_SUFFIX", "VERSION_CONTROL", "PATCH_VERSION_CONTROL"]
+)
+def test_patch_backup_naming_inherited_by_the_hook_is_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, monkeypatch: pytest.MonkeyPatch, name: str
+) -> None:
+    monkeypatch.setenv(name, ".local")
+    assert hook.check_command("patch -p1 -i ok.patch")[0]
+    monkeypatch.delenv(name)
+    assert not hook.check_command("patch -p1 -i ok.patch")[0]
