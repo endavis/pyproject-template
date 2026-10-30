@@ -81,6 +81,9 @@ resolve it yourself. The user answers the orchestrator, which restarts that issu
 same prompt plus the answer. "Implement issue N" would open its PR outside the queue, so it is only
 for taking an issue out of the run. The push runs no CI: CI starts with the PR.
 
+When you relay a review finding to a running per-issue agent, relay the finding itself, not a
+narrowed fix. The agent must still meet every requirement of the issue or return `ASK-FIRST:`.
+
 ### Step 4: Open PRs one at a time
 
 Phase 2 starts when the first branch finishes phase 1, while other phase 1 agents may still run. The
@@ -141,8 +144,8 @@ A headless Codex host (`codex exec -a never`) can read GitHub through `.codex/ru
 ## Ask-first triggers
 
 Stop and ask the user when a phase 2 rebase conflict is not a union of both sides, or any
-trigger from implement-issue fires (a new dependency, scope growth, an architecture choice, a
-breaking change, a failing test that would need changing, a blocked command).
+trigger from implement-issue fires (a new dependency, scope growth, a requirement that cannot be met
+as written, an architecture choice, a breaking change, a failing test that would need changing, a blocked command).
 
 ## Never
 
