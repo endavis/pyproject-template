@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793368424311,
+  "lastUpdate": 1793368752364,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21712,6 +21712,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7048770481092705e-7",
             "extra": "mean: 1.6571163401799613 usec\nrounds: 63096"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "945e49e6d008ffb38b807209916060a25fd310a9",
+          "message": "fix: end a write command's operands at the next command boundary in the env-persistence check (merges PR #1142, addresses #1131)\n\nThe destination wildcard rule for cp, mv, install, rsync, ln and dd read\noperands past a glued `;`, `&&` or `||` and past an unquoted newline, so an\nexpansion in a later command was taken as the write destination. The scan\nnow stops at the boundary; expansions inside the command's own operands are\nstill read as wildcards.\n\nAddresses #1131\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T13:58:28Z",
+          "tree_id": "3364711b71f53af07dba012f10440f7aec34b75a",
+          "url": "https://github.com/endavis/pyproject-template/commit/945e49e6d008ffb38b807209916060a25fd310a9"
+        },
+        "date": 1793368750782,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9273204.514219834,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3222391906365221e-8",
+            "extra": "mean: 107.83758715410272 nsec\nrounds: 99020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10347890.611005764,
+            "unit": "iter/sec",
+            "range": "stddev: 1.197077253110218e-8",
+            "extra": "mean: 96.63805287392819 nsec\nrounds: 108144"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6798044.694160561,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4213812439726686e-8",
+            "extra": "mean: 147.10112171798283 nsec\nrounds: 71444"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2021409.1792617962,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1352265773665479e-7",
+            "extra": "mean: 494.704392489794 nsec\nrounds: 199243"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 563934.4607959508,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8798291389579137e-7",
+            "extra": "mean: 1.7732557052615223 usec\nrounds: 59524"
           }
         ]
       }
