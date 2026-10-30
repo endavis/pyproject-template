@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793364724369,
+  "lastUpdate": 1793365301886,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21476,6 +21476,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2464941500279446e-7",
             "extra": "mean: 1.2501008504880675 usec\nrounds: 94769"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6072fc28f1c807b2b1e4cebacc62fe41fa80588f",
+          "message": "chore: normalise the command word once in the hook so every rule sees the same command name (merges PR #1136, addresses #1132)\n\n* chore: normalise the command word once in the hook so every rule sees the same command name\n\nReduce each path-qualified command word (/usr/bin/git, ./bin/gh) to its\nbasename in one helper, _normalise_command_words, applied to every token\nlist check_command hands to a rule. Rules that matched git, gh or patch\nliterally now give the same result for the path-qualified form.\n\nAddresses #1132\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: normalise only the command-position word in the hook, leaving operands unchanged\n\nRewrite a path-qualified command word to its basename only where a command\nbegins: first word, after a separator, or after a prefix wrapper, its options\nor an assignment. Operand and path tokens keep their original text so\npath-based checks see the path the shell uses. Tests cover operand paths that\nend in a command word.\n\nAddresses #1132\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: give path-based checks the original tokens and the command-word rules the normalised ones\n\nNormalise a path-qualified rule word wherever it sits, so a rule word after\na keyword, wrapper, option or substitution is still reduced to its basename.\nOnly the rules that key on a command word read the normalised tokens; checks\nthat treat a token as a filesystem path (patch sources, redirect and stdin\ntargets, credential-store paths, persistence targets) read the original\ntokens. Tests cover both sides.\n\nAddresses #1132\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T13:01:02Z",
+          "tree_id": "b498dcdc8c7888882cde5d4b3b600d9fcd077692",
+          "url": "https://github.com/endavis/pyproject-template/commit/6072fc28f1c807b2b1e4cebacc62fe41fa80588f"
+        },
+        "date": 1793365300819,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9040779.205475003,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9543977943405973e-8",
+            "extra": "mean: 110.60993497047362 nsec\nrounds: 91651"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9990048.390462209,
+            "unit": "iter/sec",
+            "range": "stddev: 2.030687591239814e-8",
+            "extra": "mean: 100.09961522856378 nsec\nrounds: 103542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6459843.852409134,
+            "unit": "iter/sec",
+            "range": "stddev: 3.22765121384441e-8",
+            "extra": "mean: 154.80250341145012 nsec\nrounds: 66721"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2218258.5106546683,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0178760968227912e-7",
+            "extra": "mean: 450.8040858163428 nsec\nrounds: 197239"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 585051.1786130668,
+            "unit": "iter/sec",
+            "range": "stddev: 3.243039039749173e-7",
+            "extra": "mean: 1.7092521758021555 usec\nrounds: 62345"
           }
         ]
       }
