@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793354803137,
+  "lastUpdate": 1793355522739,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21299,6 +21299,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4906652605598856e-7",
             "extra": "mean: 1.643423997551054 usec\nrounds: 63719"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "03f6f07a9187306f0b7960092564ca54c0d3c75a",
+          "message": "feat: add implement-issues to run several issues in parallel, each in its own worktree (merges PR #1127, addresses #1097)\n\n\"implement issues A, B\" runs a pre-flight that checks every issue is open\nand flags overlapping file sets, creates one worktree per issue one after\nanother, and runs implement-issue for each in a background general-purpose\nagent (default 2 at a time, --max=N overrides). An ASK-FIRST: return stops\nthat issue only. Parallel mode is Claude Code only; other hosts run the\nissues one after another. ADR-9028 records the decisions.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T10:18:00Z",
+          "tree_id": "8b77fcef4ebe1b65045d7fcea1a8b439de7319e4",
+          "url": "https://github.com/endavis/pyproject-template/commit/03f6f07a9187306f0b7960092564ca54c0d3c75a"
+        },
+        "date": 1793355521348,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19647553.354623534,
+            "unit": "iter/sec",
+            "range": "stddev: 5.6101573439144306e-9",
+            "extra": "mean: 50.896922479392394 nsec\nrounds: 196967"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20342394.02992727,
+            "unit": "iter/sec",
+            "range": "stddev: 7.0257249049907234e-9",
+            "extra": "mean: 49.15842248109159 nsec\nrounds: 198531"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12186091.091159727,
+            "unit": "iter/sec",
+            "range": "stddev: 7.722886465949167e-9",
+            "extra": "mean: 82.06076850397413 nsec\nrounds: 130175"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4318455.320046279,
+            "unit": "iter/sec",
+            "range": "stddev: 5.0031224781174076e-8",
+            "extra": "mean: 231.56428071815355 nsec\nrounds: 44892"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1058143.4427923628,
+            "unit": "iter/sec",
+            "range": "stddev: 9.296421950328277e-8",
+            "extra": "mean: 945.0514548018873 nsec\nrounds: 109362"
           }
         ]
       }
