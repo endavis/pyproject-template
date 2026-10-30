@@ -2135,7 +2135,9 @@ def _patch_source_targets(
         named.extend(paths)
     hits: list[str] = []
     for path in named:
-        for candidate in (path, posixpath.join(root, path)) if root else (path,):
+        for candidate in (
+            (path, posixpath.normpath(posixpath.join(root, path))) if root else (path,)
+        ):
             if _is_env_persistence_target(candidate):
                 hits.append(candidate)
     return hits
@@ -2207,19 +2209,33 @@ def _split_stdin_sources(
 def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str | None, bool]:
     """Return ``(root, unresolvable)``: where git writes a patch's paths (#1133).
 
-    ``-C`` and ``--work-tree`` among the options before the subcommand are
-    applied in order, each joined onto the directory so far (an absolute one
-    resets it); ``--work-tree`` beats ``GIT_WORK_TREE=<dir>`` assigned before
-    ``git``. ``--git-dir`` alone moves no work tree. A value with an expansion
-    or an empty value, or ``GIT_WORK_TREE`` set any way but a literal
-    assignment, is *unresolvable*, so the caller fails closed.
+    Every ``-C`` among the options before the subcommand is joined in order (an
+    absolute one resets the directory), wherever it stands. The last
+    ``--work-tree`` (else a literal ``GIT_WORK_TREE=<dir>`` assigned before
+    ``git``) is then resolved against that final directory, and the result is
+    normalised (``.`` and ``..`` segments folded). A value with an expansion, an
+    empty value, ``GIT_WORK_TREE`` set any way but a literal assignment, or a
+    directory that normalises to above the current one is *unresolvable*, so
+    the caller fails closed. So is a work tree the repository config or git dir
+    may move (``--git-dir``, ``GIT_DIR``, ``GIT_CONFIG*``, ``--config-env``,
+    ``-c core.worktree=``, an include setting) when no literal ``--work-tree``
+    or ``GIT_WORK_TREE`` names it; the git dir's config is not read.
     """
     env_tree: str | None = None
+    moved = False
     for t in tokens[:git_idx]:
+        lowered = t.lower()
         if t.startswith("GIT_WORK_TREE="):
             env_tree = t.partition("=")[2]
         elif "GIT_WORK_TREE" in t:
             return None, True
+        elif (
+            "GIT_DIR" in t
+            or "GIT_CONFIG" in t
+            or "core.worktree" in lowered
+            or "include" in lowered
+        ):
+            moved = True
     cwd = ""
     tree: str | None = None
     opts = tokens[git_idx + 1 : sub]
@@ -2227,29 +2243,40 @@ def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str 
     while i < len(opts):
         t = opts[i]
         i += 1
-        value: str | None = None
-        if t == "-C" or t == "--work-tree":
+        # (option name, value) for the options that matter; else skip like
+        # `_git_subcommand_index` does
+        name, value = t, None
+        if t in _GIT_GLOBAL_OPTS_WITH_VALUE:
             value = opts[i] if i < len(opts) else ""
             i += 1
-        elif t.startswith("-C"):
-            value = t[2:]
-        elif t.startswith("--work-tree="):
-            value = t.partition("=")[2]
-        elif t in {"-c", "--git-dir", "--namespace", "--super-prefix", "--config-env"}:
-            i += 1
-        if value is None:
-            continue
-        if not value or any(c in _DYNAMIC_CHARS for c in value):
+        elif t.startswith("-C") or t.startswith("-c"):
+            name, value = t[:2], t[2:]
+        elif t.startswith("--") and "=" in t:
+            name, _, value = t.partition("=")
+        if name in {"-c", "--config-env"}:
+            key = (value or "").partition("=")[0].lower()
+            moved = moved or key.startswith("core.worktree") or "include" in key
+        elif name == "--git-dir":
+            moved = True
+        elif name in {"-C", "--work-tree"}:
+            if not value or any(c in _DYNAMIC_CHARS for c in value):
+                return None, True
+            if name == "-C":
+                cwd = posixpath.join(cwd, value)
+            else:
+                tree = value
+    if tree is None:
+        tree = env_tree
+        if tree is not None and (not tree or any(c in _DYNAMIC_CHARS for c in tree)):
             return None, True
-        if t.startswith("-C"):
-            cwd = posixpath.join(cwd, value)
-        else:
-            tree = posixpath.join(cwd, value)
-    if tree is None and env_tree is not None:
-        if not env_tree or any(c in _DYNAMIC_CHARS for c in env_tree):
-            return None, True
-        tree = posixpath.join(cwd, env_tree)
-    return (tree if tree is not None else cwd) or None, False
+    if tree is None and moved:
+        return None, True
+    root = posixpath.normpath(posixpath.join(cwd, tree) if tree is not None else cwd or ".")
+    if root == "..":
+        return None, True
+    if root.startswith("../"):
+        return None, True
+    return (None if root == "." else root), False
 
 
 def _git_patch_targets(
@@ -2356,6 +2383,12 @@ def _git_patch_targets(
         return [*targets, _ENVRC_EXAMPLE]
     if tree is not None:
         root = posixpath.join(tree, root) if root else tree
+    if root:
+        root = posixpath.normpath(root)
+        if root == ".":
+            root = None
+        elif root == ".." or root.startswith("../"):
+            return [*targets, _ENVRC_EXAMPLE]
     return targets + _patch_source_targets(
         [(src, None) for src in operands + stdin_files],
         read_files=read_files and _is_first_command(tokens, git_idx),

@@ -1942,7 +1942,6 @@ def test_git_apply_work_tree_protected_target_blocks(
         "GIT_WORK_TREE=docs git apply {p}",
         "git --git-dir=.git --work-tree=docs apply {p}",
         "GIT_WORK_TREE=.config/fish git --work-tree=docs apply {p}",
-        "git --git-dir=.config/fish apply {p}",
     ],
 )
 def test_git_apply_work_tree_unprotected_target_allows(
@@ -1974,6 +1973,170 @@ def test_git_apply_unresolvable_work_tree_blocks(
     tokens = hook.tokenize(command)
     git_idx = tokens.index("git")
     assert hook._git_patch_targets(tokens, git_idx, read_files=True) == [_PATCH_STAND_IN]
+
+
+_COVERED_VALUE_OPTIONS = ["--attr-source", "--exec-path", "--namespace", "--super-prefix"]
+
+
+def _wt_targets(hook: types.ModuleType, command: str) -> list[str]:
+    tokens = hook.tokenize(command)
+    targets: list[str] = hook._git_patch_targets(tokens, tokens.index("git"), read_files=True)
+    return targets
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git --work-tree=fish -C .config apply {p}",
+        "git --work-tree fish -C .config apply {p}",
+        "GIT_WORK_TREE=fish git -C .config apply {p}",
+        "git --work-tree=../.config/fish -C docs apply {p}",
+        "git -C .config/../.config --work-tree=fish apply {p}",
+        "git --work-tree=.config/../.config/fish apply {p}",
+        "git -C .config/../.config/fish apply {p}",
+        "GIT_WORK_TREE=.config/../.config/fish git apply {p}",
+        "git -C ./.config/./fish apply {p}",
+        "git -C docs -C /repo/.config/fish apply {p}",
+        "git --git-dir=.git --work-tree=.config/fish -c core.worktree=docs apply {p}",
+        "git -ccore.worktree=docs --work-tree=.config/fish apply {p}",
+        "GIT_DIR=.git GIT_WORK_TREE=.config/fish git apply {p}",
+    ],
+)
+def test_git_apply_work_tree_order_and_dots_block(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    """``-C`` applies wherever it stands; ``.``/``..`` segments are folded (#1133)."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    _assert_patch_blocks(hook, template.format(p=patch_dir / "wt.patch"))
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git --work-tree=fish -C docs apply {p}",
+        "git -C docs --work-tree=fish apply {p}",
+        "git --work-tree=../fish -C .config apply {p}",
+        "git --work-tree=.config/../docs apply {p}",
+        "git -C .config/../docs apply {p}",
+        "GIT_WORK_TREE=.config/../docs git apply {p}",
+        "git -C .config/fish -C /repo/docs apply {p}",
+        "git -C .config/fish/.. apply {p}",
+    ],
+)
+def test_git_apply_work_tree_order_and_dots_allow(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    _assert_patch_allows(hook, template.format(p=patch_dir / "wt.patch"))
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git -C .. apply {p}",
+        "git -C docs/../.. apply {p}",
+        "git --work-tree=.. apply {p}",
+        "git --work-tree=../x apply {p}",
+        "GIT_WORK_TREE=../x git apply {p}",
+        "git -C docs --work-tree=../../x apply {p}",
+        "git apply --directory=../x {p}",
+        "git --work-tree=docs apply --directory=../../x {p}",
+    ],
+)
+def test_git_apply_work_tree_above_repo_fails_closed(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    """A root that normalises to above the current directory cannot be judged."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    command = template.format(p=patch_dir / "wt.patch")
+    assert _wt_targets(hook, command) == [_PATCH_STAND_IN], command
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git --git-dir=.git apply {p}",
+        "git --git-dir .git apply {p}",
+        "GIT_DIR=.git git apply {p}",
+        "env GIT_DIR=.git git apply {p}",
+        "git -c core.worktree=.config/fish apply {p}",
+        "git -ccore.worktree=.config/fish apply {p}",
+        "git -c core.worktree=docs apply {p}",
+        "git --config-env=core.worktree=WT apply {p}",
+        "git --config-env core.worktree=WT apply {p}",
+        "git -c include.path=x apply {p}",
+        "GIT_CONFIG_COUNT=1 git apply {p}",
+        "GIT_CONFIG_PARAMETERS='core.worktree=x' git apply {p}",
+        "GIT_CONFIG_GLOBAL=x GIT_CONFIG_KEY_0=core.worktree git apply {p}",
+        "git -C docs --git-dir=.git apply {p}",
+    ],
+)
+def test_git_apply_config_or_git_dir_may_move_work_tree_blocks(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    """A config or git dir that may move the work tree is an unknown write (#1133)."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    assert _wt_targets(hook, template.format(p=patch_dir / "wt.patch")) == [_PATCH_STAND_IN]
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git -c core.worktree=.config/fish --work-tree=docs apply {p}",
+        "git --git-dir=.git --work-tree=docs apply {p}",
+        "GIT_DIR=.git git --work-tree=docs apply {p}",
+        "GIT_DIR=.git GIT_WORK_TREE=docs git apply {p}",
+        "GIT_CONFIG_COUNT=1 git --work-tree=docs apply {p}",
+        "git --config-env=core.worktree=WT --work-tree=docs apply {p}",
+        "git -c user.name=x apply {p}",
+    ],
+)
+def test_git_apply_literal_work_tree_overrides_config(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    command = template.format(p=patch_dir / "wt.patch")
+    if "docs" in command:
+        _assert_patch_allows(hook, command)
+    else:
+        assert _wt_targets(hook, command) == []
+
+
+def _value_options(hook: types.ModuleType) -> list[str]:
+    return sorted(hook._GIT_GLOBAL_OPTS_WITH_VALUE - {"-C", "-c", "--work-tree"})
+
+
+@pytest.mark.parametrize("option", _COVERED_VALUE_OPTIONS)
+@pytest.mark.parametrize(
+    ("prefix", "blocks"),
+    [
+        ("-C .config/fish", True),
+        ("--work-tree=.config/fish", True),
+        ("--work-tree .config/fish", True),
+        ("-C docs", False),
+        ("--work-tree=docs", False),
+    ],
+)
+def test_git_apply_work_tree_after_value_taking_option(
+    hook: types.ModuleType, patch_dir: Path, option: str, prefix: str, blocks: bool
+) -> None:
+    """A value-taking global option before the subcommand never hides the tree."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    for command in (
+        f"git {option} VALUE {prefix} apply {patch_dir / 'wt.patch'}",
+        f"git {prefix} {option} VALUE apply {patch_dir / 'wt.patch'}",
+        f"git {option}=VALUE {prefix} apply {patch_dir / 'wt.patch'}",
+    ):
+        if blocks:
+            _assert_patch_blocks(hook, command)
+        else:
+            _assert_patch_allows(hook, command)
+
+
+def test_git_apply_value_option_list_is_covered(hook: types.ModuleType) -> None:
+    """Every value-taking global option has a case above or in its own test."""
+    own_tests = {"-C", "-c", "--work-tree", "--git-dir", "--config-env", "--list-cmds"}
+    assert sorted(hook._GIT_GLOBAL_OPTS_WITH_VALUE - own_tests) == _COVERED_VALUE_OPTIONS
 
 
 @pytest.mark.parametrize(
