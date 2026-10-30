@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793358168464,
+  "lastUpdate": 1793364724369,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21417,6 +21417,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.676959680200159e-7",
             "extra": "mean: 1.2448346727859465 usec\nrounds: 84761"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6afa9910d212ff4602475114940682822ad33d51",
+          "message": "fix: stop implement-issue's inline-coding carve-out from covering behavior changes (merges PR #1135, addresses #1130)\n\nfix: stop implement-issue's inline-coding carve-out from covering behavior changes (addresses #1130)\n\nStep 4 allowed inline coding for \"any other change to one or two files\",\nwhich per-issue agents read as file count alone. Require that the change\nnot alter behavior, name bug fixes as Coder-brief work, let a caller's\nnested-subagent instruction override the list, and say so in the\nimplement-issues per-issue prompt.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T12:51:23Z",
+          "tree_id": "c431371796254260c82172efd367c3f77fe86526",
+          "url": "https://github.com/endavis/pyproject-template/commit/6afa9910d212ff4602475114940682822ad33d51"
+        },
+        "date": 1793364722951,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 15428381.606958503,
+            "unit": "iter/sec",
+            "range": "stddev: 8.575213172640986e-9",
+            "extra": "mean: 64.81561225767067 nsec\nrounds: 160488"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 15404039.36674668,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3008396273247287e-8",
+            "extra": "mean: 64.91803715840537 nsec\nrounds: 165454"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 10439495.880453909,
+            "unit": "iter/sec",
+            "range": "stddev: 1.889656867979548e-8",
+            "extra": "mean: 95.7900660579139 nsec\nrounds: 111720"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2908853.394086116,
+            "unit": "iter/sec",
+            "range": "stddev: 9.323542168018042e-8",
+            "extra": "mean: 343.7780680295073 nsec\nrounds: 189682"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 799935.4608946769,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2464941500279446e-7",
+            "extra": "mean: 1.2501008504880675 usec\nrounds: 94769"
           }
         ]
       }
