@@ -143,6 +143,7 @@ SELF_REMOVAL_SENTENCE = (
 HEADLESS_CODEX_HOST_FILES: dict[str, Path] = {
     **MULTI_AGENT_FILES,
     "implement-issue": IMPLEMENT_ISSUE_FILE,
+    "implement-issues": REPO_ROOT / ".agents" / "skills" / "implement-issues" / "SKILL.md",
 }
 
 # The non-interactive invocation each CLI needs, copied verbatim from

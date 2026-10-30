@@ -310,6 +310,21 @@ def test_merge_pr_exists_on_every_wired_surface() -> None:
         assert path.exists(), f"Missing merge-pr file: {path}"
 
 
+def test_implement_issues_exists_on_every_wired_surface() -> None:
+    """`implement-issues` runs several issues in parallel worktrees (#1097).
+
+    Same two-surface layout as `merge-pr`.
+    """
+    paths: list[Path] = []
+    if agent_is_present("claude"):
+        paths.append(REPO_ROOT / ".claude" / "skills" / "implement-issues" / "SKILL.md")
+    if any(agent_is_present(a) for a in ("codex", "antigravity", "copilot")):
+        paths.append(REPO_ROOT / ".agents" / "skills" / "implement-issues" / "SKILL.md")
+
+    for path in paths:
+        assert path.exists(), f"Missing implement-issues file: {path}"
+
+
 def test_retired_self_action_aliases_are_removed() -> None:
     """The old ghissue-plan/implement/close self-action aliases should be gone."""
     removed = [

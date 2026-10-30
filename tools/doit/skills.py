@@ -40,6 +40,7 @@ SHARED_SKILLS: tuple[str, ...] = (
     "merge-pr",
     "ghi-status",
     "implement-issue",
+    "implement-issues",
     "multi-plan",
     "multi-review",
     "multi-adversarial-review",

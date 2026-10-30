@@ -298,6 +298,19 @@ Copilot also reads `.claude/skills/`, but this repo deliberately places the 8 Co
 
 Codex does not read `.claude/commands/`, `.copilot/commands/`, or `.github/skills/`. Claude does not read `.agents/skills/` or `.github/skills/`. The conflicts above are the only ones the layout creates.
 
+## Parallel issues (`implement-issues`)
+
+`implement-issues` runs `implement-issue` for several issues at once, one worktree and one background `general-purpose` agent each, which in turn start the Planner and Coder subagents. Host support:
+
+| Host | Mode | Basis |
+| :--- | :--- | :--- |
+| Claude Code | Parallel | Verified on 2.1.314: a background subagent has the Agent tool and starts `implement-planner` nested. |
+| Codex CLI | Sequential | Nested agents not verified. |
+| GitHub Copilot CLI | Sequential | `--fleet`/`task` nesting not verified. |
+| Antigravity CLI | Sequential | No subagent flag found. |
+
+See [slash-commands.md](slash-commands.md#implement-issues-a-b) and [ADR-9028](../../decisions/9028-implement-issues-runs-issues-in-parallel-background-agents.md).
+
 ## Multi-agent orchestration (`/multi-*`)
 
 In addition to the 1-to-1 delegation matrix above, this project ships three N-to-1 orchestrators that let any host agent run **any combination** of agents in parallel and synthesize the results:

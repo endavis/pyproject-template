@@ -113,7 +113,7 @@ That merges the PR, closes issue 42, removes the worktree and its branch, and fa
 
 ### Running several issues at once
 
-Start one session per issue, each from the main checkout, and say "implement issue N" in each. Every session gets its own worktree, so the sessions do not switch branches under each other. Two worktrees that change the same file still conflict at merge time; the PR that merges second needs the rebase.
+Say "implement issues A, B and C" in one session. The `implement-issues` skill checks the issues' likely files for overlap, creates a worktree per issue and runs `implement-issue` for each in a background agent (two at a time by default), then reports one PR per issue; "check only" stops after the overlap check. The alternative is one session per issue, each from the main checkout, saying "implement issue N" in each. Every session gets its own worktree, so the sessions do not switch branches under each other. Two worktrees that change the same file still conflict at merge time; the PR that merges second needs the rebase.
 
 ## What each step produces
 

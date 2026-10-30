@@ -170,6 +170,7 @@ nav:
       - ADR-9025 Delegation context: decisions/9025-delegated-agents-receive-github-data-from-the-host-and-run-without-network.md
       - ADR-9026 Doc-scan sync-exclude: decisions/9026-doc-scanning-tests-honor-sync-excludetoml-and-discover-markdown-via-git.md
       - ADR-9027 implement-issue worktree: decisions/9027-implement-issue-works-in-a-per-issue-worktree.md
+      - ADR-9028 implement-issues parallel: decisions/9028-implement-issues-runs-issues-in-parallel-background-agents.md
   - Reference:
       - API Reference: reference/api.md
   - Examples:
