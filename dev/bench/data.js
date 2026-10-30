@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793373081321,
+  "lastUpdate": 1793374110900,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21830,6 +21830,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6574892287510488e-7",
             "extra": "mean: 1.6597908770381398 usec\nrounds: 62973"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f948a50809002748661305137abcff1767b6c34",
+          "message": "fix: stop implement-issue from shipping a partial fix without asking (merges PR #1147, addresses #1145)\n\nStep 5 now builds a requirements list (Success Criteria, or for a bug the\nExpected behavior plus every concrete fix item in the body) and marks each\nmet or unmet. An unmet or dropped requirement is an ask-first trigger, not\na PR-body note. The ask-first list gains the \"cannot be met as written\"\ntrigger, and the Step 8 report gains a met/unmet table. implement-issues\nnow relays a review finding as the finding, not a narrowed fix.\n\nAddresses #1145\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T15:27:52Z",
+          "tree_id": "c31a86aacce535e0ce4196387fa24f31965dfe2c",
+          "url": "https://github.com/endavis/pyproject-template/commit/8f948a50809002748661305137abcff1767b6c34"
+        },
+        "date": 1793374109879,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9443425.667072644,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4474022809227395e-8",
+            "extra": "mean: 105.89377576050629 nsec\nrounds: 99911"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10287810.358656833,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2513404989562854e-8",
+            "extra": "mean: 97.20241384101088 nsec\nrounds: 108027"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6707684.261012348,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5780663907238325e-8",
+            "extra": "mean: 149.08274764994323 nsec\nrounds: 71603"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2284885.3811404496,
+            "unit": "iter/sec",
+            "range": "stddev: 7.70007816605669e-8",
+            "extra": "mean: 437.6587150734329 nsec\nrounds: 186568"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 596976.670201791,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9767340356062795e-7",
+            "extra": "mean: 1.675107336542948 usec\nrounds: 61882"
           }
         ]
       }
