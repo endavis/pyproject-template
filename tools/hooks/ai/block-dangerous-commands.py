@@ -2098,9 +2098,8 @@ def _is_first_command(tokens: list[str], idx: int) -> bool:
 
 def _cwd_moved(tokens: list[str], idx: int) -> bool:
     """Return True when a word before *idx* may change the working directory."""
-    return any(
-        t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in tokens[:idx]
-    )
+    words = [t.strip(";&|()") for t in tokens[:idx]]
+    return any(t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in words)
 
 
 def _patch_source_targets(
@@ -2206,38 +2205,42 @@ def _split_stdin_sources(
     return operands, stdin_files, unresolvable, has_output
 
 
+def _has_dotdot(value: str) -> bool:
+    """Return True when a ``/`` or ``\\`` separated *value* has a ``..`` segment."""
+    return ".." in value.replace("\\", "/").split("/")
+
+
 def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str | None, bool]:
     """Return ``(root, unresolvable)``: where git writes a patch's paths (#1133).
 
-    Every ``-C`` among the options before the subcommand is joined in order (an
-    absolute one resets the directory), wherever it stands. The last
-    ``--work-tree`` (else a literal ``GIT_WORK_TREE=<dir>`` assigned before
-    ``git``) is then resolved against that final directory, and the result is
-    normalised (``.`` and ``..`` segments folded). A value with an expansion, an
-    empty value, ``GIT_WORK_TREE`` set any way but a literal assignment, or a
-    directory that normalises to above the current one is *unresolvable*, so
-    the caller fails closed. So is a work tree the repository config or git dir
-    may move (``--git-dir``, ``GIT_DIR``, ``GIT_CONFIG*``, ``--config-env``,
-    ``-c core.worktree=``, an include setting) when no literal ``--work-tree``
-    or ``GIT_WORK_TREE`` names it; the git dir's config is not read.
+    Fails closed: the root is *unresolvable* unless it is simple. Every ``-C``
+    among the options before the subcommand is joined in order (an absolute one
+    resets the directory), wherever it stands. The last ``--work-tree`` (else a
+    literal ``GIT_WORK_TREE=<dir>`` assigned before ``git``) is then resolved
+    against that final directory, and ``.`` segments are folded. Unresolvable:
+
+    - a ``..`` segment in a ``-C``, ``--work-tree`` or ``GIT_WORK_TREE`` value;
+    - a value with an expansion, an empty value, or ``GIT_WORK_TREE`` set any way
+      but a literal assignment;
+    - any other ``GIT_*`` word before ``git``, or ``-c``, ``--config-env`` or
+      ``--git-dir``, which may move the work tree, unless a literal
+      ``--work-tree`` or ``GIT_WORK_TREE`` names it (the git dir's config is
+      not read);
+    - a working directory moved before ``git`` (``cd``, ``pushd``, ``env -C``),
+      unless an absolute ``--work-tree``, ``GIT_WORK_TREE`` or ``-C`` resets it.
     """
     env_tree: str | None = None
     moved = False
     for t in tokens[:git_idx]:
-        lowered = t.lower()
         if t.startswith("GIT_WORK_TREE="):
             env_tree = t.partition("=")[2]
         elif "GIT_WORK_TREE" in t:
             return None, True
-        elif (
-            "GIT_DIR" in t
-            or "GIT_CONFIG" in t
-            or "core.worktree" in lowered
-            or "include" in lowered
-        ):
+        elif "GIT_" in t:
             moved = True
     cwd = ""
     tree: str | None = None
+    absolute = False
     opts = tokens[git_idx + 1 : sub]
     i = 0
     while i < len(opts):
@@ -2253,29 +2256,26 @@ def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str 
             name, value = t[:2], t[2:]
         elif t.startswith("--") and "=" in t:
             name, _, value = t.partition("=")
-        if name in {"-c", "--config-env"}:
-            key = (value or "").partition("=")[0].lower()
-            moved = moved or key.startswith("core.worktree") or "include" in key
-        elif name == "--git-dir":
+        if name in {"-c", "--config-env", "--git-dir"}:
             moved = True
         elif name in {"-C", "--work-tree"}:
-            if not value or any(c in _DYNAMIC_CHARS for c in value):
+            if not value or any(c in _DYNAMIC_CHARS for c in value) or _has_dotdot(value):
                 return None, True
+            absolute = absolute or posixpath.isabs(value)
             if name == "-C":
                 cwd = posixpath.join(cwd, value)
             else:
                 tree = value
-    if tree is None:
+    if tree is None and env_tree is not None:
         tree = env_tree
-        if tree is not None and (not tree or any(c in _DYNAMIC_CHARS for c in tree)):
+        if not tree or any(c in _DYNAMIC_CHARS for c in tree) or _has_dotdot(tree):
             return None, True
+        absolute = absolute or posixpath.isabs(tree)
     if tree is None and moved:
         return None, True
+    if _cwd_moved(tokens, git_idx) and not absolute:
+        return None, True
     root = posixpath.normpath(posixpath.join(cwd, tree) if tree is not None else cwd or ".")
-    if root == "..":
-        return None, True
-    if root.startswith("../"):
-        return None, True
     return (None if root == "." else root), False
 
 
@@ -2346,6 +2346,8 @@ def _git_patch_targets(
                 value = t.partition("=")[2] if has_value else (args[i] if i < len(args) else "")
                 i += 0 if has_value else 1
                 if full == "--directory":
+                    if _has_dotdot(value):
+                        return [*targets, _ENVRC_EXAMPLE]
                     root = value
                 elif full == "--build-fake-ancestor":
                     fake_ancestors.append(value)
@@ -2387,8 +2389,6 @@ def _git_patch_targets(
         root = posixpath.normpath(root)
         if root == ".":
             root = None
-        elif root == ".." or root.startswith("../"):
-            return [*targets, _ENVRC_EXAMPLE]
     return targets + _patch_source_targets(
         [(src, None) for src in operands + stdin_files],
         read_files=read_files and _is_first_command(tokens, git_idx),

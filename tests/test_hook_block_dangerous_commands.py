@@ -703,6 +703,12 @@ requires_posix_sh = pytest.mark.skipif(
 )
 
 
+requires_posix_paths = pytest.mark.skipif(
+    sys.platform == "win32",
+    reason="the hook reads patch paths as POSIX paths",
+)
+
+
 def _run_launcher(
     payload: str, *, cwd: Path | None = None, script: Path | None = None
 ) -> subprocess.CompletedProcess[str]:
@@ -1930,9 +1936,10 @@ def test_git_apply_work_tree_protected_target_blocks(
 ) -> None:
     """A bare ``config.fish`` is protected only under the moved work tree (#1133)."""
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    _assert_patch_blocks(hook, template.format(p=patch_dir / "wt.patch"))
+    _assert_patch_blocks(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
 
 
+@requires_posix_paths
 @pytest.mark.parametrize(
     "template",
     [
@@ -1948,7 +1955,7 @@ def test_git_apply_work_tree_unprotected_target_allows(
     hook: types.ModuleType, patch_dir: Path, template: str
 ) -> None:
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    _assert_patch_allows(hook, template.format(p=patch_dir / "wt.patch"))
+    _assert_patch_allows(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
 
 
 @pytest.mark.parametrize(
@@ -1969,7 +1976,7 @@ def test_git_apply_unresolvable_work_tree_blocks(
 ) -> None:
     """A work tree the hook cannot spell out stands in as an unknown write."""
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    command = template.format(p=patch_dir / "wt.patch")
+    command = template.format(p=(patch_dir / "wt.patch").as_posix())
     tokens = hook.tokenize(command)
     git_idx = tokens.index("git")
     assert hook._git_patch_targets(tokens, git_idx, read_files=True) == [_PATCH_STAND_IN]
@@ -1990,11 +1997,6 @@ def _wt_targets(hook: types.ModuleType, command: str) -> list[str]:
         "git --work-tree=fish -C .config apply {p}",
         "git --work-tree fish -C .config apply {p}",
         "GIT_WORK_TREE=fish git -C .config apply {p}",
-        "git --work-tree=../.config/fish -C docs apply {p}",
-        "git -C .config/../.config --work-tree=fish apply {p}",
-        "git --work-tree=.config/../.config/fish apply {p}",
-        "git -C .config/../.config/fish apply {p}",
-        "GIT_WORK_TREE=.config/../.config/fish git apply {p}",
         "git -C ./.config/./fish apply {p}",
         "git -C docs -C /repo/.config/fish apply {p}",
         "git --git-dir=.git --work-tree=.config/fish -c core.worktree=docs apply {p}",
@@ -2005,51 +2007,75 @@ def _wt_targets(hook: types.ModuleType, command: str) -> list[str]:
 def test_git_apply_work_tree_order_and_dots_block(
     hook: types.ModuleType, patch_dir: Path, template: str
 ) -> None:
-    """``-C`` applies wherever it stands; ``.``/``..`` segments are folded (#1133)."""
+    """``-C`` applies wherever it stands; ``.`` segments are folded (#1133)."""
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    _assert_patch_blocks(hook, template.format(p=patch_dir / "wt.patch"))
+    _assert_patch_blocks(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
 
 
+@requires_posix_paths
 @pytest.mark.parametrize(
     "template",
     [
         "git --work-tree=fish -C docs apply {p}",
         "git -C docs --work-tree=fish apply {p}",
-        "git --work-tree=../fish -C .config apply {p}",
-        "git --work-tree=.config/../docs apply {p}",
-        "git -C .config/../docs apply {p}",
-        "GIT_WORK_TREE=.config/../docs git apply {p}",
         "git -C .config/fish -C /repo/docs apply {p}",
-        "git -C .config/fish/.. apply {p}",
+        "git -C ./docs/./ apply {p}",
+        "git --work-tree=./docs apply {p}",
     ],
 )
 def test_git_apply_work_tree_order_and_dots_allow(
     hook: types.ModuleType, patch_dir: Path, template: str
 ) -> None:
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    _assert_patch_allows(hook, template.format(p=patch_dir / "wt.patch"))
+    _assert_patch_allows(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
 
 
 @pytest.mark.parametrize(
     "template",
     [
         "git -C .. apply {p}",
+        "git -C docs/.. apply {p}",
         "git -C docs/../.. apply {p}",
+        "git -C ../docs apply {p}",
+        "git -C docs -C .. apply {p}",
+        "git -C .config/fish/.. apply {p}",
+        "git -C '..\\docs' apply {p}",
         "git --work-tree=.. apply {p}",
         "git --work-tree=../x apply {p}",
-        "GIT_WORK_TREE=../x git apply {p}",
+        "git --work-tree=.config/../docs apply {p}",
+        "git --work-tree ../docs apply {p}",
         "git -C docs --work-tree=../../x apply {p}",
+        "GIT_WORK_TREE=../x git apply {p}",
+        "GIT_WORK_TREE=.config/../docs git apply {p}",
+        "env GIT_WORK_TREE=.. git apply {p}",
+        "git --work-tree=docs apply --directory=../x {p}",
         "git apply --directory=../x {p}",
-        "git --work-tree=docs apply --directory=../../x {p}",
+        "git apply --directory ../x {p}",
+        "git apply --directory=docs/../x {p}",
+        "git apply --directory='docs\\..\\x' {p}",
     ],
 )
-def test_git_apply_work_tree_above_repo_fails_closed(
+def test_git_apply_dotdot_segment_fails_closed(
     hook: types.ModuleType, patch_dir: Path, template: str
 ) -> None:
-    """A root that normalises to above the current directory cannot be judged."""
+    """A ``..`` segment in a root the hook would have to fold is never resolved."""
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    command = template.format(p=patch_dir / "wt.patch")
+    command = template.format(p=(patch_dir / "wt.patch").as_posix())
     assert _wt_targets(hook, command) == [_PATCH_STAND_IN], command
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git -C ... apply {p}",
+        "git -C ..docs apply {p}",
+        "git --work-tree=docs.. apply {p}",
+        "git apply --directory=..docs {p}",
+    ],
+)
+def test_git_apply_dotdot_lookalike_is_not_a_segment(hook: types.ModuleType, template: str) -> None:
+    tokens = hook.tokenize(template.format(p="x.patch"))
+    assert hook._git_work_tree_root(tokens, 0, tokens.index("apply"))[1] is False
 
 
 @pytest.mark.parametrize(
@@ -2059,9 +2085,17 @@ def test_git_apply_work_tree_above_repo_fails_closed(
         "git --git-dir .git apply {p}",
         "GIT_DIR=.git git apply {p}",
         "env GIT_DIR=.git git apply {p}",
+        "GIT_COMMON_DIR=.git git apply {p}",
+        "env GIT_COMMON_DIR=.git git apply {p}",
+        "GIT_CEILING_DIRECTORIES=/repo git apply {p}",
+        "env GIT_CEILING_DIRECTORIES=/repo git apply {p}",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM=1 git apply {p}",
+        "env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 git apply {p}",
+        "GIT_INDEX_FILE=x git apply {p}",
         "git -c core.worktree=.config/fish apply {p}",
         "git -ccore.worktree=.config/fish apply {p}",
         "git -c core.worktree=docs apply {p}",
+        "git -c user.name=x apply {p}",
         "git --config-env=core.worktree=WT apply {p}",
         "git --config-env core.worktree=WT apply {p}",
         "git -c include.path=x apply {p}",
@@ -2069,16 +2103,19 @@ def test_git_apply_work_tree_above_repo_fails_closed(
         "GIT_CONFIG_PARAMETERS='core.worktree=x' git apply {p}",
         "GIT_CONFIG_GLOBAL=x GIT_CONFIG_KEY_0=core.worktree git apply {p}",
         "git -C docs --git-dir=.git apply {p}",
+        "printf -v GIT_COMMON_DIR %s x; git apply {p}",
     ],
 )
-def test_git_apply_config_or_git_dir_may_move_work_tree_blocks(
+def test_git_apply_git_env_or_config_may_move_work_tree_blocks(
     hook: types.ModuleType, patch_dir: Path, template: str
 ) -> None:
-    """A config or git dir that may move the work tree is an unknown write (#1133)."""
+    """Any ``GIT_*`` word or config option may move the work tree (#1133)."""
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    assert _wt_targets(hook, template.format(p=patch_dir / "wt.patch")) == [_PATCH_STAND_IN]
+    command = template.format(p=(patch_dir / "wt.patch").as_posix())
+    assert _wt_targets(hook, command) == [_PATCH_STAND_IN], command
 
 
+@requires_posix_paths
 @pytest.mark.parametrize(
     "template",
     [
@@ -2086,51 +2123,131 @@ def test_git_apply_config_or_git_dir_may_move_work_tree_blocks(
         "git --git-dir=.git --work-tree=docs apply {p}",
         "GIT_DIR=.git git --work-tree=docs apply {p}",
         "GIT_DIR=.git GIT_WORK_TREE=docs git apply {p}",
+        "GIT_COMMON_DIR=.git GIT_WORK_TREE=docs git apply {p}",
+        "GIT_CEILING_DIRECTORIES=/repo git --work-tree=docs apply {p}",
+        "GIT_DISCOVERY_ACROSS_FILESYSTEM=1 GIT_WORK_TREE=docs git apply {p}",
+        "env GIT_CEILING_DIRECTORIES=/repo GIT_WORK_TREE=docs git apply {p}",
         "GIT_CONFIG_COUNT=1 git --work-tree=docs apply {p}",
         "git --config-env=core.worktree=WT --work-tree=docs apply {p}",
-        "git -c user.name=x apply {p}",
+        "git -c user.name=x --work-tree=docs apply {p}",
     ],
 )
 def test_git_apply_literal_work_tree_overrides_config(
     hook: types.ModuleType, patch_dir: Path, template: str
 ) -> None:
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    command = template.format(p=patch_dir / "wt.patch")
-    if "docs" in command:
-        _assert_patch_allows(hook, command)
-    else:
-        assert _wt_targets(hook, command) == []
+    _assert_patch_allows(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
+
+
+def _root(hook: types.ModuleType, command: str) -> tuple[str | None, bool]:
+    tokens = hook.tokenize(command)
+    result: tuple[str | None, bool] = hook._git_work_tree_root(
+        tokens, tokens.index("git"), tokens.index("apply")
+    )
+    return result
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "cd sub && git apply p",
+        "cd sub; git -C docs apply p",
+        "cd sub && git --work-tree=docs apply p",
+        "pushd sub; git apply p",
+        "popd; git apply p",
+        "env -C sub git apply p",
+        "env -Csub git apply p",
+        "env --chdir=sub git apply p",
+        "cd /repo/sub && git -c user.name=x --work-tree=docs apply p",
+    ],
+)
+def test_git_apply_cwd_moved_before_git_is_unresolvable(
+    hook: types.ModuleType, command: str
+) -> None:
+    """A relative root has no meaning once the shell has changed directory."""
+    assert _root(hook, command) == (None, True), command
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("cd sub && git -C /repo apply p", "/repo"),
+        ("cd sub && git -C /repo -C docs apply p", "/repo/docs"),
+        ("cd sub && git --work-tree=/repo/docs apply p", "/repo/docs"),
+        ("cd sub && git --work-tree /repo/docs apply p", "/repo/docs"),
+        ("cd sub && GIT_WORK_TREE=/repo/docs git apply p", "/repo/docs"),
+        ("env -C sub git -C /repo/./docs apply p", "/repo/docs"),
+        ("cd sub && git -C /repo --work-tree=docs apply p", "/repo/docs"),
+    ],
+)
+def test_git_apply_absolute_root_resets_moved_cwd(
+    hook: types.ModuleType, command: str, expected: str
+) -> None:
+    assert _root(hook, command) == (expected, False), command
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "git apply p",
+        "git -C docs apply p",
+        "git --work-tree=docs apply p",
+        "GIT_WORK_TREE=docs git apply p",
+        "git -C ./docs apply p",
+    ],
+)
+def test_git_apply_cwd_not_moved_stays_resolvable(hook: types.ModuleType, command: str) -> None:
+    assert _root(hook, command)[1] is False, command
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "cd sub && git apply {p}",
+        "cd sub && git -C docs apply {p}",
+        "env -C sub git apply {p}",
+    ],
+)
+def test_git_apply_cwd_moved_blocks(hook: types.ModuleType, patch_dir: Path, template: str) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    _assert_patch_blocks(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
 
 
 def _value_options(hook: types.ModuleType) -> list[str]:
     return sorted(hook._GIT_GLOBAL_OPTS_WITH_VALUE - {"-C", "-c", "--work-tree"})
 
 
+_VALUE_OPTION_COMMANDS = (
+    "git {option} VALUE {prefix} apply {p}",
+    "git {prefix} {option} VALUE apply {p}",
+    "git {option}=VALUE {prefix} apply {p}",
+)
+
+
 @pytest.mark.parametrize("option", _COVERED_VALUE_OPTIONS)
 @pytest.mark.parametrize(
-    ("prefix", "blocks"),
-    [
-        ("-C .config/fish", True),
-        ("--work-tree=.config/fish", True),
-        ("--work-tree .config/fish", True),
-        ("-C docs", False),
-        ("--work-tree=docs", False),
-    ],
+    "prefix", ["-C .config/fish", "--work-tree=.config/fish", "--work-tree .config/fish"]
 )
-def test_git_apply_work_tree_after_value_taking_option(
-    hook: types.ModuleType, patch_dir: Path, option: str, prefix: str, blocks: bool
+def test_git_apply_work_tree_after_value_taking_option_blocks(
+    hook: types.ModuleType, patch_dir: Path, option: str, prefix: str
 ) -> None:
     """A value-taking global option before the subcommand never hides the tree."""
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
-    for command in (
-        f"git {option} VALUE {prefix} apply {patch_dir / 'wt.patch'}",
-        f"git {prefix} {option} VALUE apply {patch_dir / 'wt.patch'}",
-        f"git {option}=VALUE {prefix} apply {patch_dir / 'wt.patch'}",
-    ):
-        if blocks:
-            _assert_patch_blocks(hook, command)
-        else:
-            _assert_patch_allows(hook, command)
+    p = (patch_dir / "wt.patch").as_posix()
+    for template in _VALUE_OPTION_COMMANDS:
+        _assert_patch_blocks(hook, template.format(option=option, prefix=prefix, p=p))
+
+
+@requires_posix_paths
+@pytest.mark.parametrize("option", _COVERED_VALUE_OPTIONS)
+@pytest.mark.parametrize("prefix", ["-C docs", "--work-tree=docs"])
+def test_git_apply_work_tree_after_value_taking_option_allows(
+    hook: types.ModuleType, patch_dir: Path, option: str, prefix: str
+) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    p = (patch_dir / "wt.patch").as_posix()
+    for template in _VALUE_OPTION_COMMANDS:
+        _assert_patch_allows(hook, template.format(option=option, prefix=prefix, p=p))
 
 
 def test_git_apply_value_option_list_is_covered(hook: types.ModuleType) -> None:
