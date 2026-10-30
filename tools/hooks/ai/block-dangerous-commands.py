@@ -1292,6 +1292,41 @@ def redirect_reason(command: str, reason: str) -> str:
     return reason
 
 
+# Command names the rules key on. A path-qualified spelling (``/usr/bin/git``,
+# ``./bin/gh``) runs the same program, so :func:`_normalise_command_words`
+# reduces it to the bare name before any rule sees the tokens (#1132).
+_RULE_COMMAND_WORDS = (
+    frozenset(
+        {"git", "gh", "uv", "doit", "patch", "rm", "sudo", "env", "printenv"}
+        | {"bash", "sh", "zsh", "dash"}
+    )
+    | _CREDENTIAL_READER_COMMANDS
+)
+
+
+def _normalise_command_words(tokens: list[str]) -> list[str]:
+    """Return *tokens* with each path-qualified rule word reduced to its basename.
+
+    The one place a command word is normalised. Every non-option token whose
+    basename is a rule command word is reduced, wherever it sits, so a rule
+    word after a keyword, wrapper, option or substitution is still seen
+    (fails closed). The result has the same length as *tokens*, so an index
+    in one list is the same token in the other.
+
+    Only rules that key on a command word read this list. Checks that treat a
+    token as a filesystem path (patch sources, redirect and stdin targets,
+    credential-store paths, persistence targets) read the original tokens.
+    """
+    normalised = list(tokens)
+    for index, token in enumerate(tokens):
+        if "/" not in token or token[0] in "-<>&":
+            continue
+        base = token.rsplit("/", 1)[-1]
+        if base.lower() in _RULE_COMMAND_WORDS:
+            normalised[index] = base
+    return normalised
+
+
 def check_dangerous_flags(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if any dangerous flag appears as a standalone token.
@@ -2451,6 +2486,7 @@ def _bash_confirmed_write_targets(
     """
     targets: list[str] = []
     tokens = _collapse_extglobs(tokens)
+    words = _normalise_command_words(tokens)
     n = len(tokens)
     for i, tok in enumerate(tokens):
         # Pattern A: standalone redirect operator, including `>|`, `&>` and
@@ -2470,6 +2506,9 @@ def _bash_confirmed_write_targets(
             if _is_env_persistence_target(tok[1:], dynamic=True):
                 targets.append(tok[1:])
             continue
+
+        # The patterns below key on a command word; operands stay in *tokens*.
+        tok = words[i]
 
         # Pattern C: write command followed by persistence target as positional
         if tok in _WRITE_COMMANDS:
@@ -3102,7 +3141,7 @@ def check_merge_to_protected(command: str) -> tuple[bool, str]:
     terminator, hiding a real ``git merge`` from this scan entirely (#1011,
     gap 3).
     """
-    tokens = _structural_tokens(command)
+    tokens = _normalise_command_words(_structural_tokens(command))
     tokens_lower = [t.lower() for t in tokens]
 
     for git_idx in range(len(tokens_lower)):
@@ -3161,10 +3200,11 @@ def check_env_dump(tokens: list[str]) -> tuple[bool, str]:
     separator (``hi;printenv``) stuck to its neighbour, so neither ever placed
     a command at the start of a line or after a glued ``;`` (#1011, gap 2).
     """
+    words = _normalise_command_words(tokens)
     for index in _command_start_indices(tokens):
-        if index >= len(tokens) or tokens[index] not in _ENV_DUMP_COMMANDS:
+        if index >= len(tokens) or words[index] not in _ENV_DUMP_COMMANDS:
             continue
-        token = tokens[index]
+        token = words[index]
         # Stop at the next separator: later tokens belong to another command.
         rest = []
         for candidate in tokens[index + 1 :]:
@@ -3247,8 +3287,9 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
     separator (``hi;cat``) stuck to its neighbour, so neither ever placed a
     command at the start of a line or after a glued ``;`` (#1011, gap 2).
     """
+    words = _normalise_command_words(tokens)
     for index in _command_start_indices(tokens):
-        if index >= len(tokens) or tokens[index] not in _CREDENTIAL_READER_COMMANDS:
+        if index >= len(tokens) or words[index] not in _CREDENTIAL_READER_COMMANDS:
             continue
         skip_next = False
         for argument in tokens[index + 1 :]:
@@ -3290,7 +3331,8 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     Returns:
         (is_dangerous, reason)
     """
-    tokens = tokenize(command)
+    raw_tokens = tokenize(command)
+    tokens = _normalise_command_words(raw_tokens)
 
     # Check for dangerous standalone flags
     is_dangerous, reason = check_dangerous_flags(tokens)
@@ -3316,7 +3358,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # separator `&` and `>/tmp/x`.
     structural = _structural_tokens(stripped)
     for check, legacy in (
-        (check_env_dump, tokens),
+        (check_env_dump, raw_tokens),
         (check_credential_file_read, tokenize(stripped)),
     ):
         for check_tokens in (structural, legacy):
@@ -3329,7 +3371,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # command: `shlex.split` keeps a glued `true;git` as one word, so the scan
     # missed any command glued to `;`, `&&`, `||`, `|` or `&` (#1023). The
     # first pass keeps every block these checks had before.
-    command_structural = _structural_tokens(command)
+    command_structural = _normalise_command_words(_structural_tokens(command))
     for check in (
         check_push_to_protected,
         check_delete_protected_branch,
@@ -3366,7 +3408,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # could have written the file (#1105).
     read_patch_files = _depth == 0 and "\n" not in stripped.strip()
     passes: list[tuple[list[str], bool, bool]] = [
-        (tokens, True, False),
+        (raw_tokens, True, False),
         (_redirect_tokens(stripped), False, False),
     ]
     if exact_tokens is not None:

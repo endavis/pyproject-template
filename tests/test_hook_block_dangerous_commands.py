@@ -2320,3 +2320,139 @@ def test_patch_backup_naming_inherited_by_the_hook_is_unresolvable(
     assert hook.check_command("patch -p1 -i ok.patch")[0]
     monkeypatch.delenv(name)
     assert not hook.check_command("patch -p1 -i ok.patch")[0]
+
+
+# --- command word normalised once (#1132) ---
+
+_QUALIFIED_RULES = [
+    "git push --force origin main",
+    "git push origin HEAD:main",
+    "git push origin --delete main",
+    "git branch -D main",
+    "gh pr create --title x",
+    "gh pr merge 1",
+    "gh issue create --title x",
+    "uv add requests",
+    "doit release",
+    "gh pr edit 1 --add-label ready-to-merge",
+    "git merge feature/x",
+    "printenv",
+    "env",
+    "cat ~/.netrc",
+    "sudo rm file",
+    "rm -rf /",
+    "git apply bad.patch",
+    "git am bad.patch",
+    "patch -p1 -i bad.patch",
+    "git checkout -- .envrc.local.example",
+    'bash -c "gh pr merge 1"',
+]
+
+
+def _qualify(command: str, hook: types.ModuleType) -> str:
+    """Rewrite each rule-keyed command word in *command* to a path-qualified form."""
+    out = []
+    for word in command.split(" "):
+        if word in hook._RULE_COMMAND_WORDS:
+            word = f"/usr/bin/{word}"
+        out.append(word)
+    return " ".join(out)
+
+
+@pytest.mark.parametrize("command", _QUALIFIED_RULES)
+def test_path_qualified_command_word_gets_the_bare_result(
+    hook: types.ModuleType,
+    patch_dir: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+) -> None:
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "main")
+    monkeypatch.delenv("ALLOW_AI_READY_TO_MERGE", raising=False)
+    qualified = _qualify(command, hook)
+    assert qualified != command
+    assert hook.check_command(command)[0], command
+    assert hook.check_command(qualified) == hook.check_command(command)
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        (["/usr/bin/git", "status"], ["git", "status"]),
+        (["true", "&&", "./bin/gh", "pr"], ["true", "&&", "gh", "pr"]),
+        (["FOO=1", "/usr/bin/git", "push"], ["FOO=1", "git", "push"]),
+        (["sudo", "-n", "/usr/bin/rm", "x"], ["sudo", "-n", "rm", "x"]),
+        (["timeout", "5", "/usr/bin/git"], ["timeout", "5", "git"]),
+        (["then", "/usr/bin/git"], ["then", "git"]),
+        # Not command words, options and redirects.
+        (["cat", "src/foo.py", "/opt/tool"], ["cat", "src/foo.py", "/opt/tool"]),
+        (
+            ["cat", "--x=/usr/bin/git", ">/usr/bin/git"],
+            ["cat", "--x=/usr/bin/git", ">/usr/bin/git"],
+        ),
+    ],
+)
+def test_normalise_command_words_reduces_rule_words(
+    hook: types.ModuleType, tokens: list[str], expected: list[str]
+) -> None:
+    assert hook._normalise_command_words(tokens) == expected
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        "if true; then ",
+        "! ",
+        "{ ",
+        "( ",
+        "$( ",
+        "nohup ",
+        "time ",
+        "exec ",
+        "xargs ",
+        "doas ",
+        "stdbuf -o0 ",
+        "timeout 5 ",
+        "timeout -s KILL 5 ",
+        "true\n",
+        "echo x > out; ",
+    ],
+)
+def test_path_qualified_rule_word_after_a_keyword_or_wrapper_is_blocked(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, prefix: str
+) -> None:
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "main")
+    for rule in ("git push origin main", "gh pr merge 1"):
+        bare = f"{prefix}{rule}"
+        assert hook.check_command(bare)[0], bare
+        qualified = bare.replace(rule.split()[0], f"/usr/bin/{rule.split()[0]}", 1)
+        assert hook.check_command(qualified)[0], qualified
+
+
+def test_operand_path_ending_in_a_command_word_keeps_its_path(
+    hook: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A patch file or write target named like a command is still that path."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "dir").mkdir()
+    (tmp_path / "dir" / "git").write_bytes(_unified("src/foo.py"))
+    (tmp_path / "dir" / "patch").write_bytes(_unified(".bashrc"))
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    # A harmless patch file named `git` is read from dir/git, not from `git`.
+    assert hook.check_command("patch -p1 -i dir/git") == (False, "")
+    assert hook.check_command("git apply dir/git") == (False, "")
+    # A protected patch file named `patch` is still read from dir/patch.
+    assert hook.check_command("patch -p1 -i dir/patch")[0]
+    assert hook.check_command("git apply dir/patch")[0]
+    # A redirect target named like a command is not rewritten.
+    assert hook.check_command("echo x > dir/git") == (False, "")
+    assert hook.check_command("cat dir/git") == (False, "")
+
+
+@pytest.mark.parametrize(
+    "command", ["/usr/bin/git status", "/usr/bin/gh pr view 1", "/bin/cat README.md"]
+)
+def test_path_qualified_safe_commands_stay_allowed(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    assert hook.check_command(command) == (False, "")
