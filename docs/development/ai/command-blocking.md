@@ -562,7 +562,7 @@ single quotes, `$'...'`, an array literal (`a=(...)`, `a+=(...)`), a function de
 the body of a heredoc with a quoted delimiter is not. A `(` right after a reserved word
 (`then(...)`, `do(...)`) is a subshell. The body of a heredoc with an unquoted delimiter is read
 the way the shell expands it, so a `$(...)` or backtick in it is scanned whatever command receives
-the heredoc. A construct the scan cannot read, such as a heredoc inside `$(...)`, is passed over and
+the heredoc. A `$(...)` or backtick inside a `${...}` expansion, such as a default value, is scanned too. A heredoc whose delimiter word continues past its name (`<<E\OF`, a trailing `\r`) is not registered, so the lines after it are read as commands, and a body line split by a backslash-newline joins the next one before it is compared with an unquoted delimiter. A construct the scan cannot read, such as a heredoc inside `$(...)`, is passed over and
 the scan goes on, so a substitution after it is still found. Nested bodies are collected in one
 pass, so nesting depth does not use the `bash -c` recursion budget; a command with more than 256
 bodies is blocked as unreadable.

@@ -54,6 +54,77 @@ def _set_stdin(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:
     monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        # the delimiter word continues past the part a plain name covers
+        "cat <<E\\OF\nEOF\n(printenv)\nE",
+        "cat <<'E'\\OF\nEOF\nx=$(printenv)\nE",
+        "cat <<EOF\r\nEOF\n(printenv)\nEOF",
+        # a delimiter line split by a backslash-newline ends the body
+        "cat <<EOF\nEO\\\nF\n(printenv)",
+        # a default value in a parameter expansion is run
+        "echo ${x:-$(printenv)}",
+        "echo ${x:-`printenv`}",
+        'echo "${x:-$(printenv)}"',
+        'echo "${x:-`printenv`}"',
+        "echo ${x:-${y:-$(printenv)}}",
+        "cat <<EOF\n${x:-$(printenv)}\nEOF",
+    ],
+)
+def test_check_command_scans_lines_the_shell_runs_and_expansion_defaults(
+    hook: types.ModuleType, command: str
+) -> None:
+    """Lines outside a heredoc body and substitutions in ${...} are scanned."""
+    is_dangerous, _reason = hook.check_command(command)
+    assert is_dangerous
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "cat <<'EOF'\nmentions $(printenv) here\nEOF",
+        "cat <<EOF\nplain text\nEOF\necho done",
+        "git commit -m \"$(cat <<'EOF'\nfix: a thing $(printenv)\n\nEOF\n)\"",
+        "echo ${VAR:-default}",
+        'echo "${VAR:-default}"',
+        "echo ${#arr[@]}",
+        "echo ${x:-'$(printenv)'}",
+        "echo ${x:-$(echo hi)}",
+    ],
+)
+def test_check_command_allows_well_formed_heredocs_and_plain_expansions(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    """A quoted heredoc body and a plain ${...} expansion stay allowed."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    is_dangerous, reason = hook.check_command(command)
+    assert not is_dangerous, reason
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("echo ${x:-$(a)}", ["a"]),
+        ("echo ${x:-`a`}", ["a"]),
+        ('echo "${x:-$(a)} $(b)"', ["a", "b"]),
+        ("echo ${x:-${y:-$(a)}} $(b)", ["a", "b"]),
+        ("echo ${x:-'$(a)'}", []),
+        ("echo \"${x:-'$(a)'}\"", ["a"]),
+        ("echo ${x:-$((1+2))}", []),
+        ("echo ${#arr[@]}", []),
+        ("cat <<'E'\\OF\nEOF\nx=$(a)\nE", ["a"]),
+        ("cat <<E\\OF\nEOF\n(a)\nE", ["a"]),
+        ("cat <<EOF\nEO\\\nF\n(a)", ["a"]),
+    ],
+)
+def test_substitution_payloads_in_parameter_expansions(
+    hook: types.ModuleType, command: str, expected: list[str]
+) -> None:
+    """Bodies inside ${...} are collected; quoted and arithmetic text is not."""
+    assert hook._substitution_payloads(command) == expected
+
+
 def _bash_payload(command: str) -> str:
     """Build a Claude/Gemini/Codex Bash tool payload."""
     return json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})

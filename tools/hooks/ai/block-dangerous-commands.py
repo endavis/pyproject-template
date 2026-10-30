@@ -1214,6 +1214,44 @@ def _heredoc_payloads(command: str) -> list[str]:
     return payloads
 
 
+def _expansion_payloads(text: str, i: int, payloads: list[str], *, in_double: bool) -> None:
+    """Collect the ``$(...)`` and backtick bodies inside a ``${...}`` at *i*.
+
+    A default or alternate value (``${x:-$(cmd)}``) is expanded by the shell, so
+    the command in it runs. *in_double* says the expansion sits in a double
+    quote, where a ``'`` is an ordinary character; bare, it quotes. A nested
+    ``${...}`` is followed by brace depth. Text that cannot be read is left
+    unreported, as the caller skips the whole expansion anyway.
+    """
+    j = i + 2
+    depth = 1
+    try:
+        while j < len(text) and depth:
+            char = text[j]
+            if char == "\\":
+                j += 2
+            elif char == "'" and not in_double:
+                j = _skip_single(text, j + 1)
+            elif char == "`":
+                end = _skip_backtick(text, j + 1)
+                payloads.append(text[j + 1 : end - 1])
+                j = end
+            elif text.startswith("$((", j):
+                j = _skip_paren(text, j + 2)
+            elif text.startswith("$(", j):
+                end = _skip_paren(text, j + 2)
+                payloads.append(text[j + 2 : end - 1])
+                j = end
+            elif text.startswith("${", j):
+                depth += 1
+                j += 2
+            else:
+                depth -= char == "}"
+                j += 1
+    except _OpenConstructError:
+        return
+
+
 def _double_quoted_payloads(text: str, i: int, payloads: list[str]) -> int:
     """Collect the bodies of ``$(...)`` and backticks in a double-quoted string.
 
@@ -1236,6 +1274,8 @@ def _double_quoted_payloads(text: str, i: int, payloads: list[str]) -> int:
             payloads.append(text[i + 2 : end - 1])
             i = end
         elif char == "$":
+            if text.startswith("${", i):
+                _expansion_payloads(text, i, payloads, in_double=True)
             i = _skip_dollar(text, i, ansi=False)
         else:
             i += 1
@@ -1267,6 +1307,8 @@ def _heredoc_body_payloads(body: str, payloads: list[str]) -> None:
                 payloads.append(body[i + 2 : end - 1])
                 i = end
             elif char == "$":
+                if body.startswith("${", i):
+                    _expansion_payloads(body, i, payloads, in_double=True)
                 i = _skip_dollar(body, i, ansi=False)
             else:
                 i += 1
@@ -1290,7 +1332,23 @@ def _consume_heredoc_bodies(
             line_end = len(command) if newline == -1 else newline
             line = command[pos:line_end]
             pos = line_end + 1
-            if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+            logical = line
+            if unquoted:
+                # Bash joins a line ending in an odd number of backslashes
+                # with the next before comparing it to the delimiter, as
+                # :func:`_heredoc_logical_line` does.
+                joined_to = pos
+                while (len(logical) - len(logical.rstrip("\\"))) % 2 == 1 and joined_to < len(
+                    command
+                ):
+                    next_end = command.find("\n", joined_to)
+                    next_end = len(command) if next_end == -1 else next_end
+                    logical = logical[:-1] + command[joined_to:next_end]
+                    joined_to = next_end + 1
+                if (logical.lstrip("\t") if strip_tabs else logical) == delimiter:
+                    pos = joined_to
+                    break
+            elif (line.lstrip("\t") if strip_tabs else line) == delimiter:
                 break
             body.append(line)
         if unquoted:
@@ -1355,6 +1413,8 @@ def _substitution_payloads(command: str) -> list[str]:
                 payloads.append(command[i + 2 : end - 1])
                 i = end
             elif char == "$":
+                if command.startswith("${", i):
+                    _expansion_payloads(command, i, payloads, in_double=False)
                 i = _skip_dollar(command, i, ansi=False)
             elif char == "`":
                 end = _skip_backtick(command, i + 1)
@@ -1365,6 +1425,15 @@ def _substitution_payloads(command: str) -> list[str]:
                 payloads.append(command[i + 1 : end - 1])
                 i = end
             elif char == "<" and previous != "<" and (marker := _HEREDOC_START.match(command, i)):
+                after = command[marker.end() : marker.end() + 1]
+                if after and after != "\n" and after not in _HEREDOC_WORD_ENDS:
+                    # The delimiter word goes on past what the marker regex
+                    # took, so the shell's delimiter is not the one matched
+                    # and where the body ends is unknown. Register no
+                    # heredoc, so the lines that follow are read as commands,
+                    # as :func:`_heredocs` leaves such a body unstripped.
+                    i = marker.end()
+                    continue
                 delimiter = marker.group(3) or marker.group(4) or marker.group(5)
                 pending.append((delimiter, marker.group(5) is not None, bool(marker.group(1))))
                 i = marker.end()
