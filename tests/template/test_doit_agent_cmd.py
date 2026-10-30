@@ -41,6 +41,17 @@ COPILOT_LIST = (
 )
 
 
+EXAMPLE_CONFIG = (
+    Path(__file__).resolve().parents[2] / "docs" / "development" / "ai" / "agents.example.toml"
+)
+
+
+class TestExampleConfig:
+    def test_example_parses_and_sets_every_role(self, tmp_path: Path) -> None:
+        got = load_role_configs(EXAMPLE_CONFIG, tmp_path / "none.toml")
+        assert set(got) == set(ac.ROLES)
+
+
 class TestLayering:
     def test_no_files_is_empty(self, tmp_path: Path) -> None:
         assert load_role_configs(tmp_path / "u.toml", tmp_path / "l.toml") == {}

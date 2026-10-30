@@ -52,6 +52,10 @@ model = "<a model from `copilot help config`>"
 effort = "high"
 ```
 
+For a starting point that sets every role, copy [`agents.example.toml`](agents.example.toml) to
+`~/.config/pyproject-template/agents.toml`, keep the CLIs you subscribe to, and run
+`uv run doit agent_cmd --check`.
+
 - `cli` is required: `claude`, `codex`, `copilot` or `agy` (`antigravity` is an alias).
 - `model` is optional. Without it the CLI keeps its default.
 - `effort` is accepted only for `codex` and `copilot`. For `agy` and `claude` put it in the model
