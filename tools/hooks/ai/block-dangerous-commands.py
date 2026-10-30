@@ -1773,12 +1773,31 @@ def _working_tree_moved(tokens: list[str], git_idx: int, sub: int, paths: list[s
     return False
 
 
+def _has_quoted_redirect_word(command: str) -> bool:
+    """Return True if *command* holds a word that may be a quoted redirect operator.
+
+    A word with quoting or an escape whose remaining characters are all redirect
+    punctuation, at least one of them ``<`` or ``>`` (``'>'``, ``"\\>>"``, ``\\>``).
+    The tokens the scans read have lost that quoting, so they cannot tell it
+    from a real operator (#1134). Over-approximates on purpose: it fails closed.
+    Never raises.
+    """
+    for text, is_operator in operator_tokens(command):
+        if is_operator or not any(c in text for c in "'\"\\"):
+            continue
+        bare = "".join(c for c in text if c not in "'\"\\$")
+        if bare and set(bare) <= set(_REDIRECT_PUNCTUATION) and ("<" in bare or ">" in bare):
+            return True
+    return False
+
+
 def _scan_command_words(
     tokens: list[str],
     start: int,
     *,
     glued_separators: bool = False,
     exact_operators: bool = False,
+    literal_redirects: bool = False,
 ) -> tuple[list[str], list[tuple[str, str]], list[str]]:
     """Return the words of the command whose arguments begin at *start*.
 
@@ -1801,6 +1820,11 @@ def _scan_command_words(
     holding ``;`` is a literal argument and the flag stays off (#1093).
     *exact_operators* is for :func:`_exact_operator_tokens`, where every token
     equal to an operator string is a real operator (#1117).
+
+    *literal_redirects* is for a command holding a quoted word made of redirect
+    punctuation (``'>'``). The tokens lost their quoting, so such a word cannot
+    be told from a real operator; with the flag set a redirect-looking token is
+    an ordinary operand, never an operator that swallows the next word (#1134).
     """
     rest: list[str] = []
     redirects: list[tuple[str, str]] = []
@@ -1821,7 +1845,12 @@ def _scan_command_words(
                 rest.append(t[: glued.start()])
             glued_at = idx
             break
-        if t and set(t) <= set(_REDIRECT_PUNCTUATION) and ("<" in t or ">" in t):
+        if (
+            not literal_redirects
+            and t
+            and set(t) <= set(_REDIRECT_PUNCTUATION)
+            and ("<" in t or ">" in t)
+        ):
             # a redirect operator as :func:`_redirect_tokens` yields it. A
             # preceding fd number (`2` of `2>`) stays: it can be neither a
             # protected name nor a broad pathspec
@@ -1838,6 +1867,7 @@ def _git_restore_targets(
     *,
     glued_separators: bool = False,
     exact_operators: bool = False,
+    literal_redirects: bool = False,
 ) -> list[str]:
     """Return the protected paths a ``git checkout``/``git restore`` at
     *git_idx* would overwrite (#1055).
@@ -1863,12 +1893,20 @@ def _git_restore_targets(
     *exact_operators* is for :func:`_exact_operator_tokens`, where every token
     equal to an operator string is a real operator: the scan then ends at
     ``&``, ``|&``, ``(`` and ``)`` as well, as bash ends the command there.
+
+    *literal_redirects* is passed to :func:`_scan_command_words`: the tokens lost
+    their quoting, so when the command holds a quoted redirect-looking word, one
+    in the tokens is read as an operand rather than an operator (#1134).
     """
     sub = _git_subcommand_index(tokens, git_idx)
     if sub is None or tokens[sub] not in {"checkout", "restore"}:
         return []
     rest, redirects, after_glued = _scan_command_words(
-        tokens, sub + 1, glued_separators=glued_separators, exact_operators=exact_operators
+        tokens,
+        sub + 1,
+        glued_separators=glued_separators,
+        exact_operators=exact_operators,
+        literal_redirects=literal_redirects,
     )
     # the file or fd a redirect points at is no checkout argument, but the
     # tokens lost their quoting (`'>'`), so it is still checked against the
@@ -2571,6 +2609,7 @@ def _bash_confirmed_write_targets(
     exact_operators: bool = False,
     restore_scan: bool = True,
     read_patch_files: bool = False,
+    literal_redirects: bool = False,
 ) -> list[str]:
     """Return every persistence-protected path/basename targeted by a
     *confirmed* Bash write.
@@ -2712,6 +2751,7 @@ def _bash_confirmed_write_targets(
                     i,
                     glued_separators=glued_separators,
                     exact_operators=exact_operators,
+                    literal_redirects=literal_redirects,
                 )
             )
 
@@ -2803,6 +2843,7 @@ def check_env_persistence_in_bash(
     exact_operators: bool = False,
     restore_scan: bool = True,
     read_patch_files: bool = False,
+    literal_redirects: bool = False,
 ) -> tuple[bool, str]:
     """Block Bash commands that would persist ALLOW_AI_READY_TO_MERGE, or
     that write to a protected file at all.
@@ -2843,6 +2884,7 @@ def check_env_persistence_in_bash(
         exact_operators=exact_operators,
         restore_scan=restore_scan,
         read_patch_files=read_patch_files,
+        literal_redirects=literal_redirects,
     ):
         if _matches_env_persistence_target(target, dynamic=True):
             if _depth == 0 and tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
@@ -3519,6 +3561,10 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # command has several lines: the tokens lose a newline, so an earlier line
     # could have written the file (#1105).
     read_patch_files = _depth == 0 and "\n" not in stripped.strip()
+    # The redirect tokens lost the quoting of a word like `'>'`, so when the
+    # command holds one, the scans read redirect-looking tokens as operands
+    # instead of operators that swallow the next word (#1134).
+    literal_redirects = _has_quoted_redirect_word(stripped)
     passes: list[tuple[list[str], bool, bool]] = [
         (raw_tokens, True, False),
         (_redirect_tokens(stripped), False, False),
@@ -3533,6 +3579,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             exact_operators=exact,
             restore_scan=True,
             read_patch_files=read_patch_files,
+            literal_redirects=literal_redirects,
         )
         if is_dangerous:
             return True, reason

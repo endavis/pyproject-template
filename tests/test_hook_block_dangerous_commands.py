@@ -2875,3 +2875,51 @@ def test_wrapper_options_make_patch_target_unresolvable(
     (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
     p = (patch_dir / "wt.patch").as_posix()
     assert _wt_targets(hook, command.format(p=p)) == [_PATCH_STAND_IN]
+
+
+@pytest.mark.parametrize("operator", ["'>'", "'>>'", '">"', "\\>", "$'>'"])
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        "git restore --source=HEAD~1",
+        "git restore -s HEAD~1",
+        "git checkout HEAD~1 --",
+        "git checkout HEAD~1",
+    ],
+)
+def test_quoted_operator_word_does_not_swallow_broad_pathspec(
+    hook: types.ModuleType, prefix: str, operator: str
+) -> None:
+    # the tokens lost the quoting, so a quoted `>` read as a redirect hid the `.` (#1134)
+    assert hook.check_command(f"{prefix} {operator} .")[0] is True
+
+
+@pytest.mark.parametrize(
+    ("command", "blocked"),
+    [
+        ("git restore --source=HEAD~1 . > out", True),
+        ("git checkout . > /dev/null", False),
+        ("git restore . > out", False),
+        ("git restore --source=HEAD~1 f.txt > out.txt", False),
+    ],
+)
+def test_unquoted_redirects_keep_their_behaviour(
+    hook: types.ModuleType, command: str, blocked: bool
+) -> None:
+    assert hook.check_command(command)[0] is blocked
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("git restore '>' .", True),
+        ('git restore ">>" .', True),
+        ("git restore \\> .", True),
+        ("git restore > out", False),
+        ("git restore 'a>' .", False),
+        ("git restore . ; echo", False),
+        ("echo 'unclosed", False),
+    ],
+)
+def test_has_quoted_redirect_word(hook: types.ModuleType, command: str, expected: bool) -> None:
+    assert hook._has_quoted_redirect_word(command) is expected
