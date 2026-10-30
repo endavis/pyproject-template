@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793374110900,
+  "lastUpdate": 1793375875555,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21889,6 +21889,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9767340356062795e-7",
             "extra": "mean: 1.675107336542948 usec\nrounds: 61882"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c070577bc26a5620c6f909eeb6276b868a430880",
+          "message": "chore: recognise command starts after shell keywords and inside substitutions in the env-dump check (merges PR #1148, addresses #1146)\n\n* chore: recognise command starts after shell keywords and inside substitutions in the env-dump check\n\nThe env-dump and credential-store checks now count the word after a shell\nkeyword (then, do, else, elif, if, while, until, time, !, {) as a command\nstart when the keyword itself sits at a command start. Command\nsubstitution, process substitution and subshell bodies are extracted\nwith a quote-aware scan and re-scanned with every check, as bash -c\npayloads already are. Mentions inside single quotes, comments and quoted\nheredocs stay allowed.\n\nDocs and ADR-9019 describe the extended precise layer.\n\nAddresses #1146\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: scan every substitution body, including nested ones and those in unquoted heredocs\n\nThe substitution scan now keeps going past a construct it cannot read\ninstead of stopping there. It treats a parenthesis right after a reserved\nword as a subshell. Nested substitution bodies are gathered in a single\npass, so nesting no longer uses up the wrapper recursion budget; a command\nwith more bodies than the scan can handle is blocked. The scan also reads\n`$(...)` and backticks in heredoc bodies whose delimiter is unquoted,\nsince the shell expands those. Bodies of quoted-delimiter heredocs are\nstill skipped.\n\nAddresses #1146\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: align the substitution scan's heredoc rules and read substitutions inside ${...}\n\nThe substitution scan now registers a heredoc only when its delimiter\nends where the hook's main heredoc parser says it does, and it joins\nbackslash-continued body lines before comparing them to an unquoted\ndelimiter. Lines that do not start a heredoc are scanned as commands.\n`$(...)` and backtick bodies inside a `${...}` parameter expansion are\ncollected in bare, double-quoted and unquoted-heredoc context.\n\nAddresses #1146\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: read ${...} bodies with the same quoting rules the expansion skipper uses\n\n`_expansion_payloads` now takes the end of a `${...}` from `_skip_brace`\nand scans only the text before it, sending a double-quoted part through\n`_double_quoted_payloads` and skipping single-quoted and `$'...'` parts as\nthe skipper does. `_skip_brace` and `_skip_dollar` take an `in_double`\nflag so that, inside a double-quoted expansion, single quotes are plain\ntext, as they are in bash.\n\nAddresses #1146\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T15:57:16Z",
+          "tree_id": "170d7e828b2392f9ae03c0a654fa8a15863d60e6",
+          "url": "https://github.com/endavis/pyproject-template/commit/c070577bc26a5620c6f909eeb6276b868a430880"
+        },
+        "date": 1793375874462,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9491119.431380566,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2413037481123822e-8",
+            "extra": "mean: 105.36164961676616 nsec\nrounds: 99217"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10324840.829125164,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3439911630710212e-8",
+            "extra": "mean: 96.85379334653929 nsec\nrounds: 107910"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6887849.8892924795,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7744569644649012e-8",
+            "extra": "mean: 145.18318721703736 nsec\nrounds: 73503"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2257287.804555455,
+            "unit": "iter/sec",
+            "range": "stddev: 6.751783108828925e-8",
+            "extra": "mean: 443.0095258486268 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 602740.0019917521,
+            "unit": "iter/sec",
+            "range": "stddev: 1.885135271390764e-7",
+            "extra": "mean: 1.6590901494765633 usec\nrounds: 62819"
           }
         ]
       }
