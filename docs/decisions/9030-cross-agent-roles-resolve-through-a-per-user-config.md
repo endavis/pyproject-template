@@ -1,0 +1,41 @@
+---
+title: "ADR-9030: Cross-agent roles resolve through a per-user config"
+description: Cross-agent roles resolve through one doit task reading a layered per-user config, subagent first, with Copilot and Codex subagent models unprobed
+date: 2026-10-30
+audience:
+  - contributors
+tags:
+  - adr
+---
+
+# ADR-9030: Cross-agent roles resolve through a per-user config
+
+## Status
+
+Accepted
+
+## Decision
+
+1. **Roles, not CLIs.** Cross-agent work names one of five roles: `plan`, `plan_review`, `code`, `review`, `adversarial_review`. A role names the CLI and optionally a model and, for `codex` and `copilot`, an effort.
+2. **Layered per-user config, no committed model names.** The user file (`$XDG_CONFIG_HOME/pyproject-template/agents.toml`, else `~/.config/pyproject-template/agents.toml`) is overridden key by key by the gitignored `.config/pyproject_template/agents.local.toml`. A local `cli` replaces the role wholesale. There is no built-in layer: with no config each CLI keeps its default.
+3. **One resolver.** `doit agent_cmd --role --host [--cli]` returns `subagent` (optional model), `inline`, or `cli` (a ready shell command with a `'<prompt>'` slot). Skills never parse the TOML or build flags. With no config the result is exactly the invocation the skills used before.
+4. **Subagent first.** `subagent` is returned only when the role's CLI is the host and the host's subagent can run the model. Claude Code accepts `opus`, `sonnet`, `haiku` and `fable`. Copilot's `task` tool and Codex's `multi_agent` model selection are unprobed (#1151), so a configured model there resolves to `cli`. `agy` has no subagent mechanism: `inline` without a model, else `cli`.
+5. **`--check`** matches configured models against `agy models`, `codex debug models` and `copilot help config`, which spend no tokens. Claude aliases pass; other Claude names are reported unchecked.
+
+## Rationale
+
+Every `agy`, `codex` and `copilot` invocation ran on the CLI's default model, and people's subscriptions differ. Putting the choice in a per-user file keeps model names out of the repository, and one resolver keeps the flag shapes for four CLIs in one tested place instead of copied into each skill. The python floor is 3.12, so `tomllib` needs no dependency.
+
+## Consequences
+
+- Delegation surfaces gain a resolution step and keep their literals as the fallback.
+- The project-local file is per checkout, so a worktree needs its own copy; the user layer avoids that.
+- Copilot and Codex subagent model selection stays on `cli` until #1151 probes it.
+
+## Documentation
+
+- [Agent Roles and Models](../development/ai/agent-roles.md)
+- [Cross-Agent Delegation — Roles and models](../development/ai/cross-agent-delegation.md#roles-and-models)
+- [doit tasks reference — agent_cmd](../development/doit-tasks-reference.md#agent_cmd)
+
+Issue: #1150. Probes for Copilot `task` and Codex `multi_agent`: #1151.

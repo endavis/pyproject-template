@@ -637,3 +637,36 @@ def test_implement_issue_step_6_honours_caller_stop_after_push() -> None:
     start = text.index("### Step 6:")
     step6 = text[start : text.index("### Step 7:", start)]
     assert "says to stop after the\npush, skip `doit pr` and Step 7" in step6
+
+
+def test_agent_cmd_base_commands_match_non_interactive_invocations() -> None:
+    """With no config, `doit agent_cmd` must return today's invocation for every CLI (#1150)."""
+    from tools.doit.agent_cmd import BASE_COMMANDS, build_command
+
+    expected = {
+        ("agy" if k == "antigravity" else k): v for k, v in NON_INTERACTIVE_INVOCATIONS.items()
+    }
+    assert expected == BASE_COMMANDS
+    assert {cli: build_command(cli) for cli in BASE_COMMANDS} == expected
+
+
+@pytest.mark.parametrize("action", sorted(CONTRACT))
+def test_bridge_files_resolve_through_agent_cmd(action: str) -> None:
+    """Every cross-agent bridge file for *action* resolves its model with `doit agent_cmd`."""
+    missing = [
+        f"{source}->{target}/{action}: {path.relative_to(REPO_ROOT)}"
+        for (source, target), path in _bridge_files(action).items()
+        if not path.is_file() or "doit agent_cmd --role=" not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, f"these bridge files do not call `doit agent_cmd --role=`: {missing}"
+
+
+def test_multi_agent_and_implement_issue_resolve_through_agent_cmd() -> None:
+    """`multi-*` and `implement-issue` resolve roles with `doit agent_cmd --role=`."""
+    files = {**MULTI_AGENT_FILES, "implement-issue": IMPLEMENT_ISSUE_FILE}
+    missing = [
+        name
+        for name, path in files.items()
+        if "doit agent_cmd --role=" not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, f"these skills do not call `doit agent_cmd --role=`: {missing}"

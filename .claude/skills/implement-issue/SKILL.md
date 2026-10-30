@@ -87,6 +87,15 @@ clear" does not qualify. The plan uses the Planner brief's exact shape. Before p
 non-interactive invocation as "with \<agent\>"; fix or reject each point it raises. The review
 reads only the draft, the findings and the files the plan names.
 
+**Roles.** Who runs the Planner brief (`plan`), the Plan-review brief (`plan_review`) and the Coder
+brief (`code`) comes from the person's agent-role config. Before each, run
+`uv run doit agent_cmd --role=<role> --host=<host>` and read the last stdout line (JSON). If `mode`
+is `subagent`, run the brief in the host's subagent with that `model` when one is given (none means the
+subagent's own default). If `inline`, run it in the session. If `cli`, run its `command` with
+`'<prompt>'` replaced by the brief's prompt, from `$WORKTREE`. With no config the result is today's
+behaviour, and a task failure also falls back to it. See
+[Agent roles](../../../docs/development/ai/agent-roles.md).
+
 In every other case run the **Planner brief** below in a subagent, using the host's subagent tool (see
 [Per-host subagent notes](#per-host-subagent-notes)), telling it the context directory above (an absolute path inside the worktree) and the worktree root
 `$WORKTREE`. If you hold findings, pass them in its prompt, marked as findings. Post
@@ -126,7 +135,7 @@ fetch, so `comments.json` needs to pick it up (when Step 3 did not run, this is 
 uv run doit delegation_context --kind=issue --n=<n> --out=$WORKTREE/tmp/agents/<host>/implement-issue-<n>/
 ```
 
-Run the **Coder brief** below in a subagent, telling it the context directory above and the worktree
+Resolve the `code` role first (see **Roles** in Step 3), then run the **Coder brief** below in a subagent, telling it the context directory above and the worktree
 root `$WORKTREE`. When the user
 says **"implement issue N with \<agent\>"**, run the Coder brief through that agent's CLI instead,
 using the non-interactive invocation for that host documented in
@@ -302,14 +311,15 @@ run the brief in the session itself instead of failing the step.
   from `CLAUDE_CODE_SUBAGENT_MODEL`) for the Coder brief. Verified
   with `claude -p --permission-mode plan "<prompt asking which skill handles 'implement issue N'>"`,
   which named `implement-issue`.
-- **Codex CLI:** `multi_agent`. `codex features list` reports `multi_agent` as `stable`/`true`
+- **Codex CLI:** `multi_agent`. Choosing a model for a `multi_agent` subagent is unprobed (#1151), so a configured model resolves to `cli` mode. `codex features list` reports `multi_agent` as `stable`/`true`
   (`multi_agent_v2` exists but is `stable`/`false` — not enabled). `codex debug prompt-input` lists
   `implement-issue` (source `.agents/skills/implement-issue/SKILL.md`) among the skills available to
   the session. A headless Codex host (`codex exec -a never`) can read GitHub through `.codex/rules/gh.rules` but cannot write to it or delegate to another agent CLI — see [Headless Codex host limits](../../../docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits). It cannot run Step 4's "with \<agent\>" delegation, Step 6's `doit pr`, or Step 7's CI-log fetch headless; Codex hosts this skill interactively instead.
 - **GitHub Copilot CLI:** `--fleet` ("run the prompt in fleet mode (parallel subagent...)", per
   `copilot --help`) for parallel subagent work; the `task` tool for the Coder brief, the same
   mechanism `.claude/agents/implement-worker.md` already documents being read through for Copilot.
-  `copilot skill list | grep implement-issue` finds the skill.
+  `copilot skill list | grep implement-issue` finds the skill. Choosing a model for the `task` tool is
+  unprobed (#1151), so a configured model resolves to `cli` mode.
   A delegated Copilot run must set `GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS=true`, as the
   documented invocation does, or its dangerous-command hook does not load under `-p` (#1042).
 - **Antigravity CLI (`agy`):** no dedicated subagent/delegation flag found — `agy --help` lists no
