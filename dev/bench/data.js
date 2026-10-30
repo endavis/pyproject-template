@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793367788914,
+  "lastUpdate": 1793368424311,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21653,6 +21653,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7074346656147287e-7",
             "extra": "mean: 1.66255496363304 usec\nrounds: 62696"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "caf678f66efcd193f1a248bab614bf5dc46fa3bc",
+          "message": "chore: read quoted redirect-like words as operands in the hook's restore/checkout scan (merges PR #1141, addresses #1134)\n\nA quoted word that spells a redirect operator is a literal argument, not a\nredirect. The restore/checkout scan now treats redirect-like words as\nordinary operands when the command holds a quoted one, so the operand after\nit is still checked as a pathspec. Unquoted redirects are read as before.\n\nAddresses #1134\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T13:52:58Z",
+          "tree_id": "5728313f66334192a3fb0b9ca56e29156cc451d5",
+          "url": "https://github.com/endavis/pyproject-template/commit/caf678f66efcd193f1a248bab614bf5dc46fa3bc"
+        },
+        "date": 1793368422672,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9477087.091547357,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2094518790856563e-8",
+            "extra": "mean: 105.51765435308737 nsec\nrounds: 103221"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10083534.92323529,
+            "unit": "iter/sec",
+            "range": "stddev: 1.119246375651041e-8",
+            "extra": "mean: 99.17157104258347 nsec\nrounds: 109927"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6682185.200558359,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3910731809537321e-8",
+            "extra": "mean: 149.65164388386611 nsec\nrounds: 71398"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2186111.255560182,
+            "unit": "iter/sec",
+            "range": "stddev: 6.825939665420051e-8",
+            "extra": "mean: 457.43326075312393 nsec\nrounds: 191976"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 603457.9321638943,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7048770481092705e-7",
+            "extra": "mean: 1.6571163401799613 usec\nrounds: 63096"
           }
         ]
       }
