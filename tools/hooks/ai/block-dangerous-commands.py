@@ -1242,6 +1242,78 @@ def _double_quoted_payloads(text: str, i: int, payloads: list[str]) -> int:
     raise _OpenConstructError
 
 
+def _heredoc_body_payloads(body: str, payloads: list[str]) -> None:
+    """Collect the ``$(...)`` and backtick bodies in an unquoted-delimiter heredoc body.
+
+    The shell expands these in such a body as it does inside double quotes,
+    except that a ``"`` is an ordinary character. An arithmetic ``$((...))``
+    and an escaped ``\\$`` hold no command. A construct that cannot be read is
+    passed over a character at a time.
+    """
+    i = 0
+    while i < len(body):
+        char = body[i]
+        try:
+            if char == "\\":
+                i += 2
+            elif char == "`":
+                end = _skip_backtick(body, i + 1)
+                payloads.append(body[i + 1 : end - 1])
+                i = end
+            elif body.startswith("$((", i):
+                i = _skip_paren(body, i + 2)
+            elif body.startswith("$(", i):
+                end = _skip_paren(body, i + 2)
+                payloads.append(body[i + 2 : end - 1])
+                i = end
+            elif char == "$":
+                i = _skip_dollar(body, i, ansi=False)
+            else:
+                i += 1
+        except _OpenConstructError:
+            i += 1
+
+
+def _consume_heredoc_bodies(
+    command: str, pos: int, pending: list[tuple[str, bool, bool]], payloads: list[str]
+) -> int:
+    """Read the bodies of the heredocs in *pending*, starting at line start *pos*.
+
+    Each entry is ``(delimiter, unquoted, strip_tabs)``. The body of a
+    quoted-delimiter heredoc is skipped; the substitutions in an unquoted one
+    are collected into *payloads*. Returns the index after the last terminator.
+    """
+    for delimiter, unquoted, strip_tabs in pending:
+        body: list[str] = []
+        while pos < len(command):
+            newline = command.find("\n", pos)
+            line_end = len(command) if newline == -1 else newline
+            line = command[pos:line_end]
+            pos = line_end + 1
+            if (line.lstrip("\t") if strip_tabs else line) == delimiter:
+                break
+            body.append(line)
+        if unquoted:
+            _heredoc_body_payloads("\n".join(body), payloads)
+    return min(pos, len(command))
+
+
+def _opens_subshell(command: str, i: int) -> bool:
+    """Whether the ``(`` at *i* opens a subshell rather than something else.
+
+    Not a subshell: ``$(``, ``<(`` and ``>(`` (read elsewhere), an assignment
+    ``name=(...)`` or ``name+=(...)``, and a function definition ``f()``. A
+    ``(`` right after a reserved word (``then(...)``, ``do(...)``) is one.
+    """
+    previous = command[i - 1] if i else " "
+    if previous in "$<>=":
+        return False
+    if previous.isalnum() or previous == "_":
+        word = re.search(r"[^\s;&|()<>]*\Z", command[:i])
+        return word is not None and word.group() in _COMMAND_KEYWORDS
+    return True
+
+
 def _substitution_payloads(command: str) -> list[str]:
     """Return the body of each command substitution, process substitution and subshell.
 
@@ -1251,18 +1323,23 @@ def _substitution_payloads(command: str) -> list[str]:
     does a ``bash -c`` payload, so a check anchored on a command position
     sees the command inside. Text in single quotes, ``$'...'``, an escaped
     ``$``, an arithmetic ``$((...))``, an array literal ``a=(...)`` and a
-    function definition ``f()`` hold no such body and are skipped.
+    function definition ``f()`` hold no such body and are skipped, as is the
+    body of a heredoc with a quoted delimiter. The body of one with an
+    unquoted delimiter is read for substitutions.
 
-    A nested body is returned inside its parent only; the recursion in
-    :func:`check_command` reaches it. A construct that cannot be read ends the
-    scan and returns what was found before it.
+    A nested body is returned inside its parent only; :func:`check_command`
+    reaches it through :func:`_all_substitution_payloads`. A construct that
+    cannot be read, such as a heredoc inside ``$(...)``, is passed over and the
+    scan goes on after its first character, so a later substitution is found.
     """
     payloads: list[str] = []
+    pending: list[tuple[str, bool, bool]] = []
     i = 0
-    try:
-        while i < len(command):
-            char = command[i]
-            previous = command[i - 1] if i else " "
+    while i < len(command):
+        start = i
+        char = command[i]
+        previous = command[i - 1] if i else " "
+        try:
             if char == "\\":
                 i += 2
             elif char == "'":
@@ -1283,15 +1360,66 @@ def _substitution_payloads(command: str) -> list[str]:
                 end = _skip_backtick(command, i + 1)
                 payloads.append(command[i + 1 : end - 1])
                 i = end
-            elif char == "(" and not (previous.isalnum() or previous in "_=$<>"):
+            elif char == "(" and _opens_subshell(command, i):
                 end = _skip_paren(command, i + 1)
                 payloads.append(command[i + 1 : end - 1])
                 i = end
+            elif char == "<" and previous != "<" and (marker := _HEREDOC_START.match(command, i)):
+                delimiter = marker.group(3) or marker.group(4) or marker.group(5)
+                pending.append((delimiter, marker.group(5) is not None, bool(marker.group(1))))
+                i = marker.end()
+            elif char == "\n" and pending:
+                i = _consume_heredoc_bodies(command, i + 1, pending, payloads)
+                pending.clear()
             else:
                 i += 1
-    except (_OpenConstructError, RecursionError):
-        pass
-    return payloads
+        except _OpenConstructError:
+            i = start + 1
+    return list(dict.fromkeys(payloads))
+
+
+def _unquoted_heredoc_bodies(command: str) -> list[str]:
+    """Return the body of each heredoc in *command* whose delimiter is unquoted."""
+    lines = command.split("\n")
+    bodies: list[str] = []
+    for marker_line, _words, body_start, body_end in _heredocs(lines, unclear_as_body=True):
+        match, _quote = _heredoc_marker_match(lines[marker_line])
+        if match is not None and match.group(5) is None:
+            continue  # a quoted delimiter: the body is not expanded
+        bodies.append("\n".join(lines[body_start:body_end]))
+    return bodies
+
+
+# Most substitution bodies read from one command, so a pathological input
+# cannot make the scan unbounded.
+_MAX_SUBSTITUTION_PAYLOADS = 256
+
+
+def _all_substitution_payloads(command: str) -> list[str] | None:
+    """Return every substitution body in *command*, nested ones included.
+
+    Nesting is followed here, one level at a time, so it does not use the
+    recursion budget of :func:`check_command`. Returns None when the input
+    holds more than ``_MAX_SUBSTITUTION_PAYLOADS`` bodies, which the caller
+    treats as unreadable.
+    """
+    result: list[str] = []
+    seen = {command}
+    queue = [command]
+    while queue:
+        text = queue.pop(0)
+        found = _substitution_payloads(_strip_shell_comments(_without_heredoc_bodies(text)))
+        for body in _unquoted_heredoc_bodies(text):
+            _heredoc_body_payloads(body, found)
+        for payload in found:
+            if payload in seen:
+                continue
+            seen.add(payload)
+            if len(result) >= _MAX_SUBSTITUTION_PAYLOADS:
+                return None
+            result.append(payload)
+            queue.append(payload)
+    return result
 
 
 def _joined_continuation_lines(lines: list[str]) -> list[str]:
@@ -3635,7 +3763,7 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
-def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
+def check_command(command: str, _depth: int = 0, _expanded: bool = False) -> tuple[bool, str]:
     """
     Check if command contains dangerous patterns.
 
@@ -3767,12 +3895,23 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # Recurse into shell-wrapper payloads (bash/sh/zsh/dash -c <payload>, eval ...)
     # Depth cap of 3 prevents infinite loops on adversarial inputs.
     if _depth < 3:
-        for payload in (
-            _wrapped_payloads(tokens)
-            + _heredoc_payloads(command)
-            + _substitution_payloads(_strip_shell_comments(stripped))
-        ):
+        for payload in _wrapped_payloads(tokens) + _heredoc_payloads(command):
             is_dangerous, reason = check_command(payload, _depth + 1)
+            if is_dangerous:
+                return True, reason
+
+    # Substitution bodies, nested ones included, are collected in one pass and
+    # each is checked at one level down, so nesting does not use the wrapper
+    # depth budget above. A checked body does not collect its own again.
+    if not _expanded:
+        try:
+            substitutions = _all_substitution_payloads(command)
+        except RecursionError:
+            substitutions = None
+        if substitutions is None:
+            return True, "Command substitutions are nested too deeply to scan"
+        for payload in substitutions:
+            is_dangerous, reason = check_command(payload, _depth + 1, _expanded=True)
             if is_dangerous:
                 return True, reason
 

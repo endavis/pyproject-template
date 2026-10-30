@@ -1683,6 +1683,74 @@ SECRET_EXPOSURE_CASES: list[tuple[str, str, str]] = [
         "ALLOW",
         "commit message heredoc in a substitution",
     ),
+    (
+        "git commit -m \"$(cat <<'EOF'\nnotes on $(printenv)\nEOF\n)\"",
+        "ALLOW",
+        "commit message heredoc whose quoted body mentions a substitution",
+    ),
+    (
+        "git commit -m \"$(cat <<'EOF'\nnotes\nEOF\n)\"; x=$(printenv)",
+        "BLOCK",
+        "substitution after a commit message heredoc",
+    ),
+    (
+        "git commit -m \"$(cat <<'EOF'\nnotes\nEOF\n)\" && echo `env`",
+        "BLOCK",
+        "backtick substitution after a commit message heredoc",
+    ),
+    ("if true; then(printenv); fi", "BLOCK", "subshell glued to then"),
+    ("while true; do(env); done", "BLOCK", "subshell glued to do"),
+    ("if false; then :; else(printenv); fi", "BLOCK", "subshell glued to else"),
+    ("{(printenv); }", "BLOCK", "subshell glued to a brace"),
+    ("!(printenv)", "BLOCK", "subshell glued to a negation"),
+    ("f() { :; }", "ALLOW", "function definition"),
+    ("f(){ :; }", "ALLOW", "function definition without spaces"),
+    ("x+=(printenv)", "ALLOW", "append array literal"),
+    (
+        "echo $(echo $(echo $(echo $(echo $(printenv)))))",
+        "BLOCK",
+        "dump nested deeper than the wrapper depth cap",
+    ),
+    (
+        "echo $(echo `echo $(echo $(echo $(cat ~/.netrc)))`)",
+        "BLOCK",
+        "credential read nested deeper than the wrapper depth cap",
+    ),
+    (
+        "bash -c 'echo $(echo $(echo $(printenv)))'",
+        "BLOCK",
+        "nested substitutions inside a wrapper payload",
+    ),
+    (
+        "cat <<EOF\nvalue: $(printenv)\nEOF",
+        "BLOCK",
+        "substitution in an unquoted heredoc body",
+    ),
+    (
+        "cat > notes.md <<EOF\nvalue: `printenv PYPI_TOKEN`\nEOF",
+        "BLOCK",
+        "backtick substitution in an unquoted heredoc body",
+    ),
+    (
+        "cat <<EOF\nvalue: $(echo $(echo $(echo $(echo $(printenv)))))\nEOF",
+        "BLOCK",
+        "deeply nested substitution in an unquoted heredoc body",
+    ),
+    (
+        "cat <<EOF\nvalue: \\$(printenv)\nEOF",
+        "ALLOW",
+        "escaped substitution in an unquoted heredoc body",
+    ),
+    (
+        "cat <<\\EOF\nvalue: $(printenv)\nEOF",
+        "ALLOW",
+        "backslash-quoted delimiter heredoc body",
+    ),
+    (
+        "cat <<'EOF'\nvalue: `printenv`\nEOF\necho done",
+        "ALLOW",
+        "quoted heredoc body with backticks",
+    ),
 ]
 
 

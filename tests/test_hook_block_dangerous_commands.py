@@ -3073,8 +3073,50 @@ def test_command_start_indices_follow_keywords(
         ("f() { :; }", []),
         ("echo $(printenv", []),
         ("x=$(a) $(b", ["a"]),
+        ("then(a)", ["a"]),
+        ("do(a)", ["a"]),
+        ("else(a)", ["a"]),
+        ("{(a); }", ["a"]),
+        ("!(a)", ["a"]),
+        ("f(){ :; }", []),
+        ("x+=(a)", []),
+        ("x=(a)", []),
+        ("x=$(cat <<EOF\nEOF\n) $(b)", ["b"]),
+        ("echo \"$(cat <<'EOF'\nbody $(a)\nEOF\n)\" $(b)", ["b"]),
+        ("cat <<EOF\nv $(a) `b`\nEOF", ["a", "b"]),
+        ("cat <<'EOF'\nv $(a)\nEOF", []),
+        ("cat <<-EOF\n\tv $(a)\n\tEOF\n$(b)", ["a", "b"]),
+        ("cat <<EOF\nv \\$(a)\nEOF", []),
+        ("cat <<< $(a)", ["a"]),
     ],
 )
 def test_substitution_payloads(hook: types.ModuleType, command: str, expected: list[str]) -> None:
     """Bodies of substitutions and subshells are returned; quoted text is not."""
     assert hook._substitution_payloads(command) == expected
+
+
+def test_all_substitution_payloads_follows_nesting(hook: types.ModuleType) -> None:
+    """Nested bodies are all returned, whatever the depth."""
+    command = "echo $(a $(b $(c $(d $(e)))))"
+    assert hook._all_substitution_payloads(command) == [
+        "a $(b $(c $(d $(e))))",
+        "b $(c $(d $(e)))",
+        "c $(d $(e))",
+        "d $(e)",
+        "e",
+    ]
+
+
+def test_all_substitution_payloads_reads_unquoted_heredoc_bodies(hook: types.ModuleType) -> None:
+    """An unquoted-delimiter heredoc body is read; a quoted one is not."""
+    assert hook._all_substitution_payloads("cat <<EOF\n$(a $(b))\nEOF") == ["a $(b)", "b"]
+    assert hook._all_substitution_payloads("cat <<'EOF'\n$(a)\nEOF") == []
+
+
+def test_all_substitution_payloads_gives_up_past_the_limit(hook: types.ModuleType) -> None:
+    """Too many bodies are reported as unreadable, and the command is blocked."""
+    command = " ".join(f"$(x{n})" for n in range(hook._MAX_SUBSTITUTION_PAYLOADS + 1))
+    assert hook._all_substitution_payloads(command) is None
+    is_dangerous, reason = hook.check_command(command)
+    assert is_dangerous
+    assert "too deeply" in reason
