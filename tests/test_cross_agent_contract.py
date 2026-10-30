@@ -329,6 +329,26 @@ def test_implement_issue_file_carries_its_contract() -> None:
     assert not missing, f"implement-issue skill is missing: {missing}"
 
 
+def test_implement_issue_inline_coding_excludes_behavior_changes() -> None:
+    """Step 4 must not let file count alone qualify a change for inline coding (#1130)."""
+    text = IMPLEMENT_ISSUE_FILE.read_text(encoding="utf-8")
+    for needle in (
+        "only when ALL of these hold",
+        "File count alone never qualifies",
+        "every bug fix with a regression test",
+    ):
+        assert needle in text, f"implement-issue Step 4 is missing {needle!r}"
+    assert "any other change to one or two files" not in text
+
+
+def test_implement_issues_per_issue_prompt_forbids_inline_coding() -> None:
+    """The per-issue prompt must switch Step 4's inline exception off (#1130)."""
+    path = REPO_ROOT / ".agents" / "skills" / "implement-issues" / "SKILL.md"
+    text = path.read_text(encoding="utf-8")
+    needle = "Step 4's inline exception does not apply"
+    assert needle in text, f"implement-issues per-issue prompt is missing {needle!r}"
+
+
 def test_implement_issue_forbids_merge_actions() -> None:
     """implement-issue must say it never applies ready-to-merge, merges, or closes the issue.
 

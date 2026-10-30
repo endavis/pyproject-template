@@ -70,7 +70,7 @@ Prompt each agent with this, filling in the issue number and absolute `$WORKTREE
 > absolute paths, start every shell command with `cd "<WORKTREE>" &&`, run everything through
 > `uv run` and never pass the active-environment flag, never use a bare `git stash`, and inspect the
 > main checkout only with `git -C`. Run Step 3's Planner or Plan-review brief and the Coder brief as nested
-> subagents (`implement-planner`, `implement-worker`), commit, push, open the PR and run the CI loop. You
+> subagents (`implement-planner`, `implement-worker`); Step 4's inline exception does not apply, so always run the Coder brief in `implement-worker`. Commit, push, open the PR and run the CI loop. You
 > cannot ask the user. When an ask-first trigger fires, stop and make your final message start with
 > `ASK-FIRST: <trigger> — <detail>`. Otherwise finish with the Step 8 report.
 

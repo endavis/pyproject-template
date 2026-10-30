@@ -100,13 +100,18 @@ There is no approval wait — the plan is posted, not proposed.
 
 ### Step 4: Code (inline, subagent, or delegated)
 
-Do the coding inline, without a subagent, when Step 2 skipped planning and the change is one of:
+Do the coding inline, without a subagent, only when ALL of these hold: Step 2 skipped planning, the
+change does not alter behavior, and it is one of:
 
 - a version bump of an existing dependency, such as a `pip-audit` fix: `pyproject.toml` and
   `uv.lock` only;
-- a documentation-only change to one or two files, such as a typo, a broken link or a stale
-  example;
-- any other change to one or two files with no new module and no change in behavior.
+- a documentation-only change, such as a typo, a broken link or a stale example;
+- a behavior-preserving edit, such as a rename.
+
+Behavior-changing work goes to the Coder brief in `implement-worker`, however few files it touches:
+every bug fix with a regression test, and every code path change. File count alone never qualifies
+for inline coding. When the caller's prompt, such as an `implement-issues` per-issue agent's, says
+to run the Coder brief as a nested subagent, that overrides this list.
 
 Inline coding follows the Coder brief all the same: read the rules it lists, add tests when code
 changes, and run the touched tests plus `uv run doit lint` and `uv run doit type_check`. `doit check`
