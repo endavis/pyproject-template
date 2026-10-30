@@ -122,3 +122,8 @@ def test_implement_issue_points_at_implement_issues() -> None:
     text = IMPLEMENT_ISSUE.read_text(encoding="utf-8")
     assert "use `implement-issues`" in text
     assert "../implement-issues/SKILL.md" in text
+
+
+def test_step_3_prompt_names_the_plan_review_brief() -> None:
+    step3 = _section("### Step 3:", "### Step 4:")
+    assert "Plan-review brief" in step3

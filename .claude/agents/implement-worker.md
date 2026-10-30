@@ -5,7 +5,7 @@ description: >-
   (and a plan comment, when one was made). Runs the skill's Coder brief: reads
   project rules, reads the plan (or the issue body) from the context directory
   the parent wrote with `doit delegation_context`, edits files, writes tests,
-  and runs `doit check`.
+  runs the touched tests, lint and type_check; the full `doit check` is Step 5's.
   Do NOT invoke directly — the implement-issue skill drives this subagent.
 tools: Read, Write, Edit, Glob, Grep, Bash, TodoWrite
 permissionMode: default
@@ -40,8 +40,10 @@ The parent prompt will provide:
   worktree's `tmp/`, or make a temporary WIP commit.
 - **Do NOT enter plan mode.** Do not call `EnterPlanMode`. You run with `permissionMode: default` so
   you can edit files directly.
-- **All new code must be type-annotated** (mypy strict mode is enforced by `doit check`).
+- **Checking budget.** Run only what the Coder brief's step 4 lists. Do NOT run `uv run doit check`:
+  the host runs it once in Step 5.
+- **All new code must be type-annotated** (mypy strict mode is enforced by `doit type_check`).
 
 See the Coder brief in `.agents/skills/implement-issue/SKILL.md` for the full step list (read the
-rules, read the plan or issue body from the context directory, implement with tests, run `doit
-check`, return a summary).
+rules, read the plan or issue body from the context directory, implement with tests, run the
+checking budget, return a summary listing every check command).

@@ -112,3 +112,5 @@ cost, rather than either giving up after one try or never giving up at all.
   projects
 - [ADR-9027](9027-implement-issue-works-in-a-per-issue-worktree.md) — Step 1 now works in a
   per-issue worktree instead of switching the checkout
+- [ADR-9029](9029-implement-issue-host-plan-and-coder-checking-budget.md) — amends who writes the
+  plan and where validation runs (#1128)

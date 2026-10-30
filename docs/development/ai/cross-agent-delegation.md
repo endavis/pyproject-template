@@ -167,8 +167,8 @@ prompt is told to read the files in that directory instead of calling `gh`, and 
 is: a missing context file, not a failed `gh` call. The orchestrating skill that created the
 directory deletes it once every delegated agent (or subagent) using it has returned.
 
-This removes `gh` from every delegated prompt this project ships: `implement-issue`'s Planner and
-Coder briefs, `multi-plan`'s and `multi-review`'s per-agent delegated prompt, and the six Codex
+This removes `gh` from every delegated prompt this project ships: `implement-issue`'s Planner,
+Plan-review and Coder briefs, `multi-plan`'s and `multi-review`'s per-agent delegated prompt, and the six Codex
 bridge files, which now give Codex only git-based inline steps (`.agents/skills/delegate-codex-
 {review,adversarial-review}/SKILL.md`, `.github/skills/codex-{review,adversarial-review}/SKILL.md`,
 `.claude/commands/codex/{review,adversarial-review}.md`) — Hybrid C's old "activate
