@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793368752364,
+  "lastUpdate": 1793373081321,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21771,6 +21771,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8798291389579137e-7",
             "extra": "mean: 1.7732557052615223 usec\nrounds: 59524"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd98c2247ea8a3bd20af15e762925162984d13ec",
+          "message": "fix: have the implement-issues orchestrator open the PRs itself (merges PR #1144, addresses #1143)\n\nPhase 2 of implement-issues ran in a per-branch subagent, and the skill\nforbade the orchestrator from rebasing or pushing. The orchestrator now\nruns phase 2 itself, one branch at a time, from each issue's worktree:\nrebase onto origin/main, doit check when the rebase brought changes,\nforce-with-lease push, doit pr and the CI loop. Subagents only code: a CI\nfailure needing a real code change goes back to implement-worker, and the\nNever section forbids a subagent opening a PR.\n\nThe #1139 tests that asserted the per-branch agent are updated to the new\ncontract, and ADR-9028, the docs and the CLAUDE.md consent line match.\n\nAddresses #1143\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T15:10:32Z",
+          "tree_id": "b2227b8f5cf7b2fbe5f2b10451f8254780936d3c",
+          "url": "https://github.com/endavis/pyproject-template/commit/dd98c2247ea8a3bd20af15e762925162984d13ec"
+        },
+        "date": 1793373079876,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9455185.177630374,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1411108956875083e-8",
+            "extra": "mean: 105.76207458801105 nsec\nrounds: 99721"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10338060.351024391,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1052158321423385e-8",
+            "extra": "mean: 96.72994411383085 nsec\nrounds: 108614"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6715688.645392124,
+            "unit": "iter/sec",
+            "range": "stddev: 1.441208389303651e-8",
+            "extra": "mean: 148.90505692013224 nsec\nrounds: 72119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2256203.7060190374,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1121196067628842e-7",
+            "extra": "mean: 443.2223904837262 nsec\nrounds: 197278"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 602485.5382893042,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6574892287510488e-7",
+            "extra": "mean: 1.6597908770381398 usec\nrounds: 62973"
           }
         ]
       }
