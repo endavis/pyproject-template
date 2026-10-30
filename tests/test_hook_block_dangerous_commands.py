@@ -54,6 +54,93 @@ def _set_stdin(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:
     monkeypatch.setattr(sys, "stdin", io.StringIO(payload))
 
 
+@pytest.mark.parametrize(
+    "command",
+    [
+        # the delimiter word continues past the part a plain name covers
+        "cat <<E\\OF\nEOF\n(printenv)\nE",
+        "cat <<'E'\\OF\nEOF\nx=$(printenv)\nE",
+        "cat <<EOF\r\nEOF\n(printenv)\nEOF",
+        # a delimiter line split by a backslash-newline ends the body
+        "cat <<EOF\nEO\\\nF\n(printenv)",
+        # a default value in a parameter expansion is run
+        "echo ${x:-$(printenv)}",
+        "echo ${x:-`printenv`}",
+        'echo "${x:-$(printenv)}"',
+        'echo "${x:-`printenv`}"',
+        "echo ${x:-${y:-$(printenv)}}",
+        "cat <<EOF\n${x:-$(printenv)}\nEOF",
+        # quoted parts inside the expansion are read as the skipper reads them
+        'echo ${x:-"$(printenv)"}',
+        'echo ${x:-"\'"$(printenv)}',
+        'echo ${x:-"}"$(printenv)}',
+        "echo ${x:-$'}'$(printenv)}",
+        "echo ${x:-$'\\''$(printenv)}",
+        "echo ${x:-'}'$(printenv)}",
+        'echo "${x:-"}"$(printenv)}"',
+        'echo "${x:-\'}$(printenv)}"',
+    ],
+)
+def test_check_command_scans_lines_the_shell_runs_and_expansion_defaults(
+    hook: types.ModuleType, command: str
+) -> None:
+    """Lines outside a heredoc body and substitutions in ${...} are scanned."""
+    is_dangerous, _reason = hook.check_command(command)
+    assert is_dangerous
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "cat <<'EOF'\nmentions $(printenv) here\nEOF",
+        "cat <<EOF\nplain text\nEOF\necho done",
+        "git commit -m \"$(cat <<'EOF'\nfix: a thing $(printenv)\n\nEOF\n)\"",
+        "echo ${VAR:-default}",
+        'echo "${VAR:-default}"',
+        "echo ${#arr[@]}",
+        "echo ${x:-'$(printenv)'}",
+        "echo ${x:-$(echo hi)}",
+    ],
+)
+def test_check_command_allows_well_formed_heredocs_and_plain_expansions(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    """A quoted heredoc body and a plain ${...} expansion stay allowed."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    is_dangerous, reason = hook.check_command(command)
+    assert not is_dangerous, reason
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("echo ${x:-$(a)}", ["a"]),
+        ("echo ${x:-`a`}", ["a"]),
+        ('echo "${x:-$(a)} $(b)"', ["a", "b"]),
+        ("echo ${x:-${y:-$(a)}} $(b)", ["a", "b"]),
+        ("echo ${x:-'$(a)'}", []),
+        ("echo \"${x:-'$(a)'}\"", ["a"]),
+        ("echo ${x:-$((1+2))}", []),
+        ("echo ${#arr[@]}", []),
+        ('echo ${x:-"$(a)"}', ["a"]),
+        ('echo ${x:-"}"$(a)}', ["a"]),
+        ("echo ${x:-$'}'$(a)}", ["a"]),
+        ("echo ${x:-$'\\''$(a)}", ["a"]),
+        ("echo ${x:-$'$(a)'}", []),
+        ("echo ${x:-'}'$(a)}", ["a"]),
+        ('echo "${x:-"}"$(a)}"', ["a"]),
+        ("cat <<'E'\\OF\nEOF\nx=$(a)\nE", ["a"]),
+        ("cat <<E\\OF\nEOF\n(a)\nE", ["a"]),
+        ("cat <<EOF\nEO\\\nF\n(a)", ["a"]),
+    ],
+)
+def test_substitution_payloads_in_parameter_expansions(
+    hook: types.ModuleType, command: str, expected: list[str]
+) -> None:
+    """Bodies inside ${...} are collected; quoted and arithmetic text is not."""
+    assert hook._substitution_payloads(command) == expected
+
+
 def _bash_payload(command: str) -> str:
     """Build a Claude/Gemini/Codex Bash tool payload."""
     return json.dumps({"tool_name": "Bash", "tool_input": {"command": command}})
@@ -3035,3 +3122,88 @@ def test_unquoted_redirects_keep_their_behaviour(
 )
 def test_has_quoted_redirect_word(hook: types.ModuleType, command: str, expected: bool) -> None:
     assert hook._has_quoted_redirect_word(command) is expected
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        (["if", "true", ";", "then", "printenv", ";", "fi"], [0, 1, 3, 4, 6]),
+        (["!", "printenv"], [0, 1]),
+        (["time", "-p", "env"], [0, 1, 2]),
+        (["while", "true", ";", "do", "env", ";", "done"], [0, 1, 3, 4, 6]),
+        (["echo", "then", "printenv"], [0]),
+        (["echo", "if", "x"], [0]),
+    ],
+)
+def test_command_start_indices_follow_keywords(
+    hook: types.ModuleType, tokens: list[str], expected: list[int]
+) -> None:
+    """A reserved word at a command start makes the next token a start."""
+    assert hook._command_start_indices(tokens) == expected
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("x=$(printenv)", ["printenv"]),
+        ("x=`printenv`", ["printenv"]),
+        ('echo "$(printenv) $(env)"', ["printenv", "env"]),
+        ("diff <(a) >(b)", ["a", "b"]),
+        ("(printenv)", ["printenv"]),
+        ("true && (env)", ["env"]),
+        ("x=$(echo $(printenv))", ["echo $(printenv)"]),
+        ("echo '$(printenv)'", []),
+        ("echo $'$(printenv)'", []),
+        ('echo "\\$(printenv)"', []),
+        ("echo $((1 + 2))", []),
+        ("arr=(printenv)", []),
+        ("f() { :; }", []),
+        ("echo $(printenv", []),
+        ("x=$(a) $(b", ["a"]),
+        ("then(a)", ["a"]),
+        ("do(a)", ["a"]),
+        ("else(a)", ["a"]),
+        ("{(a); }", ["a"]),
+        ("!(a)", ["a"]),
+        ("f(){ :; }", []),
+        ("x+=(a)", []),
+        ("x=(a)", []),
+        ("x=$(cat <<EOF\nEOF\n) $(b)", ["b"]),
+        ("echo \"$(cat <<'EOF'\nbody $(a)\nEOF\n)\" $(b)", ["b"]),
+        ("cat <<EOF\nv $(a) `b`\nEOF", ["a", "b"]),
+        ("cat <<'EOF'\nv $(a)\nEOF", []),
+        ("cat <<-EOF\n\tv $(a)\n\tEOF\n$(b)", ["a", "b"]),
+        ("cat <<EOF\nv \\$(a)\nEOF", []),
+        ("cat <<< $(a)", ["a"]),
+    ],
+)
+def test_substitution_payloads(hook: types.ModuleType, command: str, expected: list[str]) -> None:
+    """Bodies of substitutions and subshells are returned; quoted text is not."""
+    assert hook._substitution_payloads(command) == expected
+
+
+def test_all_substitution_payloads_follows_nesting(hook: types.ModuleType) -> None:
+    """Nested bodies are all returned, whatever the depth."""
+    command = "echo $(a $(b $(c $(d $(e)))))"
+    assert hook._all_substitution_payloads(command) == [
+        "a $(b $(c $(d $(e))))",
+        "b $(c $(d $(e)))",
+        "c $(d $(e))",
+        "d $(e)",
+        "e",
+    ]
+
+
+def test_all_substitution_payloads_reads_unquoted_heredoc_bodies(hook: types.ModuleType) -> None:
+    """An unquoted-delimiter heredoc body is read; a quoted one is not."""
+    assert hook._all_substitution_payloads("cat <<EOF\n$(a $(b))\nEOF") == ["a $(b)", "b"]
+    assert hook._all_substitution_payloads("cat <<'EOF'\n$(a)\nEOF") == []
+
+
+def test_all_substitution_payloads_gives_up_past_the_limit(hook: types.ModuleType) -> None:
+    """Too many bodies are reported as unreadable, and the command is blocked."""
+    command = " ".join(f"$(x{n})" for n in range(hook._MAX_SUBSTITUTION_PAYLOADS + 1))
+    assert hook._all_substitution_payloads(command) is None
+    is_dangerous, reason = hook.check_command(command)
+    assert is_dangerous
+    assert "too deeply" in reason

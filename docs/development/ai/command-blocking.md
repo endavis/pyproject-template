@@ -544,6 +544,9 @@ everyone:
 | `cat ~/.pypirc`, `~/.netrc`, `~/.aws/credentials`, `~/.docker/config.json`, `gh/hosts.yml` | **Blocked** — credential stores |
 | `cat ~/.copilot/config.json`, `~/.codex/auth.json`, `~/.claude/.credentials.json`, `~/.gemini/antigravity-cli/antigravity-oauth-token` | **Blocked** — AI CLI credential stores (#1043) |
 | `echo hi; cat ~/.netrc`, `echo hi` *(newline)* `cat ~/.netrc`, `true` *(newline)* `printenv` | **Blocked** — a command position after a glued `;` or an unquoted newline counts (#1011) |
+| `if true; then printenv; fi`, `while true; do env; done`, `! printenv`, `{ printenv; }`, `time printenv` | **Blocked** — a command position after a shell keyword counts (#1146) |
+| `x=$(printenv)`, `` x=`env` ``, `echo "$(printenv)"`, `(printenv)`, `diff <(printenv) /dev/null`, `x=$(cat ~/.netrc)` | **Blocked** — substitution and subshell bodies are scanned (#1146) |
+| `echo '$(printenv)'`, `echo then printenv`, `arr=(printenv)` | Allowed — quoted or argument text, not a command (#1146) |
 
 Both checks above are anchored on where a command *starts*, so they need a tokenizer that treats an
 unquoted newline and a glued `;`/`&&`/`|` as separators of their own — `shlex.split` (what
@@ -551,6 +554,18 @@ unquoted newline and a glued `;`/`&&`/`|` as separators of their own — `shlex.
 its neighbour, so `hi;cat` never produced a `cat` in command position. `_structural_tokens` (built
 for the merge rule, and now shared by these two checks) is a plain `shlex.shlex` lex instead, with
 `;`, `&`, `|` and `\n` as punctuation characters.
+
+A command also starts after a shell keyword that sits at a command start (`then`, `do`, `else`,
+`elif`, `if`, `while`, `until`, `!`, `{`, `time`). The bodies of `$(...)`, backticks, `<(...)`,
+`>(...)` and a `(...)` subshell are re-scanned with every check, like `bash -c` payloads; text in
+single quotes, `$'...'`, an array literal (`a=(...)`, `a+=(...)`), a function definition (`f()`) or
+the body of a heredoc with a quoted delimiter is not. A `(` right after a reserved word
+(`then(...)`, `do(...)`) is a subshell. The body of a heredoc with an unquoted delimiter is read
+the way the shell expands it, so a `$(...)` or backtick in it is scanned whatever command receives
+the heredoc. A `$(...)` or backtick inside a `${...}` expansion, such as a default value, is scanned too. A heredoc whose delimiter word continues past its name (`<<E\OF`, a trailing `\r`) is not registered, so the lines after it are read as commands, and a body line split by a backslash-newline joins the next one before it is compared with an unquoted delimiter. A construct the scan cannot read, such as a heredoc inside `$(...)`, is passed over and
+the scan goes on, so a substitution after it is still found. Nested bodies are collected in one
+pass, so nesting depth does not use the `bash -c` recursion budget; a command with more than 256
+bodies is blocked as unreadable.
 
 **What this is and is not.** It reduces *accidental* exposure — a secret dumped into a transcript
 that is then pasted into an issue, or read by a later summarisation step. It is not a boundary

@@ -446,14 +446,18 @@ def _skip_backtick(text: str, i: int) -> int:
     raise _OpenConstructError
 
 
-def _skip_dollar(text: str, i: int, *, ansi: bool) -> int:
-    """Return the index after the ``$`` construct at *i* (``$(``, ``${``, ``$'``)."""
+def _skip_dollar(text: str, i: int, *, ansi: bool, in_double: bool = False) -> int:
+    """Return the index after the ``$`` construct at *i* (``$(``, ``${``, ``$'``).
+
+    *in_double* says the construct sits in a double quote, where a ``'`` inside
+    ``${...}`` is an ordinary character.
+    """
     if ansi and text.startswith("$'", i):
         return _skip_ansi(text, i + 2)
     if text.startswith("$(", i):
         return _skip_paren(text, i + 2)
     if text.startswith("${", i):
-        return _skip_brace(text, i + 2)
+        return _skip_brace(text, i + 2, in_double=in_double)
     return i + 1
 
 
@@ -466,7 +470,7 @@ def _skip_double(text: str, i: int) -> int:
         elif char == '"':
             return i + 1
         elif char == "$":
-            i = _skip_dollar(text, i, ansi=False)
+            i = _skip_dollar(text, i, ansi=False, in_double=True)
         elif char == "`":
             i = _skip_backtick(text, i + 1)
         else:
@@ -474,18 +478,22 @@ def _skip_double(text: str, i: int) -> int:
     raise _OpenConstructError
 
 
-def _skip_brace(text: str, i: int) -> int:
-    """Return the index after the ``}`` that closes the ``${`` whose body starts at *i*."""
+def _skip_brace(text: str, i: int, *, in_double: bool = False) -> int:
+    """Return the index after the ``}`` that closes the ``${`` whose body starts at *i*.
+
+    *in_double* says the expansion sits in a double quote, where a ``'`` and a
+    ``$'`` are ordinary text; bare, they quote.
+    """
     while i < len(text):
         char = text[i]
         if char == "\\":
             i += 2
-        elif char == "'":
+        elif char == "'" and not in_double:
             i = _skip_single(text, i + 1)
         elif char == '"':
             i = _skip_double(text, i + 1)
         elif char == "$":
-            i = _skip_dollar(text, i, ansi=True)
+            i = _skip_dollar(text, i, ansi=not in_double, in_double=in_double)
         elif char == "`":
             i = _skip_backtick(text, i + 1)
         elif char == "}":
@@ -1212,6 +1220,288 @@ def _heredoc_payloads(command: str) -> list[str]:
                     if line.strip() and line not in body and line not in payloads
                 ]
     return payloads
+
+
+def _expansion_payloads(text: str, i: int, payloads: list[str], *, in_double: bool) -> None:
+    """Collect the ``$(...)`` and backtick bodies inside a ``${...}`` at *i*.
+
+    A default or alternate value (``${x:-$(cmd)}``) is expanded by the shell, so
+    the command in it runs. The end of the expansion comes from
+    :func:`_skip_brace`, the function every caller uses to step past it, and the
+    text inside is read with the same quoting rules, so this scan and the skip
+    cannot disagree about where the expansion ends or which parts are quoted.
+    *in_double* says the expansion sits in a double quote, where a ``'`` is an
+    ordinary character; bare, it quotes.
+    Text that cannot be read is left unreported, as the caller skips the whole
+    expansion anyway.
+    """
+    try:
+        stop = _skip_brace(text, i + 2, in_double=in_double) - 1
+        j = i + 2
+        while j < stop:
+            char = text[j]
+            if char == "\\":
+                j += 2
+            elif char == "'" and not in_double:
+                j = _skip_single(text, j + 1)
+            elif char == '"':
+                j = _double_quoted_payloads(text, j + 1, payloads)
+            elif char == "`":
+                end = _skip_backtick(text, j + 1)
+                payloads.append(text[j + 1 : end - 1])
+                j = end
+            elif text.startswith("$(", j) and not text.startswith("$((", j):
+                end = _skip_paren(text, j + 2)
+                payloads.append(text[j + 2 : end - 1])
+                j = end
+            elif text.startswith("${", j):
+                _expansion_payloads(text, j, payloads, in_double=in_double)
+                j = _skip_dollar(text, j, ansi=not in_double, in_double=in_double)
+            elif char == "$":
+                j = _skip_dollar(text, j, ansi=not in_double, in_double=in_double)
+            else:
+                j += 1
+    except _OpenConstructError:
+        return
+
+
+def _double_quoted_payloads(text: str, i: int, payloads: list[str]) -> int:
+    """Collect the bodies of ``$(...)`` and backticks in a double-quoted string.
+
+    *i* is the index after the opening ``"``. Returns the index after the
+    closing quote. An arithmetic ``$((...))`` and an escaped ``\\$`` hold no
+    command, and are skipped.
+    """
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            i += 2
+        elif char == '"':
+            return i + 1
+        elif char == "`":
+            end = _skip_backtick(text, i + 1)
+            payloads.append(text[i + 1 : end - 1])
+            i = end
+        elif text.startswith("$(", i) and not text.startswith("$((", i):
+            end = _skip_paren(text, i + 2)
+            payloads.append(text[i + 2 : end - 1])
+            i = end
+        elif char == "$":
+            if text.startswith("${", i):
+                _expansion_payloads(text, i, payloads, in_double=True)
+            i = _skip_dollar(text, i, ansi=False)
+        else:
+            i += 1
+    raise _OpenConstructError
+
+
+def _heredoc_body_payloads(body: str, payloads: list[str]) -> None:
+    """Collect the ``$(...)`` and backtick bodies in an unquoted-delimiter heredoc body.
+
+    The shell expands these in such a body as it does inside double quotes,
+    except that a ``"`` is an ordinary character. An arithmetic ``$((...))``
+    and an escaped ``\\$`` hold no command. A construct that cannot be read is
+    passed over a character at a time.
+    """
+    i = 0
+    while i < len(body):
+        char = body[i]
+        try:
+            if char == "\\":
+                i += 2
+            elif char == "`":
+                end = _skip_backtick(body, i + 1)
+                payloads.append(body[i + 1 : end - 1])
+                i = end
+            elif body.startswith("$((", i):
+                i = _skip_paren(body, i + 2)
+            elif body.startswith("$(", i):
+                end = _skip_paren(body, i + 2)
+                payloads.append(body[i + 2 : end - 1])
+                i = end
+            elif char == "$":
+                if body.startswith("${", i):
+                    _expansion_payloads(body, i, payloads, in_double=True)
+                i = _skip_dollar(body, i, ansi=False)
+            else:
+                i += 1
+        except _OpenConstructError:
+            i += 1
+
+
+def _consume_heredoc_bodies(
+    command: str, pos: int, pending: list[tuple[str, bool, bool]], payloads: list[str]
+) -> int:
+    """Read the bodies of the heredocs in *pending*, starting at line start *pos*.
+
+    Each entry is ``(delimiter, unquoted, strip_tabs)``. The body of a
+    quoted-delimiter heredoc is skipped; the substitutions in an unquoted one
+    are collected into *payloads*. Returns the index after the last terminator.
+    """
+    for delimiter, unquoted, strip_tabs in pending:
+        body: list[str] = []
+        while pos < len(command):
+            newline = command.find("\n", pos)
+            line_end = len(command) if newline == -1 else newline
+            line = command[pos:line_end]
+            pos = line_end + 1
+            logical = line
+            if unquoted:
+                # Bash joins a line ending in an odd number of backslashes
+                # with the next before comparing it to the delimiter, as
+                # :func:`_heredoc_logical_line` does.
+                joined_to = pos
+                while (len(logical) - len(logical.rstrip("\\"))) % 2 == 1 and joined_to < len(
+                    command
+                ):
+                    next_end = command.find("\n", joined_to)
+                    next_end = len(command) if next_end == -1 else next_end
+                    logical = logical[:-1] + command[joined_to:next_end]
+                    joined_to = next_end + 1
+                if (logical.lstrip("\t") if strip_tabs else logical) == delimiter:
+                    pos = joined_to
+                    break
+            elif (line.lstrip("\t") if strip_tabs else line) == delimiter:
+                break
+            body.append(line)
+        if unquoted:
+            _heredoc_body_payloads("\n".join(body), payloads)
+    return min(pos, len(command))
+
+
+def _opens_subshell(command: str, i: int) -> bool:
+    """Whether the ``(`` at *i* opens a subshell rather than something else.
+
+    Not a subshell: ``$(``, ``<(`` and ``>(`` (read elsewhere), an assignment
+    ``name=(...)`` or ``name+=(...)``, and a function definition ``f()``. A
+    ``(`` right after a reserved word (``then(...)``, ``do(...)``) is one.
+    """
+    previous = command[i - 1] if i else " "
+    if previous in "$<>=":
+        return False
+    if previous.isalnum() or previous == "_":
+        word = re.search(r"[^\s;&|()<>]*\Z", command[:i])
+        return word is not None and word.group() in _COMMAND_KEYWORDS
+    return True
+
+
+def _substitution_payloads(command: str) -> list[str]:
+    """Return the body of each command substitution, process substitution and subshell.
+
+    These bodies are shell the current shell runs: ``$(...)`` and backticks
+    (bare or inside double quotes), ``<(...)`` and ``>(...)``, and a ``(...)``
+    group in command position. :func:`check_command` re-scans each one, as it
+    does a ``bash -c`` payload, so a check anchored on a command position
+    sees the command inside. Text in single quotes, ``$'...'``, an escaped
+    ``$``, an arithmetic ``$((...))``, an array literal ``a=(...)`` and a
+    function definition ``f()`` hold no such body and are skipped, as is the
+    body of a heredoc with a quoted delimiter. The body of one with an
+    unquoted delimiter is read for substitutions.
+
+    A nested body is returned inside its parent only; :func:`check_command`
+    reaches it through :func:`_all_substitution_payloads`. A construct that
+    cannot be read, such as a heredoc inside ``$(...)``, is passed over and the
+    scan goes on after its first character, so a later substitution is found.
+    """
+    payloads: list[str] = []
+    pending: list[tuple[str, bool, bool]] = []
+    i = 0
+    while i < len(command):
+        start = i
+        char = command[i]
+        previous = command[i - 1] if i else " "
+        try:
+            if char == "\\":
+                i += 2
+            elif char == "'":
+                i = _skip_single(command, i + 1)
+            elif char == '"':
+                i = _double_quoted_payloads(command, i + 1, payloads)
+            elif command.startswith("$'", i):
+                i = _skip_ansi(command, i + 2)
+            elif command.startswith("$((", i):
+                i = _skip_paren(command, i + 2)
+            elif command.startswith("$(", i) or (char in "<>" and command.startswith("(", i + 1)):
+                end = _skip_paren(command, i + 2)
+                payloads.append(command[i + 2 : end - 1])
+                i = end
+            elif char == "$":
+                if command.startswith("${", i):
+                    _expansion_payloads(command, i, payloads, in_double=False)
+                i = _skip_dollar(command, i, ansi=False)
+            elif char == "`":
+                end = _skip_backtick(command, i + 1)
+                payloads.append(command[i + 1 : end - 1])
+                i = end
+            elif char == "(" and _opens_subshell(command, i):
+                end = _skip_paren(command, i + 1)
+                payloads.append(command[i + 1 : end - 1])
+                i = end
+            elif char == "<" and previous != "<" and (marker := _HEREDOC_START.match(command, i)):
+                after = command[marker.end() : marker.end() + 1]
+                if after and after != "\n" and after not in _HEREDOC_WORD_ENDS:
+                    # The delimiter word goes on past what the marker regex
+                    # took, so the shell's delimiter is not the one matched
+                    # and where the body ends is unknown. Register no
+                    # heredoc, so the lines that follow are read as commands,
+                    # as :func:`_heredocs` leaves such a body unstripped.
+                    i = marker.end()
+                    continue
+                delimiter = marker.group(3) or marker.group(4) or marker.group(5)
+                pending.append((delimiter, marker.group(5) is not None, bool(marker.group(1))))
+                i = marker.end()
+            elif char == "\n" and pending:
+                i = _consume_heredoc_bodies(command, i + 1, pending, payloads)
+                pending.clear()
+            else:
+                i += 1
+        except _OpenConstructError:
+            i = start + 1
+    return list(dict.fromkeys(payloads))
+
+
+def _unquoted_heredoc_bodies(command: str) -> list[str]:
+    """Return the body of each heredoc in *command* whose delimiter is unquoted."""
+    lines = command.split("\n")
+    bodies: list[str] = []
+    for marker_line, _words, body_start, body_end in _heredocs(lines, unclear_as_body=True):
+        match, _quote = _heredoc_marker_match(lines[marker_line])
+        if match is not None and match.group(5) is None:
+            continue  # a quoted delimiter: the body is not expanded
+        bodies.append("\n".join(lines[body_start:body_end]))
+    return bodies
+
+
+# Most substitution bodies read from one command, so a pathological input
+# cannot make the scan unbounded.
+_MAX_SUBSTITUTION_PAYLOADS = 256
+
+
+def _all_substitution_payloads(command: str) -> list[str] | None:
+    """Return every substitution body in *command*, nested ones included.
+
+    Nesting is followed here, one level at a time, so it does not use the
+    recursion budget of :func:`check_command`. Returns None when the input
+    holds more than ``_MAX_SUBSTITUTION_PAYLOADS`` bodies, which the caller
+    treats as unreadable.
+    """
+    result: list[str] = []
+    seen = {command}
+    queue = [command]
+    while queue:
+        text = queue.pop(0)
+        found = _substitution_payloads(_strip_shell_comments(_without_heredoc_bodies(text)))
+        for body in _unquoted_heredoc_bodies(text):
+            _heredoc_body_payloads(body, found)
+        for payload in found:
+            if payload in seen:
+                continue
+            seen.add(payload)
+            if len(result) >= _MAX_SUBSTITUTION_PAYLOADS:
+                return None
+            result.append(payload)
+            queue.append(payload)
+    return result
 
 
 def _joined_continuation_lines(lines: list[str]) -> list[str]:
@@ -3397,20 +3687,34 @@ def check_merge_to_protected(command: str) -> tuple[bool, str]:
     return False, ""
 
 
+# Reserved words after which a command begins: ``if printenv; then ...``,
+# ``! printenv``, ``{ printenv; }``, ``time printenv``.
+_COMMAND_KEYWORDS = frozenset(
+    {"!", "{", "if", "then", "do", "else", "elif", "while", "until", "time"}
+)
+
+
 def _command_start_indices(tokens: list[str]) -> list[int]:
     """Return the indices at which a command begins.
 
-    A command starts at position 0 and after any shell separator. Anchoring on
-    these is what separates *running* a command from merely *mentioning* it:
-    a heredoc body tokenizes exactly like an argument list, so a scan over all
-    positions treats documentation and test fixtures as invocations. Both
+    A command starts at position 0, after any shell separator, and after a
+    reserved word (:data:`_COMMAND_KEYWORDS`) that itself sits at a start, so
+    ``then printenv`` counts while ``echo then printenv`` does not. Anchoring
+    on these is what separates *running* a command from merely *mentioning*
+    it: a heredoc body tokenizes exactly like an argument list, so a scan over
+    all positions treats documentation and test fixtures as invocations. Both
     checks below hit that while this repository's own tests were being written.
     """
-    starts = [0]
+    start_set = {0}
     for index, token in enumerate(tokens):
         if token in _SHELL_OPERATORS and index + 1 < len(tokens):
-            starts.append(index + 1)
-    return starts
+            start_set.add(index + 1)
+    for index, word in enumerate(tokens):
+        if index in start_set and word in _COMMAND_KEYWORDS and index + 1 < len(tokens):
+            start_set.add(index + 1)
+            if word == "time" and tokens[index + 1] == "-p" and index + 2 < len(tokens):
+                start_set.add(index + 2)
+    return sorted(start_set)
 
 
 def _is_secret_name(name: str) -> bool:
@@ -3541,7 +3845,7 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
     return False, ""
 
 
-def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
+def check_command(command: str, _depth: int = 0, _expanded: bool = False) -> tuple[bool, str]:
     """
     Check if command contains dangerous patterns.
 
@@ -3675,6 +3979,21 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     if _depth < 3:
         for payload in _wrapped_payloads(tokens) + _heredoc_payloads(command):
             is_dangerous, reason = check_command(payload, _depth + 1)
+            if is_dangerous:
+                return True, reason
+
+    # Substitution bodies, nested ones included, are collected in one pass and
+    # each is checked at one level down, so nesting does not use the wrapper
+    # depth budget above. A checked body does not collect its own again.
+    if not _expanded:
+        try:
+            substitutions = _all_substitution_payloads(command)
+        except RecursionError:
+            substitutions = None
+        if substitutions is None:
+            return True, "Command substitutions are nested too deeply to scan"
+        for payload in substitutions:
+            is_dangerous, reason = check_command(payload, _depth + 1, _expanded=True)
             if is_dangerous:
                 return True, reason
 
