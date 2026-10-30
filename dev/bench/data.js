@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793367285907,
+  "lastUpdate": 1793367788914,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21594,6 +21594,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7114741841654698e-7",
             "extra": "mean: 1.573118140109181 usec\nrounds: 66477"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0813db554d1f6387f39292f78226faa30f778675",
+          "message": "chore: resolve git apply and git am patch targets against the working tree git writes to (merges PR #1138, addresses #1133)\n\n* chore: resolve git apply and git am patch targets against the working tree git writes to\n\nThe hook resolved patch header paths against the current directory,\naccounting only for git -C. Resolve them against the tree set by -C,\n--work-tree and GIT_WORK_TREE as well, and treat a working tree that\ncannot be resolved to a literal path as an unknown target.\n\nAddresses #1133\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: resolve patch targets against the final -C directory and fail closed when config moves the work tree\n\nApply every -C before resolving --work-tree, treat a work tree that\n--git-dir, GIT_DIR, git config settings or core.worktree may move as an\nunknown target, share the value-taking global option list with the\nsubcommand lookup, and normalise resolved roots.\n\nAddresses #1133\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: resolve patch targets only from simple working-tree values and fail closed otherwise\n\nTreat the working tree as unknown when git environment variables or\nconfig options may move it, when a value has a .. segment, or when the\ndirectory changed before git. Run the allow-case tests on POSIX paths only.\n\nAddresses #1133\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* chore: treat any option on a prefix wrapper as a directory change when resolving patch targets\n\nCompute the final working-tree root before judging whether it is absolute,\nand treat options given to a wrapper before git or patch as possibly\nchanging the directory.\n\nAddresses #1133\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T13:42:16Z",
+          "tree_id": "8163e1747e50172632976a42b90aa6a94f57a5a8",
+          "url": "https://github.com/endavis/pyproject-template/commit/0813db554d1f6387f39292f78226faa30f778675"
+        },
+        "date": 1793367787380,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9371825.251530625,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9582928126023125e-8",
+            "extra": "mean: 106.7028004856021 nsec\nrounds: 99622"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10265464.441188099,
+            "unit": "iter/sec",
+            "range": "stddev: 1.082395426897154e-8",
+            "extra": "mean: 97.41400457125957 nsec\nrounds: 108496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6544650.084753654,
+            "unit": "iter/sec",
+            "range": "stddev: 1.805438201184654e-8",
+            "extra": "mean: 152.79655704276524 nsec\nrounds: 67169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2240549.1700752126,
+            "unit": "iter/sec",
+            "range": "stddev: 9.102708835261272e-8",
+            "extra": "mean: 446.3191494995984 nsec\nrounds: 198060"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 601483.8738412503,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7074346656147287e-7",
+            "extra": "mean: 1.66255496363304 usec\nrounds: 62696"
           }
         ]
       }
