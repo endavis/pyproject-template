@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793355522739,
+  "lastUpdate": 1793358168464,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21358,6 +21358,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 9.296421950328277e-8",
             "extra": "mean: 945.0514548018873 nsec\nrounds: 109362"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cd91ae2c056eb5c89a64e30fa5df8f6d4d82ebd5",
+          "message": "feat: let implement-issue's host write the plan after posting findings, and run doit check once per run (merges PR #1129, addresses #1128)\n\nStep 3: the host writes the plan itself only when it posted a findings\ncomment on the issue during the run and the plan cites it; a new\nPlan-review brief critiques that draft (no exploration, no probing) before\nit is posted. Otherwise the Planner runs, taking host findings as settled\nbut flagging any the code contradicts.\n\nThe Coder brief gets a checking budget: covering tests, one revert check,\nrule-required skills, doit lint and doit type_check, and no full doit\ncheck. Step 5 runs the single doit check, since the host does not rely on\na subagent's \"check passed\" claim. ADR-9029 records this and amends\nADR-9024.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T11:02:03Z",
+          "tree_id": "2877fe97516815af95cf593e612a5c3c700ac8ea",
+          "url": "https://github.com/endavis/pyproject-template/commit/cd91ae2c056eb5c89a64e30fa5df8f6d4d82ebd5"
+        },
+        "date": 1793358166656,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13383257.469855381,
+            "unit": "iter/sec",
+            "range": "stddev: 8.050492652757307e-9",
+            "extra": "mean: 74.72022429908507 nsec\nrounds: 135667"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13586150.802431347,
+            "unit": "iter/sec",
+            "range": "stddev: 7.49900785065448e-9",
+            "extra": "mean: 73.60436480809872 nsec\nrounds: 140430"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8618639.853160178,
+            "unit": "iter/sec",
+            "range": "stddev: 1.536993695594154e-8",
+            "extra": "mean: 116.0275886958349 nsec\nrounds: 90196"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2916710.4397085877,
+            "unit": "iter/sec",
+            "range": "stddev: 7.547879402395273e-8",
+            "extra": "mean: 342.8519973686216 nsec\nrounds: 190187"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 803319.5265697369,
+            "unit": "iter/sec",
+            "range": "stddev: 1.676959680200159e-7",
+            "extra": "mean: 1.2448346727859465 usec\nrounds: 84761"
           }
         ]
       }
