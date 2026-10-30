@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793375875555,
+  "lastUpdate": 1793391760676,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -21948,6 +21948,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.885135271390764e-7",
             "extra": "mean: 1.6590901494765633 usec\nrounds: 62819"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f9dfbd5740085e7a3a8503147db14e51f688ef1",
+          "message": "feat: show the template update notice on resumed sessions, in Codex and Copilot, and in yellow (merges PR #1152, addresses #1149)\n\nRun the Claude Code SessionStart check on startup and resume, wire the\nCodex SessionStart hook, colour the systemMessage yellow for Claude and\nCodex (plain under NO_COLOR), and add a plain additionalContext relay to\nthe Claude-format output so Copilot's model passes the notice on.\n\nAddresses #1149\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T20:21:46Z",
+          "tree_id": "5678ed24f6ae7875fb13f95ef1bbf50d05afb924",
+          "url": "https://github.com/endavis/pyproject-template/commit/3f9dfbd5740085e7a3a8503147db14e51f688ef1"
+        },
+        "date": 1793391759068,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9379373.964313371,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1393161922367012e-8",
+            "extra": "mean: 106.61692388050616 nsec\nrounds: 100513"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9787539.128859567,
+            "unit": "iter/sec",
+            "range": "stddev: 1.616092597691052e-8",
+            "extra": "mean: 102.17072819166538 nsec\nrounds: 107101"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6508158.9942269465,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4358109511367523e-8",
+            "extra": "mean: 153.65328365318803 nsec\nrounds: 69176"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2309020.6762933577,
+            "unit": "iter/sec",
+            "range": "stddev: 6.96899241001385e-8",
+            "extra": "mean: 433.084038729912 nsec\nrounds: 187301"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 603856.6743147,
+            "unit": "iter/sec",
+            "range": "stddev: 1.700694671205359e-7",
+            "extra": "mean: 1.6560221034815459 usec\nrounds: 62696"
           }
         ]
       }
