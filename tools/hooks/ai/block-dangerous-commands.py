@@ -2096,11 +2096,38 @@ def _is_first_command(tokens: list[str], idx: int) -> bool:
     )
 
 
+# Wrappers that run a command after options of their own, some of which change
+# the directory (`sudo -D`, `nsenter -w`, `unshare --wd`, `env -C`, `chroot`).
+_CWD_WRAPPERS = _COMMAND_PREFIX_WRAPPERS | frozenset(
+    {"doas", "nsenter", "unshare", "chroot", "setpriv", "runuser", "su", "ionice", "nohup", "time"}
+)
+# these change the root or directory with no option at all
+_CWD_ALWAYS_MOVING = frozenset({"chroot"})
+
+
 def _cwd_moved(tokens: list[str], idx: int) -> bool:
-    """Return True when a word before *idx* may change the working directory."""
-    return any(
-        t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in tokens[:idx]
-    )
+    """Return True when a word before *idx* may change the working directory.
+
+    Fails closed: any option given to a prefix wrapper (``sudo -D x``,
+    ``nsenter -w x``, ``env -i``) counts, as its own options may move the
+    directory. A wrapper's options are read up to its command word;
+    ``NAME=value`` assignments are skipped.
+    """
+    words = [t.strip(";&|()") for t in tokens[:idx]]
+    if any(t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in words):
+        return True
+    for i, word in enumerate(words):
+        base = word.rsplit("/", 1)[-1].lower()
+        if base not in _CWD_WRAPPERS:
+            continue
+        if base in _CWD_ALWAYS_MOVING:
+            return True
+        for nxt in words[i + 1 :]:
+            if nxt.startswith("-") and len(nxt) > 1:
+                return True
+            if not _ASSIGNMENT_RE.match(nxt):
+                break
+    return False
 
 
 def _patch_source_targets(
@@ -2135,7 +2162,9 @@ def _patch_source_targets(
         named.extend(paths)
     hits: list[str] = []
     for path in named:
-        for candidate in (path, posixpath.join(root, path)) if root else (path,):
+        for candidate in (
+            (path, posixpath.normpath(posixpath.join(root, path))) if root else (path,)
+        ):
             if _is_env_persistence_target(candidate):
                 hits.append(candidate)
     return hits
@@ -2202,6 +2231,78 @@ def _split_stdin_sources(
         else:
             operands.append(t)
     return operands, stdin_files, unresolvable, has_output
+
+
+def _has_dotdot(value: str) -> bool:
+    """Return True when a ``/`` or ``\\`` separated *value* has a ``..`` segment."""
+    return ".." in value.replace("\\", "/").split("/")
+
+
+def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str | None, bool]:
+    """Return ``(root, unresolvable)``: where git writes a patch's paths (#1133).
+
+    Fails closed: the root is *unresolvable* unless it is simple. Every ``-C``
+    among the options before the subcommand is joined in order (an absolute one
+    resets the directory), wherever it stands. The last ``--work-tree`` (else a
+    literal ``GIT_WORK_TREE=<dir>`` assigned before ``git``) is then resolved
+    against that final directory, and ``.`` segments are folded. Unresolvable:
+
+    - a ``..`` segment in a ``-C``, ``--work-tree`` or ``GIT_WORK_TREE`` value;
+    - a value with an expansion, an empty value, or ``GIT_WORK_TREE`` set any way
+      but a literal assignment;
+    - any other ``GIT_*`` word before ``git``, or ``-c``, ``--config-env`` or
+      ``--git-dir``, which may move the work tree, unless a literal
+      ``--work-tree`` or ``GIT_WORK_TREE`` names it (the git dir's config is
+      not read);
+    - a working directory moved before ``git`` (``cd``, ``pushd``, ``env -C``),
+      unless an absolute ``--work-tree``, ``GIT_WORK_TREE`` or ``-C`` resets it.
+    """
+    env_tree: str | None = None
+    moved = False
+    for t in tokens[:git_idx]:
+        if t.startswith("GIT_WORK_TREE="):
+            env_tree = t.partition("=")[2]
+        elif "GIT_WORK_TREE" in t:
+            return None, True
+        elif "GIT_" in t:
+            moved = True
+    cwd = ""
+    tree: str | None = None
+    opts = tokens[git_idx + 1 : sub]
+    i = 0
+    while i < len(opts):
+        t = opts[i]
+        i += 1
+        # (option name, value) for the options that matter; else skip like
+        # `_git_subcommand_index` does
+        name, value = t, None
+        if t in _GIT_GLOBAL_OPTS_WITH_VALUE:
+            value = opts[i] if i < len(opts) else ""
+            i += 1
+        elif t.startswith("-C") or t.startswith("-c"):
+            name, value = t[:2], t[2:]
+        elif t.startswith("--") and "=" in t:
+            name, _, value = t.partition("=")
+        if name in {"-c", "--config-env", "--git-dir"}:
+            moved = True
+        elif name in {"-C", "--work-tree"}:
+            if not value or any(c in _DYNAMIC_CHARS for c in value) or _has_dotdot(value):
+                return None, True
+            if name == "-C":
+                cwd = posixpath.join(cwd, value)
+            else:
+                tree = value
+    if tree is None and env_tree is not None:
+        tree = env_tree
+        if not tree or any(c in _DYNAMIC_CHARS for c in tree) or _has_dotdot(tree):
+            return None, True
+    if tree is None and moved:
+        return None, True
+    final = posixpath.join(cwd, tree) if tree is not None else cwd
+    if _cwd_moved(tokens, git_idx) and (not posixpath.isabs(final) or final.startswith("~")):
+        return None, True
+    root = posixpath.normpath(final or ".")
+    return (None if root == "." else root), False
 
 
 def _git_patch_targets(
@@ -2271,6 +2372,8 @@ def _git_patch_targets(
                 value = t.partition("=")[2] if has_value else (args[i] if i < len(args) else "")
                 i += 0 if has_value else 1
                 if full == "--directory":
+                    if _has_dotdot(value):
+                        return [*targets, _ENVRC_EXAMPLE]
                     root = value
                 elif full == "--build-fake-ancestor":
                     fake_ancestors.append(value)
@@ -2303,6 +2406,15 @@ def _git_patch_targets(
         return [*targets, _ENVRC_EXAMPLE]
     opts = tokens[git_idx + 1 : sub]
     cwd_moved = _cwd_moved(tokens, git_idx) or any(t.startswith("-C") for t in opts)
+    tree, tree_unresolvable = _git_work_tree_root(tokens, git_idx, sub)
+    if tree_unresolvable:
+        return [*targets, _ENVRC_EXAMPLE]
+    if tree is not None:
+        root = posixpath.join(tree, root) if root else tree
+    if root:
+        root = posixpath.normpath(root)
+        if root == ".":
+            root = None
     return targets + _patch_source_targets(
         [(src, None) for src in operands + stdin_files],
         read_files=read_files and _is_first_command(tokens, git_idx),
