@@ -158,6 +158,9 @@ uv run doit pr --title="<type>: <subject>" --body-file=<pr-body-file>
 
 The PR body follows `.github/pull_request_template.md` and includes `Addresses #<n>`.
 
+When the caller's prompt, such as an `implement-issues` per-issue agent's, says to stop after the
+push, skip `doit pr` and Step 7 and report the pushed branch.
+
 ### Step 7: CI loop
 
 1. Watch `gh pr checks` until every job finishes or the round cap is hit.
