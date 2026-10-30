@@ -1309,17 +1309,28 @@ def _normalise_command_words(tokens: list[str]) -> list[str]:
 
     The one place a command word is normalised: ``check_command`` applies it to
     every token list it hands to a rule, so every rule sees ``git`` for
-    ``/usr/bin/git``. Rules scan every position rather than only command
-    position (ADR-9019, rule 1), so an argument such as ``docs/patch`` is
-    reduced too; that can only add a block, never remove one.
+    ``/usr/bin/git``. Only a word in command position is rewritten: the first
+    word, the first word after a separator, and the word after a prefix
+    wrapper (``sudo``, ``env``, ``nice``, ``command``), its options or a
+    ``NAME=value`` assignment. Operand and path tokens keep their original
+    text, because path-based checks must see the path the shell uses.
     """
-    normalised: list[str] = []
-    for token in tokens:
-        if "/" in token and not token.startswith("-"):
-            base = token.rsplit("/", 1)[-1]
-            if base.lower() in _RULE_COMMAND_WORDS:
-                token = base
-        normalised.append(token)
+    normalised = list(tokens)
+    at_command = True
+    for index, token in enumerate(tokens):
+        if token in _SHELL_OPERATORS:
+            at_command = True
+            continue
+        if not at_command:
+            continue
+        if _ASSIGNMENT_RE.match(token):
+            continue
+        base = token.rsplit("/", 1)[-1]
+        if "/" in token and not token.startswith("-") and base.lower() in _RULE_COMMAND_WORDS:
+            normalised[index] = base
+        if base.lower() in _COMMAND_PREFIX_WRAPPERS or token.startswith("-"):
+            continue
+        at_command = False
     return normalised
 
 

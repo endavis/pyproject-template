@@ -2374,16 +2374,46 @@ def test_path_qualified_command_word_gets_the_bare_result(
     assert hook.check_command(qualified) == hook.check_command(command)
 
 
-def test_normalise_command_words_leaves_other_tokens_alone(hook: types.ModuleType) -> None:
-    tokens = ["/usr/bin/git", "./bin/gh", "/opt/tool", "src/foo.py", "--x=/usr/bin/git", "git"]
-    assert hook._normalise_command_words(tokens) == [
-        "git",
-        "gh",
-        "/opt/tool",
-        "src/foo.py",
-        "--x=/usr/bin/git",
-        "git",
-    ]
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        (["/usr/bin/git", "status"], ["git", "status"]),
+        (["true", "&&", "./bin/gh", "pr"], ["true", "&&", "gh", "pr"]),
+        (["FOO=1", "/usr/bin/git", "push"], ["FOO=1", "git", "push"]),
+        (["sudo", "-n", "/usr/bin/rm", "x"], ["sudo", "-n", "rm", "x"]),
+        (["/usr/bin/env", "/usr/bin/git"], ["env", "git"]),
+        # Operands and paths keep their original text.
+        (["cat", "dir/git", "src/foo.py"], ["cat", "dir/git", "src/foo.py"]),
+        (["patch", "-i", ".claude/patch"], ["patch", "-i", ".claude/patch"]),
+        (["git", "apply", "dir/git"], ["git", "apply", "dir/git"]),
+        (["echo", "x", ">", "/usr/bin/git"], ["echo", "x", ">", "/usr/bin/git"]),
+        (["cat", "--x=/usr/bin/git", "/opt/tool"], ["cat", "--x=/usr/bin/git", "/opt/tool"]),
+    ],
+)
+def test_normalise_command_words_rewrites_command_position_only(
+    hook: types.ModuleType, tokens: list[str], expected: list[str]
+) -> None:
+    assert hook._normalise_command_words(tokens) == expected
+
+
+def test_operand_path_ending_in_a_command_word_keeps_its_path(
+    hook: types.ModuleType, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A patch file or write target named like a command is still that path."""
+    monkeypatch.chdir(tmp_path)
+    (tmp_path / "dir").mkdir()
+    (tmp_path / "dir" / "git").write_bytes(_unified("src/foo.py"))
+    (tmp_path / "dir" / "patch").write_bytes(_unified(".bashrc"))
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    # A harmless patch file named `git` is read from dir/git, not from `git`.
+    assert hook.check_command("patch -p1 -i dir/git") == (False, "")
+    assert hook.check_command("git apply dir/git") == (False, "")
+    # A protected patch file named `patch` is still read from dir/patch.
+    assert hook.check_command("patch -p1 -i dir/patch")[0]
+    assert hook.check_command("git apply dir/patch")[0]
+    # A redirect target named like a command is not rewritten.
+    assert hook.check_command("echo x > dir/git") == (False, "")
+    assert hook.check_command("cat dir/git") == (False, "")
 
 
 @pytest.mark.parametrize(
