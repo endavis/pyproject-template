@@ -3035,3 +3035,46 @@ def test_unquoted_redirects_keep_their_behaviour(
 )
 def test_has_quoted_redirect_word(hook: types.ModuleType, command: str, expected: bool) -> None:
     assert hook._has_quoted_redirect_word(command) is expected
+
+
+@pytest.mark.parametrize(
+    ("tokens", "expected"),
+    [
+        (["if", "true", ";", "then", "printenv", ";", "fi"], [0, 1, 3, 4, 6]),
+        (["!", "printenv"], [0, 1]),
+        (["time", "-p", "env"], [0, 1, 2]),
+        (["while", "true", ";", "do", "env", ";", "done"], [0, 1, 3, 4, 6]),
+        (["echo", "then", "printenv"], [0]),
+        (["echo", "if", "x"], [0]),
+    ],
+)
+def test_command_start_indices_follow_keywords(
+    hook: types.ModuleType, tokens: list[str], expected: list[int]
+) -> None:
+    """A reserved word at a command start makes the next token a start."""
+    assert hook._command_start_indices(tokens) == expected
+
+
+@pytest.mark.parametrize(
+    ("command", "expected"),
+    [
+        ("x=$(printenv)", ["printenv"]),
+        ("x=`printenv`", ["printenv"]),
+        ('echo "$(printenv) $(env)"', ["printenv", "env"]),
+        ("diff <(a) >(b)", ["a", "b"]),
+        ("(printenv)", ["printenv"]),
+        ("true && (env)", ["env"]),
+        ("x=$(echo $(printenv))", ["echo $(printenv)"]),
+        ("echo '$(printenv)'", []),
+        ("echo $'$(printenv)'", []),
+        ('echo "\\$(printenv)"', []),
+        ("echo $((1 + 2))", []),
+        ("arr=(printenv)", []),
+        ("f() { :; }", []),
+        ("echo $(printenv", []),
+        ("x=$(a) $(b", ["a"]),
+    ],
+)
+def test_substitution_payloads(hook: types.ModuleType, command: str, expected: list[str]) -> None:
+    """Bodies of substitutions and subshells are returned; quoted text is not."""
+    assert hook._substitution_payloads(command) == expected

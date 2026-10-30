@@ -1214,6 +1214,86 @@ def _heredoc_payloads(command: str) -> list[str]:
     return payloads
 
 
+def _double_quoted_payloads(text: str, i: int, payloads: list[str]) -> int:
+    """Collect the bodies of ``$(...)`` and backticks in a double-quoted string.
+
+    *i* is the index after the opening ``"``. Returns the index after the
+    closing quote. An arithmetic ``$((...))`` and an escaped ``\\$`` hold no
+    command, and are skipped.
+    """
+    while i < len(text):
+        char = text[i]
+        if char == "\\":
+            i += 2
+        elif char == '"':
+            return i + 1
+        elif char == "`":
+            end = _skip_backtick(text, i + 1)
+            payloads.append(text[i + 1 : end - 1])
+            i = end
+        elif text.startswith("$(", i) and not text.startswith("$((", i):
+            end = _skip_paren(text, i + 2)
+            payloads.append(text[i + 2 : end - 1])
+            i = end
+        elif char == "$":
+            i = _skip_dollar(text, i, ansi=False)
+        else:
+            i += 1
+    raise _OpenConstructError
+
+
+def _substitution_payloads(command: str) -> list[str]:
+    """Return the body of each command substitution, process substitution and subshell.
+
+    These bodies are shell the current shell runs: ``$(...)`` and backticks
+    (bare or inside double quotes), ``<(...)`` and ``>(...)``, and a ``(...)``
+    group in command position. :func:`check_command` re-scans each one, as it
+    does a ``bash -c`` payload, so a check anchored on a command position
+    sees the command inside. Text in single quotes, ``$'...'``, an escaped
+    ``$``, an arithmetic ``$((...))``, an array literal ``a=(...)`` and a
+    function definition ``f()`` hold no such body and are skipped.
+
+    A nested body is returned inside its parent only; the recursion in
+    :func:`check_command` reaches it. A construct that cannot be read ends the
+    scan and returns what was found before it.
+    """
+    payloads: list[str] = []
+    i = 0
+    try:
+        while i < len(command):
+            char = command[i]
+            previous = command[i - 1] if i else " "
+            if char == "\\":
+                i += 2
+            elif char == "'":
+                i = _skip_single(command, i + 1)
+            elif char == '"':
+                i = _double_quoted_payloads(command, i + 1, payloads)
+            elif command.startswith("$'", i):
+                i = _skip_ansi(command, i + 2)
+            elif command.startswith("$((", i):
+                i = _skip_paren(command, i + 2)
+            elif command.startswith("$(", i) or (char in "<>" and command.startswith("(", i + 1)):
+                end = _skip_paren(command, i + 2)
+                payloads.append(command[i + 2 : end - 1])
+                i = end
+            elif char == "$":
+                i = _skip_dollar(command, i, ansi=False)
+            elif char == "`":
+                end = _skip_backtick(command, i + 1)
+                payloads.append(command[i + 1 : end - 1])
+                i = end
+            elif char == "(" and not (previous.isalnum() or previous in "_=$<>"):
+                end = _skip_paren(command, i + 1)
+                payloads.append(command[i + 1 : end - 1])
+                i = end
+            else:
+                i += 1
+    except (_OpenConstructError, RecursionError):
+        pass
+    return payloads
+
+
 def _joined_continuation_lines(lines: list[str]) -> list[str]:
     """Join each line ending in an odd number of backslashes with the next one.
 
@@ -3397,20 +3477,34 @@ def check_merge_to_protected(command: str) -> tuple[bool, str]:
     return False, ""
 
 
+# Reserved words after which a command begins: ``if printenv; then ...``,
+# ``! printenv``, ``{ printenv; }``, ``time printenv``.
+_COMMAND_KEYWORDS = frozenset(
+    {"!", "{", "if", "then", "do", "else", "elif", "while", "until", "time"}
+)
+
+
 def _command_start_indices(tokens: list[str]) -> list[int]:
     """Return the indices at which a command begins.
 
-    A command starts at position 0 and after any shell separator. Anchoring on
-    these is what separates *running* a command from merely *mentioning* it:
-    a heredoc body tokenizes exactly like an argument list, so a scan over all
-    positions treats documentation and test fixtures as invocations. Both
+    A command starts at position 0, after any shell separator, and after a
+    reserved word (:data:`_COMMAND_KEYWORDS`) that itself sits at a start, so
+    ``then printenv`` counts while ``echo then printenv`` does not. Anchoring
+    on these is what separates *running* a command from merely *mentioning*
+    it: a heredoc body tokenizes exactly like an argument list, so a scan over
+    all positions treats documentation and test fixtures as invocations. Both
     checks below hit that while this repository's own tests were being written.
     """
-    starts = [0]
+    start_set = {0}
     for index, token in enumerate(tokens):
         if token in _SHELL_OPERATORS and index + 1 < len(tokens):
-            starts.append(index + 1)
-    return starts
+            start_set.add(index + 1)
+    for index, word in enumerate(tokens):
+        if index in start_set and word in _COMMAND_KEYWORDS and index + 1 < len(tokens):
+            start_set.add(index + 1)
+            if word == "time" and tokens[index + 1] == "-p" and index + 2 < len(tokens):
+                start_set.add(index + 2)
+    return sorted(start_set)
 
 
 def _is_secret_name(name: str) -> bool:
@@ -3673,7 +3767,11 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # Recurse into shell-wrapper payloads (bash/sh/zsh/dash -c <payload>, eval ...)
     # Depth cap of 3 prevents infinite loops on adversarial inputs.
     if _depth < 3:
-        for payload in _wrapped_payloads(tokens) + _heredoc_payloads(command):
+        for payload in (
+            _wrapped_payloads(tokens)
+            + _heredoc_payloads(command)
+            + _substitution_payloads(_strip_shell_comments(stripped))
+        ):
             is_dangerous, reason = check_command(payload, _depth + 1)
             if is_dangerous:
                 return True, reason
