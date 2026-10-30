@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793391760676,
+  "lastUpdate": 1793395643984,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22007,6 +22007,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.700694671205359e-7",
             "extra": "mean: 1.6560221034815459 usec\nrounds: 62696"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ecd7c8553850bb45bd2679f2f66700b9f66dcab8",
+          "message": "feat: choose the CLI and model for each cross-agent role from a per-user config (merges PR #1153, addresses #1150)\n\n* feat: choose the CLI and model for each cross-agent role from a per-user config\n\nAdd `doit agent_cmd`, which resolves a role (plan, plan_review, code, review,\nadversarial_review) and a host to a subagent, an inline run or a ready CLI\ncommand. Config is layered: ~/.config/pyproject-template/agents.toml, then a\ngitignored .config/pyproject_template/agents.local.toml. With no config the\noutput equals today's per-CLI invocations. `--check` validates configured\nmodel names against each CLI's zero-token model lister.\n\nThe bridge skills, multi-plan, multi-review, multi-adversarial-review and\nimplement-issue resolve through the task, mirrored across .claude/, .github/\nand .agents/. Copilot `task` and Codex `multi_agent` model selection is\nrecorded as unprobed (probes tracked in #1151) and resolves to cli mode.\n\nAdds ADR-9030, a how-to, and updates cross-agent-delegation.md.\n\nAddresses #1150\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* docs: add an example agent roles config that sets every role\n\nThe how-to's snippet covered three roles and used placeholder model names. The example sets all\nfive roles with real models, notes where effort goes per CLI, and shows a Copilot alternative. A\ntest parses it so it cannot drift from the config schema.\n\nAddresses #1150\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-30T21:26:33Z",
+          "tree_id": "61427f192e505ebc82ecff5492531e469ae92577",
+          "url": "https://github.com/endavis/pyproject-template/commit/ecd7c8553850bb45bd2679f2f66700b9f66dcab8"
+        },
+        "date": 1793395642484,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10483314.790779522,
+            "unit": "iter/sec",
+            "range": "stddev: 6.92736799975395e-9",
+            "extra": "mean: 95.38967587613972 nsec\nrounds: 108909"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11014681.118637444,
+            "unit": "iter/sec",
+            "range": "stddev: 8.653753739171457e-9",
+            "extra": "mean: 90.78792106908526 nsec\nrounds: 115367"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7149526.255502598,
+            "unit": "iter/sec",
+            "range": "stddev: 9.996774688203732e-9",
+            "extra": "mean: 139.86940732336706 nsec\nrounds: 73244"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2388464.1492874245,
+            "unit": "iter/sec",
+            "range": "stddev: 4.328353194319451e-8",
+            "extra": "mean: 418.6790914564661 nsec\nrounds: 194062"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 631970.5287966155,
+            "unit": "iter/sec",
+            "range": "stddev: 1.207315792248235e-7",
+            "extra": "mean: 1.5823522687112928 usec\nrounds: 68475"
           }
         ]
       }
