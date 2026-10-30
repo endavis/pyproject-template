@@ -182,6 +182,31 @@ Planner brief when Codex itself is the host, run directly in the host's own sess
 — see [Headless Codex host limits](#headless-codex-host-limits) below and [Command Blocking — Codex
 CLI](command-blocking.md#codex-cli) for the measured sandbox-network facts (#980).
 
+## Roles and models
+
+The table above is what every CLI runs when nothing is configured. A person can pick, per role
+(`plan`, `plan_review`, `code`, `review`, `adversarial_review`), which CLI runs it and on which
+model, in a per-user config; see [Agent Roles and Models](agent-roles.md). Delegation surfaces run
+`uv run doit agent_cmd --role=<role> --host=<host> [--cli=<target>]` and use its JSON result: a
+`subagent` (optionally with a model), `inline`, or a `cli` command. With no config the command is
+exactly the row above. The flags a model adds per CLI:
+
+| CLI | Model and effort flags added |
+| :--- | :--- |
+| `claude` | `--model <model>` |
+| `codex` | `-m <model> -c model_reasoning_effort=<effort>`, placed before the prompt |
+| `copilot` | `--model <model> --reasoning-effort <effort>` |
+| `agy` | `--model <model>` (no separate effort) |
+
+Whether a host's own subagent can run a chosen model:
+
+| Host | Subagent with a chosen model | Status |
+| :--- | :--- | :--- |
+| Claude Code | Agent tool `model` (`opus`, `sonnet`, `haiku`, `fable`) | verified mechanism |
+| Copilot | `task` tool | unprobed (#1151): a configured model resolves to `cli` |
+| Codex | `multi_agent` | unprobed (#1151): a configured model resolves to `cli` |
+| agy | no subagent mechanism | `cli`, or inline in the session |
+
 ## Headless Codex host limits
 
 A headless Codex host (`codex -a never exec`) can run the read side of `multi-*` and
