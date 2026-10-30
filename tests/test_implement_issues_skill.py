@@ -76,7 +76,8 @@ def test_one_background_agent_per_issue_with_the_absolute_worktree() -> None:
     assert "run_in_background: true" in step3
     assert "general-purpose" in step3
     assert 'cd "<WORKTREE>" &&' in step3
-    assert "never edit files" in step3
+    assert "do no phase 1 coding" in step3
+    assert "`--max` counts only these" in step3
 
 
 def test_concurrency_cap() -> None:
@@ -154,7 +155,6 @@ def test_phase_2_opens_prs_one_at_a_time() -> None:
         "uv run doit pr",
         "at most 3 rounds",
         "gh pr view <pr> --json state",
-        "run_in_background: true",
     ):
         assert needle in step4, needle
     order = [
@@ -191,16 +191,28 @@ def test_overlap_orders_phase_2_instead_of_blocking() -> None:
     assert "empty" not in ask
 
 
-def test_orchestrator_never_rebases_or_pushes() -> None:
+def test_phase_2_has_no_agent_prompt() -> None:
+    step4 = _step4()
+    assert "general-purpose" not in step4
+    assert "run_in_background" not in step4
+    assert "\n> " not in step4
+
+
+def test_orchestrator_runs_phase_2_itself() -> None:
+    step4 = _step4()
+    assert "You, the orchestrator, run phase 2 yourself" in step4
+    assert 'git -C <WORKTREE> …` or `cd "<WORKTREE>" && …`' in step4
+    assert "while other phase 1 agents may still run" in step4
+    assert "`implement-worker` subagent" in step4
+    assert "Addresses #<n>" in step4
+
+
+def test_never_forbids_a_subagent_opening_a_pr() -> None:
     text = _text()
     never = text[text.index("## Never") :]
-    assert "Never rebase or push as the orchestrator" in never
-    outside = [
-        line
-        for line in text.splitlines()
-        if "git rebase" in line and not line.startswith(">") and "Never rebase" not in line
-    ]
-    assert outside == []
+    assert "Never let a subagent open a PR." in never
+    assert "Never rebase or push as the orchestrator" not in text
+    assert "Never edit files as the orchestrator" not in text
 
 
 def test_resume_rebuilds_queue_from_pushed_branches() -> None:
