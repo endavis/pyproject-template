@@ -2320,3 +2320,77 @@ def test_patch_backup_naming_inherited_by_the_hook_is_unresolvable(
     assert hook.check_command("patch -p1 -i ok.patch")[0]
     monkeypatch.delenv(name)
     assert not hook.check_command("patch -p1 -i ok.patch")[0]
+
+
+# --- command word normalised once (#1132) ---
+
+_QUALIFIED_RULES = [
+    "git push --force origin main",
+    "git push origin HEAD:main",
+    "git push origin --delete main",
+    "git branch -D main",
+    "gh pr create --title x",
+    "gh pr merge 1",
+    "gh issue create --title x",
+    "uv add requests",
+    "doit release",
+    "gh pr edit 1 --add-label ready-to-merge",
+    "git merge feature/x",
+    "printenv",
+    "env",
+    "cat ~/.netrc",
+    "sudo rm file",
+    "rm -rf /",
+    "git apply bad.patch",
+    "git am bad.patch",
+    "patch -p1 -i bad.patch",
+    "git checkout -- .envrc.local.example",
+    'bash -c "gh pr merge 1"',
+]
+
+
+def _qualify(command: str, hook: types.ModuleType) -> str:
+    """Rewrite each rule-keyed command word in *command* to a path-qualified form."""
+    out = []
+    for word in command.split(" "):
+        if word in hook._RULE_COMMAND_WORDS:
+            word = f"/usr/bin/{word}"
+        out.append(word)
+    return " ".join(out)
+
+
+@pytest.mark.parametrize("command", _QUALIFIED_RULES)
+def test_path_qualified_command_word_gets_the_bare_result(
+    hook: types.ModuleType,
+    patch_dir: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    command: str,
+) -> None:
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "main")
+    monkeypatch.delenv("ALLOW_AI_READY_TO_MERGE", raising=False)
+    qualified = _qualify(command, hook)
+    assert qualified != command
+    assert hook.check_command(command)[0], command
+    assert hook.check_command(qualified) == hook.check_command(command)
+
+
+def test_normalise_command_words_leaves_other_tokens_alone(hook: types.ModuleType) -> None:
+    tokens = ["/usr/bin/git", "./bin/gh", "/opt/tool", "src/foo.py", "--x=/usr/bin/git", "git"]
+    assert hook._normalise_command_words(tokens) == [
+        "git",
+        "gh",
+        "/opt/tool",
+        "src/foo.py",
+        "--x=/usr/bin/git",
+        "git",
+    ]
+
+
+@pytest.mark.parametrize(
+    "command", ["/usr/bin/git status", "/usr/bin/gh pr view 1", "/bin/cat README.md"]
+)
+def test_path_qualified_safe_commands_stay_allowed(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    assert hook.check_command(command) == (False, "")

@@ -1292,6 +1292,37 @@ def redirect_reason(command: str, reason: str) -> str:
     return reason
 
 
+# Command names the rules key on. A path-qualified spelling (``/usr/bin/git``,
+# ``./bin/gh``) runs the same program, so :func:`_normalise_command_words`
+# reduces it to the bare name before any rule sees the tokens (#1132).
+_RULE_COMMAND_WORDS = (
+    frozenset(
+        {"git", "gh", "uv", "doit", "patch", "rm", "sudo", "env", "printenv"}
+        | {"bash", "sh", "zsh", "dash"}
+    )
+    | _CREDENTIAL_READER_COMMANDS
+)
+
+
+def _normalise_command_words(tokens: list[str]) -> list[str]:
+    """Return *tokens* with each path-qualified command word reduced to its basename.
+
+    The one place a command word is normalised: ``check_command`` applies it to
+    every token list it hands to a rule, so every rule sees ``git`` for
+    ``/usr/bin/git``. Rules scan every position rather than only command
+    position (ADR-9019, rule 1), so an argument such as ``docs/patch`` is
+    reduced too; that can only add a block, never remove one.
+    """
+    normalised: list[str] = []
+    for token in tokens:
+        if "/" in token and not token.startswith("-"):
+            base = token.rsplit("/", 1)[-1]
+            if base.lower() in _RULE_COMMAND_WORDS:
+                token = base
+        normalised.append(token)
+    return normalised
+
+
 def check_dangerous_flags(tokens: list[str]) -> tuple[bool, str]:
     """
     Check if any dangerous flag appears as a standalone token.
@@ -3102,7 +3133,7 @@ def check_merge_to_protected(command: str) -> tuple[bool, str]:
     terminator, hiding a real ``git merge`` from this scan entirely (#1011,
     gap 3).
     """
-    tokens = _structural_tokens(command)
+    tokens = _normalise_command_words(_structural_tokens(command))
     tokens_lower = [t.lower() for t in tokens]
 
     for git_idx in range(len(tokens_lower)):
@@ -3290,7 +3321,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     Returns:
         (is_dangerous, reason)
     """
-    tokens = tokenize(command)
+    tokens = _normalise_command_words(tokenize(command))
 
     # Check for dangerous standalone flags
     is_dangerous, reason = check_dangerous_flags(tokens)
@@ -3314,10 +3345,10 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # second pass keeps every block the first one would lose to the new
     # tokenizer, such as `cat &>/tmp/x ~/.netrc`, where `&>` splits into a
     # separator `&` and `>/tmp/x`.
-    structural = _structural_tokens(stripped)
+    structural = _normalise_command_words(_structural_tokens(stripped))
     for check, legacy in (
         (check_env_dump, tokens),
-        (check_credential_file_read, tokenize(stripped)),
+        (check_credential_file_read, _normalise_command_words(tokenize(stripped))),
     ):
         for check_tokens in (structural, legacy):
             is_dangerous, reason = check(check_tokens)
@@ -3329,7 +3360,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # command: `shlex.split` keeps a glued `true;git` as one word, so the scan
     # missed any command glued to `;`, `&&`, `||`, `|` or `&` (#1023). The
     # first pass keeps every block these checks had before.
-    command_structural = _structural_tokens(command)
+    command_structural = _normalise_command_words(_structural_tokens(command))
     for check in (
         check_push_to_protected,
         check_delete_protected_branch,
@@ -3361,13 +3392,15 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # `)` also end a checkout/restore argument scan. The scan runs on every
     # pass, so the exact pass only adds coverage (#1117).
     exact_tokens = _exact_operator_tokens(stripped)
+    if exact_tokens is not None:
+        exact_tokens = _normalise_command_words(exact_tokens)
     # A patch file is read only for the top-level command, and not when the
     # command has several lines: the tokens lose a newline, so an earlier line
     # could have written the file (#1105).
     read_patch_files = _depth == 0 and "\n" not in stripped.strip()
     passes: list[tuple[list[str], bool, bool]] = [
         (tokens, True, False),
-        (_redirect_tokens(stripped), False, False),
+        (_normalise_command_words(_redirect_tokens(stripped)), False, False),
     ]
     if exact_tokens is not None:
         passes.append((exact_tokens, False, True))
