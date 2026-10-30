@@ -219,3 +219,15 @@ def test_resume_rebuilds_queue_from_pushed_branches() -> None:
     step4 = _step4()
     assert "gh pr list --head" in step4
     assert "@{u}" in step4
+
+
+def test_unmet_requirement_is_an_ask_first_trigger_and_findings_relay_whole() -> None:
+    """Step 5 lists requirements, an unmet one asks first, relays stay whole (#1145)."""
+    issue = " ".join(IMPLEMENT_ISSUE.read_text(encoding="utf-8").split())
+    assert "Build a requirements list before committing" in issue
+    assert "never a note in the PR body" in issue
+    assert "cannot be met as written" in issue
+    assert "requirement-by-requirement met/unmet table" in issue
+    issues = " ".join(_text().split())
+    assert "relay the finding itself, not a narrowed fix" in issues
+    assert "cannot be met as written" in issues

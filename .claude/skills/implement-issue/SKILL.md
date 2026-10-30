@@ -139,8 +139,11 @@ run that never fetched it has nothing to delete).
 
 ### Step 5: Check the work
 
-- Diff the branch against the issue's success criteria; anything missing is a gap to close before
-  committing, not a note for the PR description.
+- Build a requirements list before committing: the issue's Success Criteria; for a bug, its Expected
+  behavior plus every concrete fix item named anywhere in the body (for example Additional Context).
+  Diff the branch against it and mark each requirement met or unmet. Close an unmet one before
+  committing. An unmet requirement, including one deliberately dropped, is an ask-first trigger,
+  never a note in the PR body.
 - Run `uv run doit check` and `uv run doit docs_build` from `$WORKTREE`, and fix whatever either one finds.
   This is the run's single full `doit check`, run once: the Coder does not run it, and the host does
   not rely on a subagent's "check passed" claim (`.claude/rules/verified-claims.md`).
@@ -176,16 +179,18 @@ push, skip `doit pr` and Step 7 and report the pushed branch.
 
 Report: the PR URL, a summary of the change, whether a plan was posted and why (or why not), who wrote
 it (host or Planner), how many times `doit check` ran this run, whether
-coding ran inline or in a subagent, any deviations from the plan, and the CI state (green, or the round-capped failures from Step 7).
+coding ran inline or in a subagent, a requirement-by-requirement met/unmet table (from Step 5's
+requirements list), any deviations from the plan, and the CI state (green, or the round-capped failures from Step 7).
 Also report the worktree path (`$WORKTREE`) and the merge command, which the user runs from the main
 checkout: `uv run doit pr_merge --pr=<pr> --auto-close`. It removes the worktree and its branch.
 
 ## Ask-first triggers
 
 Stop and ask the user, at any step, when one of these fires: a new dependency, scope growing beyond
-the issue, an architecture choice, a breaking change the issue did not already describe, a failing test
-that would need changing to pass, or a blocked command (see `AGENTS.md` — When Blocked Protocol). Do
-not resolve any of these unilaterally and keep going.
+the issue, a requirement of the issue that cannot be met as written (unsafe, contradicted by a review
+finding, or needing a different design), an architecture choice, a breaking change the issue did not
+already describe, a failing test that would need changing to pass, or a blocked command (see `AGENTS.md` — When Blocked Protocol). Narrowing
+the scope is a trigger just as growing it is. Do not resolve any of these unilaterally and keep going.
 
 This skill **never** adds the `ready-to-merge` label, never merges a PR, and never closes the issue
 it is implementing. Those stay the user's decisions.
