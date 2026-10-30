@@ -1047,6 +1047,118 @@ def test_write_target_that_cannot_be_protected_is_allowed(
     assert _run(hook, monkeypatch, command) == 0
 
 
+# A write command's operands end at `;`, `&&`, `||`, `|` or an unquoted newline,
+# so a later command's expansion is not read as its destination (#1131)
+_WRITE_COMMAND_END_ALLOWED = [
+    'cp src/x.py tmp/tr.bak; out=$(true); echo "$out"',
+    'cp tmp/tr.bak src/x.py; rm tmp/tr.bak; out=$(true); echo "$out"',
+    'cp a b; echo "$x"',
+    'cp a b && echo "$x"',
+    'cp a b || echo "$x"',
+    'cp a b | cat "$x"',
+    'cp a b\nout=$(true); echo "$out"',
+    'cp a b\necho "$x"',
+    'cp a b\n\necho "$x"',
+    '\ncp a b\necho "$x"\n',
+    'mv a b; echo "$x"',
+    'mv a b\necho "$x"',
+    'mv a b && echo "$x"',
+    'install a b; echo "$x"',
+    'install a b || echo "$x"',
+    'rsync a b; echo "$x"',
+    'rsync a b\necho "$x"',
+    'ln a b; echo "$x"',
+    'ln a b && echo "$x"',
+    'dd if=a of=b; echo "$x"',
+    'dd if=a of=b\necho "$x"',
+    'dd if=a of=b || echo "$x"',
+    'cp a b ; out=$(true); echo "$out"',
+]
+
+_WRITE_COMMAND_END_BLOCKED = [
+    "cp a $f",
+    "cp a b; cp a $f",
+    "cp a b && cp a $f",
+    "cp a b || cp a $f",
+    "cp a b;cp a $f",
+    "cp a b\ncp a $f",
+    "cp a b\ncp a .envrc.loca?",
+    "cp a b; cp c .bashrc",
+    "cp a b;cp c ~/.bash*",
+    'cp a "$f"',
+    "cp a $(echo b) $f",
+    "cp a $(true; echo x) $f",
+    "echo $(cp a $f)",
+    "cp a ';' $f",
+    "cp a 'b;' $f",
+    'cp a "b\nc" $f',
+    "echo hi\necho x >> .envrc.local",
+    "echo hi\ncp a $f",
+    "mv a $f",
+    "mv a b\nmv a $f",
+    "mv a b; mv a $f",
+    "install a $f",
+    "install a b; install a $f",
+    "rsync a b; rsync a $f",
+    "ln a b; ln a $f",
+    "dd if=a of=$f",
+    "dd if=a of=b; dd if=a of=$f",
+    "dd if=a of=b\ndd if=a of=$f",
+    # the allowed `.envrc.local` copy is the whole command or nothing
+    "echo x > .envrc.local.example\ncp .envrc.local.example .envrc.local",
+    "cp .envrc.local.example .envrc.local\necho x",
+    "cp .envrc.local.example .envrc.local; echo x",
+    # a command the tokens cannot be read for keeps the wider scan
+    "cp a $(true; echo) $f ; ((1))",
+    "cp a $(true; echo) $f\ncat <<EOF\nx\nEOF",
+]
+
+
+@pytest.mark.parametrize("command", _WRITE_COMMAND_END_ALLOWED)
+def test_later_command_expansion_is_not_a_write_destination(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    assert _run(hook, monkeypatch, command) == 0
+
+
+@pytest.mark.parametrize("command", _WRITE_COMMAND_END_BLOCKED)
+def test_expansion_in_a_write_commands_own_operands_is_blocked(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    assert _run(hook, monkeypatch, command) == 2
+
+
+def test_documented_envrc_copy_is_still_allowed_alone(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    assert _run(hook, monkeypatch, "cp .envrc.local.example .envrc.local") == 0
+
+
+@pytest.mark.parametrize(
+    ("text", "expected"),
+    [
+        ("a\nb", "a ; b"),
+        ("\na\nb\n", "a ; b"),
+        ("a\n\nb", "a ;  ; b"),
+        ("a b", "a b"),
+        ("\na b\n", "a b"),
+        ('echo "a\nb"\nc', 'echo "a\nb" ; c'),
+        ("echo 'a\nb'\nc", "echo 'a\nb' ; c"),
+        ("echo $(a\nb)\nc", "echo $(a\nb) ; c"),
+        ("echo `a\nb`\nc", "echo `a\nb` ; c"),
+        ("echo a\\\nb\nc", "echo a\\\nb\nc"),
+        ("echo a\\\nb", "echo a\\\nb"),
+        ("echo 'a\nb", "echo 'a\nb"),
+        ("echo $(a\nb", "echo $(a\nb"),
+        ("cat <<EOF\nx\nEOF", "cat <<EOF\nx\nEOF"),
+        ("a # c\nb", "a # c\nb"),
+        ("cat <<< x\nb", "cat <<< x ; b"),
+    ],
+)
+def test_newlines_as_separators(hook: types.ModuleType, text: str, expected: str) -> None:
+    assert hook._newlines_as_separators(text) == expected
+
+
 # A redirect after `git checkout`/`git restore` is no checkout argument (#1088)
 _CHECKOUT_REDIRECT_ALLOWED = [
     "git checkout -q main 2>/dev/null",

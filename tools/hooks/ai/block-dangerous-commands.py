@@ -1714,6 +1714,8 @@ def _collapse_extglobs(tokens: list[str]) -> list[str]:
 
 # A `;`, `&&` or `||` attached to a word still ends the command there (#1093).
 _GLUED_COMMAND_END = re.compile(r";|&&|\|\|")
+# The same operators, only where they end a word
+_GLUED_END_OF_WORD = re.compile(r"(?:;|&&|\|\|)$")
 
 
 _EXACT_COMMAND_END = _COMMAND_SEPARATORS | {"&", "|&", "(", ")"}
@@ -2610,6 +2612,7 @@ def _bash_confirmed_write_targets(
     restore_scan: bool = True,
     read_patch_files: bool = False,
     literal_redirects: bool = False,
+    glued_ends_write_command: bool = False,
 ) -> list[str]:
     """Return every persistence-protected path/basename targeted by a
     *confirmed* Bash write.
@@ -2665,10 +2668,26 @@ def _bash_confirmed_write_targets(
         if tok in _WRITE_COMMANDS:
             positionals: list[str] = []
             seg_open = True
+            # The command's own operands. With *glued_ends_write_command* a
+            # token that ends in `;`, `&&` or `||` is the last one, and only
+            # the part before the operator counts (#1131). A token with text
+            # after the operator (`b;cp`) keeps the old, wider scan.
+            write_words: list[str] = []
             for j in range(i + 1, n):
                 t = tokens[j]
                 if t in _COMMAND_SEPARATORS:
                     break
+                glued_end = (
+                    _GLUED_END_OF_WORD.search(t)
+                    if glued_ends_write_command and glued_separators
+                    else None
+                )
+                if glued_end:
+                    if glued_end.start():
+                        write_words.append(t[: glued_end.start()])
+                    break
+                write_words.append(t)
+            for t in write_words:
                 if t.startswith("-"):
                     continue
                 if tok == "dd":
@@ -2783,6 +2802,62 @@ def _bash_confirmed_write_targets(
     return targets
 
 
+def _newlines_as_separators(text: str) -> str:
+    """Return *text* with each unquoted newline written as `` ; ``.
+
+    :func:`tokenize`, :func:`_redirect_tokens` and :func:`_exact_operator_tokens`
+    read a newline as whitespace, so a write command's operand scan ran on into
+    the next line (#1131). A newline inside ``'...'``, ``"..."``, a backslash
+    escape, ``$(...)``, a backtick substitution or ``<(...)`` is not a separator
+    and is kept; so is a backslash-newline continuation. Leading and trailing
+    newlines are dropped. When *text* holds a here-document, a comment or a
+    construct that cannot be read, it is returned unchanged, which keeps the
+    old scan.
+    """
+    body = text.strip("\n")
+    if "\n" not in body:
+        return body
+    out: list[str] = []
+    i = 0
+    n = len(body)
+    try:
+        while i < n:
+            char = body[i]
+            if char == "\n":
+                out.append(" ; ")
+                i += 1
+                continue
+            if char == "\\":
+                if body.startswith("\n", i + 1):
+                    return text
+                end = i + 2
+            elif char == "'":
+                end = _skip_single(body, i + 1)
+            elif char == '"':
+                end = _skip_double(body, i + 1)
+            elif char == "$":
+                end = _skip_dollar(body, i, ansi=True)
+            elif char == "`":
+                end = _skip_backtick(body, i + 1)
+            elif char in "<>" and body.startswith("(", i + 1):
+                end = _skip_paren(body, i + 2)
+            elif char == "<" and body.startswith("<<<", i):
+                end = i + 3
+            elif char == "<" and body.startswith("<", i + 1):
+                return text  # a here-document
+            elif char == "#" and (i == 0 or body[i - 1].isspace() or body[i - 1] in "&|;()<>"):
+                return text  # a comment
+            else:
+                end = i + 1
+            if end > n:
+                return text
+            out.append(body[i:end])
+            i = end
+    except (_OpenConstructError, RecursionError):
+        return text
+    return "".join(out)
+
+
 def _redirect_tokens(command: str) -> list[str]:
     """Tokenize *command* with shell operator characters as their own tokens.
 
@@ -2844,6 +2919,7 @@ def check_env_persistence_in_bash(
     restore_scan: bool = True,
     read_patch_files: bool = False,
     literal_redirects: bool = False,
+    glued_ends_write_command: bool = False,
 ) -> tuple[bool, str]:
     """Block Bash commands that would persist ALLOW_AI_READY_TO_MERGE, or
     that write to a protected file at all.
@@ -2885,6 +2961,7 @@ def check_env_persistence_in_bash(
         restore_scan=restore_scan,
         read_patch_files=read_patch_files,
         literal_redirects=literal_redirects,
+        glued_ends_write_command=glued_ends_write_command,
     ):
         if _matches_env_persistence_target(target, dynamic=True):
             if _depth == 0 and tuple(tokens) in _ALLOWED_ENV_PERSISTENCE_WRITES:
@@ -3556,7 +3633,10 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # A third pass runs on the exact operator tokens, where `&`, `|&`, `(` and
     # `)` also end a checkout/restore argument scan. The scan runs on every
     # pass, so the exact pass only adds coverage (#1117).
-    exact_tokens = _exact_operator_tokens(stripped)
+    # An unquoted newline ends a command, but the tokens drop it: write it as
+    # `;` first so a write command's operands end at the line (#1131).
+    lined = _newlines_as_separators(stripped)
+    exact_tokens = _exact_operator_tokens(lined)
     # A patch file is read only for the top-level command, and not when the
     # command has several lines: the tokens lose a newline, so an earlier line
     # could have written the file (#1105).
@@ -3565,13 +3645,18 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # command holds one, the scans read redirect-looking tokens as operands
     # instead of operators that swallow the next word (#1134).
     literal_redirects = _has_quoted_redirect_word(stripped)
-    passes: list[tuple[list[str], bool, bool]] = [
-        (raw_tokens, True, False),
-        (_redirect_tokens(stripped), False, False),
+    passes: list[tuple[list[str], bool, bool, bool]] = [
+        (
+            tokenize(_newlines_as_separators(command)),
+            True,
+            False,
+            exact_tokens is not None,
+        ),
+        (_redirect_tokens(lined), False, False, False),
     ]
     if exact_tokens is not None:
-        passes.append((exact_tokens, False, True))
-    for check_tokens, glued, exact in passes:
+        passes.append((exact_tokens, False, True, False))
+    for check_tokens, glued, exact, glued_ends in passes:
         is_dangerous, reason = check_env_persistence_in_bash(
             check_tokens,
             _depth,
@@ -3580,6 +3665,7 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
             restore_scan=True,
             read_patch_files=read_patch_files,
             literal_redirects=literal_redirects,
+            glued_ends_write_command=glued_ends,
         )
         if is_dangerous:
             return True, reason
