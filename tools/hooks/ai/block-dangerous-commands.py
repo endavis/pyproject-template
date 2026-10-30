@@ -446,14 +446,18 @@ def _skip_backtick(text: str, i: int) -> int:
     raise _OpenConstructError
 
 
-def _skip_dollar(text: str, i: int, *, ansi: bool) -> int:
-    """Return the index after the ``$`` construct at *i* (``$(``, ``${``, ``$'``)."""
+def _skip_dollar(text: str, i: int, *, ansi: bool, in_double: bool = False) -> int:
+    """Return the index after the ``$`` construct at *i* (``$(``, ``${``, ``$'``).
+
+    *in_double* says the construct sits in a double quote, where a ``'`` inside
+    ``${...}`` is an ordinary character.
+    """
     if ansi and text.startswith("$'", i):
         return _skip_ansi(text, i + 2)
     if text.startswith("$(", i):
         return _skip_paren(text, i + 2)
     if text.startswith("${", i):
-        return _skip_brace(text, i + 2)
+        return _skip_brace(text, i + 2, in_double=in_double)
     return i + 1
 
 
@@ -466,7 +470,7 @@ def _skip_double(text: str, i: int) -> int:
         elif char == '"':
             return i + 1
         elif char == "$":
-            i = _skip_dollar(text, i, ansi=False)
+            i = _skip_dollar(text, i, ansi=False, in_double=True)
         elif char == "`":
             i = _skip_backtick(text, i + 1)
         else:
@@ -474,18 +478,22 @@ def _skip_double(text: str, i: int) -> int:
     raise _OpenConstructError
 
 
-def _skip_brace(text: str, i: int) -> int:
-    """Return the index after the ``}`` that closes the ``${`` whose body starts at *i*."""
+def _skip_brace(text: str, i: int, *, in_double: bool = False) -> int:
+    """Return the index after the ``}`` that closes the ``${`` whose body starts at *i*.
+
+    *in_double* says the expansion sits in a double quote, where a ``'`` and a
+    ``$'`` are ordinary text; bare, they quote.
+    """
     while i < len(text):
         char = text[i]
         if char == "\\":
             i += 2
-        elif char == "'":
+        elif char == "'" and not in_double:
             i = _skip_single(text, i + 1)
         elif char == '"':
             i = _skip_double(text, i + 1)
         elif char == "$":
-            i = _skip_dollar(text, i, ansi=True)
+            i = _skip_dollar(text, i, ansi=not in_double, in_double=in_double)
         elif char == "`":
             i = _skip_backtick(text, i + 1)
         elif char == "}":
@@ -1218,35 +1226,40 @@ def _expansion_payloads(text: str, i: int, payloads: list[str], *, in_double: bo
     """Collect the ``$(...)`` and backtick bodies inside a ``${...}`` at *i*.
 
     A default or alternate value (``${x:-$(cmd)}``) is expanded by the shell, so
-    the command in it runs. *in_double* says the expansion sits in a double
-    quote, where a ``'`` is an ordinary character; bare, it quotes. A nested
-    ``${...}`` is followed by brace depth. Text that cannot be read is left
-    unreported, as the caller skips the whole expansion anyway.
+    the command in it runs. The end of the expansion comes from
+    :func:`_skip_brace`, the function every caller uses to step past it, and the
+    text inside is read with the same quoting rules, so this scan and the skip
+    cannot disagree about where the expansion ends or which parts are quoted.
+    *in_double* says the expansion sits in a double quote, where a ``'`` is an
+    ordinary character; bare, it quotes.
+    Text that cannot be read is left unreported, as the caller skips the whole
+    expansion anyway.
     """
-    j = i + 2
-    depth = 1
     try:
-        while j < len(text) and depth:
+        stop = _skip_brace(text, i + 2, in_double=in_double) - 1
+        j = i + 2
+        while j < stop:
             char = text[j]
             if char == "\\":
                 j += 2
             elif char == "'" and not in_double:
                 j = _skip_single(text, j + 1)
+            elif char == '"':
+                j = _double_quoted_payloads(text, j + 1, payloads)
             elif char == "`":
                 end = _skip_backtick(text, j + 1)
                 payloads.append(text[j + 1 : end - 1])
                 j = end
-            elif text.startswith("$((", j):
-                j = _skip_paren(text, j + 2)
-            elif text.startswith("$(", j):
+            elif text.startswith("$(", j) and not text.startswith("$((", j):
                 end = _skip_paren(text, j + 2)
                 payloads.append(text[j + 2 : end - 1])
                 j = end
             elif text.startswith("${", j):
-                depth += 1
-                j += 2
+                _expansion_payloads(text, j, payloads, in_double=in_double)
+                j = _skip_dollar(text, j, ansi=not in_double, in_double=in_double)
+            elif char == "$":
+                j = _skip_dollar(text, j, ansi=not in_double, in_double=in_double)
             else:
-                depth -= char == "}"
                 j += 1
     except _OpenConstructError:
         return
