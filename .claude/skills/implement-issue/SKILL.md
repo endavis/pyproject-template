@@ -1,6 +1,6 @@
 ---
 name: implement-issue
-description: Use when the user says "implement issue N" (or close variants — "work on issue N", "take issue N to a PR", "pick up #N"), or when the user approves working on an issue — including a "yes" to a fix you proposed and filed as an issue. Takes an open GitHub issue from its current state to an open PR in one run: decides whether to plan first, posts a plan comment when it does, implements the change with tests, validates it, commits, pushes, opens the PR, and fixes CI for up to 3 rounds. Never adds ready-to-merge, never merges, and never closes the issue.
+description: Use when the user says "implement issue N" (or close variants — "work on issue N", "take issue N to a PR", "pick up #N"), or when the user approves working on an issue — including a "yes" to a fix you proposed and filed as an issue. Takes an open GitHub issue from its current state to an open PR in one run: decides whether to plan first, posts a plan comment when it does, implements the change with tests, validates it, commits, pushes, opens the PR, and fixes CI for up to 3 rounds. Never adds ready-to-merge, never merges, and never closes the issue. For several issues in one request, use `implement-issues`.
 ---
 
 # Implement Issue
@@ -12,6 +12,8 @@ proposed and filed as an issue — replaces the old three-command chain (`/claud
 `/claude:implement`, `/ghi-finalize`). Nothing here waits for plan approval or commit approval — the trade is explicit:
 the agent commits and pushes on the issue's own branch, and the user's first checkpoint is reviewing
 the open PR, not approving each step along the way.
+
+See also: [`implement-issues`](../implement-issues/SKILL.md) runs this skill for several issues in parallel, one worktree and one background agent each.
 
 ## Instructions
 
