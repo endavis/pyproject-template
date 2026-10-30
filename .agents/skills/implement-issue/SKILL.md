@@ -72,7 +72,7 @@ reuse the most recent one instead of planning again:
 gh api repos/{owner}/{repo}/issues/<n>/comments --jq '.[] | select(.body | test("^#+ Implementation Plan for"; "m")) | .body'
 ```
 
-### Step 3: Plan (subagent)
+### Step 3: Plan (host or subagent)
 
 Fetch the context the Planner brief reads, so the brief never has to call `gh` itself:
 
@@ -80,10 +80,17 @@ Fetch the context the Planner brief reads, so the brief never has to call `gh` i
 uv run doit delegation_context --kind=issue --n=<n> --out=$WORKTREE/tmp/agents/<host>/implement-issue-<n>/
 ```
 
-Run the **Planner brief** below in a subagent, using the host's subagent tool (see
+**The host writes the plan itself only when** during this run it posted a findings comment on the
+issue (or posts one together with the plan) and the plan cites that comment. "The change seems
+clear" does not qualify. The plan uses the Planner brief's exact shape. Before posting it, run the
+**Plan-review brief** below on the draft, in a subagent or through another agent CLI with the same
+non-interactive invocation as "with \<agent\>"; fix or reject each point it raises. The review
+reads only the draft, the findings and the files the plan names.
+
+In every other case run the **Planner brief** below in a subagent, using the host's subagent tool (see
 [Per-host subagent notes](#per-host-subagent-notes)), telling it the context directory above (an absolute path inside the worktree) and the worktree root
-`$WORKTREE`. Post
-what it returns with:
+`$WORKTREE`. If you hold findings, pass them in its prompt, marked as findings. Post
+what it returns (or the reviewed host plan) with:
 
 ```bash
 gh issue comment <n> --body "<plan>"
@@ -102,7 +109,8 @@ Do the coding inline, without a subagent, when Step 2 skipped planning and the c
 - any other change to one or two files with no new module and no change in behavior.
 
 Inline coding follows the Coder brief all the same: read the rules it lists, add tests when code
-changes, and run `doit check`. A subagent saves no work on a change this small; it only adds the
+changes, and run the touched tests plus `uv run doit lint` and `uv run doit type_check`. `doit check`
+runs once, in Step 5. A subagent saves no work on a change this small; it only adds the
 handoff. Adding a new dependency is never small; it is an ask-first trigger. "Implement issue N
 with \<agent\>" still delegates.
 
@@ -129,6 +137,8 @@ run that never fetched it has nothing to delete).
 - Diff the branch against the issue's success criteria; anything missing is a gap to close before
   committing, not a note for the PR description.
 - Run `uv run doit check` and `uv run doit docs_build` from `$WORKTREE`, and fix whatever either one finds.
+  This is the run's single full `doit check`, run once: the Coder does not run it, and the host does
+  not rely on a subagent's "check passed" claim (`.claude/rules/verified-claims.md`).
 - Confirm ADR, nav (`mkdocs.yml`) and documentation updates landed if the plan called for them.
 
 ### Step 6: Commit and open the PR
@@ -156,7 +166,8 @@ The PR body follows `.github/pull_request_template.md` and includes `Addresses #
 
 ### Step 8: Stop and report
 
-Report: the PR URL, a summary of the change, whether a plan was posted and why (or why not), whether
+Report: the PR URL, a summary of the change, whether a plan was posted and why (or why not), who wrote
+it (host or Planner), how many times `doit check` ran this run, whether
 coding ran inline or in a subagent, any deviations from the plan, and the CI state (green, or the round-capped failures from Step 7).
 Also report the worktree path (`$WORKTREE`) and the merge command, which the user runs from the main
 checkout: `uv run doit pr_merge --pr=<pr> --auto-close`. It removes the worktree and its branch.
@@ -189,7 +200,10 @@ path:
 3. Explore the codebase for the files, modules, and tests the change touches, and the existing
    patterns in that area. If more than one approach is reasonable, pick one and say why in the plan
    rather than leaving it open — nothing downstream can ask the user.
-4. Return the plan in this exact shape, so the header is machine-findable and the next step can read
+4. Findings the caller passes are settled: do not re-measure or re-probe them, and flag in the
+   Overview any the code contradicts. Explore and probe only what they do not cover. Without
+   findings, step 3 applies as written.
+5. Return the plan in this exact shape, so the header is machine-findable and the next step can read
    every section:
 
    ```
@@ -214,6 +228,18 @@ path:
    - [ ] `doit check` passes
    ```
 
+## Plan-review brief
+
+Give this to the reviewing subagent (or another agent's CLI) when the host wrote the plan, with the
+worktree root as an absolute path and the context directory:
+
+1. Work only under the worktree root. Use absolute paths and start each shell command with
+   `cd <root> &&`.
+2. Read the draft plan and the findings from the file under `<context-dir>` the caller names. Read
+   only the files the plan names. Do not explore the codebase, do not probe, and make no `gh` call.
+3. Return a critique of design errors, missed edge cases and conflicts with project rules, or
+   `NO ISSUES`. Do not edit files and do not post anything.
+
 ## Coder brief
 
 Give this to the coding subagent (or the delegated agent's CLI), with the issue number, the branch
@@ -232,14 +258,20 @@ name, the worktree root as an absolute path, and any issue-specific notes:
 3. Implement the plan (or the issue): create and edit files, follow existing patterns, and write
    tests — this is mandatory whenever there is code to test, with no exceptions for "small" changes.
    All new code is type-annotated for mypy strict mode.
-4. Run `uv run doit check` from the worktree root. Fix failures and re-run; do not stop at the first failure.
-5. Return a summary: files created or modified, test results, and any deviations from the plan.
+4. Checking budget, run from the worktree root through `uv run`: the tests covering the change; one
+   revert check (undo the fix, confirm the new tests fail, restore — using `git show HEAD:<path>`
+   or a WIP commit); only what project rules require, such as the `mutation-triage` and
+   `property-tests` skills when they apply; `uv run doit lint`; `uv run doit type_check`. Run
+   nothing beyond that unless the plan asks: no extra mutmut runs, no flakiness reruns. Do not run
+   `uv run doit check`; the full `doit check` runs once, in Step 5. Fix failures.
+5. Return a summary: files created or modified, test results, every check command you ran, and any
+   deviations from the plan.
 6. Never use a bare `git stash`: the stash stack is shared with the main checkout, every worktree
    and every session, so a `pop` can take another session's entry. To compare against unchanged
    code, write `git show HEAD:<path>` to a scratch file under the worktree's `tmp/`, or make a
    temporary WIP commit.
-7. Never switch branches, never commit, never enter plan mode. The parent step handles validation
-   doubling, commit, and PR.
+7. Never switch branches, never commit, never enter plan mode. The parent step handles the full `doit check`
+   (Step 5), commit, and PR.
 
 ## Per-host subagent notes
 
@@ -252,7 +284,7 @@ Each host uses its own subagent mechanism for the Planner and Coder briefs. When
 run the brief in the session itself instead of failing the step.
 
 - **Claude Code:** the Agent tool with the `implement-planner` subagent
-  (`.claude/agents/implement-planner.md`, `model: opus`) for the Planner brief, and the
+  (`.claude/agents/implement-planner.md`, `model: opus`) for the Planner brief and the Plan-review brief, and the
   `implement-worker` subagent (`.claude/agents/implement-worker.md`, no `model:` because Copilot shares the file; it gets Sonnet
   from `CLAUDE_CODE_SUBAGENT_MODEL`) for the Coder brief. Verified
   with `claude -p --permission-mode plan "<prompt asking which skill handles 'implement issue N'>"`,
