@@ -1911,6 +1911,72 @@ def _assert_patch_allows(hook: types.ModuleType, command: str) -> None:
 
 
 @pytest.mark.parametrize(
+    "template",
+    [
+        "git -C .config/fish apply {p}",
+        "git -C.config/fish apply {p}",
+        "git --work-tree=.config/fish apply {p}",
+        "git --work-tree .config/fish apply {p}",
+        "GIT_WORK_TREE=.config/fish git apply {p}",
+        "env GIT_WORK_TREE=.config/fish git apply {p}",
+        "git --git-dir=.git --work-tree=.config/fish apply {p}",
+        "git --git-dir .git --work-tree /repo/.config/fish apply {p}",
+        "GIT_WORK_TREE=/x git --work-tree=.config/fish apply {p}",
+        "git -C /repo --work-tree=.config/fish apply {p}",
+    ],
+)
+def test_git_apply_work_tree_protected_target_blocks(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    """A bare ``config.fish`` is protected only under the moved work tree (#1133)."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    _assert_patch_blocks(hook, template.format(p=patch_dir / "wt.patch"))
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git -C docs apply {p}",
+        "git --work-tree=docs apply {p}",
+        "git --work-tree docs apply {p}",
+        "GIT_WORK_TREE=docs git apply {p}",
+        "git --git-dir=.git --work-tree=docs apply {p}",
+        "GIT_WORK_TREE=.config/fish git --work-tree=docs apply {p}",
+        "git --git-dir=.config/fish apply {p}",
+    ],
+)
+def test_git_apply_work_tree_unprotected_target_allows(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    _assert_patch_allows(hook, template.format(p=patch_dir / "wt.patch"))
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "git --work-tree=$TREE apply {p}",
+        "git --work-tree $TREE apply {p}",
+        "git -C $TREE apply {p}",
+        "git --work-tree= apply {p}",
+        "GIT_WORK_TREE=$TREE git apply {p}",
+        "GIT_WORK_TREE= git apply {p}",
+        "export GIT_WORK_TREE=$TREE; git apply {p}",
+        "printf -v GIT_WORK_TREE .config/fish; git apply {p}",
+    ],
+)
+def test_git_apply_unresolvable_work_tree_blocks(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    """A work tree the hook cannot spell out stands in as an unknown write."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    command = template.format(p=patch_dir / "wt.patch")
+    tokens = hook.tokenize(command)
+    git_idx = tokens.index("git")
+    assert hook._git_patch_targets(tokens, git_idx, read_files=True) == [_PATCH_STAND_IN]
+
+
+@pytest.mark.parametrize(
     ("data", "expected"),
     [
         (_unified("src/a.py"), {"a/src/a.py", "b/src/a.py"}),

@@ -2204,6 +2204,54 @@ def _split_stdin_sources(
     return operands, stdin_files, unresolvable, has_output
 
 
+def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str | None, bool]:
+    """Return ``(root, unresolvable)``: where git writes a patch's paths (#1133).
+
+    ``-C`` and ``--work-tree`` among the options before the subcommand are
+    applied in order, each joined onto the directory so far (an absolute one
+    resets it); ``--work-tree`` beats ``GIT_WORK_TREE=<dir>`` assigned before
+    ``git``. ``--git-dir`` alone moves no work tree. A value with an expansion
+    or an empty value, or ``GIT_WORK_TREE`` set any way but a literal
+    assignment, is *unresolvable*, so the caller fails closed.
+    """
+    env_tree: str | None = None
+    for t in tokens[:git_idx]:
+        if t.startswith("GIT_WORK_TREE="):
+            env_tree = t.partition("=")[2]
+        elif "GIT_WORK_TREE" in t:
+            return None, True
+    cwd = ""
+    tree: str | None = None
+    opts = tokens[git_idx + 1 : sub]
+    i = 0
+    while i < len(opts):
+        t = opts[i]
+        i += 1
+        value: str | None = None
+        if t == "-C" or t == "--work-tree":
+            value = opts[i] if i < len(opts) else ""
+            i += 1
+        elif t.startswith("-C"):
+            value = t[2:]
+        elif t.startswith("--work-tree="):
+            value = t.partition("=")[2]
+        elif t in {"-c", "--git-dir", "--namespace", "--super-prefix", "--config-env"}:
+            i += 1
+        if value is None:
+            continue
+        if not value or any(c in _DYNAMIC_CHARS for c in value):
+            return None, True
+        if t.startswith("-C"):
+            cwd = posixpath.join(cwd, value)
+        else:
+            tree = posixpath.join(cwd, value)
+    if tree is None and env_tree is not None:
+        if not env_tree or any(c in _DYNAMIC_CHARS for c in env_tree):
+            return None, True
+        tree = posixpath.join(cwd, env_tree)
+    return (tree if tree is not None else cwd) or None, False
+
+
 def _git_patch_targets(
     tokens: list[str],
     git_idx: int,
@@ -2303,6 +2351,11 @@ def _git_patch_targets(
         return [*targets, _ENVRC_EXAMPLE]
     opts = tokens[git_idx + 1 : sub]
     cwd_moved = _cwd_moved(tokens, git_idx) or any(t.startswith("-C") for t in opts)
+    tree, tree_unresolvable = _git_work_tree_root(tokens, git_idx, sub)
+    if tree_unresolvable:
+        return [*targets, _ENVRC_EXAMPLE]
+    if tree is not None:
+        root = posixpath.join(tree, root) if root else tree
     return targets + _patch_source_targets(
         [(src, None) for src in operands + stdin_files],
         read_files=read_files and _is_first_command(tokens, git_idx),
