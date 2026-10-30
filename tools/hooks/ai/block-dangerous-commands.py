@@ -2096,10 +2096,38 @@ def _is_first_command(tokens: list[str], idx: int) -> bool:
     )
 
 
+# Wrappers that run a command after options of their own, some of which change
+# the directory (`sudo -D`, `nsenter -w`, `unshare --wd`, `env -C`, `chroot`).
+_CWD_WRAPPERS = _COMMAND_PREFIX_WRAPPERS | frozenset(
+    {"doas", "nsenter", "unshare", "chroot", "setpriv", "runuser", "su", "ionice", "nohup", "time"}
+)
+# these change the root or directory with no option at all
+_CWD_ALWAYS_MOVING = frozenset({"chroot"})
+
+
 def _cwd_moved(tokens: list[str], idx: int) -> bool:
-    """Return True when a word before *idx* may change the working directory."""
+    """Return True when a word before *idx* may change the working directory.
+
+    Fails closed: any option given to a prefix wrapper (``sudo -D x``,
+    ``nsenter -w x``, ``env -i``) counts, as its own options may move the
+    directory. A wrapper's options are read up to its command word;
+    ``NAME=value`` assignments are skipped.
+    """
     words = [t.strip(";&|()") for t in tokens[:idx]]
-    return any(t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in words)
+    if any(t in {"cd", "pushd", "popd", "-C"} or t.startswith(("--chdir", "-C")) for t in words):
+        return True
+    for i, word in enumerate(words):
+        base = word.rsplit("/", 1)[-1].lower()
+        if base not in _CWD_WRAPPERS:
+            continue
+        if base in _CWD_ALWAYS_MOVING:
+            return True
+        for nxt in words[i + 1 :]:
+            if nxt.startswith("-") and len(nxt) > 1:
+                return True
+            if not _ASSIGNMENT_RE.match(nxt):
+                break
+    return False
 
 
 def _patch_source_targets(
@@ -2240,7 +2268,6 @@ def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str 
             moved = True
     cwd = ""
     tree: str | None = None
-    absolute = False
     opts = tokens[git_idx + 1 : sub]
     i = 0
     while i < len(opts):
@@ -2261,7 +2288,6 @@ def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str 
         elif name in {"-C", "--work-tree"}:
             if not value or any(c in _DYNAMIC_CHARS for c in value) or _has_dotdot(value):
                 return None, True
-            absolute = absolute or posixpath.isabs(value)
             if name == "-C":
                 cwd = posixpath.join(cwd, value)
             else:
@@ -2270,12 +2296,12 @@ def _git_work_tree_root(tokens: list[str], git_idx: int, sub: int) -> tuple[str 
         tree = env_tree
         if not tree or any(c in _DYNAMIC_CHARS for c in tree) or _has_dotdot(tree):
             return None, True
-        absolute = absolute or posixpath.isabs(tree)
     if tree is None and moved:
         return None, True
-    if _cwd_moved(tokens, git_idx) and not absolute:
+    final = posixpath.join(cwd, tree) if tree is not None else cwd
+    if _cwd_moved(tokens, git_idx) and (not posixpath.isabs(final) or final.startswith("~")):
         return None, True
-    root = posixpath.normpath(posixpath.join(cwd, tree) if tree is not None else cwd or ".")
+    root = posixpath.normpath(final or ".")
     return (None if root == "." else root), False
 
 

@@ -2802,3 +2802,76 @@ def test_path_qualified_safe_commands_stay_allowed(
 ) -> None:
     monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
     assert hook.check_command(command) == (False, "")
+
+
+@pytest.mark.parametrize(
+    "template",
+    [
+        "cd x; git -C /abs --work-tree=rel apply {p}",
+        "cd x; git --work-tree=rel -C /abs apply {p}",
+        "cd x; git --work-tree=/abs -C rel apply {p}",
+        "cd x; git -C rel --work-tree=/abs apply {p}",
+        "env -C x git -C rel --work-tree=rel2 apply {p}",
+        "cd x; GIT_WORK_TREE=/abs git -C rel apply {p}",
+        "cd x; GIT_WORK_TREE=rel git -C /abs apply {p}",
+        "cd x; git --work-tree=~/rel apply {p}",
+    ],
+)
+def test_git_apply_moved_cwd_relative_final_root_blocks(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    """The final root decides, not an earlier absolute option (#1133)."""
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    command = template.format(p=(patch_dir / "wt.patch").as_posix())
+    assert _wt_targets(hook, command) == [_PATCH_STAND_IN], command
+
+
+@requires_posix_paths
+@pytest.mark.parametrize(
+    "template",
+    [
+        "env -C x git -C rel --work-tree=/abs/docs apply {p}",
+        "env -C x git --work-tree=rel -C /abs/docs apply {p}",
+        "env -C x git -C /abs --work-tree=docs apply {p}",
+        "env -C x git --work-tree=docs -C /abs apply {p}",
+    ],
+)
+def test_git_apply_moved_cwd_absolute_final_root_allows(
+    hook: types.ModuleType, patch_dir: Path, template: str
+) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    _assert_patch_allows(hook, template.format(p=(patch_dir / "wt.patch").as_posix()))
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "sudo -D x git apply {p}",
+        "sudo --chdir=x git apply {p}",
+        "nsenter -w x git apply {p}",
+        "unshare --wd=x git apply {p}",
+        "chroot x git apply {p}",
+        "env -i git apply {p}",
+        "doas -u u git apply {p}",
+    ],
+)
+def test_wrapper_options_may_move_cwd(hook: types.ModuleType, command: str) -> None:
+    tokens = hook.tokenize(command.format(p="x.patch"))
+    assert hook._cwd_moved(tokens, tokens.index("git")) is True
+
+
+@pytest.mark.parametrize(
+    "command", ["sudo git apply {p}", "env VAR=1 git apply {p}", "git apply {p}"]
+)
+def test_bare_wrapper_does_not_move_cwd(hook: types.ModuleType, command: str) -> None:
+    tokens = hook.tokenize(command.format(p="x.patch"))
+    assert hook._cwd_moved(tokens, tokens.index("git")) is False
+
+
+@pytest.mark.parametrize("command", ["sudo -D x git apply {p}", "env -i git apply {p}"])
+def test_wrapper_options_make_patch_target_unresolvable(
+    hook: types.ModuleType, patch_dir: Path, command: str
+) -> None:
+    (patch_dir / "wt.patch").write_bytes(_unified("config.fish"))
+    p = (patch_dir / "wt.patch").as_posix()
+    assert _wt_targets(hook, command.format(p=p)) == [_PATCH_STAND_IN]
