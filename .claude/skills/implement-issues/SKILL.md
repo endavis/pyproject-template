@@ -1,14 +1,14 @@
 ---
 name: implement-issues
-description: Use when the user says "implement issues A, B and C" (or "implement issues A and B", "work on issues A, B", "take issues A, B to PRs") — several issues in one request. Checks every issue is open and compares their likely files (overlap sets the PR order), creates one worktree per issue, runs implement-issue for each in its own background agent up to the push (default 2 at a time, --max=N overrides), then opens the PRs one at a time, each rebased on main by its own agent. "check only" stops after the overlap check. Never adds ready-to-merge, never merges, never closes an issue. For a single issue use implement-issue.
+description: Use when the user says "implement issues A, B and C" (or "implement issues A and B", "work on issues A, B", "take issues A, B to PRs") — several issues in one request. Checks every issue is open and compares their likely files (overlap sets the PR order), creates one worktree per issue, runs implement-issue for each in its own background agent up to the push (default 2 at a time, --max=N overrides), then the orchestrator itself opens the PRs one at a time, each rebased on main first. "check only" stops after the overlap check. Never adds ready-to-merge, never merges, never closes an issue. For a single issue use implement-issue.
 ---
 
 # Implement Issues
 
 Take several open GitHub issues to one PR each from a single session: the work runs in parallel, the
-PRs are opened one at a time. Each issue runs [`implement-issue`](../implement-issue/SKILL.md) up to
-the push in its own worktree and its own background agent (phase 1); the PRs follow one after another,
-each rebased on `origin/main` first (phase 2). "Implement issues A, B and C" authorizes, per issue, what "implement issue N"
+PRs are opened one at a time by the orchestrator. Each issue runs [`implement-issue`](../implement-issue/SKILL.md) up to
+the push in its own worktree and its own background agent (phase 1); the orchestrator then opens the PRs
+one after another, each rebased on `origin/main` first (phase 2). "Implement issues A, B and C" authorizes, per issue, what "implement issue N"
 authorizes: commit, push and PR creation on that issue's own branch. It is not consent to add
 `ready-to-merge`, merge or close.
 
@@ -16,7 +16,7 @@ authorizes: commit, push and PR creation on that issue's own branch. It is not c
 
 The arguments are two or more issue numbers, optionally `--max=N` (concurrency cap, default 2) and
 `check only`. With a single number, tell the user to use `implement-issue` and stop. Run Steps 1 to 5
-from the main checkout and never leave it.
+from the main checkout and never leave it (phase 2 commands target a worktree with `git -C` or `cd`).
 
 ### Step 1: Pre-flight (before any worktree exists)
 
@@ -59,8 +59,8 @@ uv run doit worktree --branch=<type>/<n>-<short-description>
 
 Start one `general-purpose` subagent per issue with `run_in_background: true`, at most `--max=N` at a
 time (default 2). `doit test` already runs `pytest -n auto`, so one `doit check` uses every core.
-Issues past the cap wait in a queue; start the next when an agent returns. You, the orchestrator,
-never edit files.
+Issues past the cap wait in a queue; start the next when an agent returns. `--max` counts only these
+phase 1 agents. You, the orchestrator, do no phase 1 coding.
 
 Prompt each agent with this, filling in the issue number and absolute `$WORKTREE`:
 
@@ -83,26 +83,28 @@ for taking an issue out of the run. The push runs no CI: CI starts with the PR.
 
 ### Step 4: Open PRs one at a time
 
-Phase 2 starts when the first branch finishes phase 1. The next branch is the earliest finished one in
-the user's argument order. Two overlapping issues: the later waits for the earlier to merge, and
-behind it if it is stopped; a non-overlapping branch may go ahead of a stopped one. Only one PR from
-the run is open at a time. The orchestrator only reads, with `git -C <WORKTREE>` and `gh`.
+Phase 2 starts when the first branch finishes phase 1, while other phase 1 agents may still run. The
+next branch is the earliest finished one in the user's argument order. Two overlapping issues: the
+later waits for the earlier to merge, and behind it if it is stopped; a non-overlapping branch may go
+ahead of a stopped one. Only one PR from the run is open at a time.
 
-For each branch start one `general-purpose` agent with `run_in_background: true` (it counts toward
-`--max`). Prompt it with this, filling in the branch and absolute `<WORKTREE>`:
+You, the orchestrator, run phase 2 yourself, one branch at a time, with no agent for it. Every command
+is `git -C <WORKTREE> …` or `cd "<WORKTREE>" && …` through `uv run`; the main checkout never moves.
 
-> Work only in `<WORKTREE>`, starting every shell command with `cd "<WORKTREE>" &&`, through `uv run`.
-> 1. `git fetch origin main`. If `git merge-base --is-ancestor origin/main HEAD` succeeds, skip the
->    rebase, the re-check and the push.
-> 2. Otherwise `git rebase origin/main`. Resolve a conflict only when the resolution keeps both sides'
->    changes unaltered; any other conflict gets `git rebase --abort` and a final message starting
->    `ASK-FIRST: rebase conflict — <files>`.
-> 3. If the rebase brought changes, run `uv run doit check` and fix what it finds.
-> 4. `git push --force-with-lease origin <branch>`, always naming the branch.
-> 5. `uv run doit pr` from `<WORKTREE>`.
-> 6. Run implement-issue Step 7's CI loop, at most 3 rounds.
-> 7. Report the PR URL, the CI state, and whether `doit check` ran again. Never apply
->    `ready-to-merge`, never merge.
+1. `git fetch origin main`. If `git merge-base --is-ancestor origin/main HEAD` succeeds, skip the
+   rebase, the re-check and the push.
+2. Otherwise `git rebase origin/main`. Resolve a conflict only when the resolution keeps both sides'
+   changes unaltered; any other conflict gets `git rebase --abort` and an ask-first stop to the user:
+   `ASK-FIRST: rebase conflict — <files>`.
+3. If the rebase brought changes, run `uv run doit check` and fix what it finds.
+4. `git push --force-with-lease origin <branch>`, always naming the branch.
+5. `uv run doit pr` from `<WORKTREE>`, with a body that follows the PR template and includes
+   `Addresses #<n>`.
+6. Run implement-issue Step 7's CI loop, at most 3 rounds. A failure that needs a real code change
+   goes back to an `implement-worker` subagent for that worktree; you only resolve keep-both-sides
+   conflicts and run commands.
+7. Report the PR URL, the CI state, and whether `doit check` ran again. Never apply `ready-to-merge`,
+   never merge.
 
 A phase 2 stop holds the branches that overlap it; the others continue.
 
@@ -145,8 +147,8 @@ breaking change, a failing test that would need changing, a blocked command).
 ## Never
 
 - Never apply the `ready-to-merge` label, merge a PR, or close an issue.
-- Never edit files as the orchestrator, or `cd` to or switch the main checkout's branch.
+- Never do phase 1 coding as the orchestrator, or `cd` to or switch the main checkout's branch.
 - Never create worktrees concurrently, or run more agents than the cap.
 - Never open a PR while the previous one from the run is unmerged.
-- Never rebase or push as the orchestrator; the per-branch agents do.
+- Never let a subagent open a PR.
 - Never resolve an `ASK-FIRST:` stop on the user's behalf.

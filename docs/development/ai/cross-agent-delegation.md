@@ -309,7 +309,7 @@ Codex does not read `.claude/commands/`, `.copilot/commands/`, or `.github/skill
 | GitHub Copilot CLI | Sequential | `--fleet`/`task` nesting not verified. |
 | Antigravity CLI | Sequential | No subagent flag found. |
 
-The run has two phases. In phase 1 each issue's agent stops after the commit and push, so no PR exists yet. In phase 2 the PRs are opened one at a time, each by a background agent that rebases its branch on `origin/main` first, so a PR never waits on a later rebase; the sequential hosts run both phases in the session.
+The run has two phases. In phase 1 each issue's agent stops after the commit and push, so no PR exists yet. In phase 2 the orchestrator itself opens the PRs one at a time, with no agent, rebasing each branch on `origin/main` first (a CI fix needing real code goes to an `implement-worker` subagent), so a PR never waits on a later rebase; the sequential hosts run both phases in the session.
 
 See [slash-commands.md](slash-commands.md#implement-issues-a-b) and [ADR-9028](../../decisions/9028-implement-issues-runs-issues-in-parallel-background-agents.md).
 
