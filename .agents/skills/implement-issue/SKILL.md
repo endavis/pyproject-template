@@ -50,6 +50,8 @@ the open PR, not approving each step along the way.
    install the worktree into the main checkout's `.venv`. Treat the shell's working directory as
    non-persistent on every host: start each shell command with `cd "$WORKTREE" &&`, or use absolute
    paths. See [Per-host subagent notes](#per-host-subagent-notes).
+5. Never `cd` to the main checkout during a run: that moves the session out of its worktree. To
+   inspect it, use `git -C <main-checkout> …`.
 
 ### Step 2: Decide whether to plan
 
@@ -230,7 +232,11 @@ name, the worktree root as an absolute path, and any issue-specific notes:
    All new code is type-annotated for mypy strict mode.
 4. Run `uv run doit check` from the worktree root. Fix failures and re-run; do not stop at the first failure.
 5. Return a summary: files created or modified, test results, and any deviations from the plan.
-6. Never switch branches, never commit, never enter plan mode. The parent step handles validation
+6. Never use a bare `git stash`: the stash stack is shared with the main checkout, every worktree
+   and every session, so a `pop` can take another session's entry. To compare against unchanged
+   code, write `git show HEAD:<path>` to a scratch file under the worktree's `tmp/`, or make a
+   temporary WIP commit.
+7. Never switch branches, never commit, never enter plan mode. The parent step handles validation
    doubling, commit, and PR.
 
 ## Per-host subagent notes
