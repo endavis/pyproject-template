@@ -629,3 +629,11 @@ def test_gh_command_pattern_catches_any_subcommand_but_not_prose() -> None:
         assert GH_COMMAND_PATTERN.search(command), command
     for prose in ("instead of running `gh`.", "rather than calling `gh` itself"):
         assert not GH_COMMAND_PATTERN.search(prose), prose
+
+
+def test_implement_issue_step_6_honours_caller_stop_after_push() -> None:
+    """Step 6 lets an implement-issues per-issue agent stop after the push (#1139)."""
+    text = IMPLEMENT_ISSUE_FILE.read_text(encoding="utf-8")
+    start = text.index("### Step 6:")
+    step6 = text[start : text.index("### Step 7:", start)]
+    assert "says to stop after the\npush, skip `doit pr` and Step 7" in step6

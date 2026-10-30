@@ -20,16 +20,17 @@ Accepted
 2. **Concurrency cap.** Default 2, override with `--max=N`. `doit test` runs `pytest -n auto`, so one `doit check` already uses every core.
 3. **Host scope.** Parallel mode is Claude Code only. The skill stays one shared source in `.agents/skills/`; other hosts run `implement-issue` for each issue in sequence, because nested agents were not verified there.
 4. **Plain background agents, not the Workflow tool.** A Workflow needs its own opt-in, nesting under it was not verified, and an ask-first stop needs an agent that reasons. An issue agent cannot ask the user, so it returns `ASK-FIRST: <trigger> — <detail>`, which stops that issue only.
+5. **Two phases (amended by #1139).** The per-issue agents of item 1 stop after the commit and `git push`; they open no PR and run no CI loop. The PRs are then opened one at a time, each by its own background `general-purpose` agent that rebases the branch on `origin/main`, reruns `doit check` only if the rebase brought changes, force-pushes with `--force-with-lease`, runs `doit pr` and the CI loop. Overlap no longer blocks the run: it only sets the PR order. The orchestrator never rebases or pushes, and waits for the user to merge through `merge-pr` before the next PR.
 
 The skill never applies `ready-to-merge`, merges or closes an issue.
 
 ## Rationale
 
-Several issues were run by starting one session per issue (#1095, ADR-9027). One session could not run them together (#1097).
+Several issues were run by starting one session per issue (#1095, ADR-9027). One session could not run them together (#1097). Opening every PR up front made the second PR to merge wait for a rebase that reran the checks, as on #1132 after #1136 and #1133 (#1139).
 
 ## Documentation
 
 - [Slash Commands and Workflows — implement issues A, B](../development/ai/slash-commands.md#implement-issues-a-b)
 - [Cross-Agent Delegation — Parallel issues](../development/ai/cross-agent-delegation.md#parallel-issues-implement-issues)
 
-Issue: #1097. Builds on ADR-9027.
+Issues: #1097, #1139. Builds on ADR-9027.

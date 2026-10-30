@@ -127,3 +127,83 @@ def test_implement_issue_points_at_implement_issues() -> None:
 def test_step_3_prompt_names_the_plan_review_brief() -> None:
     step3 = _section("### Step 3:", "### Step 4:")
     assert "Plan-review brief" in step3
+
+
+def test_per_issue_prompt_stops_after_push() -> None:
+    """Phase 1 agents commit and push but open no PR (#1139)."""
+    step3 = _section("### Step 3:", "### Step 4:")
+    assert "git push -u origin" in step3
+    assert "Do not run `doit pr` or Step 7" in step3
+    assert "open the PR and run the CI loop" not in step3
+
+
+def test_per_issue_prompt_keeps_inline_exception_off() -> None:
+    step3 = _section("### Step 3:", "### Step 4:")
+    assert "Step 4's inline exception does not apply" in step3
+
+
+def _step4() -> str:
+    return _section("### Step 4:", "### Step 5:")
+
+
+def test_phase_2_opens_prs_one_at_a_time() -> None:
+    step4 = _step4()
+    for needle in (
+        "git rebase origin/main",
+        "--force-with-lease origin <branch>",
+        "uv run doit pr",
+        "at most 3 rounds",
+        "gh pr view <pr> --json state",
+        "run_in_background: true",
+    ):
+        assert needle in step4, needle
+    order = [
+        step4.index(n)
+        for n in (
+            "git rebase origin/main",
+            "uv run doit check",
+            "--force-with-lease",
+            "uv run doit pr",
+        )
+    ]
+    assert order == sorted(order)
+
+
+def test_phase_2_reruns_check_only_when_rebase_brought_changes() -> None:
+    step4 = _step4()
+    assert "merge-base --is-ancestor origin/main HEAD" in step4
+    assert "If the rebase brought changes, run `uv run doit check`" in step4
+
+
+def test_rebase_conflict_is_ask_first() -> None:
+    assert "git rebase --abort" in _step4()
+    assert "ASK-FIRST: rebase conflict" in _step4()
+    ask = _text()[_text().index("## Ask-first triggers") : _text().index("## Never")]
+    assert "rebase conflict" in ask
+
+
+def test_overlap_orders_phase_2_instead_of_blocking() -> None:
+    step1 = _section("### Step 1:", "### Step 2:")
+    assert "sets the phase 2 order" in step1
+    assert "one after another" not in step1
+    ask = _text()[_text().index("## Ask-first triggers") : _text().index("## Never")]
+    assert "overlap" not in ask
+    assert "empty" not in ask
+
+
+def test_orchestrator_never_rebases_or_pushes() -> None:
+    text = _text()
+    never = text[text.index("## Never") :]
+    assert "Never rebase or push as the orchestrator" in never
+    outside = [
+        line
+        for line in text.splitlines()
+        if "git rebase" in line and not line.startswith(">") and "Never rebase" not in line
+    ]
+    assert outside == []
+
+
+def test_resume_rebuilds_queue_from_pushed_branches() -> None:
+    step4 = _step4()
+    assert "gh pr list --head" in step4
+    assert "@{u}" in step4
