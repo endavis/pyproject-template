@@ -2381,19 +2381,51 @@ def test_path_qualified_command_word_gets_the_bare_result(
         (["true", "&&", "./bin/gh", "pr"], ["true", "&&", "gh", "pr"]),
         (["FOO=1", "/usr/bin/git", "push"], ["FOO=1", "git", "push"]),
         (["sudo", "-n", "/usr/bin/rm", "x"], ["sudo", "-n", "rm", "x"]),
-        (["/usr/bin/env", "/usr/bin/git"], ["env", "git"]),
-        # Operands and paths keep their original text.
-        (["cat", "dir/git", "src/foo.py"], ["cat", "dir/git", "src/foo.py"]),
-        (["patch", "-i", ".claude/patch"], ["patch", "-i", ".claude/patch"]),
-        (["git", "apply", "dir/git"], ["git", "apply", "dir/git"]),
-        (["echo", "x", ">", "/usr/bin/git"], ["echo", "x", ">", "/usr/bin/git"]),
-        (["cat", "--x=/usr/bin/git", "/opt/tool"], ["cat", "--x=/usr/bin/git", "/opt/tool"]),
+        (["timeout", "5", "/usr/bin/git"], ["timeout", "5", "git"]),
+        (["then", "/usr/bin/git"], ["then", "git"]),
+        # Not command words, options and redirects.
+        (["cat", "src/foo.py", "/opt/tool"], ["cat", "src/foo.py", "/opt/tool"]),
+        (
+            ["cat", "--x=/usr/bin/git", ">/usr/bin/git"],
+            ["cat", "--x=/usr/bin/git", ">/usr/bin/git"],
+        ),
     ],
 )
-def test_normalise_command_words_rewrites_command_position_only(
+def test_normalise_command_words_reduces_rule_words(
     hook: types.ModuleType, tokens: list[str], expected: list[str]
 ) -> None:
     assert hook._normalise_command_words(tokens) == expected
+
+
+@pytest.mark.parametrize(
+    "prefix",
+    [
+        "if true; then ",
+        "! ",
+        "{ ",
+        "( ",
+        "$( ",
+        "nohup ",
+        "time ",
+        "exec ",
+        "xargs ",
+        "doas ",
+        "stdbuf -o0 ",
+        "timeout 5 ",
+        "timeout -s KILL 5 ",
+        "true\n",
+        "echo x > out; ",
+    ],
+)
+def test_path_qualified_rule_word_after_a_keyword_or_wrapper_is_blocked(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, prefix: str
+) -> None:
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "main")
+    for rule in ("git push origin main", "gh pr merge 1"):
+        bare = f"{prefix}{rule}"
+        assert hook.check_command(bare)[0], bare
+        qualified = bare.replace(rule.split()[0], f"/usr/bin/{rule.split()[0]}", 1)
+        assert hook.check_command(qualified)[0], qualified
 
 
 def test_operand_path_ending_in_a_command_word_keeps_its_path(

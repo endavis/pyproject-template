@@ -1305,32 +1305,25 @@ _RULE_COMMAND_WORDS = (
 
 
 def _normalise_command_words(tokens: list[str]) -> list[str]:
-    """Return *tokens* with each path-qualified command word reduced to its basename.
+    """Return *tokens* with each path-qualified rule word reduced to its basename.
 
-    The one place a command word is normalised: ``check_command`` applies it to
-    every token list it hands to a rule, so every rule sees ``git`` for
-    ``/usr/bin/git``. Only a word in command position is rewritten: the first
-    word, the first word after a separator, and the word after a prefix
-    wrapper (``sudo``, ``env``, ``nice``, ``command``), its options or a
-    ``NAME=value`` assignment. Operand and path tokens keep their original
-    text, because path-based checks must see the path the shell uses.
+    The one place a command word is normalised. Every non-option token whose
+    basename is a rule command word is reduced, wherever it sits, so a rule
+    word after a keyword, wrapper, option or substitution is still seen
+    (fails closed). The result has the same length as *tokens*, so an index
+    in one list is the same token in the other.
+
+    Only rules that key on a command word read this list. Checks that treat a
+    token as a filesystem path (patch sources, redirect and stdin targets,
+    credential-store paths, persistence targets) read the original tokens.
     """
     normalised = list(tokens)
-    at_command = True
     for index, token in enumerate(tokens):
-        if token in _SHELL_OPERATORS:
-            at_command = True
-            continue
-        if not at_command:
-            continue
-        if _ASSIGNMENT_RE.match(token):
+        if "/" not in token or token[0] in "-<>&":
             continue
         base = token.rsplit("/", 1)[-1]
-        if "/" in token and not token.startswith("-") and base.lower() in _RULE_COMMAND_WORDS:
+        if base.lower() in _RULE_COMMAND_WORDS:
             normalised[index] = base
-        if base.lower() in _COMMAND_PREFIX_WRAPPERS or token.startswith("-"):
-            continue
-        at_command = False
     return normalised
 
 
@@ -2493,6 +2486,7 @@ def _bash_confirmed_write_targets(
     """
     targets: list[str] = []
     tokens = _collapse_extglobs(tokens)
+    words = _normalise_command_words(tokens)
     n = len(tokens)
     for i, tok in enumerate(tokens):
         # Pattern A: standalone redirect operator, including `>|`, `&>` and
@@ -2512,6 +2506,9 @@ def _bash_confirmed_write_targets(
             if _is_env_persistence_target(tok[1:], dynamic=True):
                 targets.append(tok[1:])
             continue
+
+        # The patterns below key on a command word; operands stay in *tokens*.
+        tok = words[i]
 
         # Pattern C: write command followed by persistence target as positional
         if tok in _WRITE_COMMANDS:
@@ -3203,10 +3200,11 @@ def check_env_dump(tokens: list[str]) -> tuple[bool, str]:
     separator (``hi;printenv``) stuck to its neighbour, so neither ever placed
     a command at the start of a line or after a glued ``;`` (#1011, gap 2).
     """
+    words = _normalise_command_words(tokens)
     for index in _command_start_indices(tokens):
-        if index >= len(tokens) or tokens[index] not in _ENV_DUMP_COMMANDS:
+        if index >= len(tokens) or words[index] not in _ENV_DUMP_COMMANDS:
             continue
-        token = tokens[index]
+        token = words[index]
         # Stop at the next separator: later tokens belong to another command.
         rest = []
         for candidate in tokens[index + 1 :]:
@@ -3289,8 +3287,9 @@ def check_credential_file_read(tokens: list[str]) -> tuple[bool, str]:
     separator (``hi;cat``) stuck to its neighbour, so neither ever placed a
     command at the start of a line or after a glued ``;`` (#1011, gap 2).
     """
+    words = _normalise_command_words(tokens)
     for index in _command_start_indices(tokens):
-        if index >= len(tokens) or tokens[index] not in _CREDENTIAL_READER_COMMANDS:
+        if index >= len(tokens) or words[index] not in _CREDENTIAL_READER_COMMANDS:
             continue
         skip_next = False
         for argument in tokens[index + 1 :]:
@@ -3332,7 +3331,8 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     Returns:
         (is_dangerous, reason)
     """
-    tokens = _normalise_command_words(tokenize(command))
+    raw_tokens = tokenize(command)
+    tokens = _normalise_command_words(raw_tokens)
 
     # Check for dangerous standalone flags
     is_dangerous, reason = check_dangerous_flags(tokens)
@@ -3356,10 +3356,10 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # second pass keeps every block the first one would lose to the new
     # tokenizer, such as `cat &>/tmp/x ~/.netrc`, where `&>` splits into a
     # separator `&` and `>/tmp/x`.
-    structural = _normalise_command_words(_structural_tokens(stripped))
+    structural = _structural_tokens(stripped)
     for check, legacy in (
-        (check_env_dump, tokens),
-        (check_credential_file_read, _normalise_command_words(tokenize(stripped))),
+        (check_env_dump, raw_tokens),
+        (check_credential_file_read, tokenize(stripped)),
     ):
         for check_tokens in (structural, legacy):
             is_dangerous, reason = check(check_tokens)
@@ -3403,15 +3403,13 @@ def check_command(command: str, _depth: int = 0) -> tuple[bool, str]:
     # `)` also end a checkout/restore argument scan. The scan runs on every
     # pass, so the exact pass only adds coverage (#1117).
     exact_tokens = _exact_operator_tokens(stripped)
-    if exact_tokens is not None:
-        exact_tokens = _normalise_command_words(exact_tokens)
     # A patch file is read only for the top-level command, and not when the
     # command has several lines: the tokens lose a newline, so an earlier line
     # could have written the file (#1105).
     read_patch_files = _depth == 0 and "\n" not in stripped.strip()
     passes: list[tuple[list[str], bool, bool]] = [
-        (tokens, True, False),
-        (_normalise_command_words(_redirect_tokens(stripped)), False, False),
+        (raw_tokens, True, False),
+        (_redirect_tokens(stripped), False, False),
     ]
     if exact_tokens is not None:
         passes.append((exact_tokens, False, True))
