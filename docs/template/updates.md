@@ -82,8 +82,11 @@ pyproject-template has updates since 1a2b3c4. Run the template-sync skill to rev
   repo itself, when the check fails, and when opted out. The hook always exits 0.
 - **Opt out:** set `PYPROJECT_TEMPLATE_UPDATE_CHECK=0` in the environment that launches the CLI.
 - **Limitation:** a project synced to a commit that is not on `main` always shows as behind.
-- **Hosts:** Claude Code and Antigravity CLI are wired; Copilot CLI runs the Claude hook; Codex CLI is
-  not wired yet. See [Command Blocking - Template Update Notice](../development/ai/command-blocking.md#template-update-notice)
+- **Hosts:** Claude Code, Codex CLI and Antigravity CLI are wired; Copilot CLI runs the Claude hook.
+  Claude Code and Codex run it on new and resumed sessions and show the notice in yellow (plain when
+  `NO_COLOR` is set and non-empty). Copilot CLI drops `systemMessage`, so the Claude output also
+  carries an `additionalContext` line asking the model to relay the notice; Antigravity uses the same
+  relay. A relayed notice is the model's wording and is not coloured. See [Command Blocking - Template Update Notice](../development/ai/command-blocking.md#template-update-notice)
   for the per-host evidence.
 
 ## Reporting a template bug upstream

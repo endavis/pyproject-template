@@ -805,16 +805,19 @@ Then run the test suite to verify.
 `tools/hooks/ai/template-update-check.py` is a session-start hook, not a blocking hook: it tells the
 user when the project is behind pyproject-template and always exits 0. Behavior, cache and opt-out
 (`PYPROJECT_TEMPLATE_UPDATE_CHECK=0`) are in [Keeping Up to Date](../../template/updates.md#update-notice-at-session-start).
-`--host=<name>` selects the output shape.
+`--host=<name>` selects the output shape: `claude` and `codex` print a yellow `systemMessage`
+(plain when `NO_COLOR` is set and non-empty); `claude` adds a plain top-level `additionalContext`
+relay line (`Tell the user, in one line: ...`) for Copilot CLI, which runs the Claude hook and drops
+`systemMessage`. The Claude matcher is `startup|resume` and the Codex matcher `^(startup|resume)$`.
 
 Each host was probed on 2026-10-29 with a throwaway hook that logged its invocation and printed a
 marker; none of the probe config was kept in tracked files.
 
 | Host | Wiring | Evidence |
 | :--- | :--- | :--- |
-| Claude Code 2.1.312 | `.claude/settings.json` `SessionStart`, matcher `startup`, `--host=claude` | `claude -p "say ok" --settings <probe> --output-format stream-json --verbose --include-hook-events` emitted `hook_started` for `SessionStart:startup` and a `hook_response` with `stdout` `{"systemMessage":"PROBE-MSG-claude"}`, `exit_code` 0 |
-| Copilot CLI 1.0.105 | None of its own. It runs the Claude-format hook in `.claude/settings.json`, so a `sessionStart` entry in `.github/hooks/copilot-hooks.json` would print the notice twice | In a scratch repo with only `.claude/settings.json` `SessionStart`, `copilot -p "say ok" --allow-all-tools --trust-folder` ran the hook (marker logged) and the debug log shows `[hook stdout] {"systemMessage":"PROBE-MSG-copilotA"}`. A repo with only a `sessionStart` entry in `.github/hooks/` also ran it. Whether the user sees `systemMessage` in the Copilot UI is **unverified** (`-p` output showed only the answer) |
-| Codex CLI 0.163.0 | `.codex/config.toml` carries a **commented-out** `[[hooks.SessionStart]]` block | **Unverified.** `codex -a never --dangerously-bypass-hook-trust exec "say ok"` with a probe `SessionStart` hook failed with `You've hit your usage limit` before the first turn, and the probe never ran. Type definitions accept `SessionStart`, which is not proof it fires or shows `systemMessage`. Uncomment the block once a probe passes |
+| Claude Code 2.1.312 | `.claude/settings.json` `SessionStart`, matcher `startup\|resume` (new and resumed sessions), `--host=claude` | `claude -p "say ok" --settings <probe> --output-format stream-json --verbose --include-hook-events` emitted `hook_started` for `SessionStart:startup` and a `hook_response` with `stdout` `{"systemMessage":"PROBE-MSG-claude"}`, `exit_code` 0 |
+| Copilot CLI 1.0.105 | None of its own. It runs the Claude-format hook in `.claude/settings.json`, so a `sessionStart` entry in `.github/hooks/copilot-hooks.json` would print the notice twice | In a scratch repo with only `.claude/settings.json` `SessionStart`, `copilot -p "say ok" --allow-all-tools --trust-folder` ran the hook (marker logged) and the debug log shows `[hook stdout] {"systemMessage":"PROBE-MSG-copilotA"}`. A repo with only a `sessionStart` entry in `.github/hooks/` also ran it. A 2026-10-30 probe (issue #1149) showed Copilot drops `systemMessage` and consumes only `additionalContext` for `sessionStart` (no matcher support; `source` was `new`). The hook therefore also prints a top-level `additionalContext` relay (`Tell the user, in one line: ...`), which Copilot's model relayed; Claude Code ignores that field |
+| Codex CLI | `.codex/config.toml` `[[hooks.SessionStart]]`, matcher `^(startup\|resume)$`, `--host=codex` | A 2026-10-30 probe (issue #1149) fired the hook after the first message with `source` `startup`; `systemMessage` was shown and ANSI yellow rendered. The earlier 0.163.0 probe had failed on a usage limit |
 | Antigravity `agy` 1.4.10 | `.agents/hooks.json` hook `template-update-check`, event `SessionStart`, `--host=antigravity` | A `SessionStart` handler is a flat `{"type","command"}` entry. The `matcher` plus `hooks` wrapper used by `PreToolUse` is rejected: `command hook must specify 'command'`. Output `{"systemMessage":...}` is rejected (`unknown field "systemMessage"`). `{"injectSteps":[{"systemMessage":{"systemMessage":"PROBE-MSG-agy"}}]}` is accepted, and `agy -p` asked to repeat any `PROBE-MSG` text answered `PROBE-MSG-agy`. The step goes into the model's context, not to a user-facing field, so the hook prefixes it with "Tell the user, in one line:" |
 
 ## Related
