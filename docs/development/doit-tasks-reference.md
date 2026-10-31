@@ -910,7 +910,7 @@ doit agent_cmd --check
 - Reads `$XDG_CONFIG_HOME/pyproject-template/agents.toml` (else
   `~/.config/pyproject-template/agents.toml`) and the gitignored
   `.config/pyproject_template/agents.local.toml`, local over user.
-- Prints one JSON line last on stdout: `{"mode": "subagent"}` (optionally with `model`),
+- Prints one JSON line last on stdout: `{"mode": "subagent"}` (optionally with `model`, and on Codex `effort`),
   `{"mode": "inline"}`, or `{"mode": "cli", "cli": "...", "command": "..."}`. With no config the
   command is today's invocation.
 - `--cli` fixes the target CLI; the role's model and effort apply only when its configured CLI

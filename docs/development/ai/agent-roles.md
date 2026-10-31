@@ -74,15 +74,17 @@ uv run doit agent_cmd --role=review --host=claude --cli=codex
 
 | `mode` | Meaning |
 | :--- | :--- |
-| `subagent` (optional `model`) | Run the brief in the host's own subagent, with that model when given. |
+| `subagent` (optional `model`, optional `effort`) | Run the brief in the host's own subagent, with that model and effort when given. On Codex spawn it with `fork_turns: "none"` plus `model` and `reasoning_effort`. |
 | `inline` | The host is `agy`, the target, with no model: do the work in the session. |
 | `cli` (`cli`, `command`) | Run `command` after replacing `'<prompt>'` with the prompt. |
 
 The result is `subagent` only when the role's CLI is the host and the host's subagent can run the
-model: Claude Code accepts `opus`, `sonnet`, `haiku` and `fable`. Copilot's `task` tool does not honour a
+model: Claude Code accepts `opus`, `sonnet`, `haiku` and `fable`, and Codex's `spawn_agent` accepts any
+`model` and `reasoning_effort` when spawned with `fork_turns: "none"` (verified live in 0.166.0, #1151), so a
+Codex role may also carry `effort`. Copilot's `task` tool does not honour a
 chosen model (in 1.0.105 its `model` schema allowed only `auto`; per-agent models are Copilot's own
-`subagents.agents.<agent-name>` setting, set with `/subagents`), Codex's `multi_agent` is not yet probed live (#1151), and `agy` has no subagent
-mechanism, so a configured model on those hosts resolves to `cli`. `--cli=<name>` fixes the target CLI, as the
+`subagents.agents.<agent-name>` setting, set with `/subagents`), and `agy` has no subagent
+mechanism, so a configured model on those hosts resolves to `cli`. Effort on Claude also resolves to `cli`. `--cli=<name>` fixes the target CLI, as the
 bridges do; the role's model and effort then apply only if its configured `cli` is that CLI.
 
 ## Listing models and checking the config

@@ -182,11 +182,40 @@ class TestResolve:
         assert got["mode"] == "cli"
         assert got["command"].endswith("--model gemini-4-argon-medium")
 
-    @pytest.mark.parametrize("host", ["codex", "copilot", "agy"])
-    def test_model_on_unprobed_or_subagentless_host_is_cli(self, host: str) -> None:
+    @pytest.mark.parametrize("host", ["copilot", "agy"])
+    def test_model_on_host_that_cannot_choose_a_subagent_model_is_cli(self, host: str) -> None:
         cli = canonical_cli(host)
         cfg = {"review": RoleConfig(cli, "some-model")}
         assert resolve("review", host, cfg)["mode"] == "cli"
+
+    def test_codex_model_is_subagent_with_model(self) -> None:
+        cfg = {"code": RoleConfig("codex", "gpt-5.6-luna")}
+        assert resolve("code", "codex", cfg) == {"mode": "subagent", "model": "gpt-5.6-luna"}
+
+    def test_codex_model_and_effort_is_subagent_with_both(self) -> None:
+        cfg = {"code": RoleConfig("codex", "gpt-5.6-luna", "low")}
+        assert resolve("code", "codex", cfg) == {
+            "mode": "subagent",
+            "model": "gpt-5.6-luna",
+            "effort": "low",
+        }
+
+    def test_codex_effort_only_is_subagent_with_effort(self) -> None:
+        cfg = {"code": RoleConfig("codex", None, "high")}
+        assert resolve("code", "codex", cfg) == {"mode": "subagent", "effort": "high"}
+
+    def test_codex_without_model_or_effort_is_plain_subagent(self) -> None:
+        cfg = {"code": RoleConfig("codex")}
+        assert resolve("code", "codex", cfg) == {"mode": "subagent"}
+
+    def test_codex_role_on_claude_host_is_cli(self) -> None:
+        cfg = {"code": RoleConfig("codex", "gpt-5.6-luna", "low")}
+        assert resolve("code", "claude", cfg)["mode"] == "cli"
+
+    def test_cli_override_to_codex_from_codex_host_is_subagent(self) -> None:
+        cfg = {"review": RoleConfig("codex", "gpt-5.6-luna", "low")}
+        got = resolve("review", "codex", cfg, cli="codex")
+        assert got == {"mode": "subagent", "model": "gpt-5.6-luna", "effort": "low"}
 
     def test_copilot_model_is_cli_and_no_model_is_subagent(self) -> None:
         # Copilot's task tool does not honour a chosen model (its schema allowed only "auto").

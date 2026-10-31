@@ -204,7 +204,7 @@ Whether a host's own subagent can run a chosen model:
 | :--- | :--- | :--- |
 | Claude Code | Agent tool `model` (`opus`, `sonnet`, `haiku`, `fable`) | verified mechanism |
 | Copilot | `task` tool `model`: the schema allowed only `auto`; a model passed outside it ran on another model. Per-agent models: the user's `subagents.agents.<agent-name>` setting (`/subagents`) | probed live in 1.0.105 (#1151): a configured model resolves to `cli` |
-| Codex | `multi_agent` | not probed live yet (#1151): a configured model resolves to `cli` |
+| Codex | `spawn_agent` `model` and `reasoning_effort` with `fork_turns: "none"` (a full-history fork inherits the parent's and accepts no override) | verified live in 0.166.0 (#1151): a configured model or effort resolves to `subagent` |
 | agy | no subagent mechanism | `cli`, or inline in the session |
 
 ## Headless Codex host limits
