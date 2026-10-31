@@ -318,8 +318,9 @@ run the brief in the session itself instead of failing the step.
 - **GitHub Copilot CLI:** `--fleet` ("run the prompt in fleet mode (parallel subagent...)", per
   `copilot --help`) for parallel subagent work; the `task` tool for the Coder brief, the same
   mechanism `.claude/agents/implement-worker.md` already documents being read through for Copilot.
-  `copilot skill list | grep implement-issue` finds the skill. Choosing a model for the `task` tool is
-  unprobed (#1151), so a configured model resolves to `cli` mode.
+  `copilot skill list | grep implement-issue` finds the skill. The `task` tool takes no model (1.0.105):
+  a subagent's model is Copilot's own `subagents.agents.<agent-name>` setting, set with `/subagents`,
+  so a configured model resolves to `cli` mode.
   A delegated Copilot run must set `GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS=true`, as the
   documented invocation does, or its dangerous-command hook does not load under `-p` (#1042).
 - **Antigravity CLI (`agy`):** no dedicated subagent/delegation flag found — `agy --help` lists no

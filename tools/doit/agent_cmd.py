@@ -273,8 +273,9 @@ def resolve(
     if target == host_cli and effort is None:
         if host_cli == "claude" and (model is None or model in CLAUDE_ALIASES):
             return {"mode": "subagent", "model": model} if model else {"mode": "subagent"}
-        # Copilot `task` and Codex `multi_agent` model selection is unprobed (#1151), so a
-        # configured model there resolves to cli. agy has no subagent mechanism.
+        # Copilot's `task` tool takes no model: a subagent's model is Copilot's own
+        # `subagents.agents.<name>` setting. Codex `multi_agent` is not yet probed live (#1151).
+        # So a configured model on either resolves to cli. agy has no subagent mechanism.
         if model is None:
             return {"mode": "inline" if host_cli == "agy" else "subagent"}
 

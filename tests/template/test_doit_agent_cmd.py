@@ -188,6 +188,13 @@ class TestResolve:
         cfg = {"review": RoleConfig(cli, "some-model")}
         assert resolve("review", host, cfg)["mode"] == "cli"
 
+    def test_copilot_model_is_cli_and_no_model_is_subagent(self) -> None:
+        # Copilot's task tool takes no model; its subagent models live in Copilot's own config.
+        with_model = resolve("code", "copilot", {"code": RoleConfig("copilot", "gpt-6.1-sol")})
+        assert with_model["mode"] == "cli"
+        assert with_model["command"].endswith("--model gpt-6.1-sol")
+        assert resolve("code", "copilot", {"code": RoleConfig("copilot")}) == {"mode": "subagent"}
+
     def test_override_drops_model_of_other_cli(self) -> None:
         cfg = {"review": RoleConfig("agy", "gemini-4-argon-medium")}
         got = resolve("review", "claude", cfg, cli="codex")

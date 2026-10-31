@@ -203,8 +203,8 @@ Whether a host's own subagent can run a chosen model:
 | Host | Subagent with a chosen model | Status |
 | :--- | :--- | :--- |
 | Claude Code | Agent tool `model` (`opus`, `sonnet`, `haiku`, `fable`) | verified mechanism |
-| Copilot | `task` tool | unprobed (#1151): a configured model resolves to `cli` |
-| Codex | `multi_agent` | unprobed (#1151): a configured model resolves to `cli` |
+| Copilot | `task` tool: takes no model; a subagent's model is the user's `subagents.agents.<agent-name>` setting (`/subagents`) | checked in 1.0.105 (`copilot help config`): a configured model resolves to `cli` |
+| Codex | `multi_agent` | not probed live yet (#1151): a configured model resolves to `cli` |
 | agy | no subagent mechanism | `cli`, or inline in the session |
 
 ## Headless Codex host limits
