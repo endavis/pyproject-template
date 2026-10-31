@@ -90,8 +90,10 @@ reads only the draft, the findings and the files the plan names.
 **Roles.** Who runs the Planner brief (`plan`), the Plan-review brief (`plan_review`) and the Coder
 brief (`code`) comes from the person's agent-role config. Before each, run
 `uv run doit agent_cmd --role=<role> --host=<host>` and read the last stdout line (JSON). If `mode`
-is `subagent`, run the brief in the host's subagent with that `model` when one is given (none means the
-subagent's own default). If `inline`, run it in the session. If `cli`, run its `command` with
+is `subagent`, run the brief in the host's subagent with that `model` (and `effort`, Codex only) when
+given (none means the subagent's own default). On Codex spawn it with `fork_turns: "none"` plus
+`model` and `reasoning_effort`; the briefs are self-contained through the context directory, so no
+parent history is needed, and a full-history fork ignores both. If `inline`, run it in the session. If `cli`, run its `command` with
 `'<prompt>'` replaced by the brief's prompt, from `$WORKTREE`. With no config the result is today's
 behaviour, and a task failure also falls back to it. See
 [Agent roles](../../../docs/development/ai/agent-roles.md).
@@ -311,15 +313,16 @@ run the brief in the session itself instead of failing the step.
   from `CLAUDE_CODE_SUBAGENT_MODEL`) for the Coder brief. Verified
   with `claude -p --permission-mode plan "<prompt asking which skill handles 'implement issue N'>"`,
   which named `implement-issue`.
-- **Codex CLI:** `multi_agent`. Choosing a model for a `multi_agent` subagent is unprobed (#1151), so a configured model resolves to `cli` mode. `codex features list` reports `multi_agent` as `stable`/`true`
+- **Codex CLI:** `multi_agent`. `spawn_agent` accepts `model` and `reasoning_effort` when spawned with `fork_turns: "none"` (verified live in 0.166.0, #1151: the child ran the chosen model and effort while the parent kept its own); a full-history fork inherits the parent's and accepts no override. So a configured Codex model or effort on a Codex host resolves to `subagent`. `codex features list` reports `multi_agent` as `stable`/`true`
   (`multi_agent_v2` exists but is `stable`/`false` — not enabled). `codex debug prompt-input` lists
   `implement-issue` (source `.agents/skills/implement-issue/SKILL.md`) among the skills available to
   the session. A headless Codex host (`codex exec -a never`) can read GitHub through `.codex/rules/gh.rules` but cannot write to it or delegate to another agent CLI — see [Headless Codex host limits](../../../docs/development/ai/cross-agent-delegation.md#headless-codex-host-limits). It cannot run Step 4's "with \<agent\>" delegation, Step 6's `doit pr`, or Step 7's CI-log fetch headless; Codex hosts this skill interactively instead.
 - **GitHub Copilot CLI:** `--fleet` ("run the prompt in fleet mode (parallel subagent...)", per
   `copilot --help`) for parallel subagent work; the `task` tool for the Coder brief, the same
   mechanism `.claude/agents/implement-worker.md` already documents being read through for Copilot.
-  `copilot skill list | grep implement-issue` finds the skill. Choosing a model for the `task` tool is
-  unprobed (#1151), so a configured model resolves to `cli` mode.
+  `copilot skill list | grep implement-issue` finds the skill. The `task` tool has a `model` parameter, but in
+  1.0.105 its schema allowed only `auto`, and a model outside it ran on another model (#1151), so a
+  configured model resolves to `cli` mode. Per-agent models are Copilot's own `/subagents` setting.
   A delegated Copilot run must set `GITHUB_COPILOT_PROMPT_MODE_REPO_HOOKS=true`, as the
   documented invocation does, or its dangerous-command hook does not load under `-p` (#1042).
 - **Antigravity CLI (`agy`):** no dedicated subagent/delegation flag found — `agy --help` lists no

@@ -270,11 +270,21 @@ def resolve(
     if config is not None and config.cli == target:
         model, effort = config.model, config.effort
 
+    if target == host_cli == "codex":
+        # Codex `spawn_agent` takes `model` and `reasoning_effort` when spawned with
+        # `fork_turns: "none"`; verified live in Codex CLI 0.166.0 (#1151).
+        result = {"mode": "subagent"}
+        if model:
+            result["model"] = model
+        if effort:
+            result["effort"] = effort
+        return result
+
     if target == host_cli and effort is None:
         if host_cli == "claude" and (model is None or model in CLAUDE_ALIASES):
             return {"mode": "subagent", "model": model} if model else {"mode": "subagent"}
-        # Copilot `task` and Codex `multi_agent` model selection is unprobed (#1151), so a
-        # configured model there resolves to cli. agy has no subagent mechanism.
+        # Copilot's `task` tool does not honour a chosen model: its `model` schema allowed only
+        # `auto` (#1151), so a configured model resolves to cli. agy has no subagent mechanism.
         if model is None:
             return {"mode": "inline" if host_cli == "agy" else "subagent"}
 
@@ -393,8 +403,8 @@ def task_agent_cmd() -> dict[str, Any]:
     ``~/.config/pyproject-template/agents.toml``) and the gitignored project-local
     ``.config/pyproject_template/agents.local.toml``, then prints one JSON line last on stdout:
 
-    - ``{"mode": "subagent"}`` or ``{"mode": "subagent", "model": "<alias>"}``: run the brief in
-      the host's own subagent, with that model when present.
+    - ``{"mode": "subagent"}``, optionally with ``"model"`` (Claude alias or Codex model) and,
+      on Codex, ``"effort"``: run the brief in the host's own subagent with those settings.
     - ``{"mode": "inline"}``: the host has no subagent mechanism and is the target; do the work
       in the session.
     - ``{"mode": "cli", "cli": "<name>", "command": "<shell string>"}``: run ``command`` after
