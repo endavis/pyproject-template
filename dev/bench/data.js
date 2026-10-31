@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793395643984,
+  "lastUpdate": 1793415027826,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22066,6 +22066,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.207315792248235e-7",
             "extra": "mean: 1.5823522687112928 usec\nrounds: 68475"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "74f49de452fb117cacdb60e8600d38e4e3eb190e",
+          "message": "feat: choose subagent models on Codex and record the Copilot task-tool result (merges PR #1154, addresses #1151)\n\n* feat: record that Copilot's task tool cannot choose a subagent model\n\nCopilot CLI 1.0.105's task tool takes no model; each subagent's model comes from Copilot's own\nsubagents.agents.<agent-name> setting. A Copilot host with a configured role model therefore keeps\nresolving to cli mode. The resolver comment, the implement-issue skill notes, the delegation matrix,\nthe agent-roles how-to and ADR-9030 now say so, and a test pins the Copilot result. Codex\nmulti_agent stays marked as not yet probed live.\n\nAddresses #1151\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* docs: record the live Copilot task-tool result instead of the help-text reading\n\nA live probe showed the task tool does have a model parameter, but its schema allowed only \"auto\",\nand a model passed outside it ran on a different model. The resolver result (cli mode for a\nconfigured model) is unchanged; the stated reason is corrected in the comment, the skill notes, the\ndelegation matrix, the how-to and ADR-9030.\n\nAddresses #1151\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n* feat: run a Codex role in Codex's own subagent with its model and effort\n\nA live probe of Codex CLI 0.166.0 showed spawn_agent, with fork_turns \"none\", runs the child on the\nrequested model and reasoning effort. On a Codex host a Codex role now resolves to subagent mode\ncarrying model and effort, instead of shelling out to codex exec. The implement-issue skill tells\nthe host to spawn with fork_turns \"none\"; the delegation matrix, the how-to, the doit task\nreference and ADR-9030 record the result.\n\nAddresses #1151\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbLUxnKh6RLtayUcCW\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-10-31T02:49:50Z",
+          "tree_id": "9fd728096937cbe15c8574a42453ed80f207f65e",
+          "url": "https://github.com/endavis/pyproject-template/commit/74f49de452fb117cacdb60e8600d38e4e3eb190e"
+        },
+        "date": 1793415026751,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9429576.929030929,
+            "unit": "iter/sec",
+            "range": "stddev: 1.385097661234052e-8",
+            "extra": "mean: 106.04929654068472 nsec\nrounds: 103972"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10304804.345037943,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1826345264896849e-8",
+            "extra": "mean: 97.04211419419416 nsec\nrounds: 108850"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6345032.896374047,
+            "unit": "iter/sec",
+            "range": "stddev: 1.506159588556516e-8",
+            "extra": "mean: 157.60359580979684 nsec\nrounds: 67765"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2318948.5476411222,
+            "unit": "iter/sec",
+            "range": "stddev: 6.371297657216444e-8",
+            "extra": "mean: 431.2299214302183 nsec\nrounds: 189359"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 607434.5077595573,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6250370816046188e-7",
+            "extra": "mean: 1.6462680128074532 usec\nrounds: 63416"
           }
         ]
       }
