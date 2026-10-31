@@ -79,9 +79,9 @@ uv run doit agent_cmd --role=review --host=claude --cli=codex
 | `cli` (`cli`, `command`) | Run `command` after replacing `'<prompt>'` with the prompt. |
 
 The result is `subagent` only when the role's CLI is the host and the host's subagent can run the
-model: Claude Code accepts `opus`, `sonnet`, `haiku` and `fable`. Copilot's `task` tool takes no model
-(its subagent models come from Copilot's own `subagents.agents.<agent-name>` setting, set with
-`/subagents`), Codex's `multi_agent` is not yet probed live (#1151), and `agy` has no subagent
+model: Claude Code accepts `opus`, `sonnet`, `haiku` and `fable`. Copilot's `task` tool does not honour a
+chosen model (in 1.0.105 its `model` schema allowed only `auto`; per-agent models are Copilot's own
+`subagents.agents.<agent-name>` setting, set with `/subagents`), Codex's `multi_agent` is not yet probed live (#1151), and `agy` has no subagent
 mechanism, so a configured model on those hosts resolves to `cli`. `--cli=<name>` fixes the target CLI, as the
 bridges do; the role's model and effort then apply only if its configured `cli` is that CLI.
 

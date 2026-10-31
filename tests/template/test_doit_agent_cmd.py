@@ -189,7 +189,7 @@ class TestResolve:
         assert resolve("review", host, cfg)["mode"] == "cli"
 
     def test_copilot_model_is_cli_and_no_model_is_subagent(self) -> None:
-        # Copilot's task tool takes no model; its subagent models live in Copilot's own config.
+        # Copilot's task tool does not honour a chosen model (its schema allowed only "auto").
         with_model = resolve("code", "copilot", {"code": RoleConfig("copilot", "gpt-6.1-sol")})
         assert with_model["mode"] == "cli"
         assert with_model["command"].endswith("--model gpt-6.1-sol")
