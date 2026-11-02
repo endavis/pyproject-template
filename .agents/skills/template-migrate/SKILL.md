@@ -233,8 +233,12 @@ Requirements for the plan body:
     automatically; `doit publish_setup` handles PyPI trusted publishing. Both are separate steps
     after the migration commit.
   - Record the template commit as the sync point, or `template-sync` has no baseline afterwards.
-- **`rsync` excludes `.git/`, `src/` and `tests/`.** Windows has no `rsync` — say so if the owner is
-  on Windows.
+- **`rsync` excludes `.git/`, `src/` and `tests/`.** A second `rsync --ignore-existing` brings in
+  the template's shipped tests, because the coverage gate measures `tools/`. The plan must name the
+  skeleton tests to delete or rewrite (`tests/test_cli.py`, `test_core.py`, `test_example.py`,
+  `test_logging.py`, `tests/template/test_properties.py`), the `pytest_add_cli_args_test_selection`
+  update in `[tool.mutmut]`, and any same-named collisions, `tests/conftest.py` especially (merge its
+  fixtures by hand). Windows has no `rsync` — say so if the owner is on Windows.
 
 **Stop here.** Do not change a single file until the owner has read the plan and told you to
 proceed. The plan is the deliverable; migrating without it is the failure mode this skill exists to

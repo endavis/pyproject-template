@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import re
 import subprocess  # nosec B404  # reads the tracked file list, no shell
+import tomllib
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -135,3 +136,42 @@ def test_the_parsers_read_something() -> None:
     """Guard against the assertions above passing on an empty parse."""
     assert _rsync_excludes(), "no --exclude flags found; the parser or the guide changed"
     assert _table_excludes(), "no exclusion table rows found; the parser or the guide changed"
+
+
+def _rsync_commands() -> list[str]:
+    """Every ``rsync`` command in the guide, backslash continuations joined."""
+    text = _guide_text().replace("\\\n", " ")
+    return [re.sub(r"\s+", " ", line.strip()) for line in text.splitlines() if "rsync -a" in line]
+
+
+def test_the_guide_copies_the_shipped_tests() -> None:
+    """One command copies the template's tests without replacing the project's.
+
+    The coverage gate measures `tools/`, which ships; with `tests/` excluded
+    wholesale, a migrated project had nothing covering it and failed the gate
+    (#1175, #731). The second copy carries no `--exclude`, since
+    `_rsync_excludes()` collects every one in the guide.
+    """
+    commands = _rsync_commands()
+    ignoring = [c for c in commands if "--ignore-existing" in c]
+    assert len(ignoring) == 1, f"expected one --ignore-existing command, found {ignoring}"
+    command = ignoring[0]
+    assert "../pyproject-template-src/tests/" in command.split()
+    assert "./tests/" in command.split()
+    assert "--exclude" not in command
+
+    main = [c for c in commands if "--exclude='src/'" in c]
+    assert len(main) == 1
+    assert "--ignore-existing" not in main[0]
+
+
+def test_the_guide_points_at_the_mutmut_skeleton_list() -> None:
+    """Guards a rename of the key, not the contents of the list it names.
+
+    Step 6 tells the migrator to update this `[tool.mutmut]` key; if it is
+    renamed, the instruction points at nothing.
+    """
+    key = "pytest_add_cli_args_test_selection"
+    assert key in _guide_text()
+    data = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    assert key in data["tool"]["mutmut"]
