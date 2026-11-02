@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793650184069,
+  "lastUpdate": 1793651274669,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22833,6 +22833,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7150369292119594e-7",
             "extra": "mean: 1.6534999616201091 usec\nrounds: 62540"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f85f7a612b55a4e20dbd525319ab6be3467d42ed",
+          "message": "fix: keep the major_version_zero release tests independent of the repo's changelog (merges PR #1189, addresses #1188)\n\nTestReleaseRefusesMajorVersionZeroFromOne faked every step up to branch\ncreation except _changelog_is_handwritten_enabled, which reads the cwd's\npyproject.toml. In a project with update_changelog_on_bump = false and an\nempty [Unreleased] section, as right after every release, the hand-written\nchangelog check aborted first and the three below-1.0 cases failed.\n\nFake the setting in _walk_to_branch_creation, and add a test that runs the\nwalk from a tmp_path holding exactly that config.\n\nAddresses #1188\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sch6UZkEYyxkZ9yJh3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T20:27:04Z",
+          "tree_id": "9543ab9f008b6d054ee4d8effab78e09616f9c33",
+          "url": "https://github.com/endavis/pyproject-template/commit/f85f7a612b55a4e20dbd525319ab6be3467d42ed"
+        },
+        "date": 1793651273011,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18817072.310366325,
+            "unit": "iter/sec",
+            "range": "stddev: 7.312060679859646e-9",
+            "extra": "mean: 53.14322990878341 nsec\nrounds: 191315"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20123376.0122386,
+            "unit": "iter/sec",
+            "range": "stddev: 3.5908974658269067e-8",
+            "extra": "mean: 49.69345100900672 nsec\nrounds: 199721"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13014451.905767675,
+            "unit": "iter/sec",
+            "range": "stddev: 1.211453780989326e-8",
+            "extra": "mean: 76.8376576470981 nsec\nrounds: 136222"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4407858.667601302,
+            "unit": "iter/sec",
+            "range": "stddev: 3.757478868829967e-8",
+            "extra": "mean: 226.86752806985683 nsec\nrounds: 44977"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1069559.2528425476,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1251366435133273e-7",
+            "extra": "mean: 934.964563526816 nsec\nrounds: 110327"
           }
         ]
       }
