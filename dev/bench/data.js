@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793632518690,
+  "lastUpdate": 1793640624003,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22420,6 +22420,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.530253260586399e-7",
             "extra": "mean: 1.7103882500737235 usec\nrounds: 62894"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9f70946df1288b66290e0751be95b34ca5e6ce50",
+          "message": "fix: copy the template's shipped tests during migration so the coverage gate passes (merges PR #1176, addresses #1175)\n\nStep 2 of the migration guide excluded tests/ wholesale, so a migrated\nproject got tools/ without the tests that cover it. CI's coverage run then\nmeasured 1.95% against fail_under = 70. Step 2 now runs a second\n`rsync -a --ignore-existing` over the template's tests/; measured coverage\nwith the shipped tests is 90.21%.\n\nStep 6 now covers what that copy leaves behind: the package-skeleton tests\n(the skeleton package is never copied), the [tool.mutmut]\npytest_add_cli_args_test_selection list, a project's own conftest.py, and\nthe two skills that name skeleton tests. Step 4's core.py bullet, which\ncontradicted step 2's src/ exclusion, now points at step 6. The\ntemplate-migrate skill's rsync trap says the same in both copies.\n\nAddresses #1175\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T17:29:30Z",
+          "tree_id": "6438585d1d739608daee6694842a6559c8a2a54f",
+          "url": "https://github.com/endavis/pyproject-template/commit/9f70946df1288b66290e0751be95b34ca5e6ce50"
+        },
+        "date": 1793640622859,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7462802.446018418,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3458103217607557e-8",
+            "extra": "mean: 133.99791931160172 nsec\nrounds: 77979"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10353481.04395968,
+            "unit": "iter/sec",
+            "range": "stddev: 1.28224521379386e-8",
+            "extra": "mean: 96.58587249584136 nsec\nrounds: 108969"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5603172.74718849,
+            "unit": "iter/sec",
+            "range": "stddev: 6.722360257769687e-8",
+            "extra": "mean: 178.47031407371315 nsec\nrounds: 66322"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2328447.4079233897,
+            "unit": "iter/sec",
+            "range": "stddev: 6.628332020641946e-8",
+            "extra": "mean: 429.47072654384897 nsec\nrounds: 187266"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 610931.4610297248,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6282567513948657e-7",
+            "extra": "mean: 1.6368448243187546 usec\nrounds: 63296"
           }
         ]
       }
