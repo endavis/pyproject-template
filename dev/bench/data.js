@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793415027826,
+  "lastUpdate": 1793614447653,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22125,6 +22125,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6250370816046188e-7",
             "extra": "mean: 1.6462680128074532 usec\nrounds: 63416"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3921911fda3bd72c7a52a0adc68a8951093a0407",
+          "message": "feat: leave implement-issues' rebased branches to the PR's CI instead of a local doit check (merges PR #1166, addresses #1155)\n\nPhase 2 re-ran the full `doit check` after any rebase that brought changes,\nwhich is every PR after the first in a run. CI's lint, docs and test jobs\nrun every task `doit check` runs, on the same commit, a few minutes later,\nand the re-run competed for cores with the phase 1 agents still working.\n\nStep 4.3 now says not to re-run it, Step 4.1 no longer names a re-check,\nand Step 4.7 reports that CI checked the rebased branch. ADR-9028 item 5\nand the slash-commands reference are amended to match.\n\nAddresses #1155\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T10:09:26Z",
+          "tree_id": "5811cc167048a0822c9f29c0aeef9e7a284cf1a0",
+          "url": "https://github.com/endavis/pyproject-template/commit/3921911fda3bd72c7a52a0adc68a8951093a0407"
+        },
+        "date": 1793614446532,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 20120678.96420262,
+            "unit": "iter/sec",
+            "range": "stddev: 6.007877837851023e-9",
+            "extra": "mean: 49.70011209756559 nsec\nrounds: 199721"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 21167782.83268705,
+            "unit": "iter/sec",
+            "range": "stddev: 7.778107680293547e-9",
+            "extra": "mean: 47.241603332013185 nsec\nrounds: 198887"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13068252.22395172,
+            "unit": "iter/sec",
+            "range": "stddev: 2.714776777461077e-8",
+            "extra": "mean: 76.52132686627999 nsec\nrounds: 137723"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4463106.540222117,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0736276542818116e-8",
+            "extra": "mean: 224.05918186981768 nsec\nrounds: 45824"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1099353.392957501,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0271432425067337e-7",
+            "extra": "mean: 909.6256093864241 nsec\nrounds: 115567"
           }
         ]
       }
