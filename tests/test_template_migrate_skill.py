@@ -268,3 +268,13 @@ def test_shared_skill_declares_the_frontmatter_agents_activate_on() -> None:
     # name what the user would actually say, not just the skill's own title.
     assert "migrate" in frontmatter.lower()
     assert "existing" in frontmatter.lower()
+
+
+def test_every_body_copies_the_shipped_tests() -> None:
+    """Every wired body tells the planner about the second, non-overwriting copy (#1175)."""
+    missing = [
+        surface
+        for surface, path in _wired_bodies()
+        if path.is_file() and "--ignore-existing" not in path.read_text(encoding="utf-8")
+    ]
+    assert not missing, f"no --ignore-existing shipped-tests copy in: {missing}"
