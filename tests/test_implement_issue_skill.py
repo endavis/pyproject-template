@@ -123,6 +123,8 @@ def test_step_3_states_the_host_writes_condition_and_the_review() -> None:
     assert "findings comment" in step3
     assert "cites" in step3
     assert "Plan-review brief" in step3
+    assert "second review" in step3
+    assert "changed the plan's design" in step3
 
 
 def test_planner_brief_treats_passed_findings_as_settled() -> None:
@@ -164,9 +166,12 @@ def test_implement_worker_starts_from_the_plan_locations() -> None:
     assert "deviation" in text
 
 
-def test_plan_review_brief_reads_only_named_files_and_does_not_probe() -> None:
+def test_plan_review_brief_reads_the_plan_pointers_within_a_budget() -> None:
     review = _section(_skill_text(), "## Plan-review brief", "## Coder brief")
-    assert "the files the plan names" in review
+    assert "Symbols:" in review
+    assert "whole file only when the plan rewrites most of it" in review
+    assert "about 15 tool calls" in review
+    assert "direct callers" in review
     assert "do not probe" in review
     assert "NO ISSUES" in review
     assert "worktree root" in review
