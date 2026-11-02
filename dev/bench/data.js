@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793643930598,
+  "lastUpdate": 1793645106178,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22597,6 +22597,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.67915619211344e-7",
             "extra": "mean: 1.6681641749270235 usec\nrounds: 62540"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "950eda8ae757aeb00fd850343cdf98c9ad6973cb",
+          "message": "fix: keep worked-example doc paths exempt after the configurator renames the package (merges PR #1182, addresses #1179)\n\nThe configurator substitutes __PACKAGE_NAME__ in docs, so the literal\nsrc/__PACKAGE_NAME__/ allowlist entry in test_documented_paths stopped\nmatching and cache.py, farewell.py and provider.py failed doit test in a\nconfigured project. Add a package-agnostic pattern allowlist limited to\nthose three worked-example modules; real package paths stay checked.\n\nAddresses #1179\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T18:44:04Z",
+          "tree_id": "932d76c77343e00959b2be3b465622d7f4f113d9",
+          "url": "https://github.com/endavis/pyproject-template/commit/950eda8ae757aeb00fd850343cdf98c9ad6973cb"
+        },
+        "date": 1793645103265,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9368816.568722412,
+            "unit": "iter/sec",
+            "range": "stddev: 1.281845712158078e-8",
+            "extra": "mean: 106.73706680718652 nsec\nrounds: 99315"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10346047.222964732,
+            "unit": "iter/sec",
+            "range": "stddev: 1.185540609307943e-8",
+            "extra": "mean: 96.655271182248 nsec\nrounds: 109207"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6671445.1437308965,
+            "unit": "iter/sec",
+            "range": "stddev: 1.621193918070184e-8",
+            "extra": "mean: 149.89256127507727 nsec\nrounds: 71195"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2245167.9446201455,
+            "unit": "iter/sec",
+            "range": "stddev: 7.617340214367184e-8",
+            "extra": "mean: 445.40097875359055 nsec\nrounds: 196117"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 600014.1415171113,
+            "unit": "iter/sec",
+            "range": "stddev: 1.665232377536103e-7",
+            "extra": "mean: 1.6666273856005138 usec\nrounds: 62657"
           }
         ]
       }
