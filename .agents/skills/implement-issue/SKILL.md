@@ -85,7 +85,9 @@ issue (or posts one together with the plan) and the plan cites that comment. "Th
 clear" does not qualify. The plan uses the Planner brief's exact shape. Before posting it, run the
 **Plan-review brief** below on the draft, in a subagent or through another agent CLI with the same
 non-interactive invocation as "with \<agent\>"; fix or reject each point it raises. The review
-reads only the draft, the findings and the files the plan names.
+reads the draft, the findings and the code locations the plan names, within the brief's budget. A
+second review runs only when the first changed the plan's design; edits that only apply its points
+need none.
 
 **Roles.** Who runs the Planner brief (`plan`), the Plan-review brief (`plan_review`) and the Coder
 brief (`code`) comes from the person's agent-role config. Before each, run
@@ -271,9 +273,14 @@ worktree root as an absolute path and the context directory:
 
 1. Work only under the worktree root. Use absolute paths and start each shell command with
    `cd <root> &&`.
-2. Read the draft plan and the findings from the file under `<context-dir>` the caller names. Read
-   only the files the plan names. Do not explore the codebase, do not probe, and make no `gh` call.
-3. Return a critique of design errors, missed edge cases and conflicts with project rules, or
+2. Read the draft plan and the findings from the file under `<context-dir>` the caller names. Your
+   reading list is the plan's own per-file `Symbols:`, `Pattern:` and `Tests:` pointers.
+   Read the named symbols and ranges, not whole files, and open a
+   whole file only when the plan rewrites most of it. Do not explore the codebase, do not probe,
+   and make no `gh` call.
+3. Budget about 15 tool calls. A few may go beyond the list, for example to the direct callers of a
+   changed symbol.
+4. Return a critique of design errors, missed edge cases and conflicts with project rules, or
    `NO ISSUES`. Do not edit files and do not post anything.
 
 ## Coder brief
