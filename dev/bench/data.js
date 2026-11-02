@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793615124097,
+  "lastUpdate": 1793615571395,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22243,6 +22243,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5223324557392785e-7",
             "extra": "mean: 1.5520690370475423 usec\nrounds: 68456"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7b1db6181623ba28188dc455475e4b82f350270c",
+          "message": "feat: bound implement-issue's Plan-review brief to the plan's code locations and a call budget (merges PR #1170, addresses #1156)\n\nMeasured Plan-review passes took 16 to 24 minutes, as long as a Planner\npass: \"the files the plan names\" set no limit inside those files, and\nnothing bounded the pass.\n\nThe review now reads the plan's own per-file Symbols:, Pattern: and\nTests: pointers (added in #1168) as named symbols and ranges, opening a\nwhole file only when the plan rewrites most of it. It has a budget of\nabout 15 tool calls, a few of which may go beyond the list, for example\nto the direct callers of a changed symbol. Step 3 says a second review\nruns only when the first changed the plan's design. ADR-9029 item 2 is\namended to match. Model and effort for plan_review are unchanged; #1167\nmeasures the result.\n\nAddresses #1156\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T10:32:09Z",
+          "tree_id": "33652036fbf7d4cbfa9cf66f0e1378d94d1c00c8",
+          "url": "https://github.com/endavis/pyproject-template/commit/7b1db6181623ba28188dc455475e4b82f350270c"
+        },
+        "date": 1793615569982,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9081038.140322687,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0469570477836613e-8",
+            "extra": "mean: 110.1195683299339 nsec\nrounds: 98339"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10097328.707586428,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1937038021644622e-8",
+            "extra": "mean: 99.03609449186989 nsec\nrounds: 107205"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6503769.727871562,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7575821833314703e-8",
+            "extra": "mean: 153.75698123421446 nsec\nrounds: 68316"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2242833.853517708,
+            "unit": "iter/sec",
+            "range": "stddev: 7.340330511952512e-8",
+            "extra": "mean: 445.8645023712207 nsec\nrounds: 197239"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 596568.5867651872,
+            "unit": "iter/sec",
+            "range": "stddev: 3.229290819117832e-7",
+            "extra": "mean: 1.676253195667518 usec\nrounds: 63148"
           }
         ]
       }
