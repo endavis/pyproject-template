@@ -202,7 +202,7 @@ checkout: `uv run doit pr_merge --pr=<pr> --auto-close`. It removes the worktree
 Stop and ask the user, at any step, when one of these fires: a new dependency, scope growing beyond
 the issue, a requirement of the issue that cannot be met as written (unsafe, contradicted by a review
 finding, or needing a different design), an architecture choice, a breaking change the issue did not
-already describe, a failing test that would need changing to pass, or a blocked command (see `AGENTS.md` — When Blocked Protocol). Narrowing
+already describe, a failing test that would need changing to pass, or a blocked command (see [AGENTS.md — When Blocked Protocol](../../../AGENTS.md#4-when-blocked-protocol)). Narrowing
 the scope is a trigger just as growing it is. Do not resolve any of these unilaterally and keep going.
 
 This skill **never** adds the `ready-to-merge` label, never merges a PR, and never closes the issue
