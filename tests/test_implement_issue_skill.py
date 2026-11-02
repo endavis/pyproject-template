@@ -166,6 +166,34 @@ def test_implement_worker_starts_from_the_plan_locations() -> None:
     assert "deviation" in text
 
 
+def test_coder_brief_summary_has_checks_run_and_reads_fields() -> None:
+    coder = _section(_skill_text(), "## Coder brief", "## Per-host subagent notes")
+    assert "**Checks run**" in coder
+    assert "**Reads beyond the plan's pointers**" in coder
+    assert "marked run or skipped with a reason" in coder
+    assert "each marked as a deviation" in coder
+
+
+def test_step_5_reads_the_coders_two_summary_fields() -> None:
+    step5 = _section(_skill_text(), "### Step 5", "### Step 6")
+    assert "**Checks run**" in step5
+    assert "**Reads beyond the plan's pointers**" in step5
+    assert "unmet" in step5
+    assert "Step 8 reports" in step5
+
+
+def test_step_8_reports_the_coders_field_deviations() -> None:
+    step8 = _section(_skill_text(), "### Step 8", "## Ask-first triggers")
+    assert "**Checks run**" in step8
+    assert "**Reads beyond the plan's pointers**" in step8
+
+
+def test_implement_worker_returns_the_two_summary_fields() -> None:
+    text = IMPLEMENT_WORKER.read_text(encoding="utf-8")
+    assert "**Checks run**" in text
+    assert "**Reads beyond the plan's pointers**" in text
+
+
 def test_plan_review_brief_reads_the_plan_pointers_within_a_budget() -> None:
     review = _section(_skill_text(), "## Plan-review brief", "## Coder brief")
     assert "Symbols:" in review
