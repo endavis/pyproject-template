@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793617328952,
+  "lastUpdate": 1793632518690,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22361,6 +22361,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6484591029426016e-7",
             "extra": "mean: 1.5743160367864752 usec\nrounds: 67632"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0c5e2e81beb29a6df4484b66d3e6c87c0c362303",
+          "message": "fix: give implement-issue's Coder summary fixed check and read fields that Step 5 verifies (merges PR #1173, addresses #1172)\n\nCoders on Sonnet departed from the checking budget in both directions:\non gcm#404 one ran three revert checks, 817 extra tests and direct\nmypy/ruff, and left most reads beyond the plan's pointers unreported; on\n#1156 here one skipped the revert check, doit lint and doit type_check.\nStep 5 had nothing to check them against.\n\nThe Coder brief's summary now has two fixed fields: \"Checks run\" (every\ncheck command, each budget item marked run or skipped with a reason,\neach extra check marked a deviation) and \"Reads beyond the plan's\npointers\" (each with its reason, or \"none\"). Step 5 reads them: a\nmissing budget item is unmet, an extra check or unexplained read is a\ndeviation Step 8 reports. Inline coding fills the same fields.\nimplement-worker.md and ADR-9029 item 4 match.\n\nAddresses #1172\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T15:14:22Z",
+          "tree_id": "9bdcab513dd009223b429959044a633b8d820fcd",
+          "url": "https://github.com/endavis/pyproject-template/commit/0c5e2e81beb29a6df4484b66d3e6c87c0c362303"
+        },
+        "date": 1793632517509,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9301497.649020055,
+            "unit": "iter/sec",
+            "range": "stddev: 1.364594854462142e-8",
+            "extra": "mean: 107.50956864514754 nsec\nrounds: 99315"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10470009.026110262,
+            "unit": "iter/sec",
+            "range": "stddev: 1.410897852134673e-8",
+            "extra": "mean: 95.51090142388468 nsec\nrounds: 108850"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6660963.09908294,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5952543066448948e-8",
+            "extra": "mean: 150.12844015570013 nsec\nrounds: 71552"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2196560.323245624,
+            "unit": "iter/sec",
+            "range": "stddev: 7.879323082407605e-8",
+            "extra": "mean: 455.25724443679565 nsec\nrounds: 198060"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 584662.5758548661,
+            "unit": "iter/sec",
+            "range": "stddev: 3.530253260586399e-7",
+            "extra": "mean: 1.7103882500737235 usec\nrounds: 62894"
           }
         ]
       }
