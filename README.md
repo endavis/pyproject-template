@@ -48,7 +48,7 @@ python3 tools/pyproject_template/configure.py
 
 `configure.py` prompts for the project name, package name, PyPI name, author and GitHub user, then
 renames the package directory, replaces every placeholder, installs `README.template.md` as the
-project's `README.md`, and removes itself.
+project's `README.md`. Run `uv run doit template_clean --all` afterwards to remove the template suite.
 
 ## What you get
 
