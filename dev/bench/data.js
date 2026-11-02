@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793640624003,
+  "lastUpdate": 1793641143585,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22479,6 +22479,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6282567513948657e-7",
             "extra": "mean: 1.6368448243187546 usec\nrounds: 63296"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bed58ba471887452b28e2bfa51d91ee361d4ecde",
+          "message": "docs: bring the template-migrate skill and migration guide up to date with changes since #812 (merges PR #1177, addresses #1174)\n\nThe skill said \"15-step checklist\" and \"four hook types\". migration.md now\nhas 16 steps, and the pre-commit config declares only pre-commit and\ncommit-msg (#1033). The skill and both guides now name neither count.\nNew tests reject a restated count, so it can't go stale again.\n\nThe skill now covers processes added since it was written:\n- a static version through version_provider/version_files, alongside\n  hatch-vcs (#971), as an inventory item and a Step 4 question\n- hand-written vs generated CHANGELOG.md (update_changelog_on_bump, #971)\n- configure installing README.template.md as README.md (#697)\n- the manage.py sync command for the sync point (ADR-9020)\n- .copilot/ and .codex/ in the agent-config inventory\n\nAddresses #1174\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T17:38:11Z",
+          "tree_id": "d884124af0810c6659eb75337c4a5e53da632700",
+          "url": "https://github.com/endavis/pyproject-template/commit/bed58ba471887452b28e2bfa51d91ee361d4ecde"
+        },
+        "date": 1793641141432,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13051770.691165188,
+            "unit": "iter/sec",
+            "range": "stddev: 7.425183875835749e-9",
+            "extra": "mean: 76.61795657173974 nsec\nrounds: 134935"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13661399.887847554,
+            "unit": "iter/sec",
+            "range": "stddev: 7.484099875214788e-9",
+            "extra": "mean: 73.19894068026997 nsec\nrounds: 140628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8702426.881111402,
+            "unit": "iter/sec",
+            "range": "stddev: 9.127851276583886e-9",
+            "extra": "mean: 114.91047424604025 nsec\nrounds: 90860"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3212684.6451225053,
+            "unit": "iter/sec",
+            "range": "stddev: 3.844435495206407e-8",
+            "extra": "mean: 311.26615602256476 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 791241.8893189804,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2485162699334728e-7",
+            "extra": "mean: 1.2638360196787572 usec\nrounds: 82727"
           }
         ]
       }
