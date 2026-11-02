@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793615571395,
+  "lastUpdate": 1793617328952,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22302,6 +22302,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.229290819117832e-7",
             "extra": "mean: 1.676253195667518 usec\nrounds: 63148"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c5505c8f077510e3ad24e62ea19da5380b5c0586",
+          "message": "fix: link vendored pointers to AGENTS.md sections so a missing section fails the anchor test (merges PR #1171, addresses #1165)\n\nSeven vendored pointers named an AGENTS.md section in prose (\"When Blocked\nProtocol\", the temp-file convention, \"Breaking Changes Policy\"). A project\nkeeps its own AGENTS.md, so it can lack those sections, and no test read\nthose prose pointers: the skill's pointer had no checked shape, and the\ndocs/ ones sit outside test_instruction_pointers.py's INSTRUCTION_GLOBS.\n\nEach pointer is now a link anchor:\n- implement-issue skill and command-blocking.md -> #4-when-blocked-protocol\n- cross-agent-delegation.md, doit-tasks-reference.md, ADR-9025\n  -> #temporary-files\n- python-version-bump and deprecate-api skills -> #breaking-changes-policy\n\ntest_markdown_anchors_resolve scans every committed markdown file, so a\nproject whose AGENTS.md drops one of these sections now fails it. The\n.claude/ skill copies are regenerated with doit skills_sync, and the\npython-version-bump contract test matches the linked wording.\n\nAddresses #1165\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T11:01:21Z",
+          "tree_id": "24c5a5318525d81e4f0c284e24307e7c73f1815d",
+          "url": "https://github.com/endavis/pyproject-template/commit/c5505c8f077510e3ad24e62ea19da5380b5c0586"
+        },
+        "date": 1793617327424,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10503112.522869434,
+            "unit": "iter/sec",
+            "range": "stddev: 1.054966901170104e-8",
+            "extra": "mean: 95.20987210435041 nsec\nrounds: 109386"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 11019230.224615697,
+            "unit": "iter/sec",
+            "range": "stddev: 7.98784943730371e-9",
+            "extra": "mean: 90.75044078542933 nsec\nrounds: 116973"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6978276.947426927,
+            "unit": "iter/sec",
+            "range": "stddev: 2.505983723012983e-8",
+            "extra": "mean: 143.3018505189488 nsec\nrounds: 73347"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2255364.2400270374,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3969734860250706e-7",
+            "extra": "mean: 443.3873616742331 nsec\nrounds: 188254"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 635196.4768403297,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6484591029426016e-7",
+            "extra": "mean: 1.5743160367864752 usec\nrounds: 67632"
           }
         ]
       }
