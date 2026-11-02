@@ -175,3 +175,19 @@ def test_the_guide_points_at_the_mutmut_skeleton_list() -> None:
     assert key in _guide_text()
     data = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
     assert key in data["tool"]["mutmut"]
+
+
+def test_the_guides_do_not_count_hook_types() -> None:
+    """Name `commit-msg`, not how many hook types the config declares.
+
+    Both guides said "four hook types" after the config dropped to two (#1174);
+    `.pre-commit-config.yaml` is the only place the count belongs.
+    """
+    pattern = re.compile(r"\b(\d+|one|two|three|four|five) hook types\b", re.I)
+    sync_checklist = REPO_ROOT / "docs" / "template" / "ai-sync-checklist.md"
+    stale = [
+        f"{path.name}: {m.group(0)!r}"
+        for path in (GUIDE, sync_checklist)
+        for m in pattern.finditer(path.read_text(encoding="utf-8"))
+    ]
+    assert not stale, f"hook-type counts in prose: {stale}"
