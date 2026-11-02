@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793614447653,
+  "lastUpdate": 1793615124097,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22184,6 +22184,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.0271432425067337e-7",
             "extra": "mean: 909.6256093864241 nsec\nrounds: 115567"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd3846d9afbea76ed298e5b23752c2a784959fb4",
+          "message": "feat: have implement-issue's plan carry the code locations the Coder needs (merges PR #1169, addresses #1168)\n\nThe Planner (Opus) reads the code a change touches, but its plan recorded\nonly what changes in each file, not where. The Coder (Sonnet) then read\nthe same files again to find the symbols, patterns and tests.\n\nThe plan shape now records its base commit and, per file, the symbols it\nchanges (line ranges as hints), an existing pattern to copy as path:line,\nand the test file and fixtures to reuse, plus a Test Commands section.\nThe Coder brief starts from those locations instead of whole files,\nexplores beyond them only when a pointer is wrong or missing, and reports\neach such read as a deviation. implement-worker.md and slash-commands.md\nmatch.\n\nAddresses #1168\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T10:24:38Z",
+          "tree_id": "5bb83e299bd412bde6133bc1b9752c8923136e32",
+          "url": "https://github.com/endavis/pyproject-template/commit/dd3846d9afbea76ed298e5b23752c2a784959fb4"
+        },
+        "date": 1793615122565,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10351842.152211176,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1651037981178056e-8",
+            "extra": "mean: 96.60116386013458 nsec\nrounds: 109386"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10350666.266100772,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7603632179961366e-8",
+            "extra": "mean: 96.61213822293517 nsec\nrounds: 117911"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6563831.175913433,
+            "unit": "iter/sec",
+            "range": "stddev: 3.541662636747932e-8",
+            "extra": "mean: 152.35004880527543 nsec\nrounds: 72328"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2363998.8252410428,
+            "unit": "iter/sec",
+            "range": "stddev: 6.463447636496592e-8",
+            "extra": "mean: 423.01205454196275 nsec\nrounds: 192382"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 644301.2366912958,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5223324557392785e-7",
+            "extra": "mean: 1.5520690370475423 usec\nrounds: 68456"
           }
         ]
       }
