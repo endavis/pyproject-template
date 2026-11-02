@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793648170044,
+  "lastUpdate": 1793650184069,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22774,6 +22774,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7816502897478264e-7",
             "extra": "mean: 1.669858931172252 usec\nrounds: 62461"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e24cbdfe37e508940927bdc12bfe20e28f1dd7fe",
+          "message": "fix: ignore SQLite's WAL and shared-memory files beside doit's database (merges PR #1187, addresses #1186)\n\nOn Python 3.13+, dbm.sqlite3 opens .doit.db in WAL mode, so every doit\nrun leaves .doit.db-wal and .doit.db-shm beside it until it exits. The\n.gitignore rules matched only .doit.db and .doit.db.*, so doit release's\nclean-tree check, which runs inside a doit run, always failed.\n\nAddresses #1186\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sch6UZkEYyxkZ9yJh3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T20:08:48Z",
+          "tree_id": "6de328dfbb6419bd77b5f9f7bc2db505f79a5624",
+          "url": "https://github.com/endavis/pyproject-template/commit/e24cbdfe37e508940927bdc12bfe20e28f1dd7fe"
+        },
+        "date": 1793650182221,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9018702.08535041,
+            "unit": "iter/sec",
+            "range": "stddev: 3.632635487741029e-8",
+            "extra": "mean: 110.88069996506003 nsec\nrounds: 97762"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10234673.161908496,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4846787241589307e-8",
+            "extra": "mean: 97.7070771269775 nsec\nrounds: 108496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6758131.8107799115,
+            "unit": "iter/sec",
+            "range": "stddev: 2.6735403775353575e-8",
+            "extra": "mean: 147.9698869449243 nsec\nrounds: 71912"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2197604.7196685974,
+            "unit": "iter/sec",
+            "range": "stddev: 7.731689290596231e-8",
+            "extra": "mean: 455.0408865843726 nsec\nrounds: 193462"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 604777.7582166945,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7150369292119594e-7",
+            "extra": "mean: 1.6534999616201091 usec\nrounds: 62540"
           }
         ]
       }
