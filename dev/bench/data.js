@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793645618792,
+  "lastUpdate": 1793648170044,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22715,6 +22715,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.0725422572319303e-7",
             "extra": "mean: 1.6565625975168763 usec\nrounds: 62937"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2908d77b51e596fc39a3fb33fbb44d055212ac99",
+          "message": "docs: use an ordinary field name in the factory_boy example (merges PR #1185, addresses #1184)\n\nThe example used the __GH_OWNER__ placeholder as a field name, so the\nconfigurator turned it into a field named after the repository owner.\nUse username instead.\n\nAddresses #1184\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sch6UZkEYyxkZ9yJh3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T19:35:27Z",
+          "tree_id": "7c4aee05e9e6b8d6881f874abfc5916178d91b69",
+          "url": "https://github.com/endavis/pyproject-template/commit/2908d77b51e596fc39a3fb33fbb44d055212ac99"
+        },
+        "date": 1793648168687,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8803613.498698851,
+            "unit": "iter/sec",
+            "range": "stddev: 3.421529559710151e-8",
+            "extra": "mean: 113.58972087402486 nsec\nrounds: 98271"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10004720.115113856,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2719095706142481e-8",
+            "extra": "mean: 99.95282111783693 nsec\nrounds: 108496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6724581.685106943,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7585678222320955e-8",
+            "extra": "mean: 148.7081348442415 nsec\nrounds: 71297"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2280816.248651987,
+            "unit": "iter/sec",
+            "range": "stddev: 6.505137762572323e-8",
+            "extra": "mean: 438.4395282132097 nsec\nrounds: 186186"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 598852.9817294168,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7816502897478264e-7",
+            "extra": "mean: 1.669858931172252 usec\nrounds: 62461"
           }
         ]
       }
