@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793645106178,
+  "lastUpdate": 1793645618792,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22656,6 +22656,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.665232377536103e-7",
             "extra": "mean: 1.6666273856005138 usec\nrounds: 62657"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "d262c542597dd4e932847d42f0b649b905c63dc4",
+          "message": "fix: print the migration guide's step 6 cleanup from the configurator during a migration (merges PR #1183, addresses #1180)\n\nThe configurator's closing next steps were written for a new project. When\na migration backup exists, it now also prints the remaining step 6 cleanup\n(skeleton tests, [tool.mutmut] selection, tests/conftest.py merge, skill\nreferences) and a pointer to docs/template/migration.md. The notice sits in\nthe shared flow, so manage.py --yes runs get it too.\n\nAddresses #1180\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T18:52:45Z",
+          "tree_id": "e6b73d235fa4b2faf429014f8aa97175e696159c",
+          "url": "https://github.com/endavis/pyproject-template/commit/d262c542597dd4e932847d42f0b649b905c63dc4"
+        },
+        "date": 1793645617402,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8395407.74941858,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2492449743784564e-8",
+            "extra": "mean: 119.11273756408727 nsec\nrounds: 103972"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10216772.466783978,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8347059603947238e-8",
+            "extra": "mean: 97.87826862652827 nsec\nrounds: 108850"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6511184.907391751,
+            "unit": "iter/sec",
+            "range": "stddev: 1.53800508718921e-8",
+            "extra": "mean: 153.58187706584113 nsec\nrounds: 68980"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2244529.0183661743,
+            "unit": "iter/sec",
+            "range": "stddev: 7.541126229013345e-8",
+            "extra": "mean: 445.52776632307246 nsec\nrounds: 198847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 603659.6513159005,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0725422572319303e-7",
+            "extra": "mean: 1.6565625975168763 usec\nrounds: 62937"
           }
         ]
       }
