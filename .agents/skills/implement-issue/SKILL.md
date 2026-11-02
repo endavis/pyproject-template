@@ -223,7 +223,8 @@ path:
    `docs/decisions/`.
 3. Explore the codebase for the files, modules, and tests the change touches, and the existing
    patterns in that area. If more than one approach is reasonable, pick one and say why in the plan
-   rather than leaving it open — nothing downstream can ask the user.
+   rather than leaving it open — nothing downstream can ask the user. Note what you read (symbols,
+   patterns, tests) so the Coder need not read it again.
 4. Findings the caller passes are settled: do not re-measure or re-probe them, and flag in the
    Overview any the code contradicts. Explore and probe only what they do not cover. Without
    findings, step 3 applies as written.
@@ -233,16 +234,24 @@ path:
    ```
    ## Implementation Plan for #<n>: <title>
 
+   Base commit: `<sha from git rev-parse HEAD>`
+
    ### Overview
    What will be done and why.
 
    ### Files to Create/Modify
    - [ ] `path/to/file.py` — what changes
+     - Symbols: `name` (~L10-40), the functions or sections it changes
+     - Pattern: `path/to/other.py:55`, an existing example to copy
+     - Tests: `tests/test_file.py`, plus the fixtures to reuse
    - [ ] `tests/test_file.py` — what it covers
 
    ### Test Plan
    - [ ] Test case 1
    - [ ] Test case 2
+
+   ### Test Commands
+   - `uv run pytest tests/test_file.py`
 
    ### Documentation
    - [ ] Docs that need updating
@@ -251,6 +260,9 @@ path:
    ### Validation
    - [ ] `doit check` passes
    ```
+
+   The symbol is the pointer; line ranges are hints and go stale when the branch moves. A new file
+   has no symbols to name, so give its pattern and tests instead.
 
 ## Plan-review brief
 
@@ -281,7 +293,9 @@ name, the worktree root as an absolute path, and any issue-specific notes:
    unreadable, print `DELEGATION-ERROR:` and stop.
 3. Implement the plan (or the issue): create and edit files, follow existing patterns, and write
    tests — this is mandatory whenever there is code to test, with no exceptions for "small" changes.
-   All new code is type-annotated for mypy strict mode.
+   All new code is type-annotated for mypy strict mode. Start from the plan's locations: read the
+   named symbols and ranges, not whole files. If the plan's base commit differs from `HEAD`, treat
+   the ranges as hints only. Explore beyond the plan's pointers only when one is wrong or missing.
 4. Checking budget, run from the worktree root through `uv run`: the tests covering the change; one
    revert check (undo the fix, confirm the new tests fail, restore — using `git show HEAD:<path>`
    or a WIP commit); only what project rules require, such as the `mutation-triage` and
@@ -289,7 +303,7 @@ name, the worktree root as an absolute path, and any issue-specific notes:
    nothing beyond that unless the plan asks: no extra mutmut runs, no flakiness reruns. Do not run
    `uv run doit check`; the full `doit check` runs once, in Step 5. Fix failures.
 5. Return a summary: files created or modified, test results, every check command you ran, and any
-   deviations from the plan.
+   deviations from the plan, including each read outside its pointers and why.
 6. Never use a bare `git stash`: the stash stack is shared with the main checkout, every worktree
    and every session, so a `pop` can take another session's entry. To compare against unchanged
    code, write `git show HEAD:<path>` to a scratch file under the worktree's `tmp/`, or make a

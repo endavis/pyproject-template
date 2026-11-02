@@ -35,7 +35,8 @@ artifact the next step expects.
    whether to plan first (`needs-adr`, more than about three files, or more than one reasonable
    approach), posts a plan comment with the header `## Implementation Plan for #<n>: <title>` when
    it does (no approval wait), from the Planner subagent or from the host after a review-only pass
-   when it already posted findings, then implements the change with tests in a subagent that runs
+   when it already posted findings (the plan names the symbols, patterns, tests, base commit and test
+   commands the coder starts from), then implements the change with tests in a subagent that runs
    only the touched tests, lint and type_check, and runs `doit check` once, afterwards, with
    `doit docs_build`, commits with `git commit` in the CONTRIBUTING format, pushes, and
    opens the PR with `doit pr` (`Addresses #<n>`). It then watches `gh pr checks` and fixes any
