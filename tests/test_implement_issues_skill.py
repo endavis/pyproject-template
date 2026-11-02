@@ -161,7 +161,6 @@ def test_phase_2_opens_prs_one_at_a_time() -> None:
         step4.index(n)
         for n in (
             "git rebase origin/main",
-            "uv run doit check",
             "--force-with-lease",
             "uv run doit pr",
         )
@@ -169,10 +168,13 @@ def test_phase_2_opens_prs_one_at_a_time() -> None:
     assert order == sorted(order)
 
 
-def test_phase_2_reruns_check_only_when_rebase_brought_changes() -> None:
-    step4 = _step4()
+def test_phase_2_leaves_rebased_branch_to_ci() -> None:
+    step4 = " ".join(_step4().split())
     assert "merge-base --is-ancestor origin/main HEAD" in step4
-    assert "If the rebase brought changes, run `uv run doit check`" in step4
+    assert "Do not run `uv run doit check` again" in step4
+    assert "re-check" not in step4
+    assert "brought changes" not in step4
+    assert "CI checked the rebased branch" in step4
 
 
 def test_rebase_conflict_is_ask_first() -> None:
