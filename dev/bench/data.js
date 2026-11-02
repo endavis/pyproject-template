@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793641143585,
+  "lastUpdate": 1793643930598,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22538,6 +22538,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2485162699334728e-7",
             "extra": "mean: 1.2638360196787572 usec\nrounds: 82727"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "32b78ce944d04ba421dcb1c9b0ad7d86d810a0d5",
+          "message": "fix: stop configure.py deleting itself while __init__ and manage still import it (merges PR #1181, addresses #1178)\n\nrun_configure() removed its own file at the end of a run, but\npyproject_template/__init__.py and manage.py still import it, so mypy and\nmanage.py failed in every configured project that keeps the suite. Drop the\nself-destruct; `doit template_clean --all` already sheds configure.py together\nwith its importers. Add a regression test and update the README and ADR-9017\nwording.\n\nAddresses #1178\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfMpCSgfxwSVGr4gLm\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-02T18:24:42Z",
+          "tree_id": "fc59ca8066cfca285ef4e644a07c806703c1058f",
+          "url": "https://github.com/endavis/pyproject-template/commit/32b78ce944d04ba421dcb1c9b0ad7d86d810a0d5"
+        },
+        "date": 1793643929139,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9385452.32336541,
+            "unit": "iter/sec",
+            "range": "stddev: 1.264527903433294e-8",
+            "extra": "mean: 106.54787489681934 nsec\nrounds: 103115"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10252996.857435325,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1621983864178306e-8",
+            "extra": "mean: 97.53245942671039 nsec\nrounds: 108261"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6637360.002938806,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7447330062228725e-8",
+            "extra": "mean: 150.66231145473992 nsec\nrounds: 72171"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2217141.437240334,
+            "unit": "iter/sec",
+            "range": "stddev: 7.961841372989595e-8",
+            "extra": "mean: 451.03121668444186 nsec\nrounds: 194175"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 599461.3809781322,
+            "unit": "iter/sec",
+            "range": "stddev: 1.67915619211344e-7",
+            "extra": "mean: 1.6681641749270235 usec\nrounds: 62540"
           }
         ]
       }
