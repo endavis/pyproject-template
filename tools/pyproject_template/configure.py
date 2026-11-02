@@ -533,15 +533,6 @@ def run_configure(
     print("8. Start coding!")
     print("━" * 60)
 
-    # Self-destruct
-    print("\n🗑️  Removing configure.py (self-destruct)...")
-    try:
-        Path(__file__).unlink()
-        Logger.success("configure.py removed")
-    except Exception as e:
-        Logger.warning(f"Could not remove configure.py: {e}")
-        print("  → You can safely delete it manually")
-
     return 0
 
 
