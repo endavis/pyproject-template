@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793651274669,
+  "lastUpdate": 1793707088934,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22892,6 +22892,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1251366435133273e-7",
             "extra": "mean: 934.964563526816 nsec\nrounds: 110327"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f4a9ff2cac51bb9d7e42efedd9c09674a464643e",
+          "message": "ci: run macOS only on releases, the full-matrix label and a nightly run (merges PR #1191, addresses #1190)\n\n* ci: run macOS only on releases, the full-matrix label and a nightly run\n\nmacOS runners often fail to start, and every PR waited on one. ci.yml\ngains an all_os input. Without it, PRs run Linux on the oldest and newest\nPython plus Windows on the newest. With it, every version runs on Linux,\nWindows and macOS, as before.\n\nrelease.yml, testpypi.yml and ci-full-matrix.yml pass all_os: true, so\nreleases and the full-matrix label still cover every OS. A new\nnightly-matrix.yml runs the all-OS matrix on main each day and opens or\nupdates an automated issue when it fails, like daily-check.yml.\n\nAddresses #1190\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbjfz64wNxLH1CuHGW\n\n* test: skip the Set matrix script tests on Windows\n\nThe Windows runner's bash resolves to wsl.exe with no distribution, so\nthe three TestOsMatrix tests that run the step's script failed there.\nSkip them on win32, as tests/test_daily_check_workflow.py does.\n\nAddresses #1190\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbjfz64wNxLH1CuHGW\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-03T11:57:24Z",
+          "tree_id": "04ba521e8066b618380b56e0ce4da8d3488827ef",
+          "url": "https://github.com/endavis/pyproject-template/commit/f4a9ff2cac51bb9d7e42efedd9c09674a464643e"
+        },
+        "date": 1793707087812,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10243589.679294014,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0359672273725688e-8",
+            "extra": "mean: 97.6220281471602 nsec\nrounds: 110988"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10871931.037733696,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0274179105540002e-8",
+            "extra": "mean: 91.97998005407275 nsec\nrounds: 114811"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7159923.97606972,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2740797256398438e-8",
+            "extra": "mean: 139.66628742738797 nsec\nrounds: 73709"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2378897.2581951395,
+            "unit": "iter/sec",
+            "range": "stddev: 5.4091113692036014e-8",
+            "extra": "mean: 420.362836837559 nsec\nrounds: 193200"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 641087.8091555526,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5873715385593098e-7",
+            "extra": "mean: 1.5598487223103028 usec\nrounds: 68209"
           }
         ]
       }
