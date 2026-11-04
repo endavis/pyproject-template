@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793707088934,
+  "lastUpdate": 1793803152673,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -22951,6 +22951,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5873715385593098e-7",
             "extra": "mean: 1.5598487223103028 usec\nrounds: 68209"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f9947a36cfe47bf49f3edbcb8b9165da2ba88df9",
+          "message": "fix: tag the release PR's merge commit in release_tag, not the tip of main (merges PR #1194, addresses #1192)\n\nrelease_tag tagged HEAD after `git pull`, so a PR merged between the release PR and the run\nlanded in the release without being in its changelog. It now asks gh for the PR's mergeCommit,\nrefuses when it is missing or not local, tags that commit, and says so when main has moved past it.\n\nAddresses #1192\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf7nbg8Q1uKj2PAbZp\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-04T14:38:18Z",
+          "tree_id": "7c03ea96300734ac5d5820f436b5a13f73f7d07d",
+          "url": "https://github.com/endavis/pyproject-template/commit/f9947a36cfe47bf49f3edbcb8b9165da2ba88df9"
+        },
+        "date": 1793803151100,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9393959.278571866,
+            "unit": "iter/sec",
+            "range": "stddev: 1.271588246142564e-8",
+            "extra": "mean: 106.45138757212355 nsec\nrounds: 100211"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10313120.88701168,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1206654884645415e-8",
+            "extra": "mean: 96.96385904478223 nsec\nrounds: 108602"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6752683.914611814,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4204088957368959e-8",
+            "extra": "mean: 148.08926534176248 nsec\nrounds: 73068"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2287809.705270396,
+            "unit": "iter/sec",
+            "range": "stddev: 7.981983050506743e-8",
+            "extra": "mean: 437.0992909490302 nsec\nrounds: 187618"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 606850.4825068605,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6921794950160828e-7",
+            "extra": "mean: 1.647852360385484 usec\nrounds: 62977"
           }
         ]
       }
