@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793803152673,
+  "lastUpdate": 1793803315290,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23010,6 +23010,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6921794950160828e-7",
             "extra": "mean: 1.647852360385484 usec\nrounds: 62977"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "71ff6cb0c42c18a0574f7ed5ed26b4171bbc8f83",
+          "message": "fix: probe the project venv in install_check_or_skip, not uv pip show (merges PR #1195, addresses #1193)\n\n`uv pip show` resolves its interpreter from UV_PYTHON, so with UV_PYTHON\npointing elsewhere the guard reported installed tools as missing and the\nbandit, pip-audit, pip-licenses, cyclonedx and commitizen tasks were\nsilently skipped with exit 0. The guard now runs\n`uv run --no-sync python -c \"import <module>\"`, the same environment the\nguarded `uv run <tool>` command uses. install_check_or_skip takes an\noptional `module` argument (default: package with - replaced by _);\npip-audit, pip-licenses and cyclonedx-bom pass theirs explicitly.\n\nAddresses #1193\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sf7nbg8Q1uKj2PAbZp\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-04T14:41:13Z",
+          "tree_id": "1c11fa240f8c49f51bf6a00e2f583269219ffd28",
+          "url": "https://github.com/endavis/pyproject-template/commit/71ff6cb0c42c18a0574f7ed5ed26b4171bbc8f83"
+        },
+        "date": 1793803313634,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9243304.322147213,
+            "unit": "iter/sec",
+            "range": "stddev: 1.204784790762245e-8",
+            "extra": "mean: 108.18641961229949 nsec\nrounds: 99020"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9995071.03886406,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0755431570023246e-8",
+            "extra": "mean: 100.04931391799792 nsec\nrounds: 108850"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6643914.460528706,
+            "unit": "iter/sec",
+            "range": "stddev: 1.59903759876719e-8",
+            "extra": "mean: 150.51367773335576 nsec\nrounds: 71506"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2284760.035271135,
+            "unit": "iter/sec",
+            "range": "stddev: 6.64443002337326e-8",
+            "extra": "mean: 437.6827257840795 nsec\nrounds: 199243"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 597653.926292455,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9447119905700757e-7",
+            "extra": "mean: 1.6732091198722612 usec\nrounds: 62775"
           }
         ]
       }
