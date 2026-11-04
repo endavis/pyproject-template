@@ -165,7 +165,7 @@ uv run doit release_tag
 2. ✅ Pulls latest changes
 3. ✅ Finds the most recently merged `release: vX.Y.Z` PR
 4. ✅ Extracts the version from the PR title (falls back to the branch name)
-5. ✅ Creates the git tag `vX.Y.Z` on `main`
+5. ✅ Creates the git tag `vX.Y.Z` on the release PR's merge commit, saying so when `main` has moved past it
 6. ✅ Pushes the tag, which triggers the publish workflow
 
 ### Pre-releases (TestPyPI)
