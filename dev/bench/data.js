@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793872101599,
+  "lastUpdate": 1793872686642,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23128,6 +23128,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.586103706944738e-7",
             "extra": "mean: 1.6766139294210427 usec\nrounds: 62228"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ac76afe6bed64d911c29c1408f6951d4eb782f2c",
+          "message": "fix: push in doit pr when the branch's upstream is another branch (merges PR #1203, addresses #1197)\n\n_ensure_branch_pushed treated any upstream as pushed, so a branch cut\nfrom origin/main (upstream origin/main) was never pushed. It now counts\nthe branch as pushed only when its upstream is origin/<branch>; the\n--no-push path uses the same test.\n\nAddresses #1197\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T09:57:18Z",
+          "tree_id": "43891dfea1c58dcbd7b6bb5ad6a98c4c3d17bbe5",
+          "url": "https://github.com/endavis/pyproject-template/commit/ac76afe6bed64d911c29c1408f6951d4eb782f2c"
+        },
+        "date": 1793872685130,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13309980.644232575,
+            "unit": "iter/sec",
+            "range": "stddev: 1.41542083310796e-8",
+            "extra": "mean: 75.13158934857773 nsec\nrounds: 142593"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 14011109.012441846,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2480143466738097e-8",
+            "extra": "mean: 71.37193773255218 nsec\nrounds: 147363"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9211720.053380763,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5090008606696567e-8",
+            "extra": "mean: 108.5573589085562 nsec\nrounds: 95275"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2737871.720726097,
+            "unit": "iter/sec",
+            "range": "stddev: 7.149994564546241e-8",
+            "extra": "mean: 365.24720732160347 nsec\nrounds: 187723"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 689828.4113443341,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9025113343846378e-7",
+            "extra": "mean: 1.4496358566200616 usec\nrounds: 81547"
           }
         ]
       }
