@@ -967,6 +967,27 @@ class TestDownloadAndExtractArchive:
         assert (extracted / "run.sh").stat().st_mode & 0o111 == 0o111
         assert (extracted / "plain.txt").stat().st_mode & 0o111 == 0
 
+    def test_zip_extraction_drops_setuid_bits(self, tmp_path: Path) -> None:
+        import stat
+        import zipfile
+
+        from tools.pyproject_template import utils
+
+        root = "pyproject-template-" + "d" * 40
+
+        def _retrieve(_url: str, dest: Path) -> None:
+            with zipfile.ZipFile(dest, "w") as zf:
+                info = zipfile.ZipInfo(f"{root}/suid.sh")
+                info.external_attr = 0o104755 << 16
+                zf.writestr(info, "x")
+
+        with patch.object(utils.urllib.request, "urlretrieve", _retrieve):
+            extracted = utils.download_and_extract_archive("https://x/a.zip", tmp_path)
+
+        mode = (extracted / "suid.sh").stat().st_mode
+        assert not mode & stat.S_ISUID
+        assert mode & 0o111 == 0o111
+
     def test_a_failed_extract_keeps_the_previous_one(self, tmp_path: Path) -> None:
         from tools.pyproject_template import utils
 

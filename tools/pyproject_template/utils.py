@@ -619,7 +619,7 @@ def download_and_extract_archive(url: str, target_dir: Path) -> Path:
                     extracted_path = Path(zf.extract(info, extract_dir))
                     # zf.extract drops Unix modes; restore them so executable
                     # scripts stay executable (#1199).
-                    mode = (info.external_attr >> 16) & 0o7777
+                    mode = (info.external_attr >> 16) & 0o777
                     if mode and not info.is_dir():
                         extracted_path.chmod(mode)
         elif tarfile.is_tarfile(archive_path):
