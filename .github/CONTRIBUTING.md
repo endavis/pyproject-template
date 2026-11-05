@@ -844,7 +844,7 @@ Use the feature request template (`.github/ISSUE_TEMPLATE/feature_request.yml`):
 
 ## Development Workflow
 
-**MANDATORY RULE:** All changes must originate from a GitHub Issue.
+**MANDATORY RULE:** All changes must originate from a GitHub Issue, documentation changes included. The only exceptions are release PRs (`release/v*` branches opened by `doit release`) and Dependabot PRs.
 
 ### Issue-Driven Development
 
