@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793873607168,
+  "lastUpdate": 1793874011764,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23305,6 +23305,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.87149621097029e-7",
             "extra": "mean: 1.6636796374232288 usec\nrounds: 62497"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2c660d34535ebca808cfa92a4cc7e39e08693a6e",
+          "message": "docs: warn that the ruff-fix hook deletes an import added before its first use (merges PR #1206, addresses #1201)\n\nAdd a known-limitation section to the hook doc and a one-line warning to the\nhook docstring.\n\nAddresses #1201\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T10:19:31Z",
+          "tree_id": "147d9fe65c6c6acd5d9baab14479770a525e7ac9",
+          "url": "https://github.com/endavis/pyproject-template/commit/2c660d34535ebca808cfa92a4cc7e39e08693a6e"
+        },
+        "date": 1793874010604,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9368168.052876964,
+            "unit": "iter/sec",
+            "range": "stddev: 1.081095011348429e-8",
+            "extra": "mean: 106.74445573090463 nsec\nrounds: 103864"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10327686.441151917,
+            "unit": "iter/sec",
+            "range": "stddev: 9.97965824550673e-9",
+            "extra": "mean: 96.8271069903303 nsec\nrounds: 108496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6721584.7771191895,
+            "unit": "iter/sec",
+            "range": "stddev: 1.340292574499989e-8",
+            "extra": "mean: 148.77443834437375 nsec\nrounds: 69945"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2258128.7688677027,
+            "unit": "iter/sec",
+            "range": "stddev: 5.9313093102239275e-8",
+            "extra": "mean: 442.84454181124124 nsec\nrounds: 196503"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 603023.1896906357,
+            "unit": "iter/sec",
+            "range": "stddev: 1.382443310149351e-7",
+            "extra": "mean: 1.6583110187072942 usec\nrounds: 62775"
           }
         ]
       }
