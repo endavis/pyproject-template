@@ -1722,9 +1722,29 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
         _release_action()()
 
         assert not any("--files-only" in cmd for cmd in streamed_calls)
-        assert ["uv", "run", "cz", "changelog", "--incremental"] in streamed_calls
+        assert [
+            "uv",
+            "run",
+            "cz",
+            "changelog",
+            "--incremental",
+            "--unreleased-version",
+            f"v{self._NEXT_VERSION}",
+        ] in streamed_calls
         git_add_calls = [c for c in subprocess_calls if c[:2] == ["git", "add"]]
         assert git_add_calls == [["git", "add", "CHANGELOG.md"]]
+
+    def test_changelog_heading_flag_carries_v_prefixed_next_version(
+        self, tmp_path: Path, monkeypatch: MonkeyPatch
+    ) -> None:
+        """#1196: the new section is headed ``v<next_version>``, not ``Unreleased``."""
+        pyproject = '[tool.commitizen]\nversion_provider = "scm"\nupdate_changelog_on_bump = true\n'
+        _, streamed_calls = self._patch(monkeypatch, tmp_path, pyproject)
+
+        _release_action()()
+
+        (cmd,) = [c for c in streamed_calls if "changelog" in c]
+        assert cmd[cmd.index("--unreleased-version") + 1] == f"v{self._NEXT_VERSION}"
 
     def test_static_version_bumps_files_and_lock(
         self, tmp_path: Path, monkeypatch: MonkeyPatch
@@ -1768,7 +1788,7 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
 
         _release_action()()
 
-        assert not any(cmd[-3:] == ["cz", "changelog", "--incremental"] for cmd in streamed_calls)
+        assert not any("changelog" in cmd and "--incremental" in cmd for cmd in streamed_calls)
         result = (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8")
         today = date.today().isoformat()
         assert f"## [Unreleased]\n\n## [{self._NEXT_VERSION}] - {today}" in result
@@ -1806,7 +1826,7 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
 
         _release_action()()
 
-        assert not any(cmd[-3:] == ["cz", "changelog", "--incremental"] for cmd in streamed_calls)
+        assert not any("changelog" in cmd and "--incremental" in cmd for cmd in streamed_calls)
         result = (tmp_path / "CHANGELOG.md").read_text(encoding="utf-8")
         assert f"## [{self._NEXT_VERSION}] - {date.today().isoformat()}" in result
 
@@ -1822,7 +1842,7 @@ class TestCreateReleasePrStaticVersionAndChangelogOptIns:
         _release_action()()
 
         assert any("--files-only" in cmd for cmd in streamed_calls)
-        assert not any(cmd[-3:] == ["cz", "changelog", "--incremental"] for cmd in streamed_calls)
+        assert not any("changelog" in cmd and "--incremental" in cmd for cmd in streamed_calls)
 
     def test_abort_after_a_version_bump_discards_it_before_leaving_the_branch(
         self, tmp_path: Path, monkeypatch: MonkeyPatch

@@ -724,7 +724,17 @@ def task_release() -> dict[str, Any]:
             console.print("[green]✓ CHANGELOG.md written by the version bump.[/green]")
         else:
             try:
-                changelog_cmd = ["uv", "run", "cz", "changelog", "--incremental"]
+                # --unreleased-version names the new section's heading; without it
+                # commitizen writes the unreleased commits under "## Unreleased".
+                changelog_cmd = [
+                    "uv",
+                    "run",
+                    "cz",
+                    "changelog",
+                    "--incremental",
+                    "--unreleased-version",
+                    f"v{next_version}",
+                ]
                 run_streamed(
                     changelog_cmd,
                 )
