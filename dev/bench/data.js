@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793874011764,
+  "lastUpdate": 1793874536723,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23364,6 +23364,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.382443310149351e-7",
             "extra": "mean: 1.6583110187072942 usec\nrounds: 62775"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "375a9c2c243c47723ad5b4dff67a94e436484b33",
+          "message": "fix: list the default task's tasks without reopening doit's database (merges PR #1207, addresses #1198)\n\n* fix: list tasks in-process in the default doit task\n\nThe default task ran `uv run doit list`, whose nested doit could not open\n.doit.db while the outer one held it under dbm.gnu, so bare `doit` exited 1.\nList the tasks with an in-process DoitMain call instead.\n\nAddresses #1198\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\n* fix: list the default task's tasks without reopening doit's database\n\nThe default task ran DoitMain(...).run([\"list\"]) in-process, but doit's\nList command still built a second Dependency, reopening .doit.db while\nthe outer run held it, which dbm.gnu refuses with EAGAIN. Build List\ndirectly and hand it the running Globals.dep_manager, so no second open\nhappens and the outer manager is neither replaced nor closed.\n\nAddresses #1198\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T10:28:08Z",
+          "tree_id": "0d15c69860f51d810038f4bf1afcb5c42a5e09fd",
+          "url": "https://github.com/endavis/pyproject-template/commit/375a9c2c243c47723ad5b4dff67a94e436484b33"
+        },
+        "date": 1793874535394,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10658836.595427522,
+            "unit": "iter/sec",
+            "range": "stddev: 7.896659442049548e-9",
+            "extra": "mean: 93.81886954050732 nsec\nrounds: 111521"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10922289.21193003,
+            "unit": "iter/sec",
+            "range": "stddev: 8.437328458347385e-9",
+            "extra": "mean: 91.55589827338902 nsec\nrounds: 114286"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7049721.82464608,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3665630913566654e-8",
+            "extra": "mean: 141.84956866013692 nsec\nrounds: 73654"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2377725.868612048,
+            "unit": "iter/sec",
+            "range": "stddev: 5.862963358505291e-8",
+            "extra": "mean: 420.5699291078205 nsec\nrounds: 189790"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 633137.2480023311,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2062678499840827e-7",
+            "extra": "mean: 1.5794363752175236 usec\nrounds: 68302"
           }
         ]
       }
