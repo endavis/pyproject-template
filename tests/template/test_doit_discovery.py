@@ -1,5 +1,7 @@
 """Tests for doit task autodiscovery."""
 
+import pytest
+
 from tools.doit import discover_tasks
 
 
@@ -64,11 +66,13 @@ class TestDefaultTasks:
         for name in default_tasks:
             assert f"task_{name}" in discovered, f"{name!r} is not a doit task"
 
-    def test_default_task_runs_doit_list(self) -> None:
-        """The default task lists the available tasks."""
+    def test_default_task_lists_tasks_in_process(self, capsys: pytest.CaptureFixture[str]) -> None:
+        """The default task lists tasks without a nested doit process (#1198)."""
         from tools.doit.maintenance import task_default
 
         task = task_default()
 
-        assert task["actions"] == ["uv run doit list"]
         assert task_default.__doc__
+        assert all(callable(action) for action in task["actions"])
+        assert task["actions"][0]() is True
+        assert "default" in capsys.readouterr().out

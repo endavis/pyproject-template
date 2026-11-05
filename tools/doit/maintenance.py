@@ -16,8 +16,18 @@ from .base import verbatim
 
 def task_default() -> dict[str, Any]:
     """List all available tasks (runs when no task is given)."""
+
+    def list_tasks() -> bool:
+        """List tasks in-process; a nested doit would reopen ``.doit.db`` (#1198)."""
+        from doit.cmd_base import ModuleTaskLoader
+        from doit.doit_cmd import DoitMain
+
+        import dodo
+
+        return bool(DoitMain(ModuleTaskLoader(dodo)).run(["list"]) == 0)
+
     return {
-        "actions": ["uv run doit list"],
+        "actions": [list_tasks],
         "verbosity": 2,
     }
 
