@@ -61,7 +61,19 @@ class TestWarnIfEnvDrifted:
             mock_run.return_value.returncode = 1
             warn_if_env_drifted()  # must not raise
 
-        assert "uv.lock changed — run: doit install_dev" in capsys.readouterr().out
+        assert (
+            "environment does not match uv.lock — run: doit install_dev" in capsys.readouterr().out
+        )
+
+    def test_reminder_does_not_claim_uv_lock_changed(
+        self, capsys: pytest.CaptureFixture[str]
+    ) -> None:
+        """Drift is environment vs lock, so the message must not say the lock changed."""
+        with patch("tools.doit.base.subprocess.run") as mock_run:
+            mock_run.return_value.returncode = 1
+            warn_if_env_drifted()
+
+        assert "uv.lock changed" not in capsys.readouterr().out
 
 
 def _touch(tmp_path: Path, rel: str) -> Path:

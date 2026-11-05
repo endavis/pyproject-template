@@ -176,7 +176,7 @@ def warn_if_env_drifted() -> None:
     if result.returncode != 0:
         console = Console()
         console.print(
-            verbatim("uv.lock changed — run: doit install_dev", "yellow"),
+            verbatim("environment does not match uv.lock — run: doit install_dev", "yellow"),
             soft_wrap=True,
         )
 
