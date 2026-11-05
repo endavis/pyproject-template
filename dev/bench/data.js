@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793872686642,
+  "lastUpdate": 1793873237444,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23187,6 +23187,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9025113343846378e-7",
             "extra": "mean: 1.4496358566200616 usec\nrounds: 81547"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b871814d035aa28608163aa75f86cb4be809dc41",
+          "message": "fix: keep Unix execute bits when extracting the template zip (merges PR #1204, addresses #1199)\n\n* fix: keep Unix execute bits when extracting the template zip (addresses #1199)\n\nzipfile.ZipFile.extract drops Unix permissions, so the update check wrote the\ntemplate's 100755 files as 0644. Apply the stored mode after each extract.\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\n* fix: restore only permission bits when extracting the template zip\n\nAddresses #1199\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\n* test: skip the setuid extraction test on Windows\n\nAddresses #1199\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T10:06:33Z",
+          "tree_id": "ef64724e7619f9481ca3b335ec7a16effc1bd51a",
+          "url": "https://github.com/endavis/pyproject-template/commit/b871814d035aa28608163aa75f86cb4be809dc41"
+        },
+        "date": 1793873235988,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10223835.962373223,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0775585907450122e-8",
+            "extra": "mean: 97.81064599239457 nsec\nrounds: 106735"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10620442.92633766,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0756216988579622e-8",
+            "extra": "mean: 94.15803153746987 nsec\nrounds: 110218"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7004097.18174805,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5149764505617763e-8",
+            "extra": "mean: 142.77357581586622 nsec\nrounds: 72775"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2453142.0614696913,
+            "unit": "iter/sec",
+            "range": "stddev: 6.452358047379296e-8",
+            "extra": "mean: 407.64047696483357 nsec\nrounds: 198099"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 624879.8109327084,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7734993753029463e-7",
+            "extra": "mean: 1.6003077431920538 usec\nrounds: 66213"
           }
         ]
       }
