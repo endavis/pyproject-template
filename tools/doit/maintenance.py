@@ -18,13 +18,21 @@ def task_default() -> dict[str, Any]:
     """List all available tasks (runs when no task is given)."""
 
     def list_tasks() -> bool:
-        """List tasks in-process; a nested doit would reopen ``.doit.db`` (#1198)."""
+        """List tasks in-process, reusing the running doit's dependency manager.
+
+        A second ``Dependency`` would reopen ``.doit.db``, which ``dbm.gnu`` refuses
+        while the outer run holds it (#1198). ``List`` skips creating one when its
+        ``dep_manager`` is already set, and does not close it.
+        """
         from doit.cmd_base import ModuleTaskLoader
-        from doit.doit_cmd import DoitMain
+        from doit.cmd_list import List
+        from doit.globals import Globals
 
         import dodo
 
-        return bool(DoitMain(ModuleTaskLoader(dodo)).run(["list"]) == 0)
+        command = List(task_loader=ModuleTaskLoader(dodo))
+        command.dep_manager = Globals.dep_manager
+        return bool(command.parse_execute([]) == 0)
 
     return {
         "actions": [list_tasks],
