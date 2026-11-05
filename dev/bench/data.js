@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793803315290,
+  "lastUpdate": 1793872101599,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23069,6 +23069,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.9447119905700757e-7",
             "extra": "mean: 1.6732091198722612 usec\nrounds: 62775"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a7e20132a8709486464d35842013f95ad4d8e2e0",
+          "message": "fix: head the release changelog section with the version, not Unreleased (merges PR #1202, addresses #1196)\n\nPass --unreleased-version v<next_version> to cz changelog --incremental so the\nnew section is titled with the release being cut.\n\nAddresses #1196\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T09:47:38Z",
+          "tree_id": "cf6643684d927f733646350077d8b93db3442c30",
+          "url": "https://github.com/endavis/pyproject-template/commit/a7e20132a8709486464d35842013f95ad4d8e2e0"
+        },
+        "date": 1793872100205,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8565693.809837872,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2901828422373148e-8",
+            "extra": "mean: 116.74477540295449 nsec\nrounds: 92499"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10100280.979139611,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2530583890841347e-8",
+            "extra": "mean: 99.007146639319 nsec\nrounds: 108027"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5457597.002163832,
+            "unit": "iter/sec",
+            "range": "stddev: 6.748032293972836e-8",
+            "extra": "mean: 183.2308247757244 nsec\nrounds: 70892"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2234222.6822604095,
+            "unit": "iter/sec",
+            "range": "stddev: 9.527071321860684e-8",
+            "extra": "mean: 447.5829593620808 nsec\nrounds: 186220"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 596440.2313807051,
+            "unit": "iter/sec",
+            "range": "stddev: 1.586103706944738e-7",
+            "extra": "mean: 1.6766139294210427 usec\nrounds: 62228"
           }
         ]
       }
