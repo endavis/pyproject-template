@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -944,6 +945,49 @@ class TestDownloadAndExtractArchive:
         assert (extracted / "README.md").read_text(encoding="utf-8") == "hello"
         assert not previous.exists()
         assert not (tmp_path / "extracted.tmp").exists()
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix modes are not honoured on Windows")
+    def test_zip_extraction_preserves_unix_permission_bits(self, tmp_path: Path) -> None:
+        import zipfile
+
+        from tools.pyproject_template import utils
+
+        root = "pyproject-template-" + "c" * 40
+
+        def _retrieve(_url: str, dest: Path) -> None:
+            with zipfile.ZipFile(dest, "w") as zf:
+                for name, mode in (("run.sh", 0o100755), ("plain.txt", 0o100644)):
+                    info = zipfile.ZipInfo(f"{root}/{name}")
+                    info.external_attr = mode << 16
+                    zf.writestr(info, "x")
+
+        with patch.object(utils.urllib.request, "urlretrieve", _retrieve):
+            extracted = utils.download_and_extract_archive("https://x/a.zip", tmp_path)
+
+        assert (extracted / "run.sh").stat().st_mode & 0o111 == 0o111
+        assert (extracted / "plain.txt").stat().st_mode & 0o111 == 0
+
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix modes are not honoured on Windows")
+    def test_zip_extraction_drops_setuid_bits(self, tmp_path: Path) -> None:
+        import stat
+        import zipfile
+
+        from tools.pyproject_template import utils
+
+        root = "pyproject-template-" + "d" * 40
+
+        def _retrieve(_url: str, dest: Path) -> None:
+            with zipfile.ZipFile(dest, "w") as zf:
+                info = zipfile.ZipInfo(f"{root}/suid.sh")
+                info.external_attr = 0o104755 << 16
+                zf.writestr(info, "x")
+
+        with patch.object(utils.urllib.request, "urlretrieve", _retrieve):
+            extracted = utils.download_and_extract_archive("https://x/a.zip", tmp_path)
+
+        mode = (extracted / "suid.sh").stat().st_mode
+        assert not mode & stat.S_ISUID
+        assert mode & 0o111 == 0o111
 
     def test_a_failed_extract_keeps_the_previous_one(self, tmp_path: Path) -> None:
         from tools.pyproject_template import utils
