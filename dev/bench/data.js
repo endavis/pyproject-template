@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793873237444,
+  "lastUpdate": 1793873607168,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23246,6 +23246,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7734993753029463e-7",
             "extra": "mean: 1.6003077431920538 usec\nrounds: 66213"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eccca65ea9988f00256706f1a97f21f7b4ab2c3a",
+          "message": "fix: say the environment does not match uv.lock in the drift warning (merges PR #1205, addresses #1200)\n\nwarn_if_env_drifted printed \"uv.lock changed\" whenever uv sync --check\nexited non-zero, though that means the environment drifted from an\nunchanged lock. The message now says so.\n\nAddresses #1200\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sdfT3Nuq8NP4ejGvtk\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T10:12:37Z",
+          "tree_id": "dd0a6dce534a61693a7549e6dac624e3dc00fd7c",
+          "url": "https://github.com/endavis/pyproject-template/commit/eccca65ea9988f00256706f1a97f21f7b4ab2c3a"
+        },
+        "date": 1793873605882,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9418685.614424719,
+            "unit": "iter/sec",
+            "range": "stddev: 1.658098946731688e-8",
+            "extra": "mean: 106.17192684173469 nsec\nrounds: 99811"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10273863.179241477,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2511455500310118e-8",
+            "extra": "mean: 97.33436999828047 nsec\nrounds: 109087"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6702380.331117096,
+            "unit": "iter/sec",
+            "range": "stddev: 1.527159802686073e-8",
+            "extra": "mean: 149.20072430943773 nsec\nrounds: 70191"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2264851.9640587815,
+            "unit": "iter/sec",
+            "range": "stddev: 7.572619161188731e-8",
+            "extra": "mean: 441.5299612818519 nsec\nrounds: 199641"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 601077.2612140874,
+            "unit": "iter/sec",
+            "range": "stddev: 1.87149621097029e-7",
+            "extra": "mean: 1.6636796374232288 usec\nrounds: 62497"
           }
         ]
       }
