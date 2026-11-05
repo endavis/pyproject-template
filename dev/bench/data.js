@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793874536723,
+  "lastUpdate": 1793878054825,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23423,6 +23423,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2062678499840827e-7",
             "extra": "mean: 1.5794363752175236 usec\nrounds: 68302"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd23ca06cb19ade92831a71a667f654ae269ce42",
+          "message": "docs: tell contributors that commits to main must be signed (merges PR #1209, addresses #1208)\n\nThe main ruleset requires verified signatures, but CONTRIBUTING never\nsaid so, so a fork PR with unsigned commits could not be merged.\n\nAdd a Signed Commits section under Commit Guidelines: why unsigned\nhead-branch commits block a squash merge, links to GitHub's signing\nsetup docs, and how to re-sign commits already on a PR branch. Point\nto it from Before Submitting and add a checklist item to the PR\ntemplate.\n\nAddresses #1208\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sb18NzFYN7fr3BX8tD\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T11:26:54Z",
+          "tree_id": "e3a503315c4d644271cd715aca65fb3129a87e5d",
+          "url": "https://github.com/endavis/pyproject-template/commit/dd23ca06cb19ade92831a71a667f654ae269ce42"
+        },
+        "date": 1793878053219,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18803617.84054905,
+            "unit": "iter/sec",
+            "range": "stddev: 6.762426550941466e-9",
+            "extra": "mean: 53.181255249909974 nsec\nrounds: 194288"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20774762.424038757,
+            "unit": "iter/sec",
+            "range": "stddev: 4.753871667501156e-9",
+            "extra": "mean: 48.135327836186775 nsec\nrounds: 198531"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12556571.7277337,
+            "unit": "iter/sec",
+            "range": "stddev: 3.078797660504795e-8",
+            "extra": "mean: 79.63957214462448 nsec\nrounds: 139276"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4335609.898113714,
+            "unit": "iter/sec",
+            "range": "stddev: 5.194226838045431e-8",
+            "extra": "mean: 230.64805725143034 nsec\nrounds: 45868"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1046580.0175970569,
+            "unit": "iter/sec",
+            "range": "stddev: 2.253549861038764e-7",
+            "extra": "mean: 955.4931139388611 nsec\nrounds: 109482"
           }
         ]
       }
