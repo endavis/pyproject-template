@@ -803,6 +803,9 @@ class TestWorktreeMounts:
 
         assert self._mounts(tmp_path, wt, str(other), str(other / "x"), "/proc", "/") == []
 
+    @pytest.mark.skipif(
+        os.name == "nt", reason="Windows refuses a tab in a name; mountinfo is Linux-only"
+    )
     def test_escaped_mount_paths_are_decoded(self, tmp_path: Path) -> None:
         wt = tmp_path / "wt"
         (wt / "a b\tc\\d").mkdir(parents=True)
