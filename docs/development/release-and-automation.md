@@ -248,8 +248,8 @@ new version in either case. Any later abort discards what the release changed be
 `main`, so a version-file bump is never carried back onto it.
 
 **Linking a release issue.** A release PR is exempt from the Validate Issue Link check by its
-`release/v*` branch, since a static-version release is no longer docs-only. A project that files
-an issue for each release can link it with `doit release --issue=<N>`, which writes
+`release/v*` branch. A project that files an issue for each release can link it with
+`doit release --issue=<N>`, which writes
 `Addresses #<N>` into the PR body; `doit pr_merge` then records it in the merge commit.
 
 ### Example Release Cycle
