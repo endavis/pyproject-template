@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793882509178,
+  "lastUpdate": 1793890119457,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23541,6 +23541,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4967559630741855e-7",
             "extra": "mean: 1.6433429354412075 usec\nrounds: 63493"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "06ccfd5e6df90ec1cf609a6296e9be9287e1464f",
+          "message": "fix: keep a merged worktree in place while anything is mounted inside it (merges PR #1213, addresses #1212)\n\n* fix: keep a merged worktree in place while anything is mounted inside it\n\n`doit pr_merge` judged a worktree safe to remove from `git status\n--ignored` alone. A mount below a rebuildable ignored directory was never\nlooked at, and one below another ignored directory was walked into\nunnoticed. `git worktree remove` then deleted the files inside the mount\nbefore failing with \"Device or resource busy\", on the remote machine for a\nread-write network mount.\n\nAdd `_worktree_mounts`, which lists the mount points at or below the\nworktree from /proc/self/mountinfo, or, where that file is absent, by\nwalking the worktree with os.path.ismount. Any mount keeps the worktree in\nplace, and the message lists the mounts to unmount first. The walk cannot\nsee a bind mount within one filesystem; the docstring says so.\n\nAddresses #1212\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbF9z1rLP1q1Y6HjAQ\n\n* test: skip the mountinfo escape test on Windows, which refuses a tab in a name\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T14:47:52Z",
+          "tree_id": "1174602f989dd57aaab70770eab0e9d20ae35580",
+          "url": "https://github.com/endavis/pyproject-template/commit/06ccfd5e6df90ec1cf609a6296e9be9287e1464f"
+        },
+        "date": 1793890118254,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13237003.057724603,
+            "unit": "iter/sec",
+            "range": "stddev: 1.438568953626483e-8",
+            "extra": "mean: 75.54580108799165 nsec\nrounds: 139529"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13548748.435880467,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0888005944677813e-8",
+            "extra": "mean: 73.80755534228905 nsec\nrounds: 146994"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8984363.53303939,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4072039793475318e-8",
+            "extra": "mean: 111.30448988651982 nsec\nrounds: 92303"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2630537.0159537476,
+            "unit": "iter/sec",
+            "range": "stddev: 6.025086514944106e-8",
+            "extra": "mean: 380.15051449007353 nsec\nrounds: 195695"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 659885.0770067101,
+            "unit": "iter/sec",
+            "range": "stddev: 2.746163574636228e-7",
+            "extra": "mean: 1.5154153879885837 usec\nrounds: 79822"
           }
         ]
       }
