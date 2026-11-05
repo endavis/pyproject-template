@@ -765,7 +765,10 @@ delete the branch. So when a linked worktree has the branch, the task merges wit
   modified or untracked files, which git refuses to remove, or an ignored file that cannot be
   rebuilt, such as `.envrc.local`, which git would delete without asking. `.venv/`, caches and
   build output are rebuilt, so they do not count. An ignored directory such as `tmp/agents/` is
-  judged by the files in it, so one holding only `__pycache__` does not count either
+  judged by the files in it, so one holding only `__pycache__` does not count either;
+  it is also kept, with the mount points listed, when anything is mounted at or below it, in a
+  rebuildable directory too: `git worktree remove` deletes the files inside a mount before it
+  fails, on the remote machine for a network mount. Unmount first
 - deletes the local branch if it still points at the commit the PR merged. A squash merge needs
   `git branch -D`, which would otherwise drop a commit that was never pushed
 - removes the directories under `worktrees/` that the worktree leaves empty
