@@ -967,6 +967,7 @@ class TestDownloadAndExtractArchive:
         assert (extracted / "run.sh").stat().st_mode & 0o111 == 0o111
         assert (extracted / "plain.txt").stat().st_mode & 0o111 == 0
 
+    @pytest.mark.skipif(sys.platform == "win32", reason="Unix modes are not honoured on Windows")
     def test_zip_extraction_drops_setuid_bits(self, tmp_path: Path) -> None:
         import stat
         import zipfile
