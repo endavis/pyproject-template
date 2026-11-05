@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793878054825,
+  "lastUpdate": 1793882509178,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23482,6 +23482,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.253549861038764e-7",
             "extra": "mean: 955.4931139388611 nsec\nrounds: 109482"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dbe9500b9f021b8eecbba9b0066ec9945d223c27",
+          "message": "fix: require a linked issue on docs-only PRs, as CONTRIBUTING's rule does (merges PR #1211, addresses #1210)\n\nThe Validate Issue Link job skipped every PR whose files all matched docs\npatterns (docs/, .github/, .claude/, any *.md, the pre-commit config).\nCONTRIBUTING says every change must come from an issue, with no exceptions.\n\nRemove the docs-only skip and the file listing it used. Release PRs\n(release/v* branches) and Dependabot PRs stay exempt, and CONTRIBUTING now\nnames them as the only exceptions. The job's failure message and the release\ndocs no longer mention a docs-only exemption.\n\nAddresses #1210\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scCxZVR5xieetNoahy\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-05T12:41:02Z",
+          "tree_id": "58c69947cb9f6609ab8ea0aa3ded112af8618e5a",
+          "url": "https://github.com/endavis/pyproject-template/commit/dbe9500b9f021b8eecbba9b0066ec9945d223c27"
+        },
+        "date": 1793882507443,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9673200.545623159,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1715742038531596e-8",
+            "extra": "mean: 103.37840048736204 nsec\nrounds: 102575"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10312454.727187244,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2094106751765398e-8",
+            "extra": "mean: 96.9701226773534 nsec\nrounds: 108496"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6373929.899507307,
+            "unit": "iter/sec",
+            "range": "stddev: 1.535749615867623e-8",
+            "extra": "mean: 156.88908032661266 nsec\nrounds: 67350"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2297178.2872904046,
+            "unit": "iter/sec",
+            "range": "stddev: 6.166038710034356e-8",
+            "extra": "mean: 435.3166689467243 nsec\nrounds: 189072"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 608515.7141783789,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4967559630741855e-7",
+            "extra": "mean: 1.6433429354412075 usec\nrounds: 63493"
           }
         ]
       }
