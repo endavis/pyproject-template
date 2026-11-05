@@ -1,6 +1,7 @@
 """Git-related doit tasks."""
 
 import os
+import re
 import subprocess  # nosec B404  # subprocess is required for doit tasks
 import sys
 from fnmatch import fnmatch
@@ -39,6 +40,10 @@ _REBUILDABLE_IGNORED = (
     ".pre-commit",  # PRE_COMMIT_HOME, set by .envrc under tmp/
     "mutants",  # mutmut's copy of the project, made again by the next run
 )
+
+# Where Linux lists the mounts of this process. A module constant so tests can
+# point it at a fake file (#1212).
+_MOUNTINFO = Path("/proc/self/mountinfo")
 
 
 def task_commit() -> dict[str, Any]:
@@ -186,6 +191,62 @@ def _worktree_leftovers(worktree: Path) -> list[str]:
     return leftovers
 
 
+def _unescape_mountinfo(field: str) -> str:
+    """Decode the octal escapes (``\\040``, ``\\011``, ``\\012``, ``\\134``) in a mountinfo path."""
+    return re.sub(r"\\([0-7]{3})", lambda m: chr(int(m.group(1), 8)), field)
+
+
+def _worktree_mounts(worktree: Path) -> list[str]:
+    """Return the mount points at or below *worktree*, sorted.
+
+    ``git worktree remove`` deletes the files inside a mount before it fails
+    with ``Device or resource busy``, and on a read-write network mount those
+    deletions reach the remote machine (#1212). This does not rely on
+    ``git status``, which never descends into a rebuildable directory and does
+    not notice a mount in the others.
+
+    Linux reads ``/proc/self/mountinfo``. Where it is absent, the whole
+    worktree is walked, rebuildable directories included, with
+    ``os.path.ismount``; neither a mount nor a symlinked directory is entered.
+    That walk misses a bind mount of a directory on the same filesystem, which
+    ``ismount`` cannot tell from a plain directory; a network mount such as
+    sshfs or NFS is on its own device, so it is found.
+    """
+    resolved = worktree.resolve()
+    try:
+        text = _MOUNTINFO.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return _walk_for_mounts(resolved)
+    found = []
+    for line in text.splitlines():
+        fields = line.split()
+        if len(fields) < 5:
+            continue
+        mount = Path(_unescape_mountinfo(fields[4]))
+        if mount == resolved or mount.is_relative_to(resolved):
+            found.append(str(mount))
+    return sorted(found)
+
+
+def _walk_for_mounts(resolved: Path) -> list[str]:
+    """Find mount points under *resolved* with ``os.path.ismount``, for hosts without mountinfo."""
+    found = []
+    if os.path.ismount(resolved):
+        return [str(resolved)]
+    for root, dirs, _files in os.walk(resolved):
+        keep = []
+        for d in dirs:
+            path = Path(root) / d
+            if path.is_symlink():
+                continue
+            if os.path.ismount(path):
+                found.append(str(path))
+                continue
+            keep.append(d)
+        dirs[:] = keep
+    return sorted(found)
+
+
 def _is_rebuildable(name: str) -> bool:
     """Whether a file or directory called *name* is one the tooling can rebuild."""
     return any(fnmatch(name, p) for p in _REBUILDABLE_IGNORED)
@@ -259,7 +320,8 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
     tip = _branch_tip(branch)
     inside = Path.cwd().resolve().is_relative_to(worktree.resolve())
     leftovers = _worktree_leftovers(worktree)
-    if inside or leftovers:
+    mounts = _worktree_mounts(worktree)
+    if inside or leftovers or mounts:
         if inside:
             console.print(
                 "[yellow]This task runs inside the worktree, so it cannot remove it.[/yellow]"
@@ -275,6 +337,18 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
             )
             for line in leftovers:
                 console.print(verbatim(f"  {line}"), soft_wrap=True)
+        if mounts:
+            console.print(
+                verbatim(
+                    f"Left {worktree} in place. `git worktree remove` deletes the files inside "
+                    "a mount before it fails, on the remote machine too for a network mount. "
+                    "Unmount these first:",
+                    "yellow",
+                ),
+                soft_wrap=True,
+            )
+            for mount in mounts:
+                console.print(verbatim(f"  {mount}"), soft_wrap=True)
         console.print("[bold]To remove it, from the main checkout:[/bold]")
         console.print(verbatim(f"  cd {root}"), soft_wrap=True)
         console.print(verbatim(f"  git worktree remove {worktree}"), soft_wrap=True)

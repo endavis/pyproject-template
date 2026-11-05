@@ -27,6 +27,7 @@ from rich.console import Console
 
 from tools.doit.git import (
     _main_checkout,
+    _worktree_mounts,
     remove_merged_worktree,
     task_bump,
     task_changelog,
@@ -757,3 +758,110 @@ class TestRemoveMergedWorktree:
 
         assert path.is_dir()
         assert f"{self.BRANCH} is checked out in {path}, which" in out
+
+
+class TestWorktreeMounts:
+    """A mount at or below a worktree keeps it, whatever git status says (#1212)."""
+
+    @staticmethod
+    def _mountinfo(tmp_path: Path, *mount_points: str) -> Path:
+        lines = [f"{i} 1 0:{i} / {mp} rw - tmpfs tmpfs rw" for i, mp in enumerate(mount_points, 30)]
+        info = tmp_path / "mountinfo"
+        info.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        return info
+
+    def _mounts(self, tmp_path: Path, worktree: Path, *mount_points: str) -> list[str]:
+        info = self._mountinfo(tmp_path, *mount_points)
+        with patch("tools.doit.git._MOUNTINFO", info):
+            return _worktree_mounts(worktree)
+
+    def test_mount_under_a_rebuildable_directory(self, tmp_path: Path) -> None:
+        wt = tmp_path / "wt"
+        mount = wt / "tmp" / "sandbox_cache" / "mnt" / "host"
+        mount.mkdir(parents=True)
+
+        assert self._mounts(tmp_path, wt, str(mount.resolve())) == [str(mount.resolve())]
+
+    def test_mount_under_a_non_rebuildable_ignored_directory(self, tmp_path: Path) -> None:
+        wt = tmp_path / "wt"
+        mount = wt / "tmp" / "agents" / "mnt"
+        mount.mkdir(parents=True)
+
+        assert self._mounts(tmp_path, wt, str(mount.resolve())) == [str(mount.resolve())]
+
+    def test_the_worktree_itself_counts(self, tmp_path: Path) -> None:
+        wt = tmp_path / "wt"
+        wt.mkdir()
+
+        assert self._mounts(tmp_path, wt, str(wt.resolve())) == [str(wt.resolve())]
+
+    def test_outside_and_sibling_prefix_mounts_are_ignored(self, tmp_path: Path) -> None:
+        wt = tmp_path / "wt"
+        wt.mkdir()
+        (tmp_path / "wt2").mkdir()
+        other = (tmp_path / "wt2").resolve()
+
+        assert self._mounts(tmp_path, wt, str(other), str(other / "x"), "/proc", "/") == []
+
+    def test_escaped_mount_paths_are_decoded(self, tmp_path: Path) -> None:
+        wt = tmp_path / "wt"
+        (wt / "a b\tc\\d").mkdir(parents=True)
+        root = str(wt.resolve())
+        escaped = root + "/a\\040b\\011c\\134d"
+
+        assert self._mounts(tmp_path, wt, escaped) == [f"{root}/a b\tc\\d"]
+
+    def test_fallback_walks_rebuildable_directories_and_skips_mounts_and_links(
+        self, tmp_path: Path
+    ) -> None:
+        wt = tmp_path / "wt"
+        mount = wt / ".venv" / "mnt"
+        (mount / "inner").mkdir(parents=True)
+        (wt / "plain").mkdir()
+        (tmp_path / "target").mkdir()
+        link = wt / "link"
+        try:
+            link.symlink_to(tmp_path / "target", target_is_directory=True)
+        except OSError:
+            pytest.skip("symlinks unavailable")
+        resolved_mount = mount.resolve()
+        seen: list[str] = []
+
+        def ismount(path: object) -> bool:
+            seen.append(str(path))
+            return Path(str(path)) in {resolved_mount, link}
+
+        with (
+            patch("tools.doit.git._MOUNTINFO", tmp_path / "missing"),
+            patch("tools.doit.git.os.path.ismount", side_effect=ismount),
+        ):
+            found = _worktree_mounts(wt)
+
+        assert found == [str(resolved_mount)]
+        assert not any(p.endswith("inner") or p.endswith("link") for p in seen)
+
+    def test_a_mount_keeps_the_worktree_and_git_is_not_asked_to_remove_it(
+        self, main_checkout: Path
+    ) -> None:
+        path, head = _add_worktree(main_checkout, "feat/1-add-export")
+        mount = str((path / "tmp" / "sandbox_cache" / "mnt").resolve())
+        output = io.StringIO()
+        real_run = subprocess.run
+        calls: list[list[str]] = []
+
+        def spy(cmd: list[str], *args: object, **kwargs: object) -> object:
+            calls.append(cmd)
+            return real_run(cmd, *args, **kwargs)  # type: ignore[call-overload]
+
+        with (
+            patch("tools.doit.git._worktree_mounts", return_value=[mount]),
+            patch("tools.doit.git.subprocess.run", side_effect=spy),
+        ):
+            remove_merged_worktree(path, "feat/1-add-export", head, Console(file=output, width=300))
+
+        out = output.getvalue()
+        assert path.exists()
+        assert ["git", "worktree", "remove"] not in [c[:3] for c in calls]
+        assert "Unmount these first" in out
+        assert f"  {mount}" in out.splitlines()
+        assert f"  git worktree remove {path}" in out.splitlines()
