@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793890119457,
+  "lastUpdate": 1793968862706,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23600,6 +23600,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.746163574636228e-7",
             "extra": "mean: 1.5154153879885837 usec\nrounds: 79822"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ffc9f17f3b66f3be9c72df16859308ab1731e78a",
+          "message": "docs: make AGENTS.md's changelog rule depend on update_changelog_on_bump (merges PR #1215, addresses #1214)\n\n\"Don't edit CHANGELOG.md\" holds only when update_changelog_on_bump is\ntrue. With it false or missing, doit release treats the changelog as\nhand-written and aborts on an empty ## [Unreleased] section, so an agent\nfollowing the old line blocked the release. Link to the Release\nAutomation section on hand-written changelogs instead of restating it.\n\nAddresses #1214\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scyzV4A8oPNLSHmpbr\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-06T12:40:20Z",
+          "tree_id": "553f3c9b3a2825b943cfae4cf2e22c7ca0160282",
+          "url": "https://github.com/endavis/pyproject-template/commit/ffc9f17f3b66f3be9c72df16859308ab1731e78a"
+        },
+        "date": 1793968861888,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8840829.242547192,
+            "unit": "iter/sec",
+            "range": "stddev: 3.001963263198942e-8",
+            "extra": "mean: 113.11156143446597 nsec\nrounds: 105877"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10452579.108280763,
+            "unit": "iter/sec",
+            "range": "stddev: 9.854470124808129e-9",
+            "extra": "mean: 95.67016806481551 nsec\nrounds: 109422"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6783370.726467147,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2657562257622337e-8",
+            "extra": "mean: 147.41933477087295 nsec\nrounds: 70968"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2478472.4625512306,
+            "unit": "iter/sec",
+            "range": "stddev: 6.34203868898004e-8",
+            "extra": "mean: 403.4743234430146 nsec\nrounds: 186290"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 627797.3481249888,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4017840659514374e-7",
+            "extra": "mean: 1.592870697824147 usec\nrounds: 65647"
           }
         ]
       }
