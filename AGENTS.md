@@ -184,7 +184,7 @@ findings keep the private-fork, publish-after-fix track. See
 **How to Handle:**
 1. Document in commit message with `BREAKING CHANGE:` footer
 2. Document in PR description with migration guide
-3. Don't edit CHANGELOG.md: `doit release` writes it from the commit messages, footer included
+3. With `update_changelog_on_bump = true` in `[tool.commitizen]`, don't edit CHANGELOG.md: `doit release` writes it from the commit messages, footer included. With it `false` or missing, the changelog is hand-written: add the change and its migration note under `## [Unreleased]`, or `doit release` aborts on an empty section (see [Release Automation — Downstream opt-ins](docs/development/release-and-automation.md#downstream-opt-ins-static-version-and-hand-written-changelog))
 4. Breaking changes bump MINOR before 1.0 and MAJOR from 1.0 on: set `major_version_zero = false` in `[tool.commitizen]` before releasing 1.0 (`doit release` refuses 1.0 or later until you do)
 
 ## Tooling & Environment
