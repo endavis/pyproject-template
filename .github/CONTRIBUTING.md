@@ -307,6 +307,14 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/):
 [optional footer]
 ```
 
+### Naming the Issue
+
+A commit names its issue with `Addresses #N`, never a closing keyword (`close`, `fix`,
+`resolve` in any tense, with or without a colon). `doit pr_merge` squashes the branch, and the
+squash message carries every commit's message onto `main`, so `Fixes #N` would close the issue on
+merge. Closing is `doit pr_merge --auto-close`'s job. The `check-commit-issue-ref` hook rejects a
+message line where a closing keyword precedes an issue reference.
+
 ### Commit Types
 
 - `feat`: New feature
