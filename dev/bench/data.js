@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793968862706,
+  "lastUpdate": 1794054392015,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23659,6 +23659,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4017840659514374e-7",
             "extra": "mean: 1.592870697824147 usec\nrounds: 65647"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fc275e8e1a162069ca12072f134d41f52aa7f2ba",
+          "message": "fix: reject closing keywords in commit messages (merges PR #1217, addresses #1216)\n\ndoit pr_merge squashes a PR, and with squash_merge_commit_message set to\nCOMMIT_MESSAGES the squash commit carries every branch commit's message\nonto main. A commit line naming an issue with a closing keyword therefore\nclosed the issue at merge, overriding the PR body's Addresses reference.\n\n- check_commit_issue_ref.py rejects a message line where close, fix or\n  resolve (any tense, any case, optional colon, optional owner/repo)\n  directly precedes an issue reference, on every branch, pointing the\n  author to Addresses #N. ALLOW_ISSUE_REF_MISMATCH=1 still overrides.\n- CONTRIBUTING's Commit Guidelines gain a \"Naming the Issue\" rule.\n\nAddresses #1216\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbxkYQbfEZgZ25QB7X\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-07T12:25:49Z",
+          "tree_id": "288fb6ecaa6d995345a6c5b315a6dcff7c32cbc3",
+          "url": "https://github.com/endavis/pyproject-template/commit/fc275e8e1a162069ca12072f134d41f52aa7f2ba"
+        },
+        "date": 1794054391140,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9473591.824779408,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0305275392554128e-8",
+            "extra": "mean: 105.5565849253047 nsec\nrounds: 103008"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10063786.434814377,
+            "unit": "iter/sec",
+            "range": "stddev: 9.489417725533212e-9",
+            "extra": "mean: 99.36617857277143 nsec\nrounds: 104406"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6680425.488221439,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2154746034077233e-8",
+            "extra": "mean: 149.6910641040972 nsec\nrounds: 70792"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2067853.6351705075,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3753738566300738e-7",
+            "extra": "mean: 483.59322100548167 nsec\nrounds: 184502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 503221.19151018397,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000010163564342873863",
+            "extra": "mean: 1.9871977112072046 usec\nrounds: 63658"
           }
         ]
       }
