@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794143259489,
+  "lastUpdate": 1794143826757,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23836,6 +23836,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2614482289274426e-7",
             "extra": "mean: 1.2408173355068544 usec\nrounds: 84624"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9704cadf85f89cb5fbf59a0bf80d9ee3b511fa67",
+          "message": "chore: group dependabot minor/patch updates into one PR per ecosystem (merges PR #1223, addresses #1221)\n\nUnder the strict up-to-date ruleset, every merged dependabot PR makes\nDependabot rebase every other open one and re-run CI, so a batch of N\nPRs costs up to N + (N-1) + ... + 1 CI runs. A last-listed\nminor-and-patch catch-all group in both the uv and github-actions\necosystems turns a weekly batch into one PR. Its exclude-patterns\nmirror sensitive_dependencies in automerge-config.json so a sensitive\nbump keeps its own PR and does not hold the batch from auto-merge.\nMajor bumps stay separate through update-types. Tests assert the\ngroup, the exclusion staying in sync, and that it is listed last\n(Dependabot assigns a dependency to the first group it matches).\n\nAddresses #1221\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfXAH6DL6sGA232qdv\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-08T13:16:29Z",
+          "tree_id": "608bc572c0e7548060f22b03ebf85d1d67b021ca",
+          "url": "https://github.com/endavis/pyproject-template/commit/9704cadf85f89cb5fbf59a0bf80d9ee3b511fa67"
+        },
+        "date": 1794143825908,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10552745.521297898,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0261214476483393e-8",
+            "extra": "mean: 94.7620690730926 nsec\nrounds: 108957"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10805083.641311638,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1636488064904542e-8",
+            "extra": "mean: 92.5490290678221 nsec\nrounds: 113046"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7119905.283146716,
+            "unit": "iter/sec",
+            "range": "stddev: 1.880058685096145e-8",
+            "extra": "mean: 140.45130661598347 nsec\nrounds: 73036"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2352919.6325250724,
+            "unit": "iter/sec",
+            "range": "stddev: 4.887646854374335e-8",
+            "extra": "mean: 425.00389141078927 nsec\nrounds: 193088"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 617849.0169992148,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5061434127803202e-7",
+            "extra": "mean: 1.618518396058678 usec\nrounds: 68232"
           }
         ]
       }
