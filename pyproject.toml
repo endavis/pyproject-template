@@ -49,15 +49,15 @@ dev = [
     "vulture>=2.11",
     "radon>=6.0",
     "pytest-benchmark>=5.3.1",
-    "mutmut>=3.8.0",
-    "hypothesis>=6.170.11",
+    "mutmut>=3.8.1",
+    "hypothesis>=6.170.14",
 ]
 security = [
     "pip-audit>=2.10.1",
     "bandit>=1.7",
     "pip>=26.2.2",
     "pip-licenses>=4.0",
-    "cyclonedx-bom>=7.5.0",
+    "cyclonedx-bom>=7.6.0",
 ]
 
 [project.urls]
