@@ -789,10 +789,10 @@ To reinstall the template-sync suite later, run:
         )
         print(f"      gh secret set TEST_PYPI_TOKEN --repo {self.config['repo_full']}")
         print()
+        print(f"  {Colors.YELLOW}[ ]{Colors.NC} Enable Codecov uploads (optional, uses OIDC):")
         print(
-            f"  {Colors.YELLOW}[ ]{Colors.NC} Add Codecov token to repository secrets (optional):"
+            f"      gh variable set CODECOV_ENABLED --body true --repo {self.config['repo_full']}"
         )
-        print(f"      gh secret set CODECOV_TOKEN --repo {self.config['repo_full']}")
         print()
         print(f"  {Colors.YELLOW}[ ]{Colors.NC} Review and adjust repository settings:")
         print(f"      https://github.com/{self.config['repo_full']}/settings")

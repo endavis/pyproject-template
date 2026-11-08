@@ -32,7 +32,7 @@ The script will:
 **Requirements:** [GitHub CLI](https://cli.github.com/) authenticated (`gh auth login`), Git, and
 Python 3.12+.
 
-**You add manually afterwards:** PyPI tokens, a Codecov token (optional), and collaborator access.
+**You add manually afterwards:** PyPI tokens, `CODECOV_ENABLED=true` for Codecov (optional), and collaborator access.
 
 📖 [New Project Setup](docs/template/new-project.md) has the detailed walkthrough.
 
