@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794054392015,
+  "lastUpdate": 1794141240299,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23718,6 +23718,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.0000010163564342873863",
             "extra": "mean: 1.9871977112072046 usec\nrounds: 63658"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ce8352957e313ddd0dc63e33b8b12a1266d91516",
+          "message": "fix: make the Codecov upload opt-in and authenticate with OIDC (merges PR #1219, addresses #1218)\n\nThe upload step ran on every project, failed without a CODECOV_TOKEN,\nand reported success because fail_ci_if_error is false. It now runs\nonly when the repository variable CODECOV_ENABLED is 'true', uses OIDC\n(id-token: write on the test job and on the jobs that call ci.yml)\ninstead of a token secret, and sets disable_search so only\ntmp/coverage.xml is uploaded. Docs and the setup checklist describe the\nopt-in in place of the token.\n\nAddresses #1218\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfXAH6DL6sGA232qdv\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-08T12:32:54Z",
+          "tree_id": "f6027609b6d32221a1940d1b910798f49dd55f15",
+          "url": "https://github.com/endavis/pyproject-template/commit/ce8352957e313ddd0dc63e33b8b12a1266d91516"
+        },
+        "date": 1794141239451,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12815952.73514874,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0584319837970934e-8",
+            "extra": "mean: 78.02775343088017 nsec\nrounds: 136408"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13553228.624113234,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0064974425827864e-8",
+            "extra": "mean: 73.78315733720078 nsec\nrounds: 140628"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8754273.964412075,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1349460440334024e-8",
+            "extra": "mean: 114.22991833077258 nsec\nrounds: 89630"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3159741.0893412805,
+            "unit": "iter/sec",
+            "range": "stddev: 3.8746695865402605e-8",
+            "extra": "mean: 316.48162672988906 nsec\nrounds: 194288"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 803962.1935002077,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0735315982420709e-7",
+            "extra": "mean: 1.2438395836081582 usec\nrounds: 84055"
           }
         ]
       }
