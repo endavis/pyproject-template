@@ -238,17 +238,56 @@ its members, so a grouped patch bump still qualifies.
 
 ## Stale PRs
 
-When `main` advances after a dependabot PR is opened, the PR ends up
-`BEHIND` and stops auto-merging. There is no fully-automated rebase path
-the workflow can use, so the unstick step is manual:
+The `main` ruleset requires branches to be up to date before merging
+(`required_status_checks` with `strict: true`). When `main` advances after
+a dependabot PR is opened, the PR falls behind and cannot merge until it is
+rebased.
+
+### Dependabot rebases on its own
+
+Normally nobody has to act. Dependabot rebases its open PRs and
+force-pushes as `main` moves. The `synchronize` event re-runs the Merge
+Gate and CI, and the auto-merge the workflow already enabled fires when
+checks go green. A weekly batch of dependabot PRs clears this way without
+anyone stepping in.
+
+This is observed behaviour, not configured: no workflow in this repository
+rebases dependabot PRs, and `.github/dependabot.yml` sets no
+`rebase-strategy`, so Dependabot's default (`auto`) applies. On 2026-11-02,
+PR #1160 got no rebase comment, yet the timeline
+(`gh api repos/{owner}/{repo}/issues/1160/timeline`) shows
+`dependabot[bot]` force-pushing it a few minutes after each other
+dependabot PR merged:
+
+| `main` merge | #1160 force-push (UTC) |
+|---|---|
+| 15:49 (#1164) | 15:51 |
+| 15:55 (#1162) | 15:58 |
+| 16:01 (#1163) | 16:04 |
+| 16:07 (#1161) | 16:12 |
+| 16:22 (#1159) | 16:24, then auto-merged at 16:28 |
+
+What triggers the rebase is unconfirmed. Those bumps all touch `uv.lock`,
+so each merge may have caused a real conflict, and `auto` rebases on
+conflict. Dependabot may also rebase a PR that is only behind while
+auto-merge is enabled. The timeline does not tell the two apart, so do not
+rely on a PR that is behind with no conflict being rebased.
+
+The cost is CI time: when each merge leaves the remaining PRs behind and
+each is rebased, every one of them runs CI again, so a batch of N PRs can
+cost up to N + (N-1) + … + 1 runs.
+
+### Fallback: request the rebase
+
+If a PR sits behind `main` and no `dependabot[bot]` force-push arrives,
+ask for one:
 
 ```bash
 gh pr comment <number> --body "@dependabot rebase"
 ```
 
-Dependabot rebases the branch and force-pushes. The `synchronize` event
-re-runs the Merge Gate and CI, and the already-enabled auto-merge fires
-when checks go green.
+Dependabot rebases the branch and force-pushes, and CI and auto-merge
+proceed as above.
 
 > [!IMPORTANT]
 > The comment **must be posted by a real user** (your `gh` CLI auth, or

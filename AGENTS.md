@@ -263,10 +263,11 @@ Dependabot PRs that pass CI are auto-merged by `.github/workflows/dependabot-aut
 the bot skips (major bumps, sensitive deps, `automerge-blocked`) is merged by hand.
 
 **Never** use the GitHub `update-branch` API or a local rebase to update a dependabot branch — both
-strip the verified commit signatures that branch protection requires. Use `@dependabot rebase`
-instead, posted from a real user account.
+strip the verified commit signatures that branch protection requires. Dependabot normally rebases
+its own PRs as `main` moves; when one stays behind, post `@dependabot rebase` from a real user
+account.
 
-The full procedure — requesting the rebase, confirming the force-push landed, merging — is in
+The full procedure — when Dependabot rebases on its own, requesting a rebase, confirming the force-push landed, merging — is in
 [Dependabot Auto-merge](docs/development/dependabot-automerge.md#stale-prs). Read it before
 merging a dependabot PR.
 
