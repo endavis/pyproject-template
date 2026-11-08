@@ -145,13 +145,13 @@ uv run pre-commit run --all-files
 
 ```bash
 # Create GitHub issue (interactive - opens $EDITOR with template)
-uv run doit issue --type=feature    # For new features
-uv run doit issue --type=bug        # For bugs and defects
+uv run doit issue --type=feat       # For new features
+uv run doit issue --type=fix        # For bugs and defects
 uv run doit issue --type=refactor   # For code refactoring
 
 # Create GitHub issue (non-interactive - for scripts/AI)
-uv run doit issue --type=feature --title="Add export" --body-file=issue.md
-uv run doit issue --type=feature --title="Add export" --body="## Problem\n..."
+uv run doit issue --type=feat --title="feat: add export" --body-file=issue.md
+uv run doit issue --type=feat --title="feat: add export" --body="## Problem\n..."
 
 # Create Pull Request (interactive - opens $EDITOR with template)
 uv run doit pr

@@ -671,7 +671,7 @@ def action_mark_synced(manager: SettingsManager, dry_run: bool, *, yes: bool = F
     print(f"{Colors.BOLD}Don't forget to commit the settings file:{Colors.NC}")
     print()
     print("  # 1. Create an issue")
-    print("  doit issue --type=chore --title='Sync template state'")
+    print("  doit issue --type=chore --title='chore: sync template state'")
     print()
     print("  # 2. Create branch, commit, and push")
     print("  git checkout -b chore/<issue#>-sync-template-state")

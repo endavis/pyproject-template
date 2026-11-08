@@ -304,7 +304,7 @@ BASH_CASES = [
         "doit pr",
     ),
     (
-        "doit issue --type=bug",
+        "doit issue --type=fix",
         "ALLOW",
         "doit issue",
     ),
