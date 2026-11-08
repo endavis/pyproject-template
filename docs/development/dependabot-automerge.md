@@ -250,14 +250,43 @@ that is roughly N + (N-1) + ... + 1 full CI runs.
   `sensitive_dependencies` in `.github/automerge-config.json`. Auto-merge
   refuses a whole PR if any dependency in it matches one, so without the
   exclusion one sensitive bump would hold the entire batch for manual review.
-  `tests/test_dependabot_config.py` fails when the two lists drift apart.
-- **Major bumps keep their own PRs**, because of `update-types`.
+  `tests/test_dependabot_config.py` fails when the two lists drift apart. The
+  uv `dev-dependencies` group carries the same `exclude-patterns`, because its
+  `types-*` pattern would otherwise catch e.g. `types-pyOpenSSL`.
+- **Major bumps keep their own PRs** from the catch-all, because of
+  `update-types`. Majors of `dev-dependencies` members (now including type
+  stubs and build requirements) go into that group's PR instead, and
+  auto-merge refuses a PR containing a major.
 - **Order matters.** Per GitHub's `dependabot.yml` documentation, a dependency
   matching more than one group goes into the first one listed, so the catch-all
   is last, after `dev-dependencies` (uv) and `codeql-action` (github-actions).
   A test asserts this.
 - **Trade-off:** one failing bump holds every update in its group until it is
   fixed or pinned (for example with an `ignore` entry in `dependabot.yml`).
+
+### Updates the catch-all cannot take
+
+dependabot-core's `SemverGroupingRules#allow_grouping?`
+(`updater/lib/dependabot/updater/semver_grouping_rules.rb`) runs only for a
+group with `update-types`, and returns `false` in two cases the catch-all hits
+(#1231):
+
+- **Only the fourth version component changed.** Type stubs version as
+  `<upstream>.<date>` (`types-pyyaml` `6.0.12.20260906` to `6.0.12.20261030`),
+  so major, minor and patch are all equal and the bump is never grouped.
+- **No locked version.** `[build-system] requires` entries such as `hatchling`
+  and `hatch-vcs` are not in `uv.lock`, so there is no current version to
+  classify against.
+
+A group without `update-types` skips that check. So the uv `dev-dependencies`
+group, which has none, also lists `types-*`, `hatchling` and `hatch-vcs`,
+rather than adding new groups that would each open another weekly PR.
+`tests/test_dependabot_config.py` asserts that `types-pyyaml` and every
+`[build-system] requires` entry land in it.
+
+Known residual: any other dependency whose bump changes only the fourth
+version component still arrives as its own PR. That is expected, not a
+regression.
 
 ## Stale PRs
 
