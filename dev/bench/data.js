@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794143826757,
+  "lastUpdate": 1794145233806,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23895,6 +23895,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.5061434127803202e-7",
             "extra": "mean: 1.618518396058678 usec\nrounds: 68232"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "eb3ef081987d9f558345dfa3e89e586a0addf92b",
+          "message": "feat: enforce conventional type prefix on issue titles in doit issue (merges PR #1230, addresses #1229)\n\ndoit issue now requires the title to be `<type>: <subject>` or\n`<type>(<scope>): <subject>`, where `<type>` equals `--type`. The check\ncovers --title and the prompted title, on both the local and --upstream\npaths, and runs before the editor opens or the issue is created.\n\nThe --type values now use the conventional-commit type names, matching PR\ntitles: `feat` replaces `feature` and `fix` replaces `bug`. The old names\nexit 1 with a rename message. Docs, the report-template-bug skill\nmirrors, and manage.py's template-sync issue title are updated.\n\nAddresses #1229\n\nBREAKING CHANGE: `doit issue --type=feature` and `--type=bug` are rejected;\nuse `--type=feat` and `--type=fix`. Issue titles must start with the\n`--type` value, e.g. `doit issue --type=feat --title=\"feat: add export\"`.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1seyDf6rA7V4o9XDYu9\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-08T13:39:52Z",
+          "tree_id": "1955d6d7ae244e3b0ab6850523ddfb1d927445f8",
+          "url": "https://github.com/endavis/pyproject-template/commit/eb3ef081987d9f558345dfa3e89e586a0addf92b"
+        },
+        "date": 1794145232600,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 17689679.17673499,
+            "unit": "iter/sec",
+            "range": "stddev: 9.580313309298709e-9",
+            "extra": "mean: 56.53013771528283 nsec\nrounds: 196928"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20245177.984873045,
+            "unit": "iter/sec",
+            "range": "stddev: 8.942251451102445e-9",
+            "extra": "mean: 49.3944780701453 nsec\nrounds: 197317"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12994852.76204476,
+            "unit": "iter/sec",
+            "range": "stddev: 7.583906347981288e-9",
+            "extra": "mean: 76.95354601637275 nsec\nrounds: 141243"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4273533.189632102,
+            "unit": "iter/sec",
+            "range": "stddev: 7.475342346507185e-8",
+            "extra": "mean: 233.998416679218 nsec\nrounds: 46573"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1076480.958045857,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1105052053401262e-7",
+            "extra": "mean: 928.9527998853845 nsec\nrounds: 110951"
           }
         ]
       }
