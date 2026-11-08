@@ -22,6 +22,7 @@ that the two actions are in fact pinned to the same SHA today.
 
 from __future__ import annotations
 
+import json
 import re
 from pathlib import Path
 from typing import Any
@@ -29,6 +30,9 @@ from typing import Any
 import yaml
 
 CONFIG_PATH = Path(__file__).parent.parent / ".github" / "dependabot.yml"
+
+AUTOMERGE_CONFIG_PATH = Path(__file__).parent.parent / ".github" / "automerge-config.json"
+CATCH_ALL_GROUP = "minor-and-patch"
 
 # The two halves of the CodeQL action that must always bump together.
 CODEQL_SUBACTIONS = ("github/codeql-action/init", "github/codeql-action/analyze")
@@ -140,3 +144,54 @@ class TestCodeqlActionGroup:
                 f"dependabot group {name!r} matches {matched[0]} but not the "
                 "other codeql-action sub-action; the pair must bump together (#799)"
             )
+
+
+def _ecosystem_block(ecosystem: str) -> dict[str, Any]:
+    """Return the ``updates`` entry for a package ecosystem."""
+    updates: list[dict[str, Any]] = _load_config()["updates"]
+    return next(u for u in updates if u.get("package-ecosystem") == ecosystem)
+
+
+class TestCatchAllGroup:
+    """The minor/patch catch-all group that batches weekly updates (issue #1221)."""
+
+    ECOSYSTEMS = ("uv", "github-actions")
+
+    def test_each_ecosystem_has_catch_all(self) -> None:
+        """Each ecosystem batches minor and patch bumps into one group."""
+        for eco in self.ECOSYSTEMS:
+            spec = _ecosystem_block(eco)["groups"][CATCH_ALL_GROUP]
+            assert spec["patterns"] == ["*"], eco
+            assert spec["update-types"] == ["minor", "patch"], eco
+
+    def test_catch_all_excludes_exactly_the_sensitive_dependencies(self) -> None:
+        """exclude-patterns must equal ``sensitive_dependencies`` (no drift)."""
+        sensitive: list[str] = json.loads(AUTOMERGE_CONFIG_PATH.read_text(encoding="utf-8"))[
+            "sensitive_dependencies"
+        ]
+        assert sensitive
+        for eco in self.ECOSYSTEMS:
+            spec = _ecosystem_block(eco)["groups"][CATCH_ALL_GROUP]
+            assert spec["exclude-patterns"] == sensitive, (
+                f"{eco}: exclude-patterns drifted from sensitive_dependencies in "
+                "automerge-config.json; a sensitive bump would hold the whole batch"
+            )
+
+    def test_catch_all_is_last_group(self) -> None:
+        """A dependency matching several groups goes to the first listed.
+
+        So the catch-all must come after the specific groups, or it swallows them.
+        """
+        for eco in self.ECOSYSTEMS:
+            names = list(_ecosystem_block(eco)["groups"])
+            assert names[-1] == CATCH_ALL_GROUP, f"{eco}: catch-all must be last, got {names}"
+
+    def test_codeql_precedes_catch_all(self) -> None:
+        """``codeql-action`` is listed before the catch-all so the pair bumps together."""
+        names = list(_github_actions_block()["groups"])
+        assert names.index("codeql-action") < names.index(CATCH_ALL_GROUP)
+
+    def test_uv_dev_dependencies_precede_catch_all(self) -> None:
+        """``dev-dependencies`` keeps its members ahead of the catch-all."""
+        names = list(_ecosystem_block("uv")["groups"])
+        assert names.index("dev-dependencies") < names.index(CATCH_ALL_GROUP)

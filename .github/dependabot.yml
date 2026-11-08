@@ -27,6 +27,26 @@ updates:
           - "ruff"
           - "mypy"
           - "coverage"
+      # Catch-all: one PR per weekly batch of minor/patch bumps instead of one per
+      # dependency. Under the `strict` ruleset every merge makes the other open
+      # PRs rebase and re-run CI (issue #1221). Must stay LAST: a dependency
+      # matching several groups goes to the first one listed. exclude-patterns
+      # must equal `sensitive_dependencies` in .github/automerge-config.json
+      # (tests/test_dependabot_config.py asserts it), or one sensitive bump would
+      # hold the whole batch from auto-merge.
+      minor-and-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "crypt*"
+          - "*ssl*"
+          - "*security*"
+          - "auth*"
+          - "*jwt*"
+          - "*oauth*"
+        update-types:
+          - "minor"
+          - "patch"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -52,3 +72,17 @@ updates:
       codeql-action:
         patterns:
           - "github/codeql-action*"
+      # Catch-all, last on purpose; see the uv ecosystem above and issue #1221.
+      minor-and-patch:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "crypt*"
+          - "*ssl*"
+          - "*security*"
+          - "auth*"
+          - "*jwt*"
+          - "*oauth*"
+        update-types:
+          - "minor"
+          - "patch"
