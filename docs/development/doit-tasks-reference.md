@@ -643,19 +643,24 @@ Create a GitHub issue from a template.
 
 ```bash
 # Interactive mode (opens $EDITOR)
-doit issue --type=feature
+doit issue --type=feat
 
 # Non-interactive mode (for scripts/AI)
-doit issue --type=feature --title="Add feature" --body="## Problem\n..."
-doit issue --type=bug --title="Fix bug" --body-file=issue.md
+doit issue --type=feat --title="feat: add feature" --body="## Problem\n..."
+doit issue --type=fix --title="fix: fix bug" --body-file=issue.md
 ```
 
 **Issue types:**
-- `feature` - New feature request
-- `bug` - Bug report
+- `feat` - New feature request
+- `fix` - Bug report
 - `refactor` - Code refactoring
 - `docs` - Documentation improvement
 - `chore` - Maintenance task
+
+The title must be `<type>: <subject>` or `<type>(<scope>): <subject>`, where `<type>` is the
+`--type` value; otherwise the task exits 1 before opening the editor or calling `gh`. The same
+check applies to `--upstream`. The old names `--type=feature` and `--type=bug` are rejected with a
+message naming the replacement (`feat`, `fix`).
 
 **Options:**
 - `--type` (required): Issue type

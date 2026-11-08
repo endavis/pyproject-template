@@ -870,16 +870,19 @@ Every code change must be linked to a GitHub Issue. This ensures:
 **Create issue using doit (recommended):**
 ```bash
 # Interactive: Opens $EDITOR with template
-doit issue --type=feature    # For new features
-doit issue --type=bug        # For bugs and defects
+doit issue --type=feat       # For new features
+doit issue --type=fix        # For bugs and defects
 doit issue --type=refactor   # For code refactoring
 doit issue --type=docs       # For documentation
 doit issue --type=chore      # For maintenance tasks
 
 # Non-interactive: For AI agents or scripts
-doit issue --type=feature --title="Add export" --body-file=issue.md
-doit issue --type=docs --title="Add guide" --body="## Description\n..."
+doit issue --type=feat --title="feat: add export" --body-file=issue.md
+doit issue --type=docs --title="docs: add guide" --body="## Description\n..."
 ```
+
+The title must be `<type>: <subject>` or `<type>(<scope>): <subject>`, with the same `<type>` as
+`--type`. The old `--type=feature` and `--type=bug` are rejected; use `feat` and `fix`.
 
 **Or use gh CLI directly:**
 ```bash
@@ -887,8 +890,8 @@ gh issue create --title "<description>" --label "enhancement" --body "..."
 ```
 
 **Issue types auto-apply labels:**
-- `feature` → `enhancement, needs-triage`
-- `bug` → `bug, needs-triage`
+- `feat` → `enhancement, needs-triage`
+- `fix` → `bug, needs-triage`
 - `refactor` → `refactor, needs-triage`
 - `docs` → `documentation, needs-triage`
 - `chore` → `chore, needs-triage`

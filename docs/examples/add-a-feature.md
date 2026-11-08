@@ -40,7 +40,7 @@ Every change starts with a GitHub issue. Use the `doit issue` task to create
 one with the correct labels and template sections:
 
 ```bash
-doit issue --type=feature --title="feat: add farewell command" \
+doit issue --type=feat --title="feat: add farewell command" \
   --body="## Problem
 Users can greet but cannot say goodbye.
 
