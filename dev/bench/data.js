@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794141240299,
+  "lastUpdate": 1794143259489,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23777,6 +23777,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.0735315982420709e-7",
             "extra": "mean: 1.2438395836081582 usec\nrounds: 84055"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "257d8ee7250575d5773b744db43bce08b0eaf0a7",
+          "message": "docs: say Dependabot rebases its own PRs; manual rebase is the fallback (merges PR #1222, addresses #1220)\n\nThe Stale PRs section said there was no automated rebase path and gave\nthe @dependabot rebase comment as the routine step. PR #1160's timeline\nshows Dependabot force-pushing it after each other merge with no comment.\nThe section now describes that self-rebase, cites the timeline, says the\ntrigger (conflict vs behind) is unconfirmed, and keeps the comment as a\nfallback. AGENTS.md's Dependabot PRs pointer is updated to match.\n\nAddresses #1220\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfXAH6DL6sGA232qdv\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-08T13:06:55Z",
+          "tree_id": "b7b24c6fe89765de566b2395022eb901854f4e6b",
+          "url": "https://github.com/endavis/pyproject-template/commit/257d8ee7250575d5773b744db43bce08b0eaf0a7"
+        },
+        "date": 1794143258582,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12980531.03205682,
+            "unit": "iter/sec",
+            "range": "stddev: 7.642312959301328e-9",
+            "extra": "mean: 77.03845070208547 nsec\nrounds: 135300"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13704946.7950752,
+            "unit": "iter/sec",
+            "range": "stddev: 8.609866450891694e-9",
+            "extra": "mean: 72.9663540437344 nsec\nrounds: 142248"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8793865.831912216,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0107277544444869e-8",
+            "extra": "mean: 113.71563077197314 nsec\nrounds: 92799"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3145578.441330727,
+            "unit": "iter/sec",
+            "range": "stddev: 3.830081130512102e-8",
+            "extra": "mean: 317.90655316703953 nsec\nrounds: 193163"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 805920.3972932211,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2614482289274426e-7",
+            "extra": "mean: 1.2408173355068544 usec\nrounds: 84624"
           }
         ]
       }
