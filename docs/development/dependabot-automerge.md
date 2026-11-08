@@ -236,6 +236,29 @@ Grouping does not change auto-merge eligibility: `github/codeql-action` is not
 in `sensitive_dependencies`, and the group's `update-type` is the highest of
 its members, so a grouped patch bump still qualifies.
 
+### Minor and patch catch-all
+
+Each ecosystem also has a last group, `minor-and-patch`, matching `*` with
+`update-types: ["minor", "patch"]`, so a weekly batch arrives as one PR rather
+than one per dependency. The reason is rebase churn: the `main` ruleset's
+`strict` setting makes every merge leave the other open PRs behind, and
+Dependabot rebases and re-runs CI on all of them (see
+[Dependabot rebases on its own](#dependabot-rebases-on-its-own)). With N PRs
+that is roughly N + (N-1) + ... + 1 full CI runs.
+
+- **Sensitive dependencies stay out.** The group's `exclude-patterns` equals
+  `sensitive_dependencies` in `.github/automerge-config.json`. Auto-merge
+  refuses a whole PR if any dependency in it matches one, so without the
+  exclusion one sensitive bump would hold the entire batch for manual review.
+  `tests/test_dependabot_config.py` fails when the two lists drift apart.
+- **Major bumps keep their own PRs**, because of `update-types`.
+- **Order matters.** Per GitHub's `dependabot.yml` documentation, a dependency
+  matching more than one group goes into the first one listed, so the catch-all
+  is last, after `dev-dependencies` (uv) and `codeql-action` (github-actions).
+  A test asserts this.
+- **Trade-off:** one failing bump holds every update in its group until it is
+  fixed or pinned (for example with an `ignore` entry in `dependabot.yml`).
+
 ## Stale PRs
 
 The `main` ruleset requires branches to be up to date before merging
