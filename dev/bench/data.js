@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794145233806,
+  "lastUpdate": 1794146108610,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -23954,6 +23954,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.1105052053401262e-7",
             "extra": "mean: 928.9527998853845 nsec\nrounds: 110951"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0089066922a5249391ad33dd0a949432f4b5daf3",
+          "message": "chore: group type stubs and build requirements into dev-dependencies (merges PR #1232, addresses #1231)\n\nDependabot's update-types check (SemverGroupingRules#allow_grouping? in\ndependabot-core) refuses to group a bump that changes only the fourth\nversion component (types-pyyaml) or that has no locked version (hatchling,\na [build-system] requires entry not in uv.lock). Both arrived as single\nPRs outside the minor-and-patch catch-all.\n\nThe uv dev-dependencies group has no update-types, so it now also takes\ntypes-*, hatchling and hatch-vcs. That adds no new weekly PR. The group\ngains exclude-patterns equal to sensitive_dependencies, since types-*\nwould otherwise catch stubs such as types-pyOpenSSL. The parity test now\ncovers every group in an explicit list. New tests check that types-pyyaml\nand each build-system requirement land in the group. The docs explain\nthe two cases and the remaining fourth-component case.\n\nAddresses #1231\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1seyDf6rA7V4o9XDYu9\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-08T13:54:27Z",
+          "tree_id": "2b533cf82adc4b33571eaca1d27188be4745ffb8",
+          "url": "https://github.com/endavis/pyproject-template/commit/0089066922a5249391ad33dd0a949432f4b5daf3"
+        },
+        "date": 1794146107433,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19325628.82793207,
+            "unit": "iter/sec",
+            "range": "stddev: 5.943592782800805e-9",
+            "extra": "mean: 51.744758677899355 nsec\nrounds: 197317"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20414208.6033335,
+            "unit": "iter/sec",
+            "range": "stddev: 5.672309953093694e-9",
+            "extra": "mean: 48.98548944173651 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13246939.467274839,
+            "unit": "iter/sec",
+            "range": "stddev: 6.269049949338315e-9",
+            "extra": "mean: 75.48913486548301 nsec\nrounds: 132962"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4560372.47005423,
+            "unit": "iter/sec",
+            "range": "stddev: 3.389378824933465e-8",
+            "extra": "mean: 219.2803343513098 nsec\nrounds: 47166"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1127798.8085770041,
+            "unit": "iter/sec",
+            "range": "stddev: 6.995056033215091e-8",
+            "extra": "mean: 886.6829725256993 nsec\nrounds: 117745"
           }
         ]
       }
