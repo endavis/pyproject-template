@@ -4,6 +4,7 @@ import os
 import re
 import subprocess  # nosec B404  # subprocess is required for doit tasks
 import sys
+import tomllib
 from fnmatch import fnmatch
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -40,6 +41,11 @@ _REBUILDABLE_IGNORED = (
     ".pre-commit",  # PRE_COMMIT_HOME, set by .envrc under tmp/
     "mutants",  # mutmut's copy of the project, made again by the next run
 )
+
+# Names a project may not add as rebuildable: deleting them loses local env
+# files or notes for good (#863). A name matching any of these by `fnmatch` is
+# rejected, which also catches broad patterns such as `*` and `t*` (#1238).
+_PROTECTED_NAMES = ("tmp", "agents", "checkpoints", ".envrc.local")
 
 # Where Linux lists the mounts of this process. A module constant so tests can
 # point it at a fake file (#1212).
@@ -165,11 +171,56 @@ def worktree_for_branch(branch: str) -> Path | None:
     return None
 
 
-def _worktree_leftovers(worktree: Path) -> list[str]:
+def _project_rebuildable(pyproject: Path) -> tuple[str, ...]:
+    """Return the extra rebuildable names *pyproject* lists, or ``()`` when it lists none.
+
+    Read from ``[tool.pyproject-template.worktree].rebuildable`` (#1238). A missing
+    file, table or key means ``()``.
+
+    Raises:
+        ValueError: The file is not valid TOML, or the setting is not a list of
+            acceptable names. The message names the file and the key.
+    """
+    key = "[tool.pyproject-template.worktree].rebuildable"
+    try:
+        with pyproject.open("rb") as fh:
+            data = tomllib.load(fh)
+    except FileNotFoundError:
+        return ()
+    except (tomllib.TOMLDecodeError, OSError) as exc:
+        raise ValueError(f"could not read {pyproject}: {exc}") from exc
+
+    table: Any = data.get("tool", {})
+    for part in ("pyproject-template", "worktree"):
+        if not isinstance(table, dict):
+            raise ValueError(f"{pyproject}: {key}: the parent of '{part}' is not a table")
+        table = table.get(part, {})
+    if not isinstance(table, dict):
+        raise ValueError(f"{pyproject}: [tool.pyproject-template.worktree] is not a table")
+    if "rebuildable" not in table:
+        return ()
+    names = table["rebuildable"]
+    if not isinstance(names, list):
+        raise ValueError(f"{pyproject}: {key} must be a list of names")
+    for name in names:
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"{pyproject}: {key}: {name!r} is not a non-empty string")
+        if "/" in name or "\\" in name or name in (".", ".."):
+            raise ValueError(f"{pyproject}: {key}: {name!r} must be one name, not a path")
+        if any(fnmatch(protected, name) for protected in _PROTECTED_NAMES):
+            raise ValueError(
+                f"{pyproject}: {key}: {name!r} would match a name that holds files "
+                f"that cannot be rebuilt ({', '.join(_PROTECTED_NAMES)})"
+            )
+    return tuple(names)
+
+
+def _worktree_leftovers(worktree: Path, extra: tuple[str, ...] = ()) -> list[str]:
     """Return the ``git status`` lines for files that removing *worktree* would affect.
 
     ``git worktree remove`` refuses modified and untracked files, and deletes
-    ignored ones. So every line counts, except ignored files that can be rebuilt.
+    ignored ones. So every line counts, except ignored files that can be rebuilt,
+    which includes the project's *extra* names.
     """
     status = subprocess.run(
         ["git", "-C", str(worktree), "status", "--porcelain", "--ignored"],
@@ -180,12 +231,12 @@ def _worktree_leftovers(worktree: Path) -> list[str]:
     leftovers = []
     for line in status.stdout.splitlines():
         entry = line[3:]
-        if line.startswith("!! ") and _is_rebuildable(PurePosixPath(entry.rstrip("/")).name):
+        if line.startswith("!! ") and _is_rebuildable(PurePosixPath(entry.rstrip("/")).name, extra):
             continue
         if line.startswith("!! ") and entry.endswith("/"):
             # git collapses an ignored directory into one entry, so judge it by
             # what it holds: `tmp/agents/` with only `__pycache__` loses nothing (#1112).
-            leftovers += [f"!! {path}" for path in _unrebuildable_files(worktree, entry)]
+            leftovers += [f"!! {path}" for path in _unrebuildable_files(worktree, entry, extra)]
             continue
         leftovers.append(line)
     return leftovers
@@ -247,12 +298,15 @@ def _walk_for_mounts(resolved: Path) -> list[str]:
     return sorted(found)
 
 
-def _is_rebuildable(name: str) -> bool:
-    """Whether a file or directory called *name* is one the tooling can rebuild."""
-    return any(fnmatch(name, p) for p in _REBUILDABLE_IGNORED)
+def _is_rebuildable(name: str, extra: tuple[str, ...] = ()) -> bool:
+    """Whether a file or directory called *name* is one the tooling can rebuild.
+
+    *extra* adds the project's own names to the built-in ones.
+    """
+    return any(fnmatch(name, p) for p in (*_REBUILDABLE_IGNORED, *extra))
 
 
-def _unrebuildable_files(worktree: Path, directory: str) -> list[str]:
+def _unrebuildable_files(worktree: Path, directory: str, extra: tuple[str, ...] = ()) -> list[str]:
     """Return the files under ignored *directory* that are not rebuildable, worktree-relative.
 
     A rebuildable directory is not descended into, so nothing under it counts.
@@ -262,8 +316,8 @@ def _unrebuildable_files(worktree: Path, directory: str) -> list[str]:
         relative = PurePosixPath(Path(root).relative_to(worktree).as_posix())
         # os.walk does not follow a symlinked directory; list it rather than skip it.
         links = [d for d in dirs if (Path(root) / d).is_symlink()]
-        found += [str(relative / n) for n in files + links if not _is_rebuildable(n)]
-        dirs[:] = [d for d in dirs if d not in links and not _is_rebuildable(d)]
+        found += [str(relative / n) for n in files + links if not _is_rebuildable(n, extra)]
+        dirs[:] = [d for d in dirs if d not in links and not _is_rebuildable(d, extra)]
     return sorted(found)
 
 
@@ -287,6 +341,20 @@ def _remove_empty_parents(worktree: Path, stop: Path) -> None:
             parent.rmdir()
         except OSError:  # not empty: another worktree is still there
             return
+
+
+def _print_manual_removal(
+    root: Path, worktree: Path, branch: str, merged_head: str, console: Console
+) -> None:
+    """Print the commands that remove *worktree* and *branch* by hand."""
+    tip = _branch_tip(branch)
+    console.print("[bold]To remove it, from the main checkout:[/bold]")
+    console.print(verbatim(f"  cd {root}"), soft_wrap=True)
+    console.print(verbatim(f"  git worktree remove {worktree}"), soft_wrap=True)
+    if tip and tip == merged_head:
+        console.print(verbatim(f"  git branch -D {branch}"), soft_wrap=True)
+    elif tip:
+        _warn_branch_moved(branch, tip, merged_head, console)
 
 
 def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, console: Console) -> None:
@@ -319,7 +387,13 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
 
     tip = _branch_tip(branch)
     inside = Path.cwd().resolve().is_relative_to(worktree.resolve())
-    leftovers = _worktree_leftovers(worktree)
+    try:
+        extra = _project_rebuildable(root / "pyproject.toml")
+    except ValueError as exc:
+        console.print(verbatim(f"Left {worktree} in place. {exc}", "yellow"), soft_wrap=True)
+        _print_manual_removal(root, worktree, branch, merged_head, console)
+        return
+    leftovers = _worktree_leftovers(worktree, extra)
     mounts = _worktree_mounts(worktree)
     if inside or leftovers or mounts:
         if inside:
@@ -349,13 +423,7 @@ def remove_merged_worktree(worktree: Path, branch: str, merged_head: str, consol
             )
             for mount in mounts:
                 console.print(verbatim(f"  {mount}"), soft_wrap=True)
-        console.print("[bold]To remove it, from the main checkout:[/bold]")
-        console.print(verbatim(f"  cd {root}"), soft_wrap=True)
-        console.print(verbatim(f"  git worktree remove {worktree}"), soft_wrap=True)
-        if tip and tip == merged_head:
-            console.print(verbatim(f"  git branch -D {branch}"), soft_wrap=True)
-        elif tip:
-            _warn_branch_moved(branch, tip, merged_head, console)
+        _print_manual_removal(root, worktree, branch, merged_head, console)
         return
 
     try:

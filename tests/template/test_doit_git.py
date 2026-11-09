@@ -26,7 +26,9 @@ import yaml
 from rich.console import Console
 
 from tools.doit.git import (
+    _is_rebuildable,
     _main_checkout,
+    _project_rebuildable,
     _worktree_mounts,
     remove_merged_worktree,
     task_bump,
@@ -758,6 +760,139 @@ class TestRemoveMergedWorktree:
 
         assert path.is_dir()
         assert f"{self.BRANCH} is checked out in {path}, which" in out
+
+
+SETTING = '[tool.pyproject-template.worktree]\nrebuildable = ["app_home"]\n'
+
+
+def _app_home_file(worktree: Path) -> Path:
+    """Create an ignored `tmp/app_home/data/logs/app.log` in *worktree*."""
+    log = worktree / "tmp" / "app_home" / "data" / "logs" / "app.log"
+    log.parent.mkdir(parents=True)
+    log.write_text("log\n", encoding="utf-8")
+    return log
+
+
+class TestProjectRebuildable:
+    """`_project_rebuildable` reads a project's extra rebuildable names (#1238)."""
+
+    @staticmethod
+    def _read(tmp_path: Path, text: str | None) -> tuple[str, ...]:
+        pyproject = tmp_path / "pyproject.toml"
+        if text is not None:
+            pyproject.write_text(text, encoding="utf-8")
+        return _project_rebuildable(pyproject)
+
+    @pytest.mark.parametrize(
+        "text",
+        [None, "", "[tool.other]\nx = 1\n", "[tool.pyproject-template.worktree]\n"],
+    )
+    def test_absent_setting_is_empty(self, tmp_path: Path, text: str | None) -> None:
+        assert self._read(tmp_path, text) == ()
+
+    def test_valid_list_is_returned(self, tmp_path: Path) -> None:
+        text = '[tool.pyproject-template.worktree]\nrebuildable = ["app_home", "*_data"]\n'
+        assert self._read(tmp_path, text) == ("app_home", "*_data")
+
+    @pytest.mark.parametrize(
+        "text",
+        [
+            "not = [toml",
+            "[tool]\npyproject-template = 1\n",
+            "[tool.pyproject-template]\nworktree = 1\n",
+            '[tool.pyproject-template.worktree]\nrebuildable = "app_home"\n',
+            "[tool.pyproject-template.worktree]\nrebuildable = [1]\n",
+            '[tool.pyproject-template.worktree]\nrebuildable = [""]\n',
+            '[tool.pyproject-template.worktree]\nrebuildable = ["tmp/app_home"]\n',
+            '[tool.pyproject-template.worktree]\nrebuildable = [".."]\n',
+            *(
+                f'[tool.pyproject-template.worktree]\nrebuildable = ["{n}"]\n'
+                for n in ("tmp", "*", "t*", ".envrc*", "agents")
+            ),
+        ],
+    )
+    def test_malformed_or_over_broad_raises(self, tmp_path: Path, text: str) -> None:
+        with pytest.raises(ValueError, match=r"pyproject\.toml"):
+            self._read(tmp_path, text)
+
+    def test_error_names_the_key(self, tmp_path: Path) -> None:
+        text = '[tool.pyproject-template.worktree]\nrebuildable = "x"\n'
+        with pytest.raises(ValueError, match=r"rebuildable"):
+            self._read(tmp_path, text)
+
+    def test_is_rebuildable_with_and_without_extra(self) -> None:
+        assert not _is_rebuildable("app_home")
+        assert _is_rebuildable("app_home", ("app_home",))
+        assert _is_rebuildable(".venv", ("app_home",))
+
+
+class TestRemoveMergedWorktreeProjectNames:
+    """`remove_merged_worktree` honors the main checkout's rebuildable names (#1238)."""
+
+    BRANCH = "feat/1-add-export"
+
+    @staticmethod
+    def _remove(path: Path, branch: str, merged_head: str) -> str:
+        output = io.StringIO()
+        remove_merged_worktree(path, branch, merged_head, Console(file=output, width=200))
+        return output.getvalue()
+
+    def test_without_the_setting_the_worktree_is_kept(self, main_checkout: Path) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        _app_home_file(path)
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.exists()
+        assert "!! tmp/app_home/data/logs/app.log" in out
+
+    def test_with_the_setting_the_worktree_is_removed(self, main_checkout: Path) -> None:
+        (main_checkout / "pyproject.toml").write_text(SETTING, encoding="utf-8")
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        _app_home_file(path)
+
+        self._remove(path, self.BRANCH, head)
+
+        assert not path.exists()
+        assert not _has_branch(main_checkout, self.BRANCH)
+
+    def test_other_files_still_keep_it(self, main_checkout: Path) -> None:
+        (main_checkout / "pyproject.toml").write_text(SETTING, encoding="utf-8")
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        _app_home_file(path)
+        (path / "tmp" / "notes.md").write_text("n\n", encoding="utf-8")
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.exists()
+        assert "!! tmp/notes.md" in out
+        assert "app.log" not in out
+
+    def test_setting_only_in_the_worktree_is_ignored(self, main_checkout: Path) -> None:
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+        (path / "pyproject.toml").write_text(SETTING, encoding="utf-8")
+        _app_home_file(path)
+
+        self._remove(path, self.BRANCH, head)
+
+        assert path.exists()
+
+    def test_malformed_setting_keeps_the_worktree_and_prints_commands(
+        self, main_checkout: Path
+    ) -> None:
+        (main_checkout / "pyproject.toml").write_text(
+            '[tool.pyproject-template.worktree]\nrebuildable = ["*"]\n', encoding="utf-8"
+        )
+        path, head = _add_worktree(main_checkout, self.BRANCH)
+
+        out = self._remove(path, self.BRANCH, head)
+
+        assert path.exists()
+        assert _has_branch(main_checkout, self.BRANCH)
+        lines = out.splitlines()
+        assert "rebuildable" in out
+        assert f"  git worktree remove {path}" in lines
+        assert f"  git branch -D {self.BRANCH}" in lines
 
 
 class TestWorktreeMounts:

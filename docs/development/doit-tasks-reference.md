@@ -790,6 +790,28 @@ Run from inside the worktree, the task merges but cannot remove the directory it
 prints the commands that do. A worktree outside `worktrees/`, such as one Claude Code made in
 `.claude/worktrees/`, is left in place with its branch.
 
+### Project rebuildable names
+
+A project can name more ignored files that a run rebuilds, such as an app home under `tmp/`, so they
+do not keep the worktree. List them in the **main checkout's** `pyproject.toml`; the worktree's copy
+is not read:
+
+```toml
+[tool.pyproject-template.worktree]
+rebuildable = ["app_home", "*_data"]
+```
+
+- Names match like the built-in ones: `fnmatch` on the last part of each path. They add to the
+  built-ins and cannot remove any. The mount check is unchanged.
+- A name is rejected when it is not a non-empty string, contains `/` or `\`, is `.` or `..`, or
+  matches `tmp`, `agents`, `checkpoints` or `.envrc.local`. So `tmp`, `*`, `t*` and `.envrc*` are
+  refused: deleting what they match would lose local env files or notes.
+- A malformed setting (bad TOML, a non-table, a non-list, a rejected name) keeps the worktree. The
+  task prints the error and the commands that remove it by hand.
+- No file, table or key leaves the built-in names alone.
+
+See [ADR-9031](../decisions/9031-a-project-adds-rebuildable-names-for-worktree-removal-in-pyprojecttoml.md) for why the setting lives under `[tool.pyproject-template]`.
+
 **Options:**
 - `--pr`: PR number to merge (defaults to PR for current branch)
 - `--delete-branch`: Delete the source branch after merge (default: `true`)
