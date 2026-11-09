@@ -159,7 +159,9 @@ write to a protected file. A body with an `mv` or `cp` line followed, on a later
 span holding a `|` (a PR body with a migration step and a markdown table cell, say) is read as that
 `mv`/`cp` writing to the backtick word, and a backtick makes the target a wildcard that matches every
 protected file. Quoting the delimiter (`<<'EOF'`) does not help: the scan sees the body either way.
-This is an accepted false positive under ADR-9019, rules 1 and 3, and was closed as such (#1234).
+This is an accepted false positive under
+[ADR-9019](../../decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md),
+rules 1 and 3, and was closed as such (#1234).
 Write the file with the agent's file-edit tool, or pass `--body-file=<path>`, instead of a heredoc:
 
 ```bash
