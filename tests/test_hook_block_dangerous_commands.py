@@ -3207,3 +3207,43 @@ def test_all_substitution_payloads_gives_up_past_the_limit(hook: types.ModuleTyp
     is_dangerous, reason = hook.check_command(command)
     assert is_dangerous
     assert "too deeply" in reason
+
+
+_HEREDOC_BODY_MV_PIPE = [
+    'cat > tmp/b.md <<\'EOF\'\nmv "$X/a" "$X/b"\n`a | b`\nEOF',
+    "cat > tmp/b.md <<'EOF'\nmv data/a data/b\n`a | b`\nEOF",
+    'cat > tmp/b.md <<\'EOF\'\ncp "$X/a" "$X/b"\n`a | b`\nEOF',
+    "cat > tmp/b.md <<'EOF'\necho hi > \"$X/b\"\n`a | b`\nEOF",
+    'cat > tmp/b.md <<EOF\nmv "$X/a" "$X/b"\n`a | b`\nEOF',
+    'cat > tmp/b.md <<\'EOF\'\nmv "$X/a" "$X/b"\na | b\nEOF',
+    'cat > tmp/b.md <<\'EOF\'\nmv "$X/a" "$X/b"\n`a b`\nEOF',
+    'cat > tmp/b.md <<\'EOF\'\na | b\nmv "$X/a" "$X/b"\nEOF',
+]
+
+
+@pytest.mark.parametrize("command", _HEREDOC_BODY_MV_PIPE)
+def test_heredoc_body_mv_with_backtick_pipe_is_data(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    """A heredoc body's mv/cp line is data, not a write to a protected file (#1234)."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    is_dangerous, reason = hook.check_command(command)
+    assert not is_dangerous, reason
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        "echo 'export ALLOW_AI_READY_TO_MERGE=1' >> ~/.bashrc",
+        "bash <<'EOF'\nmv x ~/.bashrc\nEOF",
+        "cat > tmp/b.md <<EOF\n$(cp x ~/.bashrc)\nEOF",
+        "cat > tmp/b.md <<EOF\n`cp x ~/.bashrc`\nEOF",
+    ],
+)
+def test_protected_file_writes_still_blocked_near_heredocs(
+    hook: types.ModuleType, monkeypatch: pytest.MonkeyPatch, command: str
+) -> None:
+    """Executed heredocs and unquoted substitutions that write a protected file block (#1234)."""
+    monkeypatch.setattr(hook, "get_current_branch", lambda: "feature/test")
+    is_dangerous, _ = hook.check_command(command)
+    assert is_dangerous

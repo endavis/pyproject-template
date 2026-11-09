@@ -3939,6 +3939,9 @@ def check_command(command: str, _depth: int = 0, _expanded: bool = False) -> tup
     # pass, so the exact pass only adds coverage (#1117).
     # An unquoted newline ends a command, but the tokens drop it: write it as
     # `;` first so a write command's operands end at the line (#1131).
+    # The first pass reads the heredoc-stripped command too, so a body's text
+    # is not tokenized as a command; an executed heredoc body is re-checked
+    # below by `_heredoc_payloads` (#1234).
     lined = _newlines_as_separators(stripped)
     exact_tokens = _exact_operator_tokens(lined)
     # A patch file is read only for the top-level command, and not when the
@@ -3951,7 +3954,7 @@ def check_command(command: str, _depth: int = 0, _expanded: bool = False) -> tup
     literal_redirects = _has_quoted_redirect_word(stripped)
     passes: list[tuple[list[str], bool, bool, bool]] = [
         (
-            tokenize(_newlines_as_separators(command)),
+            tokenize(lined),
             True,
             False,
             exact_tokens is not None,
