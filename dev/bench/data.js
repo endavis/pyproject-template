@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794226150178,
+  "lastUpdate": 1794228129529,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24072,6 +24072,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.33432167978398e-7",
             "extra": "mean: 1.6484274982886107 usec\nrounds: 65695"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "88f3a28ea9c6b60b26a89543b67ed9a9a1fd07c7",
+          "message": "feat: let a project add rebuildable names for doit pr_merge's worktree removal (merges PR #1239, addresses #1238)\n\ndoit pr_merge now reads [tool.pyproject-template.worktree].rebuildable from\nthe main checkout's pyproject.toml and adds those names to the built-in\nrebuildable set, matched the same way (fnmatch on the last path component).\nNames can only be added. Over-broad names (tmp, agents, checkpoints,\n.envrc.local or any glob matching them, paths, . and ..) are rejected, and a\nmalformed setting keeps the worktree and prints the error and the manual\nremoval commands. The mount check is unchanged.\n\nADR-9031 records the namespace choice: [tool.doit] belongs to pydoit, so\ntemplate tooling settings live under [tool.pyproject-template.<area>].\n\nAddresses #1238\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sdUSFZc8j27Aa4BeSJ\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-09T12:41:31Z",
+          "tree_id": "f1f8dce63c41cf285cc6f791cd8264f945c895d7",
+          "url": "https://github.com/endavis/pyproject-template/commit/88f3a28ea9c6b60b26a89543b67ed9a9a1fd07c7"
+        },
+        "date": 1794228128668,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13102713.58306478,
+            "unit": "iter/sec",
+            "range": "stddev: 9.592439289602706e-9",
+            "extra": "mean: 76.32006863772838 nsec\nrounds: 136222"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13002268.753446225,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3867163661151559e-8",
+            "extra": "mean: 76.90965468891358 nsec\nrounds: 139063"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8813085.011759888,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4979155942055602e-8",
+            "extra": "mean: 113.46764483329429 nsec\nrounds: 91191"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3217073.6491563283,
+            "unit": "iter/sec",
+            "range": "stddev: 3.900554745610618e-8",
+            "extra": "mean: 310.84150039967165 nsec\nrounds: 194251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 798394.3150653598,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0469915530130987e-7",
+            "extra": "mean: 1.252513928431637 usec\nrounds: 82048"
           }
         ]
       }
