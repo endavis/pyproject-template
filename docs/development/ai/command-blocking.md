@@ -154,6 +154,24 @@ for why the scanner is not taught to recognise prose instead — the short versi
 bodies for a list of trusted receivers turns a mistake in that list into a bypass, and the flat
 scan is what covers interpreters nobody has listed.
 
+The same flat scan feeds the env-persistence check, so a data heredoc can also be refused as a
+write to a protected file. A body with an `mv` or `cp` line followed, on a later line, by a backtick
+span holding a `|` (a PR body with a migration step and a markdown table cell, say) is read as that
+`mv`/`cp` writing to the backtick word, and a backtick makes the target a wildcard that matches every
+protected file. Quoting the delimiter (`<<'EOF'`) does not help: the scan sees the body either way.
+This is an accepted false positive under
+[ADR-9019](../../decisions/9019-the-dangerous-command-hook-is-a-guardrail-not-a-security-boundary.md),
+rules 1 and 3, and was closed as such (#1234).
+Write the file with the agent's file-edit tool, or pass `--body-file=<path>`, instead of a heredoc:
+
+```bash
+# BLOCKED - the body is data, but the flat scan reads `mv` writing to "`a"
+cat > tmp/agents/claude/pr-body.md <<'EOF'
+mv data/a data/b
+`a | b`
+EOF
+```
+
 Finding the marker itself has to be quote-aware too: `echo "<<EOF"` is not a heredoc, it is an
 ordinary argument that happens to contain the characters `<<EOF`. `_heredoc_marker_match` walks
 each line with the same quote-tracking the comment stripper uses, carrying an open quote from one
