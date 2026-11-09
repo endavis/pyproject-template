@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794146108610,
+  "lastUpdate": 1794226150178,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24013,6 +24013,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 6.995056033215091e-8",
             "extra": "mean: 886.6829725256993 nsec\nrounds: 117745"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0641662b8b4267e3292d4f8983e8a85793dd7702",
+          "message": "docs: record the heredoc mv-plus-pipe block as an accepted false positive (merges PR #1237, addresses #1236)\n\n* docs: record the heredoc mv-plus-pipe block as an accepted false positive\n\nThe env-persistence check's flat scan reads a data heredoc body with an\nmv/cp line followed by a backtick span holding a pipe as a write to a\nprotected file. Record the shape in the Heredocs section of\ncommand-blocking.md as an accepted false positive under ADR-9019\n(rules 1 and 3, #1234), with the file-tool / --body-file workaround.\n\nAddresses #1236\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sccgZvcjwLrw654ury\n\n* docs: link ADR-9019 from the heredoc false-positive paragraph\n\nAddresses #1236\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sccgZvcjwLrw654ury\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-09T12:08:21Z",
+          "tree_id": "e799c8098b7cd9ccb628d353da400a1c3848565e",
+          "url": "https://github.com/endavis/pyproject-template/commit/0641662b8b4267e3292d4f8983e8a85793dd7702"
+        },
+        "date": 1794226149235,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10497702.903134676,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0401598516527478e-8",
+            "extra": "mean: 95.25893514298201 nsec\nrounds: 108531"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10473928.80096648,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4369025084659902e-8",
+            "extra": "mean: 95.47515731706379 nsec\nrounds: 110096"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6569157.39550578,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3902840108442466e-8",
+            "extra": "mean: 152.22652462005848 nsec\nrounds: 70329"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2424323.32647635,
+            "unit": "iter/sec",
+            "range": "stddev: 5.956094260024104e-8",
+            "extra": "mean: 412.4862344386452 nsec\nrounds: 193912"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 606638.7518032762,
+            "unit": "iter/sec",
+            "range": "stddev: 3.33432167978398e-7",
+            "extra": "mean: 1.6484274982886107 usec\nrounds: 65695"
           }
         ]
       }
