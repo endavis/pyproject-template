@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794416367472,
+  "lastUpdate": 1794417461466,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24426,6 +24426,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2420047763273247e-7",
             "extra": "mean: 1.2472131996915987 usec\nrounds: 84055"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9be8a8eda35917d503851aae15f52418f0c079d8",
+          "message": "fix: anchor bandit exclude_dirs entries so they cannot match inside src or tools (merges PR #1250, addresses #1249)\n\n* fix: anchor bandit exclude_dirs entries so they cannot match inside src or tools\n\nBandit drops a path when an exclude_dirs entry is a substring of it, so\nthe bare `docs` entry silently skipped tools/doit/docs.py in\n`doit security`. Rewrite every entry as `<name>/*`: a path never holds a\nliteral `*`, so the substring match cannot fire, and fnmatch anchors\nthe glob at the path start. Measured with bandit 1.9.4, this is the\nonly form that scans every tracked file under src/ and tools/ and keeps\nthe pre-commit hook's exclusions; `./docs` and absolute paths would\nmake pre-commit scan tests/ and examples/.\n\nAdd a test that no tracked file under src/ or tools/ matches the\nconfigured entries, and a bandit-backed test that `doit security` scans\nevery one of them. Correct the security-triage skill's tmp wording and\nthe _bandit_stale_nosec docstring to match.\n\nAddresses #1249\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sfBaYeY1fR1p9PZYVY\n\n* fix: compare bandit's scanned paths as POSIX so the scan test passes on Windows\n\nAddresses #1249\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sfBaYeY1fR1p9PZYVY\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-11T17:17:01Z",
+          "tree_id": "2b576b94bbf93609b568aee82683b1b9ae1d000d",
+          "url": "https://github.com/endavis/pyproject-template/commit/9be8a8eda35917d503851aae15f52418f0c079d8"
+        },
+        "date": 1794417460182,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19966014.762262285,
+            "unit": "iter/sec",
+            "range": "stddev: 6.344051975108285e-9",
+            "extra": "mean: 50.08510771464005 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 21131512.485047072,
+            "unit": "iter/sec",
+            "range": "stddev: 6.988308374481439e-9",
+            "extra": "mean: 47.32268931093374 nsec\nrounds: 199721"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13575225.30442684,
+            "unit": "iter/sec",
+            "range": "stddev: 8.681809088447645e-9",
+            "extra": "mean: 73.6636024504067 nsec\nrounds: 145773"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4491285.616604291,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6264501149638832e-8",
+            "extra": "mean: 222.65339712598066 nsec\nrounds: 45303"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1137319.6059556631,
+            "unit": "iter/sec",
+            "range": "stddev: 1.442753642348052e-7",
+            "extra": "mean: 879.260319406631 nsec\nrounds: 117468"
           }
         ]
       }
