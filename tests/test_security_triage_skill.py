@@ -18,10 +18,14 @@ Scoped to the agents a project actually wires, per `tests/agent_roster.py` (#690
 
 from __future__ import annotations
 
+import fnmatch
 import importlib.util
+import io
 import re
 import subprocess
 import sys
+import tokenize
+import tomllib
 from pathlib import Path
 
 import pytest
@@ -55,6 +59,8 @@ CONTRACT: tuple[tuple[str, str], ...] = (
     ("bandit fix: yaml", "`yaml.safe_load`"),
     ("bandit justify pattern", "`# nosec <ID> # <reason>`"),
     ("per-ID precision", "`# nosec B602` clears only"),
+    ("no nosec on a skipped ID", "Never name an ID listed in `[tool.bandit] skips` in a `# nosec`"),
+    ("no nosec where bandit never reads", "Never put a `# nosec` in a file bandit never reads"),
     ("bandit config pointer", "`[tool.bandit] skips` in `pyproject.toml`"),
     ("pip-audit locate: reverse-deps", "`uv tree --invert --package <package>`"),
     (
@@ -397,7 +403,7 @@ def _bandit_stale_nosec(*targets: Path, config: bool = True) -> list[str]:
     pytest temp directory the detector test writes to.
     """
     args = ["-c", "pyproject.toml"] if config else []
-    result = subprocess.run(  # nosec B603  # fixed argv, no shell
+    result = subprocess.run(
         [sys.executable, "-m", "bandit", *args, "-r", *map(str, targets)],
         cwd=REPO_ROOT,
         capture_output=True,
@@ -434,3 +440,100 @@ def test_no_nosec_comment_is_stale() -> None:
     ]
     stale = _bandit_stale_nosec(*targets)
     assert not stale, "stale nosec comments:\n" + "\n".join(stale)
+
+
+# A `# nosec` that names an ID in `[tool.bandit] skips`, or sits in a file bandit's `exclude_dirs`
+# drops, suppresses nothing: the test never runs. Both are read from `pyproject.toml` (#1241).
+_NOSEC_TOKEN = re.compile(r"^#\s*nosec\b([^#\n]*)")
+_BANDIT_ID = re.compile(r"\bB\d+\b")
+
+
+def _bandit_config() -> dict[str, list[str]]:
+    """Return the `[tool.bandit]` table of `pyproject.toml`."""
+    data = tomllib.loads((REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8"))
+    return data["tool"]["bandit"]  # type: ignore[no-any-return]
+
+
+def _tracked_python_files() -> list[str]:
+    """Return every git-tracked `.py` path, relative to the repository root."""
+    result = subprocess.run(
+        ["git", "ls-files", "-z", "--", "*.py"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    return [name for name in result.stdout.split("\0") if name]
+
+
+def _nosec_comments(source: str) -> list[tuple[int, str]]:
+    """Return (line, ID-list text) for each `# nosec` comment; string literals are ignored.
+
+    Only a comment that opens with `nosec` counts, so prose that mentions one does not.
+    """
+    found: list[tuple[int, str]] = []
+    try:
+        for token in tokenize.generate_tokens(io.StringIO(source).readline):
+            if token.type != tokenize.COMMENT:
+                continue
+            match = _NOSEC_TOKEN.search(token.string)
+            if match:
+                found.append((token.start[0], match.group(1)))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return found
+    return found
+
+
+def _skipped_ids(id_list: str, skips: list[str]) -> list[str]:
+    """Return the IDs in *id_list* that bandit's `skips` already disables."""
+    return [found for found in _BANDIT_ID.findall(id_list) if found in skips]
+
+
+def _bandit_never_reads(path: str, exclude_dirs: list[str]) -> bool:
+    """Mirror bandit's `_is_file_included`: an fnmatch glob or a substring of the path excludes."""
+    return any(fnmatch.fnmatch(path, ex) or ex in path for ex in exclude_dirs)
+
+
+def test_the_skipped_id_scanner_detects_a_violation() -> None:
+    skips = ["B101", "B603", "B607"]
+    assert _skipped_ids(" B603", skips) == ["B603"]
+    assert _skipped_ids(" B404 B603", skips) == ["B603"]
+    assert _skipped_ids(" B404", skips) == []
+    assert _skipped_ids("", skips) == []
+    source = "import os  # nosec B404  # reason\ntext = '# nosec B603'\n"
+    assert _nosec_comments(source) == [(1, " B404  ")]
+
+
+def test_no_nosec_comment_names_a_skipped_id() -> None:
+    """Delete the whole `# nosec`: a skipped ID is never run, so naming it is dead text."""
+    skips = _bandit_config()["skips"]
+    offenders: list[str] = []
+    for name in _tracked_python_files():
+        source = (REPO_ROOT / name).read_text(encoding="utf-8")
+        offenders.extend(
+            f"{name}:{line}: {', '.join(ids)}"
+            for line, text in _nosec_comments(source)
+            if (ids := _skipped_ids(text, skips))
+        )
+    assert not offenders, "nosec names an ID in [tool.bandit] skips:\n" + "\n".join(offenders)
+
+
+def test_the_excluded_path_scanner_detects_a_violation() -> None:
+    exclude_dirs = ["tests", "tmp", "docs", "examples", "site"]
+    assert _bandit_never_reads("tests/conftest.py", exclude_dirs)
+    assert _bandit_never_reads("examples/api/main.py", exclude_dirs)
+    assert _bandit_never_reads("tools/doit/docs.py", exclude_dirs)
+    assert not _bandit_never_reads("tools/doit/base.py", exclude_dirs)
+    assert not _bandit_never_reads("tools/doit/testing.py", exclude_dirs)
+
+
+def test_no_nosec_comment_sits_where_bandit_never_reads() -> None:
+    """Delete a `# nosec` in a file `[tool.bandit] exclude_dirs` drops: bandit never reads it."""
+    exclude_dirs = _bandit_config()["exclude_dirs"]
+    offenders: list[str] = []
+    for name in _tracked_python_files():
+        if not _bandit_never_reads(name, exclude_dirs):
+            continue
+        source = (REPO_ROOT / name).read_text(encoding="utf-8")
+        offenders.extend(f"{name}:{line}" for line, _ in _nosec_comments(source))
+    assert not offenders, "nosec in a file bandit never reads:\n" + "\n".join(offenders)

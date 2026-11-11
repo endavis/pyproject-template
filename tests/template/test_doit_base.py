@@ -5,7 +5,7 @@ from __future__ import annotations
 import ast
 import os
 import shlex
-import subprocess  # nosec B404  # test invokes bash deliberately to verify shell-snippet behaviour
+import subprocess
 import sys
 from io import StringIO
 from pathlib import Path
@@ -253,7 +253,7 @@ def _write_fake_uv(tmp_path: Path) -> Path:
 def _run_bash(action: str, env: dict[str, str]) -> subprocess.CompletedProcess[str]:
     """Run ``bash -c <action>`` with a deliberately minimal env. Used by the
     shell-level behavioural tests below."""
-    return subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+    return subprocess.run(
         ["bash", "-c", action],
         capture_output=True,
         text=True,
@@ -497,7 +497,7 @@ class TestNoUvCacheDefault:
             "print(repr(os.environ.get('UV_CACHE_DIR'))); "
             "print(hasattr(b, 'UV_CACHE_DIR'))"
         )
-        result = subprocess.run(  # nosec B603  # fixed argv, no shell
+        result = subprocess.run(
             [sys.executable, "-c", code],
             env=env,
             capture_output=True,

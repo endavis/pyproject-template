@@ -95,6 +95,10 @@ When the task is done, return to the `implement-issue` run, or commit and open a
 - Keep the reason out of the ID list. Bandit reads every word between `nosec` and the next `#` as
   a candidate test ID, so `# nosec B404 - reason words` prints a `Test in comment` warning per
   word. A second `#` ends the list: `# nosec B404  # reason words`. Keep reasons short.
+- Never name an ID listed in `[tool.bandit] skips` in a `# nosec`: bandit never runs that test, so
+  the comment is dead text. Delete the whole comment.
+- Never put a `# nosec` in a file bandit never reads, as `[tool.bandit] exclude_dirs` lists `tests`
+  and `examples`: nothing there is scanned, so the comment suppresses nothing.
 - Remove a `# nosec` when bandit prints `nosec encountered (<ID>), but no failed test`: it
   suppresses nothing, either because the code no longer matches the test or because the comment is
   on a different line from the one bandit reports. Move it to that line, or delete it.

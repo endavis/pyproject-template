@@ -167,7 +167,7 @@ def warn_if_env_drifted() -> None:
     choose to run a `doit` task — `doit check` and `doit test` call this
     first — on a branch they have already decided to trust.
     """
-    result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+    result = subprocess.run(
         ["uv", "sync", "--all-extras", "--dev", "--check"],
         capture_output=True,
         text=True,
@@ -224,7 +224,7 @@ def run_streamed(
         subprocess.CalledProcessError: If ``check`` is ``True`` and the child
             exits with a non-zero return code.
     """
-    subprocess.run(  # nosec B603  # fixed argv, no shell
+    subprocess.run(
         cmd,
         env=_child_env(env),
         check=check,
@@ -273,7 +273,7 @@ def run_teed(
     # Popen with stdout piped and stderr merged into stdout. We read lines
     # from the pipe, echo each to sys.stdout (so the user sees live output),
     # and buffer them for the caller.
-    process = subprocess.Popen(  # nosec B603  # fixed argv, no shell
+    process = subprocess.Popen(
         cmd,
         stdout=subprocess.PIPE,
         stderr=subprocess.STDOUT,

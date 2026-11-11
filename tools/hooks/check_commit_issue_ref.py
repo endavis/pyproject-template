@@ -69,7 +69,7 @@ OVERRIDE_ENV = "ALLOW_ISSUE_REF_MISMATCH"
 def current_branch() -> str:
     """Return the checked-out branch name, or "" when detached or unavailable."""
     try:
-        result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+        result = subprocess.run(
             ["git", "branch", "--show-current"],
             capture_output=True,
             text=True,

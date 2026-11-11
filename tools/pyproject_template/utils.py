@@ -301,7 +301,7 @@ def github_token() -> str | None:
     if token:
         return token
     try:
-        result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+        result = subprocess.run(
             ["gh", "auth", "token"],
             capture_output=True,
             text=True,

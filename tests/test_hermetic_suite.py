@@ -24,7 +24,7 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess  # nosec B404  # the point of this module is to inspect subprocess behaviour
+import subprocess
 import sys
 from pathlib import Path
 
@@ -44,7 +44,7 @@ def _run_gh(*args: str) -> subprocess.CompletedProcess[str]:
     at all. Running the dispatch module keeps these assertions meaningful on
     every platform; the launchers are asserted separately.
     """
-    return subprocess.run(  # nosec B603  # fixed argv, no shell
+    return subprocess.run(
         [sys.executable, str(_stub_dir() / "_gh_stub.py"), *args],
         capture_output=True,
         text=True,

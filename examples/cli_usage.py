@@ -5,7 +5,7 @@ This example demonstrates how to use the command-line interface
 programmatically and provides examples of CLI commands.
 """
 
-import subprocess  # nosec B404  # subprocess is required for CLI examples
+import subprocess
 from pathlib import Path
 
 
