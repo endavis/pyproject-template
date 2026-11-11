@@ -518,7 +518,10 @@ class TestNoUvCacheDefault:
         assert self._imported_value(None).splitlines()[1] == "False"
 
     def test_envrc_leaves_uv_cache_unset(self) -> None:
-        """direnv must not point uv at a per-checkout cache; the other tool caches stay in tmp/."""
+        """direnv must not point uv or pre-commit at a per-checkout cache.
+
+        The other tool caches stay in tmp/.
+        """
         envrc = (Path(__file__).resolve().parents[2] / ".envrc").read_text(encoding="utf-8")
         exports = {
             line.split("=", 1)[0].split()[-1]: line
@@ -526,5 +529,6 @@ class TestNoUvCacheDefault:
             if line.strip().startswith("export ")
         }
         assert "UV_CACHE_DIR" not in exports
+        assert "PRE_COMMIT_HOME" not in exports
         for name in ("RUFF_CACHE_DIR", "MYPY_CACHE_DIR", "COVERAGE_FILE"):
             assert "/tmp/" in exports[name], name
