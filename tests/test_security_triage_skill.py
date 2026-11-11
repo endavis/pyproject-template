@@ -575,7 +575,9 @@ def test_doit_security_scans_every_tracked_file_under_src_and_tools() -> None:
         text=True,
         check=False,
     )
-    scanned = set(json.loads(result.stdout)["metrics"])
+    # Bandit reports native paths (backslashes on Windows, sometimes a leading
+    # "./"); git reports POSIX ones, so normalise before comparing.
+    scanned = {Path(key).as_posix() for key in json.loads(result.stdout)["metrics"]}
     missing = [
         name
         for name in _tracked_python_files()
