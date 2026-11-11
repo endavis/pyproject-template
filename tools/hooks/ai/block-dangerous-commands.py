@@ -1802,7 +1802,7 @@ def get_current_branch() -> str | None:
     Returns None if not in a git repository or in detached HEAD state.
     """
     try:
-        result = subprocess.run(  # nosec B603 B607  # trusted git command
+        result = subprocess.run(
             ["git", "branch", "--show-current"],
             capture_output=True,
             text=True,
@@ -1915,7 +1915,7 @@ def _envrc_example_modified() -> bool:
     except OSError:
         return False  # no example to copy, so the `cp` fails on its own
     try:
-        inside = subprocess.run(  # nosec B603 B607  # trusted git command
+        inside = subprocess.run(
             ["git", "rev-parse", "--is-inside-work-tree"],
             capture_output=True,
             timeout=5,
@@ -1925,7 +1925,7 @@ def _envrc_example_modified() -> bool:
         # The raw blob, never --filters: those run smudge filters a worktree
         # .gitattributes and repo config choose, which can make swapped
         # content match. Line endings are normalised below instead.
-        head = subprocess.run(  # nosec B603 B607  # trusted git command
+        head = subprocess.run(
             ["git", "cat-file", "blob", f"HEAD:./{_ENVRC_EXAMPLE}"],
             capture_output=True,
             timeout=5,

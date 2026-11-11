@@ -187,7 +187,7 @@ def require(value: str, label: str) -> str:
 
 def _git_has_version_tag() -> bool:
     """Return ``True`` if the current repo has at least one ``v*`` tag."""
-    result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+    result = subprocess.run(
         ["git", "tag", "--list", "v*"],
         capture_output=True,
         text=True,
@@ -202,7 +202,7 @@ def _git_root_commit() -> str | None:
     Returns ``None`` if not inside a git repo, the repo has no commits, or the
     ``git rev-list`` call fails for any other reason.
     """
-    result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+    result = subprocess.run(
         ["git", "rev-list", "--max-parents=0", "HEAD"],
         capture_output=True,
         text=True,
@@ -244,7 +244,7 @@ def seed_baseline_tag() -> None:
         )
         return
 
-    result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+    result = subprocess.run(
         ["git", "tag", "v0.0.0", root],
         capture_output=True,
         text=True,

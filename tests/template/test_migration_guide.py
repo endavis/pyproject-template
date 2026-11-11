@@ -14,7 +14,7 @@ to the paths the guide's own later steps invoke.
 from __future__ import annotations
 
 import re
-import subprocess  # nosec B404  # reads the tracked file list, no shell
+import subprocess
 import tomllib
 from pathlib import Path
 
@@ -62,7 +62,7 @@ def _table_excludes() -> set[str]:
 
 
 def _tracked_top_level() -> set[str]:
-    result = subprocess.run(  # nosec B603  # fixed argv, no shell
+    result = subprocess.run(
         ["git", "ls-files"],
         cwd=REPO_ROOT,
         capture_output=True,

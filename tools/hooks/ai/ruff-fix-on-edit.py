@@ -55,7 +55,7 @@ def run_ruff(path: Path) -> None:
     Best-effort: every exception is swallowed. This function must never raise.
     """
     with contextlib.suppress(Exception):  # hook must never raise; errors would block tool calls
-        subprocess.run(  # nosec B603 B607  # trusted ruff invocation
+        subprocess.run(
             [
                 "uv",
                 "run",
@@ -73,7 +73,7 @@ def run_ruff(path: Path) -> None:
         )
 
     with contextlib.suppress(Exception):  # hook must never raise; errors would block tool calls
-        subprocess.run(  # nosec B603 B607  # trusted ruff invocation
+        subprocess.run(
             ["uv", "run", "ruff", "format", "--quiet", str(path)],
             capture_output=True,
             timeout=RUFF_TIMEOUT_SECONDS,
