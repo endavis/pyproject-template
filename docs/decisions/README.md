@@ -90,6 +90,9 @@ its own. Either way, `doit adr` sets the title and fills in the date. If the des
 the template's placeholder, `doit adr` says so; replace it before you commit, because `doit check`
 fails on an ADR that keeps it.
 
+`doit adr` also adds the ADR to the Index below and to the `mkdocs.yml` nav, or prints a reminder
+naming the file it could not edit. The nav label is `ADR-NNNN <title>`; shorten it by hand if you like.
+
 ## When to Create an ADR
 
 Create an ADR when:
