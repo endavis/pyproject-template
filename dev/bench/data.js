@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794414920349,
+  "lastUpdate": 1794415756798,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24308,6 +24308,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.700977998603787e-7",
             "extra": "mean: 1.6723912693784113 usec\nrounds: 61920"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0178b94b8ed58b337d79e742ca5994a3ef14f92c",
+          "message": "chore: remove nosec comments bandit never applies and guard against them (merges PR #1247, addresses #1241)\n\nB603 and B607 are in [tool.bandit] skips, so a per-line nosec naming\nthem suppresses nothing. Bandit's exclude_dirs drops tests/ and\nexamples/, so a nosec there suppresses nothing either. Remove both\nkinds, including the stale B607 on the four context-mode hooks.\n\nAdd guards in tests/test_security_triage_skill.py that read\n[tool.bandit] from pyproject.toml: no nosec names a skipped ID, and no\nnosec sits in a file bandit never reads. Document both rules in the\nsecurity-triage skill and the slash-commands summary.\n\nAddresses #1241\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfBaYeY1fR1p9PZYVY\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-11T16:48:28Z",
+          "tree_id": "d2d327592f92bd41e922dfb631323c63e6a13be4",
+          "url": "https://github.com/endavis/pyproject-template/commit/0178b94b8ed58b337d79e742ca5994a3ef14f92c"
+        },
+        "date": 1794415755480,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9481355.919193974,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1104386781215899e-8",
+            "extra": "mean: 105.47014673034357 nsec\nrounds: 103864"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10270546.114397243,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0228213949681463e-8",
+            "extra": "mean: 97.36580595244111 nsec\nrounds: 106644"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6689008.282671692,
+            "unit": "iter/sec",
+            "range": "stddev: 1.57135204787953e-8",
+            "extra": "mean: 149.49899263700487 nsec\nrounds: 72119"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2241294.871585738,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4975986614947445e-7",
+            "extra": "mean: 446.17065459686273 nsec\nrounds: 184843"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 570945.4666414069,
+            "unit": "iter/sec",
+            "range": "stddev: 3.255838063450122e-7",
+            "extra": "mean: 1.7514807602948688 usec\nrounds: 60713"
           }
         ]
       }
