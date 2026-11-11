@@ -842,6 +842,13 @@ doit adr --title="Use some tool" --template --body-file=adr.md
   that starts with its own frontmatter keeps it, and `doit adr` sets its title. If the
   description is still the template's placeholder, it says so; write one sentence that says
   what was decided, because `docs/TABLE_OF_CONTENTS.md` lists it next to the title
+- Replaces a body's first `# ADR-...` heading with the numbered one, including an `# ADR-NNNN:`
+  placeholder
+- Adds the ADR to the `## Index` table in `docs/decisions/README.md` (the series table for
+  `--template` or the project one) and to the `- Decisions:` list under `nav:` in `mkdocs.yml`,
+  in numeric order, in every input mode. Both edits are idempotent and keep comments. When a file
+  is missing or restructured so an entry cannot be placed safely, it leaves the file as it is and
+  prints a reminder naming the file. The nav label is `ADR-NNNN <title>`; shorten it by hand if you like
 
 **Series:**
 - Default (project-level, 0XXX): decisions specific to this project. Numbering starts at `0001`.
