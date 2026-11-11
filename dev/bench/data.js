@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794414681080,
+  "lastUpdate": 1794414920349,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24249,6 +24249,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8849928886515986e-7",
             "extra": "mean: 1.6585623196623323 usec\nrounds: 63216"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a6bf953314289ed2abb687a44ecd5a73a85ef030",
+          "message": "chore: remove stale nosec ids and give every nosec and noqa a reason (merges PR #1246, addresses #1241)\n\nDrop the B607 and B101 ids that suppress nothing, move two misplaced\nnosec comments onto their lines, replace try/except/pass in\nruff-fix-on-edit with contextlib.suppress, and add a reason after every\nnosec and noqa in shipped files. A new test requires the reason and the\n`# noqa: X  # reason` format.\n\nAddresses #1241\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfBaYeY1fR1p9PZYVY\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-11T16:34:38Z",
+          "tree_id": "2e75c600f046032bb5796a71319f42074fbf60ba",
+          "url": "https://github.com/endavis/pyproject-template/commit/a6bf953314289ed2abb687a44ecd5a73a85ef030"
+        },
+        "date": 1794414919299,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8926584.725615928,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2336714551905835e-8",
+            "extra": "mean: 112.02492674834279 nsec\nrounds: 104298"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10209753.813659888,
+            "unit": "iter/sec",
+            "range": "stddev: 1.082728135398358e-8",
+            "extra": "mean: 97.94555463835717 nsec\nrounds: 98136"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6815141.04536072,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3641109843616072e-8",
+            "extra": "mean: 146.73210625343273 nsec\nrounds: 72807"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2215848.461474482,
+            "unit": "iter/sec",
+            "range": "stddev: 6.071879571060314e-8",
+            "extra": "mean: 451.29439913710274 nsec\nrounds: 194970"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 597946.1973463163,
+            "unit": "iter/sec",
+            "range": "stddev: 1.700977998603787e-7",
+            "extra": "mean: 1.6723912693784113 usec\nrounds: 61920"
           }
         ]
       }
