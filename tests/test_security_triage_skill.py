@@ -331,6 +331,55 @@ def test_no_nosec_comment_puts_its_reason_inside_the_id_list() -> None:
     )
 
 
+# A suppression with no stated reason cannot be reviewed later (#1241), and `# noqa: X - reason`
+# is the wrong shape: ruff reads it, but the repo writes `# noqa: X  # reason`.
+_SUPPRESSION = re.compile(r"#\s*(?:nosec|noqa)\b")
+_NOSEC_WITH_REASON = re.compile(r"#\s*nosec\b[^#\n]*#\s*\S")
+_NOQA_WITH_REASON = re.compile(r"#\s*noqa\b[^#\n]*#\s*\S")
+_NOQA_DASH_REASON = re.compile(r"#\s*noqa:\s*[A-Z0-9, ]+\s-\s")
+
+
+def _suppression_problem(line: str) -> str | None:
+    """Return why a suppression comment on `line` is malformed, or None when it is fine."""
+    if _SUPPRESSION.search(line) is None:
+        return None
+    if _NOQA_DASH_REASON.search(line):
+        return "write `# noqa: X  # reason`, not `# noqa: X - reason`"
+    if re.search(r"#\s*nosec\b", line) and not _NOSEC_WITH_REASON.search(line):
+        return "nosec has no `# <reason>` after its ID list"
+    if re.search(r"#\s*noqa\b", line) and not _NOQA_WITH_REASON.search(line):
+        return "noqa has no `# <reason>` after its code list"
+    return None
+
+
+def test_the_suppression_scanner_detects_a_violation() -> None:
+    assert _suppression_problem("import os  # nosec B404") is not None
+    assert _suppression_problem("import os  # nosec B404  # needed") is None
+    assert _suppression_problem("x = 1  # noqa: E402") is not None
+    assert _suppression_problem("x = 1  # noqa: E402  # path set up") is None
+    assert _suppression_problem("x = 1  # noqa: N818 - a reason") is not None
+    assert _suppression_problem("x = 1") is None
+
+
+def test_every_suppression_states_a_reason_in_the_shipped_files() -> None:
+    """Every `# nosec` and `# noqa` carries `# <reason>`, and noqa never uses ` - reason`."""
+    this_file = Path(__file__).resolve()
+    paths = [REPO_ROOT / "bootstrap.py"]
+    for name in ("src", "tools", "tests", "examples"):
+        root = REPO_ROOT / name
+        if root.is_dir():
+            paths.extend(root.rglob("*.py"))
+    offenders: list[str] = []
+    for path in paths:
+        if not path.is_file() or path.resolve() == this_file:
+            continue
+        for number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+            problem = _suppression_problem(line)
+            if problem:
+                offenders.append(f"{path.relative_to(REPO_ROOT)}:{number}: {problem}")
+    assert not offenders, "\n".join(offenders)
+
+
 # A `# nosec` on a line where bandit finds nothing prints `nosec encountered ... but no failed
 # test` on every run and hides which suppressions still matter (#1084). Bandit has no setting that
 # makes it fatal, so scan its output.

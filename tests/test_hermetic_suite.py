@@ -24,8 +24,8 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess
-import sys  # nosec B404  # the point of this module is to inspect subprocess behaviour
+import subprocess  # nosec B404  # the point of this module is to inspect subprocess behaviour
+import sys
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]

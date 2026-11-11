@@ -29,9 +29,9 @@ _script_dir = Path(__file__).parent
 if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
-from check_template_updates import run_check_updates  # noqa: E402
-from configure import load_defaults, run_configure  # noqa: E402
-from settings import (  # noqa: E402
+from check_template_updates import run_check_updates  # noqa: E402  # sys.path is set up above
+from configure import load_defaults, run_configure  # noqa: E402  # sys.path is set up above
+from settings import (  # noqa: E402  # sys.path is set up above
     PreflightWarning,
     ProjectContext,
     ProjectSettings,
@@ -41,7 +41,7 @@ from settings import (  # noqa: E402
     get_template_commits_since,
     get_template_latest_commit,
 )
-from utils import (  # noqa: E402
+from utils import (  # noqa: E402  # sys.path is set up above
     TEMPLATE_COMMIT_FILE,
     Colors,
     Logger,

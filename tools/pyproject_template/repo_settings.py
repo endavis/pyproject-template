@@ -21,7 +21,7 @@ from __future__ import annotations
 
 import os
 import shutil
-import subprocess  # nosec B404
+import subprocess  # nosec B404  # subprocess is required to run git and gh
 import sys
 from pathlib import Path
 from typing import Any
@@ -31,7 +31,7 @@ _script_dir = Path(__file__).parent
 if str(_script_dir) not in sys.path:
     sys.path.insert(0, str(_script_dir))
 
-from utils import TEMPLATE_REPO, GitHubCLI, Logger  # noqa: E402
+from utils import TEMPLATE_REPO, GitHubCLI, Logger  # noqa: E402  # sys.path is set up above
 
 
 def _is_forbidden(error: subprocess.CalledProcessError) -> bool:

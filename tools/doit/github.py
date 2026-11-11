@@ -123,7 +123,7 @@ def _run_gh_with_retry(
     *,
     retries: int | None = None,
     backoff_base: float | None = None,
-    **subprocess_kwargs: Any,  # noqa: ANN401 - forwarded verbatim to subprocess.run
+    **subprocess_kwargs: Any,  # noqa: ANN401  # forwarded verbatim to subprocess.run
 ) -> subprocess.CompletedProcess[str]:
     """Run a ``gh`` command with exponential-backoff retry on transient errors.
 
@@ -199,7 +199,7 @@ def _run_gh_with_retry(
                 break
 
             delay = backoff_base * (_GH_BACKOFF_FACTOR ** (attempt - 1))
-            jitter = random.uniform(0, delay * 0.1)  # nosec B311
+            jitter = random.uniform(0, delay * 0.1)  # nosec B311  # retry jitter, not security-sensitive
             total = delay + jitter
             console.print(
                 verbatim(
