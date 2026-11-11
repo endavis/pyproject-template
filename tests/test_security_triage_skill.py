@@ -21,6 +21,7 @@ from __future__ import annotations
 import fnmatch
 import importlib.util
 import io
+import json
 import re
 import subprocess
 import sys
@@ -399,8 +400,9 @@ requires_bandit = pytest.mark.skipif(
 def _bandit_stale_nosec(*targets: Path, config: bool = True) -> list[str]:
     """Run bandit over `targets` and return the stale-`nosec` warnings it printed.
 
-    `config=False` skips `pyproject.toml`, whose `exclude_dirs` lists `tmp` and so skips the
-    pytest temp directory the detector test writes to.
+    `config=False` skips `pyproject.toml`, whose `exclude_dirs` lists `tmp/*`: that drops a
+    repo-relative `tmp/...` path, and a pytest temp directory is not one, but the detector test
+    skips the config rather than depend on where the temp directory lives.
     """
     args = ["-c", "pyproject.toml"] if config else []
     result = subprocess.run(
@@ -519,12 +521,67 @@ def test_no_nosec_comment_names_a_skipped_id() -> None:
 
 
 def test_the_excluded_path_scanner_detects_a_violation() -> None:
+    """Bare entries substring-match, so `docs` drops `tools/doit/docs.py` (#1249)."""
     exclude_dirs = ["tests", "tmp", "docs", "examples", "site"]
     assert _bandit_never_reads("tests/conftest.py", exclude_dirs)
     assert _bandit_never_reads("examples/api/main.py", exclude_dirs)
     assert _bandit_never_reads("tools/doit/docs.py", exclude_dirs)
     assert not _bandit_never_reads("tools/doit/base.py", exclude_dirs)
     assert not _bandit_never_reads("tools/doit/testing.py", exclude_dirs)
+
+
+def test_the_anchored_excluded_path_scanner_detects_a_violation() -> None:
+    """Anchored `<name>/*` entries drop the top-level directory and nothing nested."""
+    exclude_dirs = ["tests/*", "tmp/*", "docs/*", "examples/*", "site/*"]
+    assert _bandit_never_reads("tests/conftest.py", exclude_dirs)
+    assert _bandit_never_reads("examples/api/main.py", exclude_dirs)
+    assert not _bandit_never_reads("tools/doit/docs.py", exclude_dirs)
+    assert not _bandit_never_reads("tools/docs/x.py", exclude_dirs)
+    assert not _bandit_never_reads("src/pkg/tests/x.py", exclude_dirs)
+    assert not _bandit_never_reads("tools/doit/base.py", exclude_dirs)
+    assert not _bandit_never_reads("tools/doit/testing.py", exclude_dirs)
+
+
+def test_exclude_dirs_cannot_match_inside_scanned_trees() -> None:
+    """No tracked file under `src/` or `tools/` may be dropped by `exclude_dirs` (#1249)."""
+    exclude_dirs = _bandit_config()["exclude_dirs"]
+    dropped = [
+        name
+        for name in _tracked_python_files()
+        if name.startswith(("src/", "tools/")) and _bandit_never_reads(name, exclude_dirs)
+    ]
+    assert not dropped, "exclude_dirs drops files `doit security` must scan:\n" + "\n".join(dropped)
+
+
+@requires_bandit
+def test_doit_security_scans_every_tracked_file_under_src_and_tools() -> None:
+    """Run bandit as `doit security` does and check each tracked file was scanned (#1249)."""
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "bandit",
+            "-c",
+            "pyproject.toml",
+            "-r",
+            "src/",
+            "tools/",
+            "-f",
+            "json",
+            "-q",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    scanned = set(json.loads(result.stdout)["metrics"])
+    missing = [
+        name
+        for name in _tracked_python_files()
+        if name.startswith(("src/", "tools/")) and name not in scanned
+    ]
+    assert not missing, "bandit skipped tracked files:\n" + "\n".join(missing)
 
 
 def test_no_nosec_comment_sits_where_bandit_never_reads() -> None:

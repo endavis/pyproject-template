@@ -223,22 +223,24 @@ directory = "tmp/htmlcov"
 output = "tmp/coverage.xml"
 
 [tool.bandit]
+# Anchored `<name>/*`: bandit also substring-matches entries, so a bare `docs` skipped
+# tools/doit/docs.py. Guarded by tests/test_security_triage_skill.py (#1249).
 exclude_dirs = [
-    "tests",
-    "tmp",
-    ".venv",
-    "docs",
-    "examples",
-    ".git",
-    ".github",
-    ".pytest_cache",
-    ".mypy_cache",
-    ".ruff_cache",
-    "site",
-    ".claude",
-    ".codex",
-    ".devcontainer",
-    ".vscode",
+    "tests/*",
+    "tmp/*",
+    ".venv/*",
+    "docs/*",
+    "examples/*",
+    ".git/*",
+    ".github/*",
+    ".pytest_cache/*",
+    ".mypy_cache/*",
+    ".ruff_cache/*",
+    "site/*",
+    ".claude/*",
+    ".codex/*",
+    ".devcontainer/*",
+    ".vscode/*",
 ]
 skips = [
     "B101",
