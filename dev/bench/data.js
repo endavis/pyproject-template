@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794412263535,
+  "lastUpdate": 1794414681080,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24190,6 +24190,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.530826219842723e-7",
             "extra": "mean: 1.6678678713740507 usec\nrounds: 62228"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a6e230f7530ddaf81a6505c16e98c5c9e03c47b9",
+          "message": "feat: give unresolvable write targets their own block reason in the dangerous-command hook (merges PR #1244, addresses #1240)\n\nA Bash command whose write target is a runtime variable, a command\nsubstitution or an unreadable patch file was blocked with the same text as a\nconfirmed write to a protected file. Report it as an unresolved target and\nsuggest literal paths. The block decision is unchanged.\n\nAddresses #1240\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfBaYeY1fR1p9PZYVY\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-11T16:30:40Z",
+          "tree_id": "0af8afe3e4aeb29d7d5b5085ceef8c8e47f64ee0",
+          "url": "https://github.com/endavis/pyproject-template/commit/a6e230f7530ddaf81a6505c16e98c5c9e03c47b9"
+        },
+        "date": 1794414680251,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9754675.687710911,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1011174502112917e-8",
+            "extra": "mean: 102.51494073347975 nsec\nrounds: 103853"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10214476.214981949,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4388493475025723e-8",
+            "extra": "mean: 97.90027202112068 nsec\nrounds: 108484"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6647885.230407349,
+            "unit": "iter/sec",
+            "range": "stddev: 3.040977189255105e-8",
+            "extra": "mean: 150.42377618464465 nsec\nrounds: 72229"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2290518.6573357973,
+            "unit": "iter/sec",
+            "range": "stddev: 6.185951422024302e-8",
+            "extra": "mean: 436.5823420810481 nsec\nrounds: 200000"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 602931.8212194707,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8849928886515986e-7",
+            "extra": "mean: 1.6585623196623323 usec\nrounds: 63216"
           }
         ]
       }
