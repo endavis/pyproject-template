@@ -3768,9 +3768,9 @@ def check_env_dump(tokens: list[str]) -> tuple[bool, str]:
                 break
             rest.append(candidate)
 
-        # nosec B105  # bandit's hardcoded-password heuristic fires on this
+        # bandit's hardcoded-password heuristic fires on this
         # string comparison; the literal is a shell command name.
-        if token == "printenv":  # nosec B105
+        if token == "printenv":  # nosec B105  # the literal is a shell command name, not a password
             # `printenv` alone dumps everything; `printenv NAME` prints one.
             if not rest:
                 return True, "Prints the entire environment, which may contain secrets"

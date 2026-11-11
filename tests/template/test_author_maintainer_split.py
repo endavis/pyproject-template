@@ -22,7 +22,7 @@ PACKAGE_DIR = REPO_ROOT / "tools" / "pyproject_template"
 if str(PACKAGE_DIR) not in sys.path:
     sys.path.insert(0, str(PACKAGE_DIR))
 
-from tools.pyproject_template.utils import (  # noqa: E402
+from tools.pyproject_template.utils import (  # noqa: E402  # sys.path is set up above
     get_first_author,
     get_first_maintainer,
 )

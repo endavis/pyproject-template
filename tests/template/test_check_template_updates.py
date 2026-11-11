@@ -40,7 +40,7 @@ TESTS_DIR = REPO_ROOT / "tests"
 if str(TESTS_DIR) not in sys.path:
     sys.path.insert(0, str(TESTS_DIR))
 
-from doc_scan import load_sync_excludes as duplicated_load_sync_excludes  # noqa: E402
+from doc_scan import load_sync_excludes as duplicated_load_sync_excludes  # noqa: E402  # sys.path is set up above
 
 
 def _make_template(

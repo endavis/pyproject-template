@@ -248,7 +248,7 @@ def _check_wheel(dist: str) -> list[str]:
             )
             return failures
 
-        import_result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+        import_result = subprocess.run(  # nosec B603  # fixed argv, no shell
             [
                 str(python_path),
                 "-c",
@@ -288,7 +288,7 @@ def _check_wheel(dist: str) -> list[str]:
             if not script_path.exists():
                 failures.append(f"console script {script!r} was not installed at {script_path}")
                 continue
-            help_result = subprocess.run(  # nosec B603 B607  # fixed argv, no shell
+            help_result = subprocess.run(  # nosec B603  # fixed argv, no shell
                 [str(script_path), "--help"],
                 capture_output=True,
                 text=True,
