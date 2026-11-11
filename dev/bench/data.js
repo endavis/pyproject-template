@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794228129529,
+  "lastUpdate": 1794412263535,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24131,6 +24131,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.0469915530130987e-7",
             "extra": "mean: 1.252513928431637 usec\nrounds: 82048"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "452b423fda023f4cc5354c518451d80b921243b0",
+          "message": "chore: share pre-commit's hook cache across projects instead of tmp/.pre-commit (merges PR #1243, addresses #1242)\n\n.envrc no longer sets PRE_COMMIT_HOME, so pre-commit uses its shared\ndefault (~/.cache/pre-commit) rather than one store per checkout and\nworktree. Its store holds hook environments keyed by repo and rev, not\nper-project state. .envrc.local.example keeps the per-project opt-in, and\n.pre-commit stays a rebuildable name for projects that use it (#998).\n\nAddresses #1242\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sdW7TReLhZojZ87M4Y\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-11T15:50:20Z",
+          "tree_id": "fa9d84cc97be86ea03c3598d109cbd04fc505d2d",
+          "url": "https://github.com/endavis/pyproject-template/commit/452b423fda023f4cc5354c518451d80b921243b0"
+        },
+        "date": 1794412262294,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8768302.202266835,
+            "unit": "iter/sec",
+            "range": "stddev: 2.950094084852674e-8",
+            "extra": "mean: 114.04716408399726 nsec\nrounds: 100211"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8705834.715720875,
+            "unit": "iter/sec",
+            "range": "stddev: 3.418355791046592e-8",
+            "extra": "mean: 114.86549339079615 nsec\nrounds: 108261"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6326872.8020494655,
+            "unit": "iter/sec",
+            "range": "stddev: 2.295170493124849e-8",
+            "extra": "mean: 158.0559671874658 nsec\nrounds: 67536"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2330287.5049057417,
+            "unit": "iter/sec",
+            "range": "stddev: 6.182638245106317e-8",
+            "extra": "mean: 429.13159766543447 nsec\nrounds: 186533"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 599567.8777457133,
+            "unit": "iter/sec",
+            "range": "stddev: 1.530826219842723e-7",
+            "extra": "mean: 1.6678678713740507 usec\nrounds: 62228"
           }
         ]
       }
