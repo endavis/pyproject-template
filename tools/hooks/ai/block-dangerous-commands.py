@@ -190,6 +190,17 @@ _ALLOWED_ENV_PERSISTENCE_WRITES: frozenset[tuple[str, ...]] = frozenset(
 # sink for every git working-tree writer (`stash pop`, `apply`, `am`, `merge`,
 # an alias ...), so it is allowed only while the example matches HEAD (#1061).
 _ENVRC_EXAMPLE = ".envrc.local.example"
+
+
+class _UnresolvedTarget(str):
+    """Stand-in for a write target the hook could not work out (#1240).
+
+    It carries the protected name ``_ENVRC_EXAMPLE`` so the matcher blocks it,
+    but the type tells the caller the block is fail-closed, not a confirmed write.
+    """
+
+
+_UNRESOLVED_TARGET = _UnresolvedTarget(_ENVRC_EXAMPLE)
 _ALLOWED_ENVRC_COPY: tuple[str, ...] = tuple(shlex.split(f"cp {_ENVRC_EXAMPLE} .envrc.local"))
 
 # Settings files that are only protected when inside a known AI CLI config dir
@@ -2257,7 +2268,7 @@ def _git_restore_targets(
     ):
         # Stand in the protected name the broad pathspec covers, so the
         # caller's match blocks it
-        targets.append(_ENVRC_EXAMPLE)
+        targets.append(_UNRESOLVED_TARGET)
     return targets
 
 
@@ -2476,19 +2487,19 @@ def _patch_source_targets(
     ``--directory`` / ``-d`` prefix: both ``root/path`` and ``path`` are checked.
     """
     if not read_files or not sources:
-        return [_ENVRC_EXAMPLE]
+        return [_UNRESOLVED_TARGET]
     named: list[str] = []
     for src, base_dir in sources:
         if any(c in _DYNAMIC_CHARS for c in src) or (
             base_dir is not None and any(c in _DYNAMIC_CHARS for c in base_dir)
         ):
-            return [_ENVRC_EXAMPLE]
+            return [_UNRESOLVED_TARGET]
         absolute = posixpath.isabs(src) or (base_dir is not None and posixpath.isabs(base_dir))
         if cwd_moved and not absolute:
-            return [_ENVRC_EXAMPLE]
+            return [_UNRESOLVED_TARGET]
         paths = _read_patch_paths(src, base_dir=base_dir, mbox=mbox)
         if paths is None:
-            return [_ENVRC_EXAMPLE]
+            return [_UNRESOLVED_TARGET]
         named.extend(paths)
     hits: list[str] = []
     for path in named:
@@ -2703,7 +2714,7 @@ def _git_patch_targets(
                 i += 0 if has_value else 1
                 if full == "--directory":
                     if _has_dotdot(value):
-                        return [*targets, _ENVRC_EXAMPLE]
+                        return [*targets, _UNRESOLVED_TARGET]
                     root = value
                 elif full == "--build-fake-ancestor":
                     fake_ancestors.append(value)
@@ -2717,7 +2728,7 @@ def _git_patch_targets(
     targets.extend(v for v in fake_ancestors if _is_env_persistence_target(v, dynamic=True))
     if is_am:
         if resume:
-            return [*targets, _ENVRC_EXAMPLE]
+            return [*targets, _UNRESOLVED_TARGET]
         if stop:
             return targets
     elif any(toggles.get(k, False) for k in _GIT_APPLY_TOGGLES[:4]) and not toggles.get(
@@ -2725,7 +2736,7 @@ def _git_patch_targets(
     ):
         return targets
     if toggles.get("--unsafe-paths", False):
-        return [*targets, _ENVRC_EXAMPLE]
+        return [*targets, _UNRESOLVED_TARGET]
     operands, stdin_files, unresolvable, has_output = _split_stdin_sources(plain, redirects)
     if has_output:
         # an fd number (`2` of `2>`) is no patch file
@@ -2733,12 +2744,12 @@ def _git_patch_targets(
     needs_stdin = not [t for t in operands if t != "-"] or "-" in operands
     operands = [t for t in operands if t != "-"]
     if unresolvable or (needs_stdin and not stdin_files):
-        return [*targets, _ENVRC_EXAMPLE]
+        return [*targets, _UNRESOLVED_TARGET]
     opts = tokens[git_idx + 1 : sub]
     cwd_moved = _cwd_moved(tokens, git_idx) or any(t.startswith("-C") for t in opts)
     tree, tree_unresolvable = _git_work_tree_root(tokens, git_idx, sub)
     if tree_unresolvable:
-        return [*targets, _ENVRC_EXAMPLE]
+        return [*targets, _UNRESOLVED_TARGET]
     if tree is not None:
         root = posixpath.join(tree, root) if root else tree
     if root:
@@ -2868,7 +2879,7 @@ def _patch_command_targets(
         or any(os.environ.get(name) for name in _PATCH_BACKUP_ENV)
     ):
         # set on this command line or inherited from the hook's environment
-        return [*targets, _ENVRC_EXAMPLE]
+        return [*targets, _UNRESOLVED_TARGET]
     operands, stdin_files, unresolvable, has_output = _split_stdin_sources(plain, redirects)
     if has_output:
         operands = [t for t in operands if not t.isdigit()]
@@ -2884,7 +2895,7 @@ def _patch_command_targets(
     sources += [(f, directory) for f in inputs if f != "-"]
     needs_stdin = not inputs or "-" in inputs
     if unresolvable or (needs_stdin and not stdin_files):
-        return [*targets, _ENVRC_EXAMPLE]
+        return [*targets, _UNRESOLVED_TARGET]
     return targets + _patch_source_targets(
         sources,
         read_files=read_files and _is_first_command(tokens, patch_idx),
@@ -3243,6 +3254,12 @@ def check_env_persistence_in_bash(
         f"Blocked: writes to shell or project config files that could persist "
         f"{var_name} are not allowed. Only a human can edit these files."
     )
+    unresolved_message = (
+        "Blocked: cannot determine which file this command writes (runtime variable, "
+        "command substitution, or an unreadable or not-yet-created patch file), so it "
+        "could touch a protected file. Use literal paths, or create the patch file in "
+        "an earlier command, and retry."
+    )
 
     for target in _bash_confirmed_write_targets(
         tokens,
@@ -3262,6 +3279,10 @@ def check_env_persistence_in_bash(
                         f"example, or ask a human to run the copy."
                     )
                 continue
+            if isinstance(target, _UnresolvedTarget) or not _matches_env_persistence_target(target):
+                # Only a stand-in or a shell expansion made it match: the
+                # real target is unknown, not a confirmed protected write
+                return True, unresolved_message
             return True, message
         if var_present:
             return True, message
