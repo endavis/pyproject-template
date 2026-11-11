@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794415756798,
+  "lastUpdate": 1794416367472,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24367,6 +24367,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.255838063450122e-7",
             "extra": "mean: 1.7514807602948688 usec\nrounds: 60713"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2199821b03bf322f15c786b4b1aafbb464da8f6",
+          "message": "fix: number any ADR heading in a body and add new ADRs to the index and nav (merges PR #1248, addresses #1245)\n\nThe body heading rewrite only matched digits, so a body starting with\nthe template's `# ADR-NNNN: <title>` kept the placeholder. Replace the\nwhole first `# ADR-...` line instead, with a lambda so a backslash in\nthe title is kept literally.\n\ndoit adr also never added the new ADR to the README index or the\nmkdocs nav, in any mode. It now inserts the row into the 9XXX or 0001+\nindex table and the entry into the Decisions nav, in numeric order and\nidempotently. Both paths derive from ADR_DIR. When either file or its\nstructure is missing, it prints a reminder naming that file instead.\n\nAddresses #1245\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sfBaYeY1fR1p9PZYVY\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-11T16:58:43Z",
+          "tree_id": "5ee20de9a0d730a028e898dbc4acea81949a12be",
+          "url": "https://github.com/endavis/pyproject-template/commit/c2199821b03bf322f15c786b4b1aafbb464da8f6"
+        },
+        "date": 1794416365978,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 13388912.551745038,
+            "unit": "iter/sec",
+            "range": "stddev: 8.927439115539978e-9",
+            "extra": "mean: 74.68866467946759 nsec\nrounds: 135870"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13454642.225434724,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1366632446844208e-8",
+            "extra": "mean: 74.32378975559789 nsec\nrounds: 139257"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8584477.714364309,
+            "unit": "iter/sec",
+            "range": "stddev: 2.182386289819144e-8",
+            "extra": "mean: 116.4893233197765 nsec\nrounds: 91609"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3103956.368265509,
+            "unit": "iter/sec",
+            "range": "stddev: 5.584349526093987e-8",
+            "extra": "mean: 322.16947706607107 nsec\nrounds: 197746"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 801787.5374052107,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2420047763273247e-7",
+            "extra": "mean: 1.2472131996915987 usec\nrounds: 84055"
           }
         ]
       }
