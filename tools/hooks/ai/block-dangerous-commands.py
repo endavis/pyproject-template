@@ -2216,18 +2216,23 @@ def _git_restore_targets(
     # protected names below: fail closed (#1088)
     redirect_targets = [target for _, target in redirects]
     paths: list[str] = []
+    # the pathspecs alone: for `checkout` the revision is no pathspec, so
+    # `HEAD~1` or `:/msg` must not read as one that climbs or covers the root
+    pathspecs: list[str] | None = None
     has_source = False
     if tokens[sub] == "checkout":
         paths = [t for t in rest if not t.startswith("-")]
         if "--" in rest:
             dashes = rest.index("--")
             has_source = any(not t.startswith("-") for t in rest[:dashes])
+            pathspecs = [t for t in rest[dashes + 1 :] if not t.startswith("-")]
         else:
             # `--pathspec-from-file` reads the paths from a file, so the one
             # non-option argument is then the revision
             has_source = len(paths) >= 2 or (
                 len(paths) >= 1 and any(_long_opt_matches(t, "--pathspec-from-file") for t in rest)
             )
+            pathspecs = paths[1:] if has_source else paths
     else:
         skip = False
         for t in rest:
@@ -2260,10 +2265,12 @@ def _git_restore_targets(
     ]
     # `-C`/`--work-tree` move where git resolves paths, so any pathspec may
     # reach the root (`git -C .. checkout X -- repo/`)
-    moved = _working_tree_moved(tokens, git_idx, sub, paths)
+    if pathspecs is None:
+        pathspecs = paths
+    moved = _working_tree_moved(tokens, git_idx, sub, pathspecs)
     if has_source and (
         moved
-        or any(_is_broad_pathspec(path) for path in paths)
+        or any(_is_broad_pathspec(path) for path in pathspecs)
         or any(_long_opt_matches(t, "--pathspec-from-file") for t in rest)
     ):
         # Stand in the protected name the broad pathspec covers, so the

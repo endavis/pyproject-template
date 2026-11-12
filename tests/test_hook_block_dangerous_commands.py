@@ -1079,6 +1079,13 @@ _DYNAMIC_TARGET_BLOCKED = [
     "git checkout HEAD~1 -- ~/src/repo",
     "git -C .. checkout HEAD~1 -- repo/",
     "git --work-tree=.. restore -s HEAD~1 repo/",
+    # #1251: a plain revision no longer hides what the pathspecs do
+    "cd x && git checkout HEAD~1 -- ../y",
+    "cd x && git checkout HEAD~1 -- .",
+    "git checkout HEAD~1 -- .envrc.local.example",
+    "cd x && git checkout HEAD~1 -- .envrc.local.example",
+    "git checkout .envrc.local.example -- src/a.py",
+    "git checkout HEAD~1 --pathspec-from-file=p",
 ]
 
 _DYNAMIC_TARGET_ALLOWED = [
@@ -1091,6 +1098,12 @@ _DYNAMIC_TARGET_ALLOWED = [
     "git checkout main",
     "git checkout -b feature/x",
     "git checkout main -- src/foo.py",
+    # #1251: the revision is no pathspec (`~`, `{`, a leading `:`)
+    "cd /work/repo && git checkout HEAD~1 -- src/pkg/module.py",
+    "cd /work/repo && git checkout HEAD~1 src/pkg/module.py",
+    "cd /work/repo && git checkout HEAD@{1} -- src/pkg/module.py",
+    'git checkout ":/fix bug" -- src/a.py',
+    "git checkout HEAD~1 -- src/pkg/module.py",
     "git restore src/foo.py",
     'git commit -m "a >> $f"',
     # Guard the everyday forms next to the #1061 gaps
