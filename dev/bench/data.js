@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794417461466,
+  "lastUpdate": 1794488593308,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24485,6 +24485,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.442753642348052e-7",
             "extra": "mean: 879.260319406631 nsec\nrounds: 117468"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ef8247589af9381314498757b8700bba0f753c02",
+          "message": "fix: keep the checkout revision out of the hook's pathspec checks (merges PR #1252, addresses #1251)\n\nThe dangerous-command hook read the revision of `git checkout <rev> -- <path>`\nas a pathspec. After a `cd`, a revision holding `~` or `{` (`HEAD~1`,\n`HEAD@{1}`) counted as a climbing pathspec, and a `:/<message>` revision as a\nroot-covering one, so the hook added the unresolved stand-in target and\nblocked the restore. The climb and broad-pathspec checks now see only the\npathspecs; every token, the revision included, is still matched against the\nprotected names.\n\nAddresses #1251\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1seN1L4YqjBScRbg4fg\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-12T13:02:13Z",
+          "tree_id": "dafac6fffe790768db9539fa98ca74696ff4e512",
+          "url": "https://github.com/endavis/pyproject-template/commit/ef8247589af9381314498757b8700bba0f753c02"
+        },
+        "date": 1794488592110,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 18708111.794918627,
+            "unit": "iter/sec",
+            "range": "stddev: 4.955531483012124e-9",
+            "extra": "mean: 53.452748784172506 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20659898.681970112,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4927211524425272e-8",
+            "extra": "mean: 48.40294792310379 nsec\nrounds: 199681"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13776415.797915738,
+            "unit": "iter/sec",
+            "range": "stddev: 7.992965581758603e-9",
+            "extra": "mean: 72.5878207125029 nsec\nrounds: 143267"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4460828.885442987,
+            "unit": "iter/sec",
+            "range": "stddev: 4.834094454635649e-8",
+            "extra": "mean: 224.17358425545032 nsec\nrounds: 48448"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1062454.7912216778,
+            "unit": "iter/sec",
+            "range": "stddev: 3.426376910468026e-7",
+            "extra": "mean: 941.2165188225437 nsec\nrounds: 111945"
           }
         ]
       }
