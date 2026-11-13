@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794488593308,
+  "lastUpdate": 1794562548193,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24544,6 +24544,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.426376910468026e-7",
             "extra": "mean: 941.2165188225437 nsec\nrounds: 111945"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d44dc9254b0171a1bac7cd0465e58a246ff5c19",
+          "message": "fix: stop the template update check caching the template head (merges PR #1254, addresses #1253)\n\nThe hook cached the template main head for 24 hours, so a project synced\nafter the cache was written got a false \"has updates since\" notice until\nthe cache expired. A successful check now compares against the live head\nand leaves no cache; only a failed check is cached, so an offline machine\nstill pays the timeout once a day.\n\nAddresses #1253\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbskuUKEHCs7qarAwo\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-13T09:35:05Z",
+          "tree_id": "6ae27245aec367365266917a45ba957fadd16dd5",
+          "url": "https://github.com/endavis/pyproject-template/commit/3d44dc9254b0171a1bac7cd0465e58a246ff5c19"
+        },
+        "date": 1794562546681,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 19584580.505852405,
+            "unit": "iter/sec",
+            "range": "stddev: 6.566453237815159e-9",
+            "extra": "mean: 51.06057797363455 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 20899320.632595435,
+            "unit": "iter/sec",
+            "range": "stddev: 6.617955311739834e-9",
+            "extra": "mean: 47.84844529541114 nsec\nrounds: 198926"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 13356436.93839999,
+            "unit": "iter/sec",
+            "range": "stddev: 8.393252526323013e-9",
+            "extra": "mean: 74.8702670189669 nsec\nrounds: 143473"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4118642.828167211,
+            "unit": "iter/sec",
+            "range": "stddev: 7.13332935754681e-8",
+            "extra": "mean: 242.7984269869301 nsec\nrounds: 43547"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 1107658.8974136594,
+            "unit": "iter/sec",
+            "range": "stddev: 7.990521493677937e-8",
+            "extra": "mean: 902.8050082339981 nsec\nrounds: 115969"
           }
         ]
       }
