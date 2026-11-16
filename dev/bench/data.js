@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794854248518,
+  "lastUpdate": 1794854652877,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24662,6 +24662,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.216364079958309e-7",
             "extra": "mean: 1.67673919818477 usec\nrounds: 62957"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "ea850831e6a68caeded18d7073edf627ff14a1d5",
+          "message": "fix: place doit adr nav entries beside their series, not after a group header (merges PR #1263, addresses #1259)\n\n_add_to_nav counted a nested group header such as \"- Template Decisions:\"\nas a nav item, so a project ADR numbered below the listed ones was\ninserted on the line after the header, emptying the group and making\nmkdocs.yml invalid YAML. ADR entries are now found at any depth and the\nnew entry goes beside the nearest ADR of its own series (0XXX or 9XXX),\nat that entry's indent. The already-present check also sees nested\nentries.\n\nAddresses #1259\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scBk93xiucNFHXwe56\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-16T18:43:18Z",
+          "tree_id": "33732f570f8f8a0821f6ba6612fc1a8936b97ed5",
+          "url": "https://github.com/endavis/pyproject-template/commit/ea850831e6a68caeded18d7073edf627ff14a1d5"
+        },
+        "date": 1794854650549,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10529751.034243591,
+            "unit": "iter/sec",
+            "range": "stddev: 9.884097068972606e-9",
+            "extra": "mean: 94.96900703045306 nsec\nrounds: 110376"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10741206.482474301,
+            "unit": "iter/sec",
+            "range": "stddev: 9.462752961084806e-9",
+            "extra": "mean: 93.09941128416368 nsec\nrounds: 116185"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8270894.708514442,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4862869617274164e-8",
+            "extra": "mean: 120.90590380392024 nsec\nrounds: 87010"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2956354.8732305225,
+            "unit": "iter/sec",
+            "range": "stddev: 4.737615226105361e-8",
+            "extra": "mean: 338.25438517374664 nsec\nrounds: 196657"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 643038.1677995495,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6831950837307585e-7",
+            "extra": "mean: 1.5551176432060934 usec\nrounds: 70112"
           }
         ]
       }
