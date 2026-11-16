@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794854652877,
+  "lastUpdate": 1794855020927,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24721,6 +24721,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6831950837307585e-7",
             "extra": "mean: 1.5551176432060934 usec\nrounds: 70112"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8f9960c37f78a95f1a9a2bee43e6fbf8e0e17736",
+          "message": "feat: run coverage in its own CI job instead of a matrix step (merges PR #1264, addresses #1260)\n\nCoverage ran as a conditional step in the test matrix, so one entry ran\npytest --cov and the id-token permission covered the whole test job.\nA new coverage job on the newest Python on ubuntu-latest now carries the\n--cov run, the id-token permission and the CODECOV_ENABLED-gated upload,\nin parallel with the test matrix. It logs the coverage core in use\n(COVERAGE_DEBUG=core), is skipped on full_matrix runs, and ci-complete\nrequires it to succeed or be skipped.\n\nAddresses #1260\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scBk93xiucNFHXwe56\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-16T18:49:38Z",
+          "tree_id": "8a7e65527c625c6f113adbd69fd3a89ebea35706",
+          "url": "https://github.com/endavis/pyproject-template/commit/8f9960c37f78a95f1a9a2bee43e6fbf8e0e17736"
+        },
+        "date": 1794855019458,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8060362.823939639,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6203522449841775e-8",
+            "extra": "mean: 124.06389412520677 nsec\nrounds: 83816"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8588932.873331277,
+            "unit": "iter/sec",
+            "range": "stddev: 9.357217529742178e-9",
+            "extra": "mean: 116.42889922972972 nsec\nrounds: 89183"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5894693.339311465,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4359543866944542e-8",
+            "extra": "mean: 169.64410910590405 nsec\nrounds: 60950"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2132552.239279402,
+            "unit": "iter/sec",
+            "range": "stddev: 6.452993125208546e-8",
+            "extra": "mean: 468.92168997365525 nsec\nrounds: 188289"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 515473.9745423983,
+            "unit": "iter/sec",
+            "range": "stddev: 3.315446619399905e-7",
+            "extra": "mean: 1.9399621501507034 usec\nrounds: 55810"
           }
         ]
       }
