@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794855020927,
+  "lastUpdate": 1794855613727,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24780,6 +24780,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.315446619399905e-7",
             "extra": "mean: 1.9399621501507034 usec\nrounds: 55810"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cc198c2ff0285ac29262fb427da1e0cb478bc867",
+          "message": "chore: use setup-uv's built-in cache instead of a separate actions/cache step (merges PR #1267, addresses #1266)\n\n* chore: trial setup-uv built-in cache in ci.yml (addresses #1266)\n\n* chore: use setup-uv's built-in cache in all workflows\n\nReplace the separate actions/cache step and UV_CACHE_DIR with\nenable-cache: true on setup-uv in daily-check, benchmark and mutation\n(ci.yml was switched in the trial commit). Measured on the Windows test\njob: setup, cache and install took 37-41s before and 13-16s after, cold\nor warm. Release and TestPyPI build jobs stay uncached. A test asserts\nthe pattern across workflows.\n\nAddresses #1266\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scBk93xiucNFHXwe56\n\n* docs: keep single-run cache timings out of the CI docs (addresses #1266)\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-16T18:59:35Z",
+          "tree_id": "0b9b928ecbe5462e6bc99a8811f241eb69cf8390",
+          "url": "https://github.com/endavis/pyproject-template/commit/cc198c2ff0285ac29262fb427da1e0cb478bc867"
+        },
+        "date": 1794855612808,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16096624.099727243,
+            "unit": "iter/sec",
+            "range": "stddev: 7.722559747820177e-9",
+            "extra": "mean: 62.12482777782857 nsec\nrounds: 160026"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 16278712.416397186,
+            "unit": "iter/sec",
+            "range": "stddev: 7.797404848265589e-9",
+            "extra": "mean: 61.4299199114005 nsec\nrounds: 165317"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11611569.306031106,
+            "unit": "iter/sec",
+            "range": "stddev: 5.0746740967440945e-8",
+            "extra": "mean: 86.12100342721075 nsec\nrounds: 123427"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4252411.676653724,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9500037699654427e-8",
+            "extra": "mean: 235.16067493891194 nsec\nrounds: 43678"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 817930.286166613,
+            "unit": "iter/sec",
+            "range": "stddev: 3.050580169795695e-7",
+            "extra": "mean: 1.222598083128443 usec\nrounds: 84617"
           }
         ]
       }
