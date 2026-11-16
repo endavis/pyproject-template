@@ -24,7 +24,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries",
 ]
 dependencies = [
-    "click>=8.5.0",
+    "click>=8.5.1",
     "rich>=15.0.0",
 ]
 
@@ -37,11 +37,11 @@ dev = [
     "ruff>=0.17.4",
     "mypy>=2.4.1",
     "pre-commit>=4.7.0",
-    "mkdocs-material>=9.8.0",
+    "mkdocs-material>=9.8.1",
     "mkdocstrings[python]>=1.0.8",
     "pymdown-extensions>=12.3",
     "codespell>=2.4.3",
-    "pyproject-fmt>=2.30.3",
+    "pyproject-fmt>=2.30.6",
     "commitizen>=4.19.3",
     "pyright>=1.1.414",
     "pyyaml>=6.0",
@@ -50,12 +50,12 @@ dev = [
     "radon>=6.0",
     "pytest-benchmark>=5.3.1",
     "mutmut>=3.8.1",
-    "hypothesis>=6.170.14",
+    "hypothesis>=6.170.15",
 ]
 security = [
     "pip-audit>=2.10.1",
     "bandit>=1.7",
-    "pip>=26.2.2",
+    "pip>=26.3",
     "pip-licenses>=4.0",
     "cyclonedx-bom>=7.6.0",
 ]
