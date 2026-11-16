@@ -12,7 +12,6 @@ jobs:
   mutate:
     runs-on: ubuntu-latest
     env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
       # As in ci.yml: no per-example deadline, so a slow runner cannot fail a
       # property test on timing and stop the run.
       HYPOTHESIS_PROFILE: ci
@@ -35,14 +34,8 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "latest"
-
-      - name: Cache uv dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dependencies
         run: uv sync --all-extras --dev

@@ -121,6 +121,7 @@ runs, and it already does what a hand-rolled `tests.yml` would:
 | **Coverage** | `package_name` **and** `tools/`, gated by `fail_under` in `pyproject.toml` |
 | **Actions** | pinned to commit SHAs with a `# vX.Y.Z` comment (see [Action pinning](#action-pinning-and-workflow-permissions)) |
 | **Interpreter** | every job that sets up Python and then runs uv sets `UV_PYTHON` to that version, so `uv sync` and `uv run` use it instead of the one in `.python-version`; a `Check the Python version` step fails the job if uv runs another one (#1261) |
+| **uv cache** | `astral-sh/setup-uv` with `enable-cache: true`, keyed on `uv.lock`; no separate `actions/cache` step or `UV_CACHE_DIR`. It is faster than `actions/cache`, most of all on Windows (timings in #1266) |
 
 Read `.github/workflows/ci.yml` for the current definition. This page previously carried a ~60-line
 `tests.yml` sample to copy; it drifted from the real file in every dimension above — hardcoded
