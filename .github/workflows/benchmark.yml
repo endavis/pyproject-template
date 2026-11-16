@@ -24,8 +24,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
     outputs:
       has-benchmarks: ${{ steps.check-benchmarks.outputs.exists }}
 
@@ -61,15 +59,8 @@ jobs:
         if: steps.check-benchmarks.outputs.exists == 'true'
         with:
           version: "latest"
-
-      - name: Cache uv dependencies
-        if: steps.check-benchmarks.outputs.exists == 'true'
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dependencies
         if: steps.check-benchmarks.outputs.exists == 'true'
