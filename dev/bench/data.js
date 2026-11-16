@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794562548193,
+  "lastUpdate": 1794854248518,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24603,6 +24603,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 7.990521493677937e-8",
             "extra": "mean: 902.8050082339981 nsec\nrounds: 115969"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "532ae014ecbda52ccc715088304c6a7c899864fb",
+          "message": "fix: run CI jobs on the Python that setup-python installs (merges PR #1262, addresses #1261)\n\nuv builds .venv from .python-version, so every job that set up a newer\nPython still ran on the pinned 3.12. Each job that sets up Python and\nthen runs uv now sets UV_PYTHON to the requested version (job env in\nci.yml, a GITHUB_ENV step in daily-check, benchmark, mutation, testpypi\nand release) and fails in a \"Check the Python version\" step if uv runs\nanother one. tests/test_workflow_uv_python.py checks every such job.\n\nAddresses #1261\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scBk93xiucNFHXwe56\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-16T18:36:37Z",
+          "tree_id": "9713210dc2eb6891a6ebd602bf9f4f4f08857754",
+          "url": "https://github.com/endavis/pyproject-template/commit/532ae014ecbda52ccc715088304c6a7c899864fb"
+        },
+        "date": 1794854246446,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 9829338.475274282,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2691386774169185e-8",
+            "extra": "mean: 101.73624629119263 nsec\nrounds: 101782"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9829378.368321855,
+            "unit": "iter/sec",
+            "range": "stddev: 1.114269463001223e-8",
+            "extra": "mean: 101.73583338930187 nsec\nrounds: 104243"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7161304.42540143,
+            "unit": "iter/sec",
+            "range": "stddev: 1.189213534878692e-8",
+            "extra": "mean: 139.63936464604973 nsec\nrounds: 75816"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2999560.2528250986,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3975355731299155e-8",
+            "extra": "mean: 333.3822012937271 nsec\nrounds: 194288"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 596395.6714810481,
+            "unit": "iter/sec",
+            "range": "stddev: 1.216364079958309e-7",
+            "extra": "mean: 1.67673919818477 usec\nrounds: 62957"
           }
         ]
       }
