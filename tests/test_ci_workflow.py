@@ -305,17 +305,19 @@ class TestOsMatrix:
 
 
 class TestCodecovOptIn:
-    """The Codecov upload is opt-in, OIDC-authenticated and uploads one file (#1218)."""
+    """The Codecov upload is opt-in, OIDC-authenticated and uploads one file (#1218).
+
+    It lives in the separate ``coverage`` job, not the ``test`` matrix (#1260).
+    """
 
     @staticmethod
     def _step() -> dict[str, Any]:
-        steps: list[dict[str, Any]] = _load_workflow()["jobs"]["test"]["steps"]
+        steps: list[dict[str, Any]] = _load_workflow()["jobs"]["coverage"]["steps"]
         return next(s for s in steps if s.get("name") == "Upload coverage to Codecov")
 
     def test_gated_on_repository_variable(self) -> None:
         condition = self._step()["if"]
         assert "vars.CODECOV_ENABLED == 'true'" in condition
-        assert "needs.setup.outputs.newest" in condition
 
     def test_authenticates_with_oidc_not_a_token(self) -> None:
         step = self._step()
@@ -328,7 +330,7 @@ class TestCodecovOptIn:
         assert with_["files"] == "./tmp/coverage.xml"
 
     def test_job_can_request_an_oidc_token(self) -> None:
-        perms = _load_workflow()["jobs"]["test"]["permissions"]
+        perms = _load_workflow()["jobs"]["coverage"]["permissions"]
         assert perms == {"contents": "read", "id-token": "write"}
 
     def test_callers_grant_id_token(self) -> None:
@@ -343,3 +345,52 @@ class TestCodecovOptIn:
             data = yaml.safe_load((workflows / name).read_text(encoding="utf-8"))
             granted = [data.get("permissions"), data["jobs"][job].get("permissions")]
             assert any(p and p.get("id-token") == "write" for p in granted), name
+
+
+class TestCoverageJob:
+    """Coverage runs in its own job, not in the test matrix (#1260)."""
+
+    @staticmethod
+    def _jobs() -> dict[str, Any]:
+        jobs: dict[str, Any] = _load_workflow()["jobs"]
+        return jobs
+
+    def test_test_matrix_has_no_coverage_or_oidc(self) -> None:
+        test = self._jobs()["test"]
+        text = yaml.safe_dump(test)
+        for forbidden in ("--cov", "codecov", "id-token", "permissions"):
+            assert forbidden not in text, forbidden
+
+    def test_test_matrix_runs_plain_tests_unconditionally(self) -> None:
+        runs = [s for s in self._jobs()["test"]["steps"] if s.get("name") == "Run tests"]
+        assert len(runs) == 1
+        assert "if" not in runs[0]
+        assert runs[0]["run"].startswith("uv run pytest")
+
+    def test_coverage_job_runs_on_newest_linux(self) -> None:
+        job = self._jobs()["coverage"]
+        assert job["runs-on"] == "ubuntu-latest"
+        assert job["needs"] == "setup"
+        assert job["env"]["UV_PYTHON"] == "${{ needs.setup.outputs.newest }}"
+        setup_py = next(s for s in job["steps"] if "setup-python" in str(s.get("uses")))
+        assert setup_py["with"]["python-version"] == "${{ needs.setup.outputs.newest }}"
+
+    def test_coverage_job_measures_coverage_and_reports_core(self) -> None:
+        job = self._jobs()["coverage"]
+        measured = next(s for s in job["steps"] if s.get("name") == "Run tests with coverage")
+        assert "--cov" in measured["run"]
+        assert measured["env"]["COVERAGE_DEBUG"] == "core"
+        assert measured["env"]["COVERAGE_DEBUG_FILE"].startswith("tmp/")
+        show = next(s for s in job["steps"] if s.get("name") == "Show the coverage core")
+        assert show["if"] == "always()"
+        assert "Using core=" in show["run"]
+
+    def test_coverage_job_skipped_on_full_matrix(self) -> None:
+        assert "inputs.full_matrix" in self._jobs()["coverage"]["if"]
+
+    def test_ci_complete_needs_coverage_and_accepts_skipped(self) -> None:
+        job = self._jobs()["ci-complete"]
+        assert "coverage" in job["needs"]
+        script = job["steps"][0]["run"]
+        assert 'coverage_result="${{ needs.coverage.result }}"' in script
+        assert '"$coverage_result" != "skipped"' in script
