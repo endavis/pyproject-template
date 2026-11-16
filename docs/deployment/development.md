@@ -398,7 +398,7 @@ doit check
 
 #### Wrong Python Version
 
-The project pins its Python version in `.python-version`, and uv builds `.venv` on that version. `python --version` reports whichever `python` comes first on your `PATH`, which may not be the project's.
+The project pins its Python version in `.python-version`, and uv builds `.venv` on that version. `python --version` reports whichever `python` comes first on your `PATH`, which may not be the project's. Setting `UV_PYTHON` overrides `.python-version`, which is how CI makes uv use the Python version it set up.
 
 ```bash
 # Check the version .venv runs; --no-sync keeps uv from rebuilding it first

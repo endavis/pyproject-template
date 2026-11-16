@@ -120,6 +120,7 @@ runs, and it already does what a hand-rolled `tests.yml` would:
 | **Checks** | the `lint` and `docs` jobs run `doit` tasks, so CI and a local run cannot diverge; the `test` job calls `pytest` directly (see [Pipeline Jobs](#pipeline-jobs)) |
 | **Coverage** | `package_name` **and** `tools/`, gated by `fail_under` in `pyproject.toml` |
 | **Actions** | pinned to commit SHAs with a `# vX.Y.Z` comment (see [Action pinning](#action-pinning-and-workflow-permissions)) |
+| **Interpreter** | every job that sets up Python and then runs uv sets `UV_PYTHON` to that version, so `uv sync` and `uv run` use it instead of the one in `.python-version`; a `Check the Python version` step fails the job if uv runs another one (#1261) |
 
 Read `.github/workflows/ci.yml` for the current definition. This page previously carried a ~60-line
 `tests.yml` sample to copy; it drifted from the real file in every dimension above — hardcoded
