@@ -112,7 +112,6 @@ jobs:
       fail-fast: false
       matrix: ${{ fromJson(needs.setup.outputs.matrix) }}
     env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
       HYPOTHESIS_PROFILE: ci
       # uv builds .venv from .python-version unless told otherwise (#1261).
       UV_PYTHON: ${{ matrix.python-version }}
@@ -131,14 +130,8 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "latest"
-
-      - name: Cache uv dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
@@ -170,7 +163,6 @@ jobs:
       contents: read
       id-token: write
     env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
       HYPOTHESIS_PROFILE: ci
       # uv builds .venv from .python-version unless told otherwise (#1261).
       UV_PYTHON: ${{ needs.setup.outputs.newest }}
@@ -185,14 +177,8 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "latest"
-
-      - name: Cache uv dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
@@ -237,7 +223,6 @@ jobs:
     if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
     runs-on: ubuntu-latest
     env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
       # uv builds .venv from .python-version unless told otherwise (#1261).
       UV_PYTHON: ${{ needs.setup.outputs.newest }}
 
@@ -251,14 +236,8 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "latest"
-
-      - name: Cache uv dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dependencies
         run: uv sync --all-extras --dev
@@ -282,7 +261,6 @@ jobs:
     if: ${{ needs.setup.outputs.matrix != '{"include":[]}' }}
     runs-on: ubuntu-latest
     env:
-      UV_CACHE_DIR: ${{ github.workspace }}/.uv-cache
       # uv builds .venv from .python-version unless told otherwise (#1261).
       UV_PYTHON: ${{ needs.setup.outputs.newest }}
 
@@ -296,14 +274,8 @@ jobs:
       - uses: astral-sh/setup-uv@68559e99cc807c1eb7e9238fd43a15bba460eec2 # v10.3.3
         with:
           version: "latest"
-
-      - name: Cache uv dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ env.UV_CACHE_DIR }}
-          key: ${{ runner.os }}-uv-${{ hashFiles('uv.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-uv-
+          enable-cache: true
+          cache-dependency-glob: uv.lock
 
       - name: Install dependencies
         id: install
