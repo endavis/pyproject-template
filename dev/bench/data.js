@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794908770746,
+  "lastUpdate": 1794909921613,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24898,6 +24898,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3813267299529724e-7",
             "extra": "mean: 1.2679946480879365 usec\nrounds: 83914"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1494b033f0cbaf3b00558658f05c29adc0a04a10",
+          "message": "chore(deps): bump pymdown-extensions from 12.3 to 13.0 (merges PR #1258)\n\nBumps [pymdown-extensions](https://github.com/facelessuser/pymdown-extensions) from 12.3 to 13.0.\n- [Release notes](https://github.com/facelessuser/pymdown-extensions/releases)\n- [Commits](https://github.com/facelessuser/pymdown-extensions/compare/12.3...13.0)\n\n---\nupdated-dependencies:\n- dependency-name: pymdown-extensions\n  dependency-version: '13.0'\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-17T10:04:38Z",
+          "tree_id": "a40ea1db7ce1f0f5856d67dd8a857a1d09bc1fbc",
+          "url": "https://github.com/endavis/pyproject-template/commit/1494b033f0cbaf3b00558658f05c29adc0a04a10"
+        },
+        "date": 1794909920380,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8954824.173890563,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9433702712163592e-8",
+            "extra": "mean: 111.67165100970759 nsec\nrounds: 95166"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 9300539.173498541,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5780872560752493e-8",
+            "extra": "mean: 107.52064814150282 nsec\nrounds: 98281"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6962978.0241196975,
+            "unit": "iter/sec",
+            "range": "stddev: 1.814318398482487e-8",
+            "extra": "mean: 143.6167106281261 nsec\nrounds: 72412"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2463022.2368347663,
+            "unit": "iter/sec",
+            "range": "stddev: 6.63705952014806e-8",
+            "extra": "mean: 406.0052666374225 nsec\nrounds: 185426"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 558448.7732603111,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2050374921171302e-7",
+            "extra": "mean: 1.7906745396929495 usec\nrounds: 59960"
           }
         ]
       }
