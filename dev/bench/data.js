@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794855613727,
+  "lastUpdate": 1794908770746,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24839,6 +24839,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.050580169795695e-7",
             "extra": "mean: 1.222598083128443 usec\nrounds: 84617"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "49699333+dependabot[bot]@users.noreply.github.com",
+            "name": "dependabot[bot]",
+            "username": "dependabot[bot]"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cf3655737239b2ff5ae73d088875683781084edd",
+          "message": "chore(deps): bump cyclonedx-bom from 7.6.0 to 8.0.1 (merges PR #1257)\n\nBumps [cyclonedx-bom](https://github.com/CycloneDX/cyclonedx-python) from 7.6.0 to 8.0.1.\n- [Release notes](https://github.com/CycloneDX/cyclonedx-python/releases)\n- [Changelog](https://github.com/CycloneDX/cyclonedx-python/blob/main/CHANGELOG.md)\n- [Commits](https://github.com/CycloneDX/cyclonedx-python/compare/v7.6.0...v8.0.1)\n\n---\nupdated-dependencies:\n- dependency-name: cyclonedx-bom\n  dependency-version: 8.0.1\n  dependency-type: direct:production\n  update-type: version-update:semver-major\n...\n\nSigned-off-by: dependabot[bot] <support@github.com>\nCo-authored-by: dependabot[bot] <49699333+dependabot[bot]@users.noreply.github.com>",
+          "timestamp": "2026-11-17T09:45:28Z",
+          "tree_id": "4aa9afe29c7dd97a707bde8cd92c5c9e3382a2fd",
+          "url": "https://github.com/endavis/pyproject-template/commit/cf3655737239b2ff5ae73d088875683781084edd"
+        },
+        "date": 1794908769617,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12560996.265410056,
+            "unit": "iter/sec",
+            "range": "stddev: 9.476556787502719e-9",
+            "extra": "mean: 79.61151956980976 nsec\nrounds: 130175"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12914930.409587147,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0033178863356152e-8",
+            "extra": "mean: 77.429762939928 nsec\nrounds: 135704"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9528144.068816347,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1422933256447147e-8",
+            "extra": "mean: 104.95223338118846 nsec\nrounds: 98971"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3511434.921239741,
+            "unit": "iter/sec",
+            "range": "stddev: 4.063280469442765e-8",
+            "extra": "mean: 284.7838625603637 nsec\nrounds: 195542"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 788646.8618049319,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3813267299529724e-7",
+            "extra": "mean: 1.2679946480879365 usec\nrounds: 83914"
           }
         ]
       }
