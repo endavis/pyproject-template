@@ -109,6 +109,8 @@ TEMPLATE_OWNED_TEST_FILES: list[str] = [
     "tests/template/test_migration_guide.py",
     # Targets configure.py and setup_repo.py, both shed by configuration.
     "tests/template/test_author_maintainer_split.py",
+    # Targets configure.py and manage.py, both shed by configuration.
+    "tests/template/test_configure_repo_identity.py",
 ]
 
 
@@ -501,6 +503,7 @@ _MARKER_TOKENS: frozenset[str] = frozenset(
         "__AUTHOR_NAME__",
         "__AUTHOR_EMAIL__",
         "__DESCRIPTION__",
+        "__REPO_NAME__",
         "__REPO_URL__",
         "__REPO_SLUG__",
     }
