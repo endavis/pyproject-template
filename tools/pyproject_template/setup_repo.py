@@ -324,6 +324,9 @@ class RepositorySetup:
             # Define replacements
             owner = self.config["repo_owner"]
             pkg = self.config["package_name"]
+            # Repository identity comes from the repo name, never the package
+            # name: the two differ for names such as my-tool / mytool (#1268).
+            repo = self.config["repo_name"]
             replacements = {
                 # Marker tokens (unambiguous, used in prose files). These take
                 # priority because ``update_file()`` treats them as blind
@@ -335,17 +338,19 @@ class RepositorySetup:
                 "__AUTHOR_NAME__": self.config["author_name"],
                 "__AUTHOR_EMAIL__": self.config["author_email"],
                 "__DESCRIPTION__": self.config["description"],
-                "__REPO_URL__": f"https://github.com/{owner}/{pkg}",
-                "__REPO_SLUG__": f"{owner}/{pkg}",
+                "__REPO_NAME__": repo,
+                "__REPO_URL__": f"https://github.com/{owner}/{repo}",
+                "__REPO_SLUG__": f"{owner}/{repo}",
                 # URLs — kept for runtime-critical files (pyproject.toml,
                 # workflows, LICENSE, mkdocs.yml, dodo.py, .envrc,
                 # .pre-commit-config.yaml) that retain literal placeholders,
                 # and for downstream consumer projects that have not yet
                 # migrated to marker tokens.
-                "https://github.com/username/package_name": (f"https://github.com/{owner}/{pkg}"),
-                f"https://github.com/username/{pkg}": (f"https://github.com/{owner}/{pkg}"),
-                "gh username/package_name": f"gh {owner}/{pkg}",
-                "username/package_name": f"{owner}/{pkg}",
+                "https://github.com/username/package_name": (f"https://github.com/{owner}/{repo}"),
+                f"https://github.com/username/{pkg}": (f"https://github.com/{owner}/{repo}"),
+                "https://username.github.io/package_name": f"https://{owner}.github.io/{repo}",
+                "gh username/package_name": f"gh {owner}/{repo}",
+                "username/package_name": f"{owner}/{repo}",
                 "username": owner,
                 # Package names (literal forms; Python files receive
                 # word-boundary protection from ``update_file()``).

@@ -558,6 +558,7 @@ class TestConfigureModule:
                         "author_name": "Test Author",
                         "author_email": "test@example.com",
                         "github_user": "testuser",
+                        "github_repo": "test-repo",
                     },
                 )
             assert result == 0
@@ -567,7 +568,7 @@ class TestConfigureModule:
             assert "{owner}" not in content
             assert "{repo}" not in content
             assert "testuser" in content
-            assert "test_pkg" in content
+            assert "https://github.com/testuser/test-repo/discussions" in content
         finally:
             os.chdir(old_cwd)
 
@@ -693,6 +694,7 @@ class TestConfigureModule:
                         "author_name": "Test Author",
                         "author_email": "test@example.com",
                         "github_user": "myuser",
+                        "github_repo": "test-repo",
                     },
                 )
             assert result == 0
@@ -700,9 +702,9 @@ class TestConfigureModule:
             # Verify mkdocs.yml placeholders were replaced
             content = mkdocs_yml.read_text(encoding="utf-8")
             assert "username.github.io" not in content
-            assert "https://myuser.github.io/test_pkg" in content
+            assert "https://myuser.github.io/test-repo" in content
             assert "username/package_name" not in content
-            assert "myuser/test_pkg" in content
+            assert "myuser/test-repo" in content
         finally:
             os.chdir(old_cwd)
 
