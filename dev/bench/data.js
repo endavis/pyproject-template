@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795262612656,
+  "lastUpdate": 1795262817714,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25016,6 +25016,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.0543415320668955e-7",
             "extra": "mean: 2.2304593421602816 usec\nrounds: 44540"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fefab3f7898719b30c6fc09f6bbc9e78bbff7736",
+          "message": "fix: allow documented paths that configuration renames or sheds (merges PR #1271, addresses #1269)\n\n* fix: allow documented paths that configuration renames or sheds\n\nThe deprecate-api skill names src/package_name/__init__.py and core.py, and\nADR-9017 and ADR-9026 name template-owned tests that configuration removes.\ntest_documented_paths_exist failed on all of them in a configured project.\nAdd exact-match ALLOWED_PATTERNS entries for those paths, with tests that\npin them and that other paths stay checked.\n\nAddresses #1269\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbm45qpHg5tbCESQQA\n\n* fix: keep the package_name exemption from being rewritten by configure\n\nConfiguration rewrote the literal in the allowlist pattern, so the skills'\nsrc/package_name paths were no longer exempt in a configured project.\n\nAddresses #1269\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbm45qpHg5tbCESQQA\n\n* test: pin that configure's rewrite keeps the documented-paths allowlist working\n\nApply update_test_files to a copy of test_documented_paths.py and assert the\nfive paths reported in #1269 stay allowed. Template-owned, since it imports\ntools.pyproject_template; registered in TEMPLATE_OWNED_TEST_FILES.\n\nAddresses #1269\n\nCo-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1sbm45qpHg5tbCESQQA\n\n---------\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-21T12:06:19Z",
+          "tree_id": "7454e7852e14b526dc61fd570d259603859f0be8",
+          "url": "https://github.com/endavis/pyproject-template/commit/fefab3f7898719b30c6fc09f6bbc9e78bbff7736"
+        },
+        "date": 1795262815881,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8141554.730663886,
+            "unit": "iter/sec",
+            "range": "stddev: 9.913662837024487e-9",
+            "extra": "mean: 122.82666309834623 nsec\nrounds: 79403"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8340127.674053795,
+            "unit": "iter/sec",
+            "range": "stddev: 9.759143831425678e-9",
+            "extra": "mean: 119.90224119841811 nsec\nrounds: 87712"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5497533.229679772,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4351948376252763e-8",
+            "extra": "mean: 181.8997645346201 nsec\nrounds: 57036"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2190847.5298236036,
+            "unit": "iter/sec",
+            "range": "stddev: 6.838682168283341e-8",
+            "extra": "mean: 456.44436063540905 nsec\nrounds: 191242"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 475572.2366714082,
+            "unit": "iter/sec",
+            "range": "stddev: 2.290402552903945e-7",
+            "extra": "mean: 2.1027299806210933 usec\nrounds: 49025"
           }
         ]
       }
