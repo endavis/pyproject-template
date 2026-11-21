@@ -111,6 +111,8 @@ TEMPLATE_OWNED_TEST_FILES: list[str] = [
     "tests/template/test_author_maintainer_split.py",
     # Targets configure.py and manage.py, both shed by configuration.
     "tests/template/test_configure_repo_identity.py",
+    # Imports tools.pyproject_template to apply configure's rewrite (#1269).
+    "tests/template/test_documented_paths_survive_configure.py",
 ]
 
 
