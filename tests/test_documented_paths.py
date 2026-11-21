@@ -88,7 +88,9 @@ ALLOWED_PATTERNS: dict[re.Pattern[str], str] = {
     re.compile(r"src/[A-Za-z0-9_]+/(?:cache|farewell|provider)\.py"): (
         "worked-example modules in the tutorials, in any package name"
     ),
-    re.compile(r"src/package_name/(?:__init__|core)\.py"): (
+    # Built from two pieces: configuration rewrites the literal word, which would turn
+    # this pattern into one for the new package while the skill still names the old one.
+    re.compile(r"src/" + "package" + r"_name/(?:__init__|core)\.py"): (
         "the deprecate-api skill's example paths; configuration renames the package (#1269)"
     ),
     re.compile(r"tests/template/test_(?:utils|utils_properties|check_template_updates)\.py"): (
@@ -270,8 +272,8 @@ def test_never_committed_entries_are_allowlisted() -> None:
 def test_paths_shed_or_renamed_by_configuration_are_allowed() -> None:
     """A configured project lacks these, and the docs that ship still name them (#1269)."""
     for raw in (
-        "src/package_name/__init__.py",
-        "src/package_name/core.py",
+        "src/package" + "_name/__init__.py",
+        "src/package" + "_name/core.py",
         "tests/template/test_utils.py",
         "tests/template/test_utils_properties.py",
         "tests/template/test_check_template_updates.py",
@@ -280,6 +282,6 @@ def test_paths_shed_or_renamed_by_configuration_are_allowed() -> None:
 
 
 def test_other_template_paths_are_still_checked() -> None:
-    """The exemptions are exact, not a blanket over `tests/template/` or `package_name`."""
+    """The exemptions are exact, not a blanket over `tests/template/` or the placeholder package."""
     assert not _is_allowed("tests/template/test_other.py")
-    assert not _is_allowed("src/package_name/cli.py")
+    assert not _is_allowed("src/package" + "_name/cli.py")
