@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794909921613,
+  "lastUpdate": 1795262612656,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -24957,6 +24957,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.2050374921171302e-7",
             "extra": "mean: 1.7906745396929495 usec\nrounds: 59960"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "bd08a4da5d4ec3d5ba6e764d9bb2fe9c38b99ebf",
+          "message": "fix: build project name and repo URLs from the PyPI and repo names when configuring (merges PR #1270, addresses #1268)\n\nconfigure set [project].name to the package name and built every GitHub\nURL and slug from the package name, so a my-tool / mytool project got\nlinks to a repository that does not exist. Both wizard paths now use the\nrepo name (github_repo, then the git remote, then the PyPI name) for URLs,\nslugs and the clone directory via a new __REPO_NAME__ marker, and the PyPI\nname for [project].name. action_configure also passes the maintainer\naddress from settings, so SECURITY.md no longer keeps the template's\nplaceholder email.\n\nAddresses #1268\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbm45qpHg5tbCESQQA\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-21T12:02:49Z",
+          "tree_id": "f8d31198a0eaca65b945984fcac24dad1305ee41",
+          "url": "https://github.com/endavis/pyproject-template/commit/bd08a4da5d4ec3d5ba6e764d9bb2fe9c38b99ebf"
+        },
+        "date": 1795262611064,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8125032.618837075,
+            "unit": "iter/sec",
+            "range": "stddev: 1.339775306061946e-8",
+            "extra": "mean: 123.07642897107883 nsec\nrounds: 82150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8410677.874865554,
+            "unit": "iter/sec",
+            "range": "stddev: 1.337505530263537e-8",
+            "extra": "mean: 118.8964807448395 nsec\nrounds: 87169"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5508975.715764968,
+            "unit": "iter/sec",
+            "range": "stddev: 1.753527347584986e-8",
+            "extra": "mean: 181.52194738094641 nsec\nrounds: 56938"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2134270.4063066454,
+            "unit": "iter/sec",
+            "range": "stddev: 6.82865256016264e-8",
+            "extra": "mean: 468.544190579159 nsec\nrounds: 184502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 448338.14322365687,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0543415320668955e-7",
+            "extra": "mean: 2.2304593421602816 usec\nrounds: 44540"
           }
         ]
       }
