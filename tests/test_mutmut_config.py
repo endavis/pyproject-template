@@ -99,6 +99,20 @@ def _copied_paths(config: dict[str, Any]) -> set[tuple[str, ...]]:
     return copied
 
 
+def _file_entries_in_subdirectories(config: dict[str, Any], root: Path) -> dict[str, str]:
+    """Map each ``also_copy`` file entry under a subdirectory to the directory to list instead.
+
+    mutmut 3.8.1 copies a file entry with ``shutil.copy2`` into ``mutants/`` without
+    creating its parent directory, so it raises ``FileNotFoundError`` (#1275). A
+    top-level file and a directory entry (copied with ``copytree``) work.
+    """
+    return {
+        entry: Path(entry).parent.as_posix() + "/"
+        for entry in config.get("also_copy", [])
+        if len(Path(entry).parts) > 1 and (root / entry).is_file()
+    }
+
+
 def _is_copied(parts: tuple[str, ...], copied: set[tuple[str, ...]]) -> bool:
     """Return True if some copied prefix is a prefix of *parts*."""
     return any(parts[: len(prefix)] == prefix for prefix in copied)
@@ -354,8 +368,39 @@ def test_selected_tests_read_no_file_mutmut_leaves_behind() -> None:
     assert not offenders, (
         "these selected tests read files that mutmut does not copy into mutants/, so they "
         "fail there and its stats run stops before any mutant is checked (#1272). Add the "
-        f"file to also_copy in pyproject.toml, as narrowly as possible: {offenders}"
+        "narrowest directory that holds the file to also_copy in pyproject.toml; a file "
+        "entry under a subdirectory crashes mutmut 3.8, which does not create its parent "
+        f"directory (#1275): {offenders}"
     )
+
+
+def test_also_copy_has_no_file_entry_under_a_subdirectory() -> None:
+    """mutmut 3.8 cannot copy a file whose parent directory it does not create (#1275)."""
+    offenders = _file_entries_in_subdirectories(_mutmut_config(), REPO_ROOT)
+
+    assert not offenders, (
+        "these also_copy entries are files under a subdirectory, which makes mutmut 3.8 "
+        "raise FileNotFoundError before any test runs (#1275). List the directory "
+        f"instead: {offenders}"
+    )
+
+
+def test_the_also_copy_guard_rejects_a_file_under_a_subdirectory(tmp_path: Path) -> None:
+    (tmp_path / "docs" / "usage").mkdir(parents=True)
+    (tmp_path / "docs" / "usage" / "page.md").write_text("x", encoding="utf-8")
+    config = {"also_copy": ["docs/usage/page.md"]}
+
+    assert _file_entries_in_subdirectories(config, tmp_path) == {
+        "docs/usage/page.md": "docs/usage/"
+    }
+
+
+def test_the_also_copy_guard_accepts_a_directory_and_a_top_level_file(tmp_path: Path) -> None:
+    (tmp_path / "docs" / "usage").mkdir(parents=True)
+    (tmp_path / "data.json").write_text("{}", encoding="utf-8")
+    config = {"also_copy": ["docs/usage/", "docs/usage", "data.json"]}
+
+    assert _file_entries_in_subdirectories(config, tmp_path) == {}
 
 
 def test_every_test_of_the_package_is_selected() -> None:
