@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795344481127,
+  "lastUpdate": 1795344676314,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25193,6 +25193,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7733388099047182e-7",
             "extra": "mean: 2.1836940262588675 usec\nrounds: 47374"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3d37e69b5afe17e6285ded536fdfe7a9fc5471f1",
+          "message": "fix: reject an also_copy file entry under a subdirectory (merges PR #1277, addresses #1275)\n\nmutmut 3.8.1 copies a file entry with shutil.copy2 and never creates the\nparent directory, so a file under a subdirectory crashes the run. Fail\ntest_mutmut_config.py on such an entry, naming the directory to list\ninstead, and reword the also_copy advice to say \"the narrowest directory\nthat holds the file\".\n\nAddresses #1275\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scdN14cQRYCv9EGqR3\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T10:50:36Z",
+          "tree_id": "c9305e0f1f4358a6842838e67d2afe0f1c387467",
+          "url": "https://github.com/endavis/pyproject-template/commit/3d37e69b5afe17e6285ded536fdfe7a9fc5471f1"
+        },
+        "date": 1795344675381,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7335018.134892626,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6084723856659698e-8",
+            "extra": "mean: 136.33231460505976 nsec\nrounds: 76782"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 7600731.386519183,
+            "unit": "iter/sec",
+            "range": "stddev: 1.285303844628735e-8",
+            "extra": "mean: 131.56628607789258 nsec\nrounds: 80174"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5168885.232726342,
+            "unit": "iter/sec",
+            "range": "stddev: 4.217297609619248e-8",
+            "extra": "mean: 193.46531311405172 nsec\nrounds: 54964"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2078032.3308624923,
+            "unit": "iter/sec",
+            "range": "stddev: 7.537295776765757e-8",
+            "extra": "mean: 481.22446660151223 nsec\nrounds: 192679"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 451866.96355974494,
+            "unit": "iter/sec",
+            "range": "stddev: 2.54514112484863e-7",
+            "extra": "mean: 2.213040741288408 usec\nrounds: 47215"
           }
         ]
       }
