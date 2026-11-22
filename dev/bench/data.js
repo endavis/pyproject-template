@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795344676314,
+  "lastUpdate": 1795379482338,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25252,6 +25252,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.54514112484863e-7",
             "extra": "mean: 2.213040741288408 usec\nrounds: 47215"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "65b3a33ff7639d36c774c392e4040af9b0df5cdb",
+          "message": "fix: scan only committed markdown in test_docs_dev_sync (merges PR #1279, addresses #1278)\n\n`_markdown_files` used rglob with a hardcoded SKIP_DIRS that lacked\n`mutants/`, so a local mutmut run that copies docs via also_copy made\ntest_fenced_syncs_keep_the_dev_tools fail on the copies. Use\ndoc_scan.committed_markdown_files, as the other doc tests do since #1012,\nso every git-ignored path drops out.\n\nAddresses #1278\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sexR2YxcD6AXTG8ZDA\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T20:30:45Z",
+          "tree_id": "7765acfa7a45eb5fb0e0a46618eebc2db573c993",
+          "url": "https://github.com/endavis/pyproject-template/commit/65b3a33ff7639d36c774c392e4040af9b0df5cdb"
+        },
+        "date": 1795379480551,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10895791.007259328,
+            "unit": "iter/sec",
+            "range": "stddev: 8.898775874401363e-9",
+            "extra": "mean: 91.77855920086475 nsec\nrounds: 111695"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10818471.840013564,
+            "unit": "iter/sec",
+            "range": "stddev: 9.59532655305654e-9",
+            "extra": "mean: 92.43449673745661 nsec\nrounds: 108661"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 8322175.508917312,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1045824958393774e-8",
+            "extra": "mean: 120.16088809091902 nsec\nrounds: 85419"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2965979.887843208,
+            "unit": "iter/sec",
+            "range": "stddev: 4.587589327085321e-8",
+            "extra": "mean: 337.15670294958636 nsec\nrounds: 192419"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 610772.985754334,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2764640016226216e-7",
+            "extra": "mean: 1.6372695311089307 usec\nrounds: 63642"
           }
         ]
       }
