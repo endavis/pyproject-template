@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795262817714,
+  "lastUpdate": 1795341313386,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25075,6 +25075,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.290402552903945e-7",
             "extra": "mean: 2.1027299806210933 usec\nrounds: 49025"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "0ae1fbf2935e3eb21435060a0bac129aca54ace5",
+          "message": "fix: catch selected tests that read files mutmut does not copy into mutants/ (merges PR #1273, addresses #1272)\n\ntests/test_mutmut_config.py guarded only imports. A selected test reading a\nrepository file outside the mutmut copy passed doit check and then stopped the\nweekly stats run with FileNotFoundError, leaving every mutant unchecked.\n\n- _copied_roots becomes _copied_paths: keeps full also_copy prefixes and\n  compares by prefix, so a narrow entry such as tools/x/generated/ no longer\n  marks all of tools as copied. Adds the project and lock files mutmut 3.8.1\n  copies.\n- New static scan (_repo_paths_read) resolves paths built from __file__\n  (.parent, .parents[n], / \"str\", joinpath, names in any scope) and git-tracked\n  relative Path()/open() constants; a new guard fails on any not copied.\n- Document the check and narrow also_copy for data files in ci-cd-testing.md\n  and the [tool.mutmut] comment.\n\nAddresses #1272\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbtATyYXM5kDNNUVLX\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T09:54:39Z",
+          "tree_id": "483df8eaa104cf3e9cb10652011d1f216991a42d",
+          "url": "https://github.com/endavis/pyproject-template/commit/0ae1fbf2935e3eb21435060a0bac129aca54ace5"
+        },
+        "date": 1795341312283,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 14748068.343670707,
+            "unit": "iter/sec",
+            "range": "stddev: 3.709290316216978e-8",
+            "extra": "mean: 67.80548995958246 nsec\nrounds: 158003"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 15819500.494725553,
+            "unit": "iter/sec",
+            "range": "stddev: 9.093592751547827e-9",
+            "extra": "mean: 63.213121067470766 nsec\nrounds: 163159"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11908677.525802143,
+            "unit": "iter/sec",
+            "range": "stddev: 9.094305367738085e-9",
+            "extra": "mean: 83.97238046234207 nsec\nrounds: 123123"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4256766.957467116,
+            "unit": "iter/sec",
+            "range": "stddev: 9.556708021477683e-8",
+            "extra": "mean: 234.9200719681928 nsec\nrounds: 46549"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 856814.8697237688,
+            "unit": "iter/sec",
+            "range": "stddev: 1.8912636880463565e-7",
+            "extra": "mean: 1.1671132648787865 usec\nrounds: 87743"
           }
         ]
       }
