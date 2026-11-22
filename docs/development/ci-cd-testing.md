@@ -782,7 +782,7 @@ uv run mutmut results --all true
 
 mutmut does not run all of `tests/`. It copies `src/`, `tests/`, `pyproject.toml` and `uv.lock` into `mutants/` (git-ignored) and runs the tests there. A test that imports `tools` or reads any other file in the repository fails in that copy. mutmut passes `-x` to pytest, so the first such failure stops the run before any mutant is checked (#873).
 
-`pytest_add_cli_args_test_selection` in `[tool.mutmut]` therefore lists only the tests that exercise `src/`. When you add a test file that imports the package, add it to that list. `tests/test_mutmut_config.py` fails until you do. It also fails if a listed file imports a module that mutmut does not copy, or no longer exists. The benchmarks in `tests/benchmarks/` are left out on purpose: they time the package and assert nothing, so they cannot kill a mutant.
+`pytest_add_cli_args_test_selection` in `[tool.mutmut]` therefore lists only the tests that exercise `src/`. When you add a test file that imports the package, add it to that list. `tests/test_mutmut_config.py` fails until you do. It also fails if a listed file imports a module that mutmut does not copy, or no longer exists, and (a static scan, so a heuristic) if a listed file reads a repository file mutmut does not copy. A selected test that needs a data file gets it through `also_copy` in `[tool.mutmut]`, kept as narrow as possible (#1272). The benchmarks in `tests/benchmarks/` are left out on purpose: they time the package and assert nothing, so they cannot kill a mutant.
 
 ### Interpreting Results
 
