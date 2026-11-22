@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795379482338,
+  "lastUpdate": 1795384672670,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25311,6 +25311,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2764640016226216e-7",
             "extra": "mean: 1.6372695311089307 usec\nrounds: 63642"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "981693fb533869939ce4c1af21dab84a23547ada",
+          "message": "fix: judge the merge and bare-push branch checks where the git command runs (merges PR #1281, addresses #1280)\n\n* fix: judge the merge and bare-push branch checks where the git command runs\n\nThe protected-branch checks for `git merge` without `--ff-only` and bare\n`git push` read the branch in the hook process's directory. A leading\n`cd <path>` or a git `-C <path>` made them judge the wrong branch.\n\nThey now resolve the directory from the payload `cwd` (else the process\ndirectory), each leading `cd` joined by `&&` or `;`, and each `-C`, and read\nthe branch there. A directory the hook cannot resolve fails closed for both\nchecks.\n\nAddresses #1280\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scr9TBVra1dVPpe5vv\n\n* fix: fail closed on cd and git-dir forms the branch check cannot fold\n\nResolve the directory with os.path so Windows paths work, and treat builtin/command cd, a relative cd under CDPATH, --git-dir, --work-tree, --namespace and GIT_* words before git as unresolved.\n\nAddresses #1280\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>\nClaude-Session: https://claude.ai/code/session_01NXu1scr9TBVra1dVPpe5vv\n\n---------\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T21:57:20Z",
+          "tree_id": "c46c33351a96f0623af67a3947b153fa3b90158d",
+          "url": "https://github.com/endavis/pyproject-template/commit/981693fb533869939ce4c1af21dab84a23547ada"
+        },
+        "date": 1795384671160,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16419570.838187855,
+            "unit": "iter/sec",
+            "range": "stddev: 5.767275428423318e-9",
+            "extra": "mean: 60.90293162073687 nsec\nrounds: 165591"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 16815083.120575823,
+            "unit": "iter/sec",
+            "range": "stddev: 7.0616542964699865e-9",
+            "extra": "mean: 59.470416698466835 nsec\nrounds: 171851"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 12780206.90431186,
+            "unit": "iter/sec",
+            "range": "stddev: 6.538288596513025e-9",
+            "extra": "mean: 78.24599456700614 nsec\nrounds: 130685"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4426179.808659107,
+            "unit": "iter/sec",
+            "range": "stddev: 9.152290550108531e-8",
+            "extra": "mean: 225.92846274425207 nsec\nrounds: 47845"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 867283.10211117,
+            "unit": "iter/sec",
+            "range": "stddev: 8.12381801480131e-8",
+            "extra": "mean: 1.1530260390935394 usec\nrounds: 91017"
           }
         ]
       }
