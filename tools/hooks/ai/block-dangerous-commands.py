@@ -1668,15 +1668,24 @@ def _git_command_dir(tokens: list[str], git_idx: int, sub: int) -> tuple[str | N
 
     Fails closed (``unresolved``): a ``cd`` with no, an empty, a dynamic
     (``$``, backtick, glob), ``~``, ``-`` or ``..`` path, a ``cd`` not joined by
-    ``&&`` or ``;`` or inside a group, ``pushd``/``popd``, a wrapper option such
-    as ``env -C``, a ``-C`` value of those kinds, or a directory that does not
-    exist.
+    ``&&`` or ``;`` or inside a group, a ``cd`` word that is not a plain command
+    start (``builtin cd``, ``command cd``), a relative ``cd`` while ``CDPATH``
+    is set or named in the command, ``pushd``/``popd``, a wrapper option such
+    as ``env -C``, a ``-C`` value of those kinds, ``--git-dir``,
+    ``--work-tree``, ``--namespace`` or a ``GIT_*`` word before ``git`` (the
+    repository is not the directory's), or a directory that does not exist.
     """
     if _cwd_moved(tokens, git_idx, ignore_cd=True):
         return None, True
-    steps: list[str] = []
+    if any("GIT_" in t for t in tokens[:git_idx]):
+        return None, True
+    cdpath = bool(os.environ.get("CDPATH")) or any("CDPATH" in t for t in tokens[:git_idx])
+    # (path, is_cd): a relative `cd` may go through CDPATH, a `git -C` never does
+    steps: list[tuple[str, bool]] = []
     starts = set(_command_start_indices(tokens[:git_idx])) if git_idx else set()
     for i in range(git_idx):
+        if tokens[i].strip(";&|(){}") == "cd" and (tokens[i] != "cd" or i not in starts):
+            return None, True
         if tokens[i] != "cd" or i not in starts:
             continue
         if any(t in {"(", ")", "{", "}"} or t.startswith(("(", "{")) for t in tokens[:i]):
@@ -1688,16 +1697,18 @@ def _git_command_dir(tokens: list[str], git_idx: int, sub: int) -> tuple[str | N
             return None, True
         # the shlex tokens keep a spaced `;` on the path: `cd X; git` is `X;`
         if len(tokens[j]) > 1 and tokens[j].endswith(";") and not tokens[j].endswith(";;"):
-            steps.append(tokens[j][:-1])
+            steps.append((tokens[j][:-1], True))
             continue
         if j + 1 >= len(tokens) or tokens[j + 1] not in {"&&", ";"}:
             return None, True
-        steps.append(tokens[j])
+        steps.append((tokens[j], True))
     opts = tokens[git_idx + 1 : sub]
     k = 0
     while k < len(opts):
         t = opts[k]
         k += 1
+        if t.split("=", 1)[0] in {"--git-dir", "--work-tree", "--namespace"}:
+            return None, True
         value: str | None = None
         if t == "-C":
             value = opts[k] if k < len(opts) else ""
@@ -1707,12 +1718,13 @@ def _git_command_dir(tokens: list[str], git_idx: int, sub: int) -> tuple[str | N
         elif t in _GIT_GLOBAL_OPTS_WITH_VALUE:
             k += 1
         if value is not None:
-            steps.append(value)
+            steps.append((value, False))
     if not steps:
         return None, False
+    # os.path, not posixpath: the directory is checked on this host's filesystem
     base = _PAYLOAD_CWD if _PAYLOAD_CWD is not None else os.getcwd()
     path = base
-    for step in steps:
+    for step, is_cd in steps:
         if (
             not step
             or step == "-"
@@ -1720,14 +1732,15 @@ def _git_command_dir(tokens: list[str], git_idx: int, sub: int) -> tuple[str | N
             or any(c in _DYNAMIC_CHARS for c in step)
             or "`" in step
             or _has_dotdot(step)
+            or (is_cd and cdpath and not os.path.isabs(step) and not step.startswith("./"))
         ):
             return None, True
-        path = posixpath.join(path, step)
-    path = posixpath.normpath(path)
+        path = os.path.join(path, step)
+    path = os.path.normpath(path)
     if not os.path.isdir(path):
         return None, True
     # a path that lands back on the start moves nothing (``git -C .``)
-    return (None if path == posixpath.normpath(base) else path), False
+    return (None if path == os.path.normpath(base) else path), False
 
 
 def _branch_where_git_runs(

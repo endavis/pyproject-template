@@ -3299,32 +3299,32 @@ def _hook_exit(command: str, process_cwd: Path, payload_cwd: Path | None = None)
 
 def test_merge_cd_to_worktree_from_main_passes(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"cd {wt} && git merge --no-edit main", repo) == 0
+    assert _hook_exit(f"cd {wt.as_posix()} && git merge --no-edit main", repo) == 0
 
 
 def test_merge_cd_to_main_from_worktree_blocks(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"cd {repo} && git merge --no-edit fix/1-x", wt) == 2
+    assert _hook_exit(f"cd {repo.as_posix()} && git merge --no-edit fix/1-x", wt) == 2
 
 
 def test_merge_git_dash_c_main_from_worktree_blocks(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"git -C {repo} merge --no-edit fix/1-x", wt) == 2
+    assert _hook_exit(f"git -C {repo.as_posix()} merge --no-edit fix/1-x", wt) == 2
 
 
 def test_merge_git_dash_c_worktree_from_main_passes(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"git -C {wt} merge --no-edit main", repo) == 0
+    assert _hook_exit(f"git -C {wt.as_posix()} merge --no-edit main", repo) == 0
 
 
 def test_push_cd_to_main_from_worktree_blocks(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"cd {repo} && git push", wt) == 2
+    assert _hook_exit(f"cd {repo.as_posix()} && git push", wt) == 2
 
 
 def test_push_cd_to_worktree_from_main_passes(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"cd {wt} && git push", repo) == 0
+    assert _hook_exit(f"cd {wt.as_posix()} && git push", repo) == 0
 
 
 @pytest.mark.parametrize("sep", ["; ", ";", " ; "])
@@ -3333,20 +3333,20 @@ def test_semicolon_cd_resolves_for_push_and_merge(
 ) -> None:
     # `cd X; git ...` tokenizes as `X;` on the shlex tokens: the `;` ends the path
     repo, wt = branch_repos
-    assert _hook_exit(f"cd {wt}{sep}git push", repo) == 0
-    assert _hook_exit(f"cd {wt}{sep}git merge --no-edit main", repo) == 0
-    assert _hook_exit(f"cd {repo}{sep}git push", wt) == 2
-    assert _hook_exit(f"cd {repo}{sep}git merge --no-edit fix/1-x", wt) == 2
+    assert _hook_exit(f"cd {wt.as_posix()}{sep}git push", repo) == 0
+    assert _hook_exit(f"cd {wt.as_posix()}{sep}git merge --no-edit main", repo) == 0
+    assert _hook_exit(f"cd {repo.as_posix()}{sep}git push", wt) == 2
+    assert _hook_exit(f"cd {repo.as_posix()}{sep}git merge --no-edit fix/1-x", wt) == 2
 
 
 def test_push_git_dash_c_main_from_worktree_blocks(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"git -C {repo} push", wt) == 2
+    assert _hook_exit(f"git -C {repo.as_posix()} push", wt) == 2
 
 
 def test_push_git_dash_c_worktree_from_main_passes(branch_repos: tuple[Path, Path]) -> None:
     repo, wt = branch_repos
-    assert _hook_exit(f"git -C {wt} push", repo) == 0
+    assert _hook_exit(f"git -C {wt.as_posix()} push", repo) == 0
 
 
 def test_payload_cwd_is_where_the_command_starts(branch_repos: tuple[Path, Path]) -> None:
@@ -3367,9 +3367,30 @@ def test_relative_cd_resolves_against_payload_cwd(
     assert _hook_exit("cd wt && git push", tmp_path, payload_cwd=tmp_path) == 0
 
 
+def test_relative_cd_with_cdpath_in_environment_fails_closed(
+    branch_repos: tuple[Path, Path],
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # bash may resolve a relative `cd wt` through CDPATH, somewhere else entirely
+    monkeypatch.setenv("CDPATH", str(tmp_path))
+    assert _hook_exit("cd wt && git push", tmp_path, payload_cwd=tmp_path) == 2
+    # CDPATH is not consulted for `./wt` or an absolute path
+    assert _hook_exit("cd ./wt && git push", tmp_path, payload_cwd=tmp_path) == 0
+    _repo, wt = branch_repos
+    assert _hook_exit(f"cd {wt.as_posix()} && git push", tmp_path) == 0
+
+
 @pytest.mark.parametrize(
     "template",
     [
+        "builtin cd {wt} && {git}",
+        "command cd {wt} && {git}",
+        "CDPATH=/tmp; cd wt && {git}",
+        "GIT_DIR={wt}/.git {git}",
+        "git --git-dir={wt}/.git {git_args}",
+        "git --work-tree {wt} {git_args}",
+        "git --namespace=x -C {wt} {git_args}",
         "cd $HOME && {git}",
         "cd ~ && {git}",
         "cd && {git}",
@@ -3391,7 +3412,7 @@ def test_unresolvable_directory_fails_closed(
     branch_repos: tuple[Path, Path], template: str, git: str, git_args: str
 ) -> None:
     _repo, wt = branch_repos
-    command = template.format(wt=wt, git=git, git_args=git_args)
+    command = template.format(wt=wt.as_posix(), git=git, git_args=git_args)
     # even from a feature-branch worktree, an unknown directory is treated as protected
     assert _hook_exit(command, wt) == 2
 
