@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795341313386,
+  "lastUpdate": 1795344481127,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25134,6 +25134,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.8912636880463565e-7",
             "extra": "mean: 1.1671132648787865 usec\nrounds: 87743"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4b7d4b04376ff6912f52ea80158c15f132d122ca",
+          "message": "fix: count a path built from __file__ only when git tracks it (merges PR #1276, addresses #1274)\n\nfix: report an anchored path in the mutmut scan only when git tracks it\n\nAn anchored path (built from __file__) that no tracked file sits at or\nunder cannot be data a test depends on, since a fresh checkout lacks it\ntoo. Apply the same _is_tracked rule the relative-path branch uses, and\nswap fictional fixture paths in the scanner tests for tracked ones.\n\nAddresses #1274\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scdN14cQRYCv9EGqR3\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-22T10:47:18Z",
+          "tree_id": "53a6fce2c5d17d1688fc0301c3555b4f8bf39438",
+          "url": "https://github.com/endavis/pyproject-template/commit/4b7d4b04376ff6912f52ea80158c15f132d122ca"
+        },
+        "date": 1795344479639,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8179493.310206755,
+            "unit": "iter/sec",
+            "range": "stddev: 1.781227471756936e-8",
+            "extra": "mean: 122.2569616570446 nsec\nrounds: 84161"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8383067.087203192,
+            "unit": "iter/sec",
+            "range": "stddev: 1.59192465281865e-8",
+            "extra": "mean: 119.2880827026312 nsec\nrounds: 89840"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5469329.97909551,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5106134410743574e-8",
+            "extra": "mean: 182.8377523064306 nsec\nrounds: 57232"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2081007.1936791786,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3275790827095905e-7",
+            "extra": "mean: 480.5365416503055 nsec\nrounds: 194213"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 457939.6142385446,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7733388099047182e-7",
+            "extra": "mean: 2.1836940262588675 usec\nrounds: 47374"
           }
         ]
       }
