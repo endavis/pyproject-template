@@ -290,7 +290,9 @@ source_paths = ["src/"]
 # file stops the stats run, and no mutant gets checked (#873).
 # tests/test_mutmut_config.py fails when a test that imports the package is
 # missing from this list, or when a listed one imports or reads (a static scan)
-# something mutmut does not copy; a data file it needs goes in a narrow also_copy.
+# something mutmut does not copy; a data file it needs goes in also_copy as the narrowest
+# directory that holds it. A file entry under a subdirectory crashes mutmut 3.8, which
+# does not create its parent directory (a top-level file works) (#1275).
 pytest_add_cli_args_test_selection = [
     "tests/test_cli.py",
     "tests/test_core.py",
