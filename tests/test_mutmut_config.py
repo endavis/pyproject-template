@@ -199,8 +199,10 @@ def _repo_paths_read(source: str, module: Path) -> set[tuple[str, ...]]:
     ``.resolve()``, ``.absolute()``, ``/ "str"``, ``.joinpath("str", ...)`` and
     names bound to those, in any scope (no control-flow tracking). A relative
     ``Path("str")`` or ``open("str")`` resolves against the working directory, which
-    is ``mutants/`` under mutmut; it counts only when git tracks it. Paths outside
-    the repository, the repository root and the module itself are dropped.
+    is ``mutants/`` under mutmut. Either kind counts only when git tracks it, so a
+    path a test creates at run time (a data or output directory) is not reported.
+    Paths outside the repository, the repository root and the module itself are
+    dropped.
 
     It does not see ``with_name``, ``with_suffix``, f-strings, ``os.path.join``,
     ``anchor / variable``, or a bare ``Path(__file__).read_text()`` (no joined
@@ -235,7 +237,9 @@ def _repo_paths_read(source: str, module: Path) -> set[tuple[str, ...]]:
             path = _resolve(node, module, names)
             if path is not None:
                 if path.is_relative_to(REPO_ROOT) and path not in {REPO_ROOT, module}:
-                    found.add(path.relative_to(REPO_ROOT).parts)
+                    parts = path.relative_to(REPO_ROOT).parts
+                    if _is_tracked(parts):
+                        found.add(parts)
                 return
             if isinstance(node, ast.Call) and (
                 _is_path_call(node) or (isinstance(node.func, ast.Name) and node.func.id == "open")
@@ -421,19 +425,21 @@ def test_a_broad_also_copy_copies_its_root() -> None:
 
 def test_the_path_scanner_resolves_anchors_to_repository_paths() -> None:
     module = TESTS / "unit" / "deep" / "test_x.py"
-    source = 'Path(__file__).resolve().parents[3] / "docs" / "usage" / "page.md"\n'
+    source = 'Path(__file__).resolve().parents[3] / "docs" / "usage" / "basics.md"\n'
 
-    assert _repo_paths_read(source, module) == {("docs", "usage", "page.md")}
+    assert _repo_paths_read(source, module) == {("docs", "usage", "basics.md")}
 
 
 def test_the_path_scanner_does_not_flag_reads_under_tests() -> None:
     module = TESTS / "test_x.py"
 
-    assert _repo_paths_read('Path(__file__).parent / "docs"\n', module) == {("tests", "docs")}
-    reported = _repo_paths_read('Path(__file__).parent.parent / "tools" / "x"\n', module)
-    assert reported == {("tools", "x")}
-    assert _is_copied(("tests", "docs"), {("tests",)})
-    assert not _is_copied(("tools", "x"), {("tests",)})
+    assert _repo_paths_read('Path(__file__).parent / "template"\n', module) == {
+        ("tests", "template")
+    }
+    reported = _repo_paths_read('Path(__file__).parent.parent / "tools" / "doit"\n', module)
+    assert reported == {("tools", "doit")}
+    assert _is_copied(("tests", "template"), {("tests",)})
+    assert not _is_copied(("tools", "doit"), {("tests",)})
 
 
 def test_the_path_scanner_follows_names_in_any_scope() -> None:
@@ -442,16 +448,16 @@ def test_the_path_scanner_follows_names_in_any_scope() -> None:
         "REPO_ROOT = Path(__file__).parent.parent\n"
         'DOCS = REPO_ROOT / "docs"\n'
         "def test_a():\n"
-        '    (DOCS / "a.md").read_text()\n'
+        '    (DOCS / "index.md").read_text()\n'
         "def test_b():\n"
         "    root = Path(__file__).parent.parent\n"
-        '    (root / "scripts" / "b.sh").read_text()\n'
+        '    (root / "completions" / "doit.bash").read_text()\n'
         '    REPO_ROOT.joinpath("examples")\n'
     )
 
     assert _repo_paths_read(source, module) == {
-        ("docs", "a.md"),
-        ("scripts", "b.sh"),
+        ("docs", "index.md"),
+        ("completions", "doit.bash"),
         ("examples",),
     }
 
@@ -469,6 +475,15 @@ def test_the_path_scanner_ignores_what_it_cannot_resolve() -> None:
     source = 'tmp_path / "docs"\nPath(__file__).read_text()\n'
 
     assert _repo_paths_read(source, module) == set()
+
+
+def test_the_path_scanner_reports_an_anchored_path_only_when_git_tracks_it() -> None:
+    module = TESTS / "test_x.py"
+    untracked = 'Path(__file__).parent.parent / "data" / "isolation-check"\n'
+    tracked = 'Path(__file__).parent.parent / "docs" / "index.md"\n'
+
+    assert _repo_paths_read(untracked, module) == set()
+    assert _repo_paths_read(tracked, module) == {("docs", "index.md")}
 
 
 def test_the_path_scanner_counts_a_relative_constant_only_when_git_tracks_it() -> None:
