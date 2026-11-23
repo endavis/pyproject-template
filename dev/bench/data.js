@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795384672670,
+  "lastUpdate": 1795446736142,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25370,6 +25370,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 8.12381801480131e-8",
             "extra": "mean: 1.1530260390935394 usec\nrounds: 91017"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c9c342b48575e8e8d027df6722aaaa2b7f76b03",
+          "message": "feat: point implement-issue and mutation-triage at a portable-tests rule (merges PR #1286, addresses #1285)\n\nShip a portable-tests rule, mirrored to .claude/rules/, .github/instructions/\nand .agents/skills/. It covers three test-portability failures seen in\ndownstream Windows CI: path-built values compared with POSIX literals,\nhard-coded /tmp instead of tmp_path, and POSIX-only behavior without a\nwin32 skipif.\n\nThe implement-issue Coder brief and mutation-triage Step 4 now say to check\nexact-value assertions against the rule. Tests pin both pointers. The\nshipped-rule lists in rule-files.md and both rule READMEs name all three\nrules.\n\nAddresses #1285\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scr9TBVra1dVPpe5vv\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-23T15:11:40Z",
+          "tree_id": "aa02aad17213be76f6cf293ec15bcc48e763d830",
+          "url": "https://github.com/endavis/pyproject-template/commit/1c9c342b48575e8e8d027df6722aaaa2b7f76b03"
+        },
+        "date": 1795446734760,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8136919.7441487685,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3529960983151982e-8",
+            "extra": "mean: 122.89662813979413 nsec\nrounds: 84876"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8481205.284902837,
+            "unit": "iter/sec",
+            "range": "stddev: 1.628948231741742e-8",
+            "extra": "mean: 117.9077697576868 nsec\nrounds: 89358"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5123601.018986203,
+            "unit": "iter/sec",
+            "range": "stddev: 4.693384588299427e-8",
+            "extra": "mean: 195.1752285734903 nsec\nrounds: 56262"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2081910.9313762463,
+            "unit": "iter/sec",
+            "range": "stddev: 6.813596584129357e-8",
+            "extra": "mean: 480.32794531654173 nsec\nrounds: 196851"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 463475.0177213061,
+            "unit": "iter/sec",
+            "range": "stddev: 1.85998941627718e-7",
+            "extra": "mean: 2.1576135967727903 usec\nrounds: 48335"
           }
         ]
       }
