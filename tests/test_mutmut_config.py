@@ -32,6 +32,8 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
+import pytest
+
 REPO_ROOT = Path(__file__).parent.parent
 PYPROJECT = REPO_ROOT / "pyproject.toml"
 TESTS = REPO_ROOT / "tests"
@@ -468,7 +470,15 @@ def test_a_broad_also_copy_copies_its_root() -> None:
     assert _left_behind({"tools"}, copied) == set()
 
 
-def test_the_path_scanner_resolves_anchors_to_repository_paths() -> None:
+def _pretend_tracked(monkeypatch: pytest.MonkeyPatch, *paths: tuple[str, ...]) -> None:
+    """Make ``_tracked_paths`` report *paths*, so a test does not depend on the checkout (#1302)."""
+    monkeypatch.setattr(f"{__name__}._tracked_paths", lambda: frozenset(paths))
+
+
+def test_the_path_scanner_resolves_anchors_to_repository_paths(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _pretend_tracked(monkeypatch, ("docs", "usage", "basics.md"))
     module = TESTS / "unit" / "deep" / "test_x.py"
     source = 'Path(__file__).resolve().parents[3] / "docs" / "usage" / "basics.md"\n'
 
@@ -487,7 +497,13 @@ def test_the_path_scanner_does_not_flag_reads_under_tests() -> None:
     assert not _is_copied(("tools", "doit"), {("tests",)})
 
 
-def test_the_path_scanner_follows_names_in_any_scope() -> None:
+def test_the_path_scanner_follows_names_in_any_scope(monkeypatch: pytest.MonkeyPatch) -> None:
+    _pretend_tracked(
+        monkeypatch,
+        ("docs", "index.md"),
+        ("completions", "doit.bash"),
+        ("examples", "a.py"),
+    )
     module = TESTS / "test_x.py"
     source = (
         "REPO_ROOT = Path(__file__).parent.parent\n"
