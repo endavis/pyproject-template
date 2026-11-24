@@ -1,0 +1,2 @@
+# LF working files on every OS; matches ruff's format line-ending = "lf" (see #1288).
+* text=auto eol=lf
