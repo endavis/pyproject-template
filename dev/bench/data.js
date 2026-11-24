@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795526520336,
+  "lastUpdate": 1795527487723,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25665,6 +25665,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.536502181581459e-7",
             "extra": "mean: 1.290011468970841 usec\nrounds: 83914"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2937fb061a43263f430febb5ddc1a77232c5097b",
+          "message": "chore: run doit tasks in the Windows CI job on Git's default line endings (merges PR #1296, addresses #1293)\n\nThe Windows test job turned off core.autocrlf and ran only pytest, so no\ndoit task, Rich output or cmd.exe action string ran on Windows, and #1287,\n#1288 and #1291 reached main. The job now keeps Git's defaults and, on\nWindows only, runs doit format_check (CRLF checkout, #1288), doit security\n(install_check_or_skip through cmd.exe, #1291) and doit cleanup (a Rich\npanel with a non-cp1252 character on piped stdout, #1287). Each step runs\neven when an earlier one failed. tests/test_ci_workflow.py guards the new\ncontract and the CI docs table lists the tasks.\n\nAddresses #1293\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T13:37:24Z",
+          "tree_id": "d3aecbe360768b8eba169732d03c57624e3b671c",
+          "url": "https://github.com/endavis/pyproject-template/commit/2937fb061a43263f430febb5ddc1a77232c5097b"
+        },
+        "date": 1795527486683,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 10323916.6954813,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0487018324870395e-8",
+            "extra": "mean: 96.86246310353245 nsec\nrounds: 104888"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 10225000.797192475,
+            "unit": "iter/sec",
+            "range": "stddev: 2.3154707485435145e-8",
+            "extra": "mean: 97.79950337750336 nsec\nrounds: 105553"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 7928945.952133213,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4823262392881342e-8",
+            "extra": "mean: 126.12016856174417 nsec\nrounds: 81513"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3013018.702147023,
+            "unit": "iter/sec",
+            "range": "stddev: 4.414972315903951e-8",
+            "extra": "mean: 331.8930610312568 nsec\nrounds: 196580"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 614052.4545147711,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1453257823561903e-7",
+            "extra": "mean: 1.628525368879451 usec\nrounds: 64587"
           }
         ]
       }
