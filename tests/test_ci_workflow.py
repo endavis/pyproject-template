@@ -304,6 +304,43 @@ class TestOsMatrix:
             assert data["jobs"][job]["with"]["all_os"] is True, name
 
 
+def _test_job_steps() -> list[dict[str, Any]]:
+    """Return the steps of the ``test`` job."""
+    steps: list[dict[str, Any]] = _load_workflow()["jobs"]["test"]["steps"]
+    return steps
+
+
+class TestWindowsDoitTasks:
+    """The Windows test job runs doit tasks on Git's default checkout (#1293)."""
+
+    def test_windows_job_does_not_configure_autocrlf(self) -> None:
+        """Turning autocrlf off hid #1288; the checkout must use Git's defaults."""
+        for step in _test_job_steps():
+            assert "autocrlf" not in step.get("run", ""), step.get("name")
+
+    def test_windows_job_runs_each_doit_task(self) -> None:
+        """format_check (#1288), security (cmd.exe guard, #1291) and cleanup (Rich panel, #1287)."""
+        run = {
+            step["run"].split("doit ", 1)[1].split()[0]
+            for step in _test_job_steps()
+            if "doit " in step.get("run", "")
+        }
+        assert {"format_check", "security", "cleanup"} <= run
+
+    def test_doit_steps_run_on_windows_only(self) -> None:
+        """Linux runs these tasks in the lint job; the test job adds them for Windows."""
+        steps = [s for s in _test_job_steps() if "doit " in s.get("run", "")]
+        assert steps
+        for step in steps:
+            assert "runner.os == 'Windows'" in step.get("if", ""), step["name"]
+
+    def test_doit_steps_run_after_an_earlier_failure(self) -> None:
+        """A failing test run must not hide a failing doit task."""
+        for step in _test_job_steps():
+            if "doit " in step.get("run", ""):
+                assert "!cancelled()" in step.get("if", ""), step["name"]
+
+
 class TestCodecovOptIn:
     """The Codecov upload is opt-in, OIDC-authenticated and uploads one file (#1218).
 
