@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795533713865,
+  "lastUpdate": 1795533927686,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25901,6 +25901,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3388396882742228e-7",
             "extra": "mean: 1.297874751695647 usec\nrounds: 83669"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3611c64ec435c311bc4fc01b39ff68b209e1aa67",
+          "message": "fix: make the mutmut path-scanner self-tests independent of tracked files (merges PR #1304, addresses #1302)\n\nPatch the tracked-path set in the two scanner tests that asserted on\nexamples/ and docs/usage/basics.md, so they pass in projects that delete\nor sync-exclude those paths.\n\nAddresses #1302\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T15:24:46Z",
+          "tree_id": "3f6fbe8fad491657ef86ea92c1b00f9bb13e4767",
+          "url": "https://github.com/endavis/pyproject-template/commit/3611c64ec435c311bc4fc01b39ff68b209e1aa67"
+        },
+        "date": 1795533926408,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12563637.601406671,
+            "unit": "iter/sec",
+            "range": "stddev: 9.847977176323609e-9",
+            "extra": "mean: 79.59478231750623 nsec\nrounds: 131476"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13182266.746260686,
+            "unit": "iter/sec",
+            "range": "stddev: 9.530713212428424e-9",
+            "extra": "mean: 75.85948754099233 nsec\nrounds: 137006"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9924596.87665035,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2786098640686966e-8",
+            "extra": "mean: 100.75976006166107 nsec\nrounds: 103402"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3492353.4327424304,
+            "unit": "iter/sec",
+            "range": "stddev: 4.5132965808955564e-8",
+            "extra": "mean: 286.3398620038101 nsec\nrounds: 192976"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 773586.2682964209,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3446161283232422e-7",
+            "extra": "mean: 1.2926806498287304 usec\nrounds: 83746"
           }
         ]
       }
