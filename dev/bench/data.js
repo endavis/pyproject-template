@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795446736142,
+  "lastUpdate": 1795522392983,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25429,6 +25429,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.85998941627718e-7",
             "extra": "mean: 2.1576135967727903 usec\nrounds: 48335"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "1c1f2accce1c7982b6e4df60e558f5954c40d7c1",
+          "message": "fix: reconfigure doit's stdout and stderr to UTF-8 at startup (merges PR #1289, addresses #1287)\n\nUnder Git Bash on Windows, sys.stdout is cp1252, so any doit task that\nprinted a Rich panel crashed with UnicodeEncodeError before doing its\nwork. dodo.py now calls ensure_utf8_streams() before task discovery,\nwhich reconfigures stdout and stderr to UTF-8 in place, so doit's\ncaptured-output writer and every Console pick it up.\n\nAddresses #1287\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T12:12:25Z",
+          "tree_id": "aa730d9653e9164d251c2523c25047462f3a4ec6",
+          "url": "https://github.com/endavis/pyproject-template/commit/1c1f2accce1c7982b6e4df60e558f5954c40d7c1"
+        },
+        "date": 1795522391210,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12380618.333556244,
+            "unit": "iter/sec",
+            "range": "stddev: 9.13545658748681e-9",
+            "extra": "mean: 80.77141004255132 nsec\nrounds: 129450"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12594910.768810628,
+            "unit": "iter/sec",
+            "range": "stddev: 9.49590492691138e-9",
+            "extra": "mean: 79.39714844795465 nsec\nrounds: 135172"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9588644.174317522,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1539771151582853e-8",
+            "extra": "mean: 104.29003118902112 nsec\nrounds: 99394"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3420090.982086933,
+            "unit": "iter/sec",
+            "range": "stddev: 4.148299620776634e-8",
+            "extra": "mean: 292.3898823854685 nsec\nrounds: 193837"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 742388.5055848581,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3114364427742418e-7",
+            "extra": "mean: 1.3470036139799793 usec\nrounds: 83592"
           }
         ]
       }
