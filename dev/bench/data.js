@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795530719495,
+  "lastUpdate": 1795533713865,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25842,6 +25842,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.2646821697619187e-7",
             "extra": "mean: 1.1818188780864534 usec\nrounds: 90613"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66f3f9d960dd658eb6fd40894048aad41eca4f61",
+          "message": "fix: keep doit tooling type-clean when a project follows doit's untyped imports (merges PR #1303, addresses #1301)\n\nfix: keep doit tooling type-clean when a project follows doit's untyped imports (addresses #1301)\n\nWith follow_untyped_imports on the doit.* override, mypy reads doit's\nunannotated source, so super().execute() is Any and CmdAction has no\n_module/_hint. Bind the result to an annotated local and narrow the tests\nwith isinstance(_GuardedCmdAction); assert action.out is not None.\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Sonnet 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T15:21:04Z",
+          "tree_id": "1ee8c7963566f594dfd3d3332b45291204e5f4d2",
+          "url": "https://github.com/endavis/pyproject-template/commit/66f3f9d960dd658eb6fd40894048aad41eca4f61"
+        },
+        "date": 1795533712662,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12601125.735910062,
+            "unit": "iter/sec",
+            "range": "stddev: 9.726592658429652e-9",
+            "extra": "mean: 79.35798919538195 nsec\nrounds: 132539"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13239129.178255282,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2769257295227812e-8",
+            "extra": "mean: 75.53366890946711 nsec\nrounds: 137932"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9702128.641397271,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4339238412864009e-8",
+            "extra": "mean: 103.07016500824122 nsec\nrounds: 101813"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3433650.2457362567,
+            "unit": "iter/sec",
+            "range": "stddev: 4.140238766755217e-8",
+            "extra": "mean: 291.23525357358466 nsec\nrounds: 193724"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 770490.3718124729,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3388396882742228e-7",
+            "extra": "mean: 1.297874751695647 usec\nrounds: 83669"
           }
         ]
       }
