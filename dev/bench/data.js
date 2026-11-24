@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795535932387,
+  "lastUpdate": 1795545250490,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26137,6 +26137,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.107482916558971e-7",
             "extra": "mean: 2.2370634129680305 usec\nrounds: 46839"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f6418475392e4a3d0e9b4d50e052e9c3145c1a45",
+          "message": "fix: judge every git merge in a command in the protected-branch merge check (merges PR #1312, addresses #1311)\n\ncheck_merge_to_protected returned \"allow\" as soon as one merge resolved to\na non-protected branch, so later git merge commands in the same command\nline were not judged. The loop now moves on to the next merge and allows\nonly after every merge has been checked, matching check_push_to_protected.\n\nAdds blocked-case tests for a merge on a non-protected branch followed by\none on a protected branch (git -C and cd-chain forms), and an allowed case\nfor two merges on a non-protected branch.\n\nAddresses #1311\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T18:33:24Z",
+          "tree_id": "37c4972bc2aae0683ccb52b60191cb6d70a9d28f",
+          "url": "https://github.com/endavis/pyproject-template/commit/f6418475392e4a3d0e9b4d50e052e9c3145c1a45"
+        },
+        "date": 1795545249035,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8577903.382396834,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0788211705121967e-8",
+            "extra": "mean: 116.57860381735617 nsec\nrounds: 85347"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8688484.365201386,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3249389482258495e-8",
+            "extra": "mean: 115.09487247340194 nsec\nrounds: 85786"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 6877151.842988746,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5660386076153192e-8",
+            "extra": "mean: 145.4090331042348 nsec\nrounds: 69387"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2280876.676736104,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2881107357042256e-7",
+            "extra": "mean: 438.4279124774879 nsec\nrounds: 182216"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 572682.826620544,
+            "unit": "iter/sec",
+            "range": "stddev: 3.192826803082168e-7",
+            "extra": "mean: 1.746167256142629 usec\nrounds: 62485"
           }
         ]
       }
