@@ -133,8 +133,10 @@ def _module_installed(module: str) -> bool:
     return result.returncode == 0
 
 
-# ``CmdAction`` ships no type information, so mypy sees ``Any`` as the base class.
-class _GuardedCmdAction(CmdAction):  # type: ignore[misc]  # doit has no stubs
+# ``CmdAction`` ships no type information, so mypy sees ``Any`` as the base class. That is a
+# ``misc`` error only under ``disallow_subclassing_any``; ``unused-ignore`` keeps a project that
+# turns it off but keeps ``warn_unused_ignores`` from failing on this line.
+class _GuardedCmdAction(CmdAction):  # type: ignore[misc, unused-ignore]  # doit has no stubs
     """A ``CmdAction`` that skips itself, with a hint, when its tool is not installed."""
 
     def __init__(self, command: str, module: str, hint: str) -> None:
