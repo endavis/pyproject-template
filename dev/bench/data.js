@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795522392983,
+  "lastUpdate": 1795523339853,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25488,6 +25488,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3114364427742418e-7",
             "extra": "mean: 1.3470036139799793 usec\nrounds: 83592"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "a32eccb2bcd92b945c1423fa3ba8548d28b47c23",
+          "message": "fix: ship a .gitattributes that checks text files out with LF (merges PR #1290, addresses #1288)\n\nGit for Windows sets core.autocrlf=true system-wide and the template had\nno .gitattributes, so Windows checkouts got CRLF working files and\ndoit format_check failed against ruff's line-ending = \"lf\". The new\n`* text=auto eol=lf` rule forces LF regardless of each machine's\nautocrlf. A test guards the rule and keeps its eol in step with ruff's\nsetting, and CONTRIBUTING.md explains renormalizing an older checkout.\n\nAddresses #1288\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T12:28:19Z",
+          "tree_id": "a826f56537ca72d5d3ce605ed95ef66299059ba7",
+          "url": "https://github.com/endavis/pyproject-template/commit/a32eccb2bcd92b945c1423fa3ba8548d28b47c23"
+        },
+        "date": 1795523337940,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7868814.108660981,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1471943789825508e-8",
+            "extra": "mean: 127.08395270124991 nsec\nrounds: 81820"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8203364.89834243,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0881824155517466e-8",
+            "extra": "mean: 121.90119693469443 nsec\nrounds: 85602"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5396854.866745305,
+            "unit": "iter/sec",
+            "range": "stddev: 2.442399802903997e-8",
+            "extra": "mean: 185.29310583500506 nsec\nrounds: 56777"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2118603.9171092375,
+            "unit": "iter/sec",
+            "range": "stddev: 6.887081099652937e-8",
+            "extra": "mean: 472.0089451002553 nsec\nrounds: 198453"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 466335.399712718,
+            "unit": "iter/sec",
+            "range": "stddev: 2.5212598305749814e-7",
+            "extra": "mean: 2.144379347173819 usec\nrounds: 48221"
           }
         ]
       }
