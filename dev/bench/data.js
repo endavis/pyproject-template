@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795523339853,
+  "lastUpdate": 1795525593107,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25547,6 +25547,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.5212598305749814e-7",
             "extra": "mean: 2.144379347173819 usec\nrounds: 48221"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4a96be1682c4a73bad5ca2c4834e03e17867d553",
+          "message": "fix: isolate test git fixtures from the developer's global git config (merges PR #1294, addresses #1292)\n\nAn autouse fixture in tests/conftest.py points GIT_CONFIG_GLOBAL at an\nempty file and sets GIT_CONFIG_NOSYSTEM=1, so tests that run real git\ncommands no longer depend on the machine's tag.gpgsign, commit.gpgsign\nor hooks. Adds tests/test_conftest_git_isolation.py.\n\nAddresses #1292\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T13:05:50Z",
+          "tree_id": "1a11cfdd3d35d007203bc126dbbad63fbacaa4b2",
+          "url": "https://github.com/endavis/pyproject-template/commit/4a96be1682c4a73bad5ca2c4834e03e17867d553"
+        },
+        "date": 1795525592195,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8253652.763469812,
+            "unit": "iter/sec",
+            "range": "stddev: 2.1311975417046708e-8",
+            "extra": "mean: 121.15847718066621 nsec\nrounds: 81487"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8352340.972662097,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1523105843316253e-8",
+            "extra": "mean: 119.72691288263765 nsec\nrounds: 87078"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5566004.194601857,
+            "unit": "iter/sec",
+            "range": "stddev: 1.9579331673279437e-8",
+            "extra": "mean: 179.66209960277098 nsec\nrounds: 56906"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2143751.40823621,
+            "unit": "iter/sec",
+            "range": "stddev: 7.100867200999688e-8",
+            "extra": "mean: 466.47199678005524 nsec\nrounds: 186916"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 468776.0669077464,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6420323875863108e-7",
+            "extra": "mean: 2.1332147065366214 usec\nrounds: 49461"
           }
         ]
       }
