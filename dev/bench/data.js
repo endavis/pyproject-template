@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795533927686,
+  "lastUpdate": 1795534947906,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25960,6 +25960,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3446161283232422e-7",
             "extra": "mean: 1.2926806498287304 usec\nrounds: 83746"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f26517345770d094f9383f1719acbdc35c317f99",
+          "message": "feat: type-check shipped tooling under variant downstream mypy configs (merges PR #1307, addresses #1305)\n\nA downstream project can change one mypy setting and break the shipped\ntooling's type check after a sync (#1299, #1301). test_mypy_config_variants\nreads the live [tool.mypy] table, changes exactly one setting per variant,\nwrites it under tmp_path and runs mypy over the paths doit type_check uses.\nVariants: disallow_subclassing_any off (#1299) and follow_untyped_imports on\nthe doit.* override (#1301). Self-tests check each variant differs from the\nbase in exactly one setting and that the TOML writer round-trips.\n\nThe test is template-owned (ADR-9017) and skipped on Windows, where\ndoit type_check never runs. ci-cd-testing.md says how to add a variant.\n\nAddresses #1305\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T15:41:45Z",
+          "tree_id": "d6c0e1db5624a70a69bc5344acbe308c6c509ac0",
+          "url": "https://github.com/endavis/pyproject-template/commit/f26517345770d094f9383f1719acbdc35c317f99"
+        },
+        "date": 1795534946188,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 15684494.099803327,
+            "unit": "iter/sec",
+            "range": "stddev: 8.196428122872284e-9",
+            "extra": "mean: 63.75723651887117 nsec\nrounds: 154584"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 15779085.854777277,
+            "unit": "iter/sec",
+            "range": "stddev: 8.06411661414888e-9",
+            "extra": "mean: 63.37502750181437 nsec\nrounds: 159262"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11748085.359511534,
+            "unit": "iter/sec",
+            "range": "stddev: 8.599644799549245e-9",
+            "extra": "mean: 85.12025316451891 nsec\nrounds: 119290"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4403030.957366604,
+            "unit": "iter/sec",
+            "range": "stddev: 1.643052142766876e-8",
+            "extra": "mean: 227.11627732867154 nsec\nrounds: 46335"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 837534.5392240009,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0443645235034067e-7",
+            "extra": "mean: 1.1939806099537433 usec\nrounds: 87055"
           }
         ]
       }
