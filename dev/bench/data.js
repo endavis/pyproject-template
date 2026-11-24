@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795525593107,
+  "lastUpdate": 1795526520336,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25606,6 +25606,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.6420323875863108e-7",
             "extra": "mean: 2.1332147065366214 usec\nrounds: 49461"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "11ad0277e9c0c604f4f29d076ae01294fc5211db",
+          "message": "fix: run the doit optional-tool guard without a POSIX shell (merges PR #1295, addresses #1291)\n\ninstall_check_or_skip built a POSIX shell prefix (/dev/null redirect and a\nbrace group) that cmd.exe cannot parse, so security, audit, licenses,\ncommit, bump and changelog failed on Windows before their tool ran. It now\nreturns a CmdAction subclass that probes the project .venv in Python\n(list-arg subprocess, #1193) and then runs the plain `uv run <tool>`\ncommand through doit, leaving the tool's exit code unmasked (#527).\n\nsbom's `mkdir -p tmp` becomes a Python action, and bandit's\n--msg-template is double-quoted so cmd.exe passes it as one argument.\nTests of the old POSIX snippet are replaced by cross-platform tests.\n\nAddresses #1291\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T13:21:11Z",
+          "tree_id": "2a5e356170f370a43c804bd1c5b51103410bfd8a",
+          "url": "https://github.com/endavis/pyproject-template/commit/11ad0277e9c0c604f4f29d076ae01294fc5211db"
+        },
+        "date": 1795526518681,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12619513.917448645,
+            "unit": "iter/sec",
+            "range": "stddev: 8.927074698549031e-9",
+            "extra": "mean: 79.2423548594315 nsec\nrounds: 131269"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13030189.061005741,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1016892413471914e-8",
+            "extra": "mean: 76.74485729394434 nsec\nrounds: 136613"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9841454.917194482,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0541092077977767e-8",
+            "extra": "mean: 101.61099231911854 nsec\nrounds: 101771"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3414654.041586697,
+            "unit": "iter/sec",
+            "range": "stddev: 4.102825997931512e-8",
+            "extra": "mean: 292.85543654528675 nsec\nrounds: 192160"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 775186.9065147077,
+            "unit": "iter/sec",
+            "range": "stddev: 1.536502181581459e-7",
+            "extra": "mean: 1.290011468970841 usec\nrounds: 83914"
           }
         ]
       }
