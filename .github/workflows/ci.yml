@@ -117,10 +117,9 @@ jobs:
       UV_PYTHON: ${{ matrix.python-version }}
 
     steps:
-      - name: Configure git line endings (Windows)
-        if: runner.os == 'Windows'
-        run: git config --global core.autocrlf false
-
+      # No Windows git config step: the checkout uses Git's defaults, as a
+      # developer's does (core.autocrlf=true). .gitattributes pins eol=lf (#1288),
+      # and the doit steps below fail if that stops working (#1293).
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
       - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
@@ -134,6 +133,7 @@ jobs:
           cache-dependency-glob: uv.lock
 
       - name: Install dependencies
+        id: install
         run: uv sync --all-extras --dev
 
       # Fails the job when uv runs another Python than the one requested
@@ -149,6 +149,27 @@ jobs:
 
       - name: Run tests
         run: uv run pytest -n auto -v --ignore=tests/benchmarks/
+
+      # Windows only: run doit tasks end to end, the way a Windows developer
+      # does (#1293). Each guards a bug that reached main because pytest alone
+      # does not run doit. The lint job covers the same tasks on Linux.
+      #
+      # format_check: ruff on a checkout made with autocrlf=true (#1288).
+      - name: Check code formatting (Windows)
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.install.outcome == 'success' }}
+        run: uv run doit format_check
+
+      # security: install_check_or_skip runs bandit through cmd.exe (#1291).
+      - name: Run security scan (Windows)
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.install.outcome == 'success' }}
+        run: uv run doit security
+
+      # cleanup: prints a Rich panel with a non-cp1252 character through doit's
+      # piped stdout, which defaults to cp1252 on a runner (#1287). Last, since
+      # it deletes caches.
+      - name: Run cleanup (Windows)
+        if: ${{ !cancelled() && runner.os == 'Windows' && steps.install.outcome == 'success' }}
+        run: uv run doit cleanup
 
   # Coverage runs in its own job so the slower measured run does not make one
   # matrix entry the slowest Linux job (#1260). Skipped on full_matrix runs,

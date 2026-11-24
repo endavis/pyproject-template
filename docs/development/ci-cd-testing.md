@@ -135,13 +135,25 @@ versions, raw `pytest` instead of `doit`, and mutable action tags this project's
 | Job | What it runs |
 | :--- | :--- |
 | `setup` | Builds the test matrix from `.github/python-versions.json` |
-| `test` | `pytest`, called directly, on each OS and Python version in the matrix. It does not measure coverage. |
+| `test` | `pytest`, called directly, on each OS and Python version in the matrix. It does not measure coverage. On Windows it then also runs `doit format_check`, `doit security` and `doit cleanup`, on Git's default line-ending settings (see [Windows doit tasks](#windows-doit-tasks)). |
 | `coverage` | `pytest --cov` on the newest Python on `ubuntu-latest`, in parallel with `test`, plus the opt-in Codecov upload (the only job holding `id-token: write`). It logs which coverage core ran (`COVERAGE_DEBUG=core`). Skipped on `full_matrix` runs, which test only the middle versions. |
 | `lint` | `doit env_check`, `doit format_check`, `doit lint`, `doit type_check`, `doit deadcode`, `doit security`, `doit spell_check`, `doit audit` and `doit wheel_check`, on `ubuntu-latest`. Each runs even when one before it failed, so CI reports every failing check at once. A failure in any of them fails CI. |
 | `docs` | `doit docs_build`, described below |
 | `ci-complete` | Fails if any other job (`test`, `coverage`, `lint`, `docs`) failed; a skipped job passes. It gives the run one result to require ([ADR-9013](../decisions/9013-python-version-support-policy.md)). |
 
 `tests/test_ci_jobs_doc.py` checks this table against `ci.yml`: the same jobs, and the same `doit` tasks in each.
+
+#### Windows doit tasks
+
+`pytest` alone never ran a `doit` task on Windows, so three Windows-only failures reached `main`. The Windows `test` job checks out with Git's defaults (`core.autocrlf=true`; it no longer turns that off) and runs one task for each:
+
+| Task | Catches |
+| :--- | :--- |
+| `doit format_check` | CRLF checkouts failing ruff's `line-ending = "lf"` (#1288) |
+| `doit security` | A `install_check_or_skip` action string that cmd.exe cannot parse (#1291) |
+| `doit cleanup` | A Rich panel with a non-cp1252 character crashing on a piped stdout (#1287) |
+
+Linux runs the first two in the `lint` job already. `tests/test_ci_workflow.py` checks that the job sets no `autocrlf` and runs all three on Windows only.
 
 #### Documentation Build Job
 
