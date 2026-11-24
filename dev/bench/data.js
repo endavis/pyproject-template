@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795535368945,
+  "lastUpdate": 1795535932387,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26078,6 +26078,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3364426267935624e-7",
             "extra": "mean: 1.2796892424551833 usec\nrounds: 83718"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "62ef0c9c5a35d42d09cf2278c23a9af87ce7b114",
+          "message": "fix: follow only an unconditional cd chain in the protected-branch push check (merges PR #1310, addresses #1308)\n\n_git_command_dir accepted a `cd` wherever it started a command and was\nfollowed by && or ;, without checking the tokens before it. It now walks the\nprefix from the command start and follows only consecutive `cd <path>`\nunits joined by && or ;. Any other token before git in a prefix that\ncontains a cd leaves the directory unresolved, which the bare-push and\nmerge checks treat as protected. Prefixes with no cd, -C handling and path\nvalidation are unchanged.\n\nAddresses #1308\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T15:58:15Z",
+          "tree_id": "ad2bfbdd669b1acc82ad06f04d2b9ff37547fb39",
+          "url": "https://github.com/endavis/pyproject-template/commit/62ef0c9c5a35d42d09cf2278c23a9af87ce7b114"
+        },
+        "date": 1795535930966,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8015810.969765162,
+            "unit": "iter/sec",
+            "range": "stddev: 1.37563845200237e-8",
+            "extra": "mean: 124.75344088974902 nsec\nrounds: 83522"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8012451.904775482,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5501112444380867e-8",
+            "extra": "mean: 124.80574134916085 nsec\nrounds: 85830"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5389350.894919514,
+            "unit": "iter/sec",
+            "range": "stddev: 2.7131586153562873e-8",
+            "extra": "mean: 185.5511024421679 nsec\nrounds: 56139"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2061179.0839319,
+            "unit": "iter/sec",
+            "range": "stddev: 1.168538009301418e-7",
+            "extra": "mean: 485.1592022234198 nsec\nrounds: 184843"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 447014.59699492704,
+            "unit": "iter/sec",
+            "range": "stddev: 2.107482916558971e-7",
+            "extra": "mean: 2.2370634129680305 usec\nrounds: 46839"
           }
         ]
       }
