@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795534947906,
+  "lastUpdate": 1795535368945,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26019,6 +26019,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.0443645235034067e-7",
             "extra": "mean: 1.1939806099537433 usec\nrounds: 87055"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "66435ec2e79b08c877b7ff3e89e52f0c906f0081",
+          "message": "fix: check only the Windows doit-task steps in TestWindowsDoitTasks (merges PR #1309, addresses #1306)\n\nThe tests selected every test-job step containing \"doit \", so a project's\nown doit step (such as a Linux-only tool install) failed the Windows-only\nand !cancelled() checks. Steps are now selected by their doit task against\none set, format_check, security and cleanup, which all three tests share.\nNew tests cover a project's own doit step and a Windows-task step missing\neither guard.\n\nAddresses #1306\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T15:48:45Z",
+          "tree_id": "936310a0966b6f8330c32abdda417ff6c384d47d",
+          "url": "https://github.com/endavis/pyproject-template/commit/66435ec2e79b08c877b7ff3e89e52f0c906f0081"
+        },
+        "date": 1795535367419,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12626612.694509428,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0659483185154474e-8",
+            "extra": "mean: 79.1978042087916 nsec\nrounds: 131579"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13003017.45371695,
+            "unit": "iter/sec",
+            "range": "stddev: 1.0018038444048663e-8",
+            "extra": "mean: 76.90522631069352 nsec\nrounds: 136781"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9805433.138222307,
+            "unit": "iter/sec",
+            "range": "stddev: 1.070955124182005e-8",
+            "extra": "mean: 101.98427605425462 nsec\nrounds: 101154"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3444897.7394466163,
+            "unit": "iter/sec",
+            "range": "stddev: 4.287476185434983e-8",
+            "extra": "mean: 290.28437870571986 nsec\nrounds: 189898"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 781439.7174125041,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3364426267935624e-7",
+            "extra": "mean: 1.2796892424551833 usec\nrounds: 83718"
           }
         ]
       }
