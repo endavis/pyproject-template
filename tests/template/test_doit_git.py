@@ -25,9 +25,9 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 import yaml
-from doit.action import CmdAction
 from rich.console import Console
 
+from tools.doit.base import _GuardedCmdAction
 from tools.doit.git import (
     _is_rebuildable,
     _main_checkout,
@@ -78,7 +78,7 @@ class TestGitTaskGates:
         self, task: Callable[[], dict[str, Any]], command: str
     ) -> None:
         action = task()["actions"][0]
-        assert isinstance(action, CmdAction)
+        assert isinstance(action, _GuardedCmdAction)
         assert action._module == "commitizen"
         assert action._hint == "commitizen not installed. Run: doit install_dev"
         assert action._action == command

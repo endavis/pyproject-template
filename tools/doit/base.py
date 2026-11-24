@@ -161,7 +161,8 @@ class _GuardedCmdAction(CmdAction):  # type: ignore[misc, unused-ignore]  # doit
             self.err = ""
             self.result = text
             return None
-        return super().execute(out, err)
+        result: TaskFailed | TaskError | None = super().execute(out, err)
+        return result
 
 
 def install_check_or_skip(
