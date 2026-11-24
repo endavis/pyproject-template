@@ -278,6 +278,7 @@ class TestInstallCheckOrSkip:
             result = action.execute(out=out)
         assert result is None
         assert _PROBE_HINT in out.getvalue()
+        assert action.out is not None
         assert _PROBE_HINT in action.out
         popen.assert_not_called()
 
@@ -295,6 +296,7 @@ class TestInstallCheckOrSkip:
         with patch("tools.doit.base.subprocess.run", return_value=_probe_result(0)):
             result = action.execute(out=out)
         assert result is None
+        assert action.out is not None
         assert "42" in action.out
         assert _PROBE_HINT not in out.getvalue()
 

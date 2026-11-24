@@ -22,8 +22,8 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from doit.action import CmdAction
 
+from tools.doit.base import _GuardedCmdAction
 from tools.doit.security import (
     _make_tmp_dir,
     task_audit,
@@ -45,7 +45,7 @@ def _touch(tmp_path: Path, rel: str) -> Path:
 
 def _guard(action: object) -> tuple[str, str, str]:
     """Return the guarded action's (module, hint, command), failing if it is not one."""
-    assert isinstance(action, CmdAction)
+    assert isinstance(action, _GuardedCmdAction)
     return action._module, action._hint, action._action
 
 
