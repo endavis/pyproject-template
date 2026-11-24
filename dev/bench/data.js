@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795527487723,
+  "lastUpdate": 1795528832399,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25724,6 +25724,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.1453257823561903e-7",
             "extra": "mean: 1.628525368879451 usec\nrounds: 64587"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "b730edd58af66c91ca7b76d66168d0b6407c04f9",
+          "message": "fix: pass the doit publish token to uv publish through UV_PUBLISH_TOKEN (merges PR #1298, addresses #1297)\n\ntask_publish returned \"uv publish --token '{token}'\", which is not an\nf-string and which doit does not expand, so uv publish received the\nliteral {token} on every OS, plus the single quotes under cmd.exe.\n\nThe publish step is now a Python action that runs [\"uv\", \"publish\"] with\nlist arguments and sets UV_PUBLISH_TOKEN from PYPI_TOKEN in a copy of the\nparent environment. The token never appears on the command line, in\ndoit's printed title or in the process list. PYPI_TOKEN is still read\nwhen the action runs, and a missing token still raises RuntimeError.\n\nAddresses #1297\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T13:59:37Z",
+          "tree_id": "5e690cde6c68607cfe73936a78f1a9bae7c388f1",
+          "url": "https://github.com/endavis/pyproject-template/commit/b730edd58af66c91ca7b76d66168d0b6407c04f9"
+        },
+        "date": 1795528830936,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8288431.240722852,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2267362980749244e-8",
+            "extra": "mean: 120.65009299791066 nsec\nrounds: 84303"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8526218.273411818,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3052627040363118e-8",
+            "extra": "mean: 117.2852920172596 nsec\nrounds: 87101"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5516516.159750422,
+            "unit": "iter/sec",
+            "range": "stddev: 8.398166547520628e-8",
+            "extra": "mean: 181.2738277277596 nsec\nrounds: 57235"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2079836.9498060858,
+            "unit": "iter/sec",
+            "range": "stddev: 7.077970768589589e-8",
+            "extra": "mean: 480.8069209912033 nsec\nrounds: 198847"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 455155.9337765849,
+            "unit": "iter/sec",
+            "range": "stddev: 1.983995570311438e-7",
+            "extra": "mean: 2.1970492435474958 usec\nrounds: 47062"
           }
         ]
       }
