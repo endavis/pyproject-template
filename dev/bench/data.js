@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795528832399,
+  "lastUpdate": 1795530719495,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -25783,6 +25783,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.983995570311438e-7",
             "extra": "mean: 2.1970492435474958 usec\nrounds: 47062"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "90333adaf82672fb238b9dc7c2f761c947361d9e",
+          "message": "fix: keep the CmdAction subclass ignore valid when disallow_subclassing_any is off (merges PR #1300, addresses #1299)\n\nThe `misc` error that `# type: ignore[misc]` on `_GuardedCmdAction` silences\nonly exists under `disallow_subclassing_any = true`. A downstream project\nthat turns that off but keeps `warn_unused_ignores` got an `unused-ignore`\nerror from shipped tooling. Adding `unused-ignore` to the ignore's codes\nkeeps both configurations passing.\n\nAddresses #1299\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-24T14:31:14Z",
+          "tree_id": "04d68af37e36d9a008e79a441cbbd8ecb4f42201",
+          "url": "https://github.com/endavis/pyproject-template/commit/90333adaf82672fb238b9dc7c2f761c947361d9e"
+        },
+        "date": 1795530717819,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 16384477.254030056,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4434273708628238e-8",
+            "extra": "mean: 61.033378391979646 nsec\nrounds: 158756"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 16312840.903016707,
+            "unit": "iter/sec",
+            "range": "stddev: 9.923814067453304e-9",
+            "extra": "mean: 61.30140089915741 nsec\nrounds: 165044"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11381450.83553545,
+            "unit": "iter/sec",
+            "range": "stddev: 2.2035064380936517e-8",
+            "extra": "mean: 87.86226065993056 nsec\nrounds: 124039"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4314808.190110231,
+            "unit": "iter/sec",
+            "range": "stddev: 4.712328158101215e-8",
+            "extra": "mean: 231.76001248260653 nsec\nrounds: 46465"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 846153.347642537,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2646821697619187e-7",
+            "extra": "mean: 1.1818188780864534 usec\nrounds: 90613"
           }
         ]
       }
