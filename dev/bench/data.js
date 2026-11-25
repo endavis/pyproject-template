@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795596470084,
+  "lastUpdate": 1795596877975,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26314,6 +26314,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.902467913097847e-7",
             "extra": "mean: 2.1438577110063557 usec\nrounds: 48126"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "94cabf78b403bd7f393cd8934654cd3af96aefd6",
+          "message": "fix: skip the root CHANGELOG.md in the documented-path and link tests (merges PR #1318, addresses #1316)\n\nA changelog records paths as they were at each release. With\nupdate_changelog_on_bump = true it is generated from commit messages, so\na path quoted in shorthand or since removed made test_documented_paths\nfail the release PR, after the release task's own check had passed. The\nsame held for relative links in test_markdown_links.\n\ndoc_scan gains HISTORICAL_RECORDS and is_historical_record();\ntest_documented_paths filters the root CHANGELOG.md through it and\ntest_markdown_links drops it from _ROOT_MARKDOWN. Regression tests show\nthe same text in another markdown file is still reported.\n\nAddresses #1316\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scKbRQXMaKTLmaw6Xg\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T08:54:00Z",
+          "tree_id": "00a78654643f697e7831fb8eb61a86b1ff51b4b0",
+          "url": "https://github.com/endavis/pyproject-template/commit/94cabf78b403bd7f393cd8934654cd3af96aefd6"
+        },
+        "date": 1795596876544,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8189948.23103397,
+            "unit": "iter/sec",
+            "range": "stddev: 1.166323377754682e-8",
+            "extra": "mean: 122.10089389951509 nsec\nrounds: 82224"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8333234.739556883,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1632606084681041e-8",
+            "extra": "mean: 120.00141976717852 nsec\nrounds: 87944"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5450675.164814358,
+            "unit": "iter/sec",
+            "range": "stddev: 1.6597237494362222e-8",
+            "extra": "mean: 183.46351043908862 nsec\nrounds: 56520"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2137219.198224826,
+            "unit": "iter/sec",
+            "range": "stddev: 7.251994021665537e-8",
+            "extra": "mean: 467.89772468383217 nsec\nrounds: 184502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 474097.1799104328,
+            "unit": "iter/sec",
+            "range": "stddev: 2.0458506688923896e-7",
+            "extra": "mean: 2.109272196449094 usec\nrounds: 48929"
           }
         ]
       }
