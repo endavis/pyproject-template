@@ -116,6 +116,9 @@ TEMPLATE_OWNED_TEST_FILES: list[str] = [
     # Reads the template's own [tool.mypy] table and type-checks the shipped
     # tooling under variants of it; shed with the template config (#1305).
     "tests/template/test_mypy_config_variants.py",
+    # Asserts the template-shipped CHANGELOG.md is placeholder-free; a project
+    # legitimately fills its own changelog (#1313).
+    "tests/template/test_changelog_placeholder.py",
 ]
 
 
