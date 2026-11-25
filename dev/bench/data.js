@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795597860152,
+  "lastUpdate": 1795600457865,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26432,6 +26432,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.3426463785997987e-7",
             "extra": "mean: 1.2240574935534945 usec\nrounds: 84126"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6ee497a31e71ca021f558a07c6e68726968c958d",
+          "message": "chore: print test durations in CI and build the worktree test repo once (merges PR #1322, addresses #1321)\n\nThe coverage job and the Windows test job set how long a PR's CI takes.\nNeither printed per-test timings, so where their time went could not be\nseen. Both pytest steps in ci.yml now pass --durations=0\n--durations-min=0.05. The steps already run with -v, so the table adds\nonly tests over 0.05s.\n\ntest_doit_git.py ran git init, add and commit for every main_checkout\ntest, and a further worktree add, add, commit and rev-parse per\n_add_worktree call. On Windows each git process is costly. A\nsession-scoped git_template fixture now builds the repository once, with\nthe branches the tests use already committed. main_checkout copies it,\nand _add_worktree only checks a branch out. On Linux, git process\nlaunches for the file went from 417 to 246. Each test still gets its own\nreal repository, and no test body changed.\n\nAddresses #1321\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sd6WPdg3qv5B8PuDxa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T09:53:40Z",
+          "tree_id": "7df6c64c1e8583bf9a12a22e149dde62ce9eebeb",
+          "url": "https://github.com/endavis/pyproject-template/commit/6ee497a31e71ca021f558a07c6e68726968c958d"
+        },
+        "date": 1795600456427,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8037594.44839464,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3307030501381495e-8",
+            "extra": "mean: 124.41533426704943 nsec\nrounds: 82150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8322772.5820609275,
+            "unit": "iter/sec",
+            "range": "stddev: 1.110039195173074e-8",
+            "extra": "mean: 120.15226778578817 nsec\nrounds: 87398"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5489353.39256341,
+            "unit": "iter/sec",
+            "range": "stddev: 1.5283005885001964e-8",
+            "extra": "mean: 182.17081839816137 nsec\nrounds: 56745"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2099682.3206490404,
+            "unit": "iter/sec",
+            "range": "stddev: 7.240674880305238e-8",
+            "extra": "mean: 476.2625232234591 nsec\nrounds: 197239"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 444874.9812868196,
+            "unit": "iter/sec",
+            "range": "stddev: 2.823074185625942e-7",
+            "extra": "mean: 2.2478225165808556 usec\nrounds: 46166"
           }
         ]
       }
