@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795600457865,
+  "lastUpdate": 1795602498291,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26491,6 +26491,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.823074185625942e-7",
             "extra": "mean: 2.2478225165808556 usec\nrounds: 46166"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aab7e81a7d13ecfae1ac0febb1aa331674496c3e",
+          "message": "fix: bump virtualenv in uv.lock past PYSEC-2026-4402 (merges PR #1326, addresses #1325)\n\npip-audit reported virtualenv 21.14.12 (PYSEC-2026-4402, fixed in\n21.14.13), which failed doit audit and every PR's CI lint job.\nvirtualenv is transitive through pre-commit, so only uv.lock changes:\nuv lock --upgrade-package virtualenv moved it to 21.15.13.\n\nAddresses #1325\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sd6WPdg3qv5B8PuDxa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T10:27:30Z",
+          "tree_id": "d41f14191b468670318371481364ff6bd299e1a6",
+          "url": "https://github.com/endavis/pyproject-template/commit/aab7e81a7d13ecfae1ac0febb1aa331674496c3e"
+        },
+        "date": 1795602496261,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 7879283.16669937,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1861655215683238e-8",
+            "extra": "mean: 126.9150986001306 nsec\nrounds: 82150"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 7931518.530768941,
+            "unit": "iter/sec",
+            "range": "stddev: 1.203592668369896e-8",
+            "extra": "mean: 126.07926163453752 nsec\nrounds: 83739"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5410580.515082186,
+            "unit": "iter/sec",
+            "range": "stddev: 4.153279599155819e-8",
+            "extra": "mean: 184.82305128118222 nsec\nrounds: 55888"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2045952.973341767,
+            "unit": "iter/sec",
+            "range": "stddev: 7.357591729043022e-8",
+            "extra": "mean: 488.769787492547 nsec\nrounds: 193088"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 463873.5100403528,
+            "unit": "iter/sec",
+            "range": "stddev: 1.7917049417652508e-7",
+            "extra": "mean: 2.155760090532027 usec\nrounds: 48382"
           }
         ]
       }
