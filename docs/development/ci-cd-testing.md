@@ -150,6 +150,8 @@ Each job sets `timeout-minutes` (5 for `setup` and `ci-complete`, 10 for `lint` 
 - `test` and `coverage` pass `--junitxml=tmp/junit.xml`. `tools/junit_summary.py` writes the failed tests and the 10 slowest to the run's step summary, and the report is uploaded as an artifact kept 14 days, even when the job fails. In `test` both steps run before the Windows doit steps, because `doit cleanup` empties `tmp/`.
 - Each job that installs dependencies logs `uv cache hit: true|false|unknown` after `setup-uv`, so a slow install can be told from a cold cache.
 
+`doit ci_timings --run=<id> [--compare=<id>] [--tests]` turns a run's jobs and these JUnit artifacts into step and test duration tables, and the `ci-triage` skill uses it to triage a failure or a slowdown.
+
 `tests/test_ci_workflow.py` (`TestRunDiagnostics`) guards these steps.
 
 #### Windows doit tasks
