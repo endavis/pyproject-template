@@ -9,7 +9,6 @@ Pattern mirrors ``tests/test_hook_cbm_code_discovery_gate.py``.
 
 from __future__ import annotations
 
-import importlib.util
 import io
 import json
 import subprocess
@@ -19,34 +18,48 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 import pytest
+from hook_loader import (
+    DANGEROUS_HOOK_PATH,
+    load_hook,
+    rebound_globals,
+    reset_rebound,
+    snapshot_rebound,
+)
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterator
 
-HOOK_PATH = (
-    Path(__file__).resolve().parents[1] / "tools" / "hooks" / "ai" / "block-dangerous-commands.py"
-)
+HOOK_PATH = DANGEROUS_HOOK_PATH
 
 
-def _load_hook() -> types.ModuleType:
-    """Load the hook script as a fresh module instance."""
-    spec = importlib.util.spec_from_file_location("block_dangerous_commands", HOOK_PATH)
-    if spec is None or spec.loader is None:  # pragma: no cover - defensive
-        raise RuntimeError(f"could not load hook from {HOOK_PATH}")
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+@pytest.fixture(scope="module")
+def _hook_module() -> tuple[types.ModuleType, dict[str, object]]:
+    """Load the hook once for this file, with a snapshot of the globals it rebinds."""
+    module = load_hook(HOOK_PATH, "block_dangerous_commands")
+    return module, snapshot_rebound(module, rebound_globals(HOOK_PATH))
 
 
 @pytest.fixture
-def hook() -> Iterator[types.ModuleType]:
-    """Load a fresh copy of the hook module for each test."""
-    module = _load_hook()
+def hook(
+    _hook_module: tuple[types.ModuleType, dict[str, object]],
+    monkeypatch: pytest.MonkeyPatch,
+) -> Iterator[types.ModuleType]:
+    """Hand the shared hook module to each test, with rebound globals reset."""
+    module, snapshot = _hook_module
+    reset_rebound(module, snapshot, monkeypatch)
     sys.modules["block_dangerous_commands"] = module
     try:
         yield module
     finally:
         sys.modules.pop("block_dangerous_commands", None)
+
+
+def test_hook_fixture_shares_one_module(
+    hook: types.ModuleType,
+    _hook_module: tuple[types.ModuleType, dict[str, object]],
+) -> None:
+    """The ``hook`` fixture hands out the one module loaded for the file (#1323)."""
+    assert hook is _hook_module[0]
 
 
 def _set_stdin(monkeypatch: pytest.MonkeyPatch, payload: str) -> None:
