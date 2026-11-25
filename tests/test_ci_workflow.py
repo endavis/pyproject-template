@@ -464,6 +464,17 @@ class TestCoverageJob:
         assert show["if"] == "always()"
         assert "Using core=" in show["run"]
 
+    def test_both_pytest_steps_print_durations(self) -> None:
+        jobs = self._jobs()
+        coverage_name = "Run tests with coverage"
+        steps = [
+            next(s for s in jobs["test"]["steps"] if s.get("name") == "Run tests"),
+            next(s for s in jobs["coverage"]["steps"] if s.get("name") == coverage_name),
+        ]
+        for step in steps:
+            assert "--durations=0" in step["run"], step["name"]
+            assert "--durations-min=0.05" in step["run"], step["name"]
+
     def test_coverage_job_skipped_on_full_matrix(self) -> None:
         assert "inputs.full_matrix" in self._jobs()["coverage"]["if"]
 

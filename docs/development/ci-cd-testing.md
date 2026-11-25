@@ -135,8 +135,8 @@ versions, raw `pytest` instead of `doit`, and mutable action tags this project's
 | Job | What it runs |
 | :--- | :--- |
 | `setup` | Builds the test matrix from `.github/python-versions.json` |
-| `test` | `pytest`, called directly, on each OS and Python version in the matrix. It does not measure coverage. On Windows it then also runs `doit format_check`, `doit security` and `doit cleanup`, on Git's default line-ending settings (see [Windows doit tasks](#windows-doit-tasks)). |
-| `coverage` | `pytest --cov` on the newest Python on `ubuntu-latest`, in parallel with `test`, plus the opt-in Codecov upload (the only job holding `id-token: write`). It logs which coverage core ran (`COVERAGE_DEBUG=core`). Skipped on `full_matrix` runs, which test only the middle versions. |
+| `test` | `pytest`, called directly, on each OS and Python version in the matrix. It does not measure coverage. It prints the duration of each test over 0.05s (`--durations-min=0.05`). On Windows it then also runs `doit format_check`, `doit security` and `doit cleanup`, on Git's default line-ending settings (see [Windows doit tasks](#windows-doit-tasks)). |
+| `coverage` | `pytest --cov` on the newest Python on `ubuntu-latest`, in parallel with `test`, plus the opt-in Codecov upload (the only job holding `id-token: write`). It logs which coverage core ran (`COVERAGE_DEBUG=core`) and prints the duration of each test over 0.05s (`--durations-min=0.05`). Skipped on `full_matrix` runs, which test only the middle versions. |
 | `lint` | `doit env_check`, `doit format_check`, `doit lint`, `doit type_check`, `doit deadcode`, `doit security`, `doit spell_check`, `doit audit` and `doit wheel_check`, on `ubuntu-latest`. Each runs even when one before it failed, so CI reports every failing check at once. A failure in any of them fails CI. |
 | `docs` | `doit docs_build`, described below |
 | `ci-complete` | Fails if any other job (`test`, `coverage`, `lint`, `docs`) failed; a skipped job passes. It gives the run one result to require ([ADR-9013](../decisions/9013-python-version-support-policy.md)). |
