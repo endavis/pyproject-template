@@ -262,7 +262,7 @@ Turns a performance change into a measured one instead of a claimed one. It conf
 
 Merges a finished PR and closes the issues it fully addresses. It checks that the PR is open, mergeable, clean and labelled `ready-to-merge`, that every `gh pr checks` job passes or is skipped, and compares each `Addresses #X` issue's success criteria with the diff. It then runs `doit pr_merge --pr=N --auto-close` from the main checkout when every linked issue is fully addressed; otherwise it merges without `--auto-close`, closes only the addressed issues and comments on the rest with what is missing.
 
-**Consent scope:** invoking `merge-pr` is consent to merge that PR and to close the issues it fully addresses. It never adds `ready-to-merge` (the human merge gate), never uses `--admin`, `--force` or `--no-verify`, and stops when a precondition or check fails. **Workflow position:** after the PR is reviewed and the user has added the `ready-to-merge` label. `tests/test_merge_pr_skill.py` enforces the contract.
+**Consent scope:** invoking `merge-pr` is consent to merge that PR and to close the issues it fully addresses. It never adds `ready-to-merge` (the human merge gate), never uses `--admin`, `--force` or `--no-verify` to override a block, and stops when a precondition or check fails. **Workflow position:** after the PR is reviewed and the user has added the `ready-to-merge` label. `tests/test_merge_pr_skill.py` enforces the contract.
 
 ## Codex
 
