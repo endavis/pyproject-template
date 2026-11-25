@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795603420341,
+  "lastUpdate": 1795613722183,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26668,6 +26668,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.4453667889477597e-7",
             "extra": "mean: 2.1795516911608903 usec\nrounds: 47896"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5588377e16ecd223f344637aa637363b70166dee",
+          "message": "chore: add timeouts, JUnit artifacts, a run summary and cache logging to CI jobs (merges PR #1331, addresses #1329)\n\nEvery job in ci.yml sets timeout-minutes (5, 10 or 20, at least 8x the\nslowest recent run), so a hung job no longer holds a runner for 6 hours.\n\nThe test and coverage jobs write a JUnit report, upload it as an artifact\n(junit-test-<os>-<python>, junit-coverage) even when they fail, and run\ntools/junit_summary.py to put the failed and 10 slowest tests in the step\nsummary. In test, both steps run before the Windows doit steps, since\ndoit cleanup empties tmp/.\n\nEach job that installs dependencies logs the setup-uv cache-hit output.\n\nTestRunDiagnostics in tests/test_ci_workflow.py guards the new steps;\ntests/test_junit_summary.py covers the script.\n\nAddresses #1329\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1se92V3dxT7dkV83YJ1\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T13:34:30Z",
+          "tree_id": "2e37708d67428d97f974ba984fa50b36c4163a70",
+          "url": "https://github.com/endavis/pyproject-template/commit/5588377e16ecd223f344637aa637363b70166dee"
+        },
+        "date": 1795613720826,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12448174.697851567,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1105210054745185e-8",
+            "extra": "mean: 80.3330628202535 nsec\nrounds: 131614"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 12776952.103376903,
+            "unit": "iter/sec",
+            "range": "stddev: 9.308361709536268e-9",
+            "extra": "mean: 78.26592695261834 nsec\nrounds: 136296"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9718313.399118194,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2043166036061834e-8",
+            "extra": "mean: 102.89851324312474 nsec\nrounds: 101523"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3468869.0280168704,
+            "unit": "iter/sec",
+            "range": "stddev: 4.529189562469519e-8",
+            "extra": "mean: 288.278396192921 nsec\nrounds: 195964"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 771670.9094798914,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4120693333998002e-7",
+            "extra": "mean: 1.2958892031760054 usec\nrounds: 84460"
           }
         ]
       }
