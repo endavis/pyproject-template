@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795613722183,
+  "lastUpdate": 1795615265704,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26727,6 +26727,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4120693333998002e-7",
             "extra": "mean: 1.2958892031760054 usec\nrounds: 84460"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dde80f4f8a7df31d3a93d82676a3b7c147a7aa83",
+          "message": "feat: add a ci-triage skill and a doit ci_timings helper (merges PR #1332, addresses #1330)\n\ndoit ci_timings --run=<id> prints each CI job's and step's duration from\nthe GitHub jobs API. --compare=<id> adds a baseline column and the signed\ndelta, largest regression first. --tests downloads both runs' junit-*\nartifacts (from #1329) into a temporary directory under tmp/, parses\nthem with tools/junit_summary.py, and lists the tests whose duration\nchanged most. Run IDs must be digits; a missing or unauthenticated gh, a\ngh error, --tests without --compare, and a run with no junit artifacts\neach exit 1 with a message.\n\nThe shared ci-triage skill (.agents/skills, generated into .claude/skills)\nhas a failure mode (find the run, classify, reproduce locally with the\nmatching doit task and UV_PYTHON, hand the fix to implement-issue) and a\nperformance mode (doit ci_timings, the uv cache line, --tests, perf-change\nfor package code). It never edits a test to pass, never re-runs CI for a\ngreen result, and never bypasses a block.\n\nAdding the skill raises the shared-skill count to 21. NUMBER_WORDS gains\n21, and test_implement_issues_skill derives its count from SHARED_SKILLS\ninstead of a literal.\n\nAddresses #1330\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1se92V3dxT7dkV83YJ1\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T14:00:16Z",
+          "tree_id": "c3eb2a734144931e6a626c96f5b1dc03ddf4aa25",
+          "url": "https://github.com/endavis/pyproject-template/commit/dde80f4f8a7df31d3a93d82676a3b7c147a7aa83"
+        },
+        "date": 1795615264214,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8004671.500108677,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2167230112703002e-8",
+            "extra": "mean: 124.92705040880482 nsec\nrounds: 82625"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 8330304.472682284,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1736288603225668e-8",
+            "extra": "mean: 120.0436314518056 nsec\nrounds: 84955"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 3642907.742133656,
+            "unit": "iter/sec",
+            "range": "stddev: 3.793930288451782e-8",
+            "extra": "mean: 274.50599103404653 nsec\nrounds: 162312"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2074915.6120733554,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2043116994070717e-7",
+            "extra": "mean: 481.9473111008847 nsec\nrounds: 197668"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 455410.4229853557,
+            "unit": "iter/sec",
+            "range": "stddev: 2.340543122044255e-7",
+            "extra": "mean: 2.1958215041383804 usec\nrounds: 47735"
           }
         ]
       }
