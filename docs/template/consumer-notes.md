@@ -272,7 +272,8 @@ stop. See [AI Command Blocking](../development/ai/command-blocking.md#heredocs).
 
 A commit message passed by heredoc is scanned as command arguments, so a message that merely *names*
 a blocked pattern is refused. Write it to `tmp/agents/<agent-type>/` and pass `git commit -F <file>`;
-the block now says so rather than giving a generic reason. See
+the block now says so rather than giving a generic reason. The same hint now covers any data
+heredoc whose body alone trips a block. See
 [Passing the Message](../../.github/CONTRIBUTING.md#commit-guidelines).
 
 ### PRs get no benchmark regression comment

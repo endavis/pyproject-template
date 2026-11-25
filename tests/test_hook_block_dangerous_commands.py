@@ -936,6 +936,128 @@ def test_redirect_fires_only_on_a_commit_heredoc(
 
 
 # ---------------------------------------------------------------------------
+# Heredoc-body hint (#1319)
+# ---------------------------------------------------------------------------
+
+_RELEASE = "doit " + "release"  # assembled so this file is not itself blocked
+_DATA_HEREDOC = f"cat > tmp/agents/claude/m.txt <<'EOF'\nfix: x\n\nthe {_RELEASE} task ran\nEOF"
+# The #1234 shape: an `mv` line, then a backtick span holding a pipe.
+_ISSUE_1234 = "cat > tmp/b.md <<'EOF'\nmv data/a data/b\n`a | b`\nEOF"
+
+
+def _blocked_stderr(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+    command: str,
+) -> str:
+    """Run the hook through ``main()``, assert exit 2, return stderr."""
+    _set_stdin(monkeypatch, _bash_payload(command))
+    with pytest.raises(SystemExit) as exc_info:
+        sys.exit(hook.main())
+    assert exc_info.value.code == 2
+    return capsys.readouterr().err
+
+
+def test_data_heredoc_block_keeps_reason_and_adds_hint(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A heredoc written to a file gets the heredoc hint after the matched reason."""
+    err = _blocked_stderr(hook, monkeypatch, capsys, _DATA_HEREDOC)
+    assert "Releases must be run manually" in err
+    assert hook._HEREDOC_BODY_HINT in err
+    assert hook._COMMIT_HEREDOC_REDIRECT not in err
+
+
+def test_data_heredoc_then_commit_file_gets_generic_hint(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The heredoc's owner is ``cat``, so the commit wording does not apply."""
+    command = _DATA_HEREDOC + "\ngit commit -F tmp/agents/claude/m.txt"
+    err = _blocked_stderr(hook, monkeypatch, capsys, command)
+    assert hook._HEREDOC_BODY_HINT in err
+
+
+def test_commit_heredoc_keeps_original_reason_before_redirect(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """The commit redirect is appended to, not substituted for, the matched reason."""
+    command = f"git commit -F - <<EOF\ndocs: the {_BLOCKED_FLAG} bypass\nEOF"
+    _, original = hook.check_command(command)
+    err = _blocked_stderr(hook, monkeypatch, capsys, command)
+    assert original.rstrip(".") in err
+    assert hook._COMMIT_HEREDOC_REDIRECT in err
+
+
+def test_issue_1234_shape_gets_hint(hook: types.ModuleType) -> None:
+    """The #1234 mv-then-backtick-pipe body is data and now names the heredoc."""
+    command = _ISSUE_1234
+    is_dangerous, reason = hook.check_command(command)
+    assert is_dangerous
+    assert hook._HEREDOC_BODY_HINT in hook.redirect_reason(command, reason)
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        f"cat > m.txt <<'EOF'\nx\nEOF\n{_RELEASE}",
+        _RELEASE,
+        f"bash <<'EOF'\n{_RELEASE}\nEOF",
+        f"cat > m.txt <<EOF\nx $({_RELEASE}) y\nEOF",
+        f"git commit -F - <<EOF\nx `{_RELEASE}` y\nEOF",
+        f"cat > m.txt <<'EOF'\nthe {_RELEASE} task ran",
+        f"git commit -F - <<EOF\nx\nEOF\ngh pr merge 1 {_BLOCKED_FLAG}",
+    ],
+    ids=[
+        "heredoc-then-release",
+        "bare-release",
+        "shell-stdin-body",
+        "executed-dollar-paren",
+        "executed-backtick",
+        "unterminated",
+        "commit-heredoc-then-blocked",
+    ],
+)
+def test_other_causes_keep_the_plain_reason(hook: types.ModuleType, command: str) -> None:
+    """Executed bodies, substitutions and non-body causes get no heredoc hint."""
+    is_dangerous, reason = hook.check_command(command)
+    assert is_dangerous
+    assert hook.redirect_reason(command, reason) == reason
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        _DATA_HEREDOC,
+        _DATA_HEREDOC + "\ngit commit -F tmp/agents/claude/m.txt",
+        f"git commit -F - <<EOF\ndocs: the {_BLOCKED_FLAG} bypass\nEOF",
+        _ISSUE_1234,
+    ],
+)
+def test_hint_never_changes_the_verdict(hook: types.ModuleType, command: str) -> None:
+    """Detection only: every hinted command is still blocked."""
+    assert hook.check_command(command)[0] is True
+    assert hook.redirect_reason(command, "") == ""
+
+
+def test_copilot_deny_json_carries_the_hint(
+    hook: types.ModuleType,
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A non-default output format carries the hint in its deny reason."""
+    code, out = _run_raw(hook, monkeypatch, capsys, _copilot_payload(_DATA_HEREDOC))
+    assert code == 0
+    assert hook._HEREDOC_BODY_HINT in json.dumps(json.loads(out))
+
+
+# ---------------------------------------------------------------------------
 # The merge rule reads each command on its own (#894)
 # ---------------------------------------------------------------------------
 
