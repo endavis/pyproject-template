@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795602960699,
+  "lastUpdate": 1795603420341,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26609,6 +26609,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.4747092327874507e-7",
             "extra": "mean: 1.3032056930414888 usec\nrounds: 83119"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "4ee57a36ee5f4415e3c8c87fa6bff544a080d0df",
+          "message": "docs: point implement-issue at the branch-update procedure and scope the --force rule (merges PR #1328, addresses #1327)\n\nimplement-issue had no step for a PR branch that needs main, for example\nwhen a CI fix lands on main underneath it. Only implement-issues phase 2\ndocumented the update. AGENTS.md and merge-pr listed --force among the\nnever-use flags; the qualifier \"to override blocks\" was easy to read\npast, so the documented git push --force-with-lease on one's own branch\nlooked forbidden. An agent improvised git merge origin/main instead.\n\nimplement-issue Step 7 now points at implement-issues Step 4 items 1-4\n(fetch, rebase on origin/main, git push --force-with-lease origin\n<branch>), says to rebase rather than merge main, and counts the update\nas one of the 3 CI rounds. The procedure keeps a single copy.\n\nAGENTS.md (When Blocked Protocol, Decision Framework), the merge-pr Never\nline and slash-commands.md's merge-pr consent scope now say the rule is\nabout overriding a block, and that --force-with-lease on your own PR\nbranch after a rebase is the documented update.\n\nA new test pins the Step 7 pointer. The .claude/skills copies are\nregenerated with doit skills_sync.\n\nAddresses #1327\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sd6WPdg3qv5B8PuDxa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T10:43:02Z",
+          "tree_id": "e3deee8cd82d9a0bf53d67045e48467279d7555b",
+          "url": "https://github.com/endavis/pyproject-template/commit/4ee57a36ee5f4415e3c8c87fa6bff544a080d0df"
+        },
+        "date": 1795603419023,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 8187836.488989707,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2134432691483908e-8",
+            "extra": "mean: 122.13238519659171 nsec\nrounds: 83251"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 7810495.31582331,
+            "unit": "iter/sec",
+            "range": "stddev: 3.696452872166145e-8",
+            "extra": "mean: 128.03285317566178 nsec\nrounds: 86423"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 5526583.145743526,
+            "unit": "iter/sec",
+            "range": "stddev: 1.673550088903297e-8",
+            "extra": "mean: 180.94362712523048 nsec\nrounds: 56877"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 2124257.8672789983,
+            "unit": "iter/sec",
+            "range": "stddev: 7.577843691795143e-8",
+            "extra": "mean: 470.7526404413975 nsec\nrounds: 184502"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 458809.94887869444,
+            "unit": "iter/sec",
+            "range": "stddev: 2.4453667889477597e-7",
+            "extra": "mean: 2.1795516911608903 usec\nrounds: 47896"
           }
         ]
       }
