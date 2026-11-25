@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795545250490,
+  "lastUpdate": 1795595704075,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26196,6 +26196,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 3.192826803082168e-7",
             "extra": "mean: 1.746167256142629 usec\nrounds: 62485"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "804ed0dc22d2c5f0ce816756d0e9c98c3abce319",
+          "message": "fix: ship a placeholder-free CHANGELOG.md (merges PR #1314, addresses #1313)\n\nThe shipped CHANGELOG.md carried Keep a Changelog placeholder sections and\nusername/package_name link references. With update_changelog_on_bump = true,\ncz changelog --incremental drops the unrecognised headings but keeps the 0.1.0\nbullets and link references, so they landed in a project's first generated\nrelease.\n\nReset CHANGELOG.md to its header plus an empty ## [Unreleased] heading, which\ncz removes cleanly and hand-written mode still needs. Add a template-owned test\nthat the file holds no placeholder content, and a consumer note telling\nexisting projects to reset theirs before their first doit release.\n\nAddresses #1313\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sbqeu87NEH3sb3TNF3\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T08:34:27Z",
+          "tree_id": "fad1134b5e82fb814a33f5a3c5ede0923135aaa8",
+          "url": "https://github.com/endavis/pyproject-template/commit/804ed0dc22d2c5f0ce816756d0e9c98c3abce319"
+        },
+        "date": 1795595702642,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 15196969.13578922,
+            "unit": "iter/sec",
+            "range": "stddev: 6.822992282569642e-9",
+            "extra": "mean: 65.802594653231 nsec\nrounds: 155304"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 15301862.390785368,
+            "unit": "iter/sec",
+            "range": "stddev: 6.509189391792142e-9",
+            "extra": "mean: 65.35152221746488 nsec\nrounds: 152672"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11530737.941414865,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2295239137260197e-8",
+            "extra": "mean: 86.72471832078566 nsec\nrounds: 117758"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4191390.4825261766,
+            "unit": "iter/sec",
+            "range": "stddev: 5.840764701109326e-8",
+            "extra": "mean: 238.5843085174192 nsec\nrounds: 44918"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 800915.1249708917,
+            "unit": "iter/sec",
+            "range": "stddev: 1.2378968554650208e-7",
+            "extra": "mean: 1.2485717510158691 usec\nrounds: 85419"
           }
         ]
       }
