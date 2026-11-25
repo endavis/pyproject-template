@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795596877975,
+  "lastUpdate": 1795597860152,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26373,6 +26373,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 2.0458506688923896e-7",
             "extra": "mean: 2.109272196449094 usec\nrounds: 48929"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3b751929919d2a4e1699bb76f7deb1916f80b3c3",
+          "message": "fix: append a heredoc hint when a data heredoc body alone trips a hook block (merges PR #1320, addresses #1319)\n\nThe commit-heredoc redirect only fired when a heredoc fed git commit\ndirectly. A data heredoc written to a file got the bare reason of the\npattern its body matched, which reads as though the agent had run that\ncommand and says nothing about the file-based convention.\n\nredirect_reason now appends a hint whenever _heredoc_body_caused_block\nholds: the command with its heredoc bodies stripped is allowed, no body a\nshell executes is dangerous, and no command substitution in a body is.\nA commit heredoc keeps its commit wording; any other data heredoc gets a\ngeneral hint. The matched reason is kept. The check runs after the\nverdict, so what is blocked does not change (ADR-9019, rules 1 and 3).\n\nAddresses #1319\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1scKbRQXMaKTLmaw6Xg\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T09:10:24Z",
+          "tree_id": "485008dff44b3a3c1bdee70311ea9c02fb8acf8c",
+          "url": "https://github.com/endavis/pyproject-template/commit/3b751929919d2a4e1699bb76f7deb1916f80b3c3"
+        },
+        "date": 1795597858906,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 15178918.101007558,
+            "unit": "iter/sec",
+            "range": "stddev: 9.227858380861767e-9",
+            "extra": "mean: 65.88084824923202 nsec\nrounds: 152231"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 15187047.808595564,
+            "unit": "iter/sec",
+            "range": "stddev: 8.838103828418253e-9",
+            "extra": "mean: 65.84558188024009 nsec\nrounds: 148810"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 11545060.261474404,
+            "unit": "iter/sec",
+            "range": "stddev: 8.863343121145734e-9",
+            "extra": "mean: 86.6171312536996 nsec\nrounds: 117330"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 4301322.601313815,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4307132778668732e-8",
+            "extra": "mean: 232.48663090151746 nsec\nrounds: 43433"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 816955.090154266,
+            "unit": "iter/sec",
+            "range": "stddev: 1.3426463785997987e-7",
+            "extra": "mean: 1.2240574935534945 usec\nrounds: 84126"
           }
         ]
       }
