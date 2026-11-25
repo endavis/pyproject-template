@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795602498291,
+  "lastUpdate": 1795602960699,
   "repoUrl": "https://github.com/endavis/pyproject-template",
   "entries": {
     "Benchmark": [
@@ -26550,6 +26550,65 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 1.7917049417652508e-7",
             "extra": "mean: 2.155760090532027 usec\nrounds: 48382"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "6662995+endavis@users.noreply.github.com",
+            "name": "Eric Davis",
+            "username": "endavis"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c353d42681001b8efb5c239d0e35f0ee2445b7ab",
+          "message": "chore: load the dangerous-command hook once per test module (merges PR #1324, addresses #1323)\n\nThe hook fixture in both dangerous-command test files re-executed the\n4500-line hook for every test. Under coverage on Python 3.14 (the sysmon\ncore) that made test_hook_block_dangerous_commands.py take 84s against\n11s without coverage, and the hook tests were 83% of the CI coverage\njob's measured time.\n\nA module-scoped fixture now loads the hook once per file. The\nfunction-scoped hook fixture resets every global the hook rebinds at\nruntime before each test, through monkeypatch. The names come from the\nhook's global statements, read with ast, so a global added later is\nreset without being listed. The loader, the ast scan and the reset live\nin a new helper, tests/hook_loader.py, with tests of their own.\nCONTRIBUTING.md gains a bullet on loading a module once per test module.\n\nOn Python 3.14 with coverage, test_hook_block_dangerous_commands.py\ntakes 9.29s (was 84.18s) and test_hook_dangerous_command_matrix.py\n1.57s (was 25.37s). No existing test body changed.\n\nAddresses #1323\n\n\nClaude-Session: https://claude.ai/code/session_01NXu1sd6WPdg3qv5B8PuDxa\n\nCo-authored-by: Claude Opus 5.5 <noreply@anthropic.com>",
+          "timestamp": "2026-11-25T10:35:15Z",
+          "tree_id": "51a04004f6bdde56d40586395d668b3feca0b9f0",
+          "url": "https://github.com/endavis/pyproject-template/commit/c353d42681001b8efb5c239d0e35f0ee2445b7ab"
+        },
+        "date": 1795602959528,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_default",
+            "value": 12587574.72878346,
+            "unit": "iter/sec",
+            "range": "stddev: 9.817803182700365e-9",
+            "extra": "mean: 79.44342111537526 nsec\nrounds: 129753"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_with_name",
+            "value": 13245132.215051169,
+            "unit": "iter/sec",
+            "range": "stddev: 9.441180869128625e-9",
+            "extra": "mean: 75.49943509538132 nsec\nrounds: 138218"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_core.py::test_bench_greet_long_name",
+            "value": 9820686.836118761,
+            "unit": "iter/sec",
+            "range": "stddev: 1.1450824264912029e-8",
+            "extra": "mean: 101.82587192600172 nsec\nrounds: 100817"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_get_logger",
+            "value": 3482692.2670625993,
+            "unit": "iter/sec",
+            "range": "stddev: 4.3159251869989784e-8",
+            "extra": "mean: 287.1341833608021 nsec\nrounds: 193649"
+          },
+          {
+            "name": "tests/benchmarks/test_bench_logging.py::test_bench_setup_logging",
+            "value": 767338.5754371195,
+            "unit": "iter/sec",
+            "range": "stddev: 1.4747092327874507e-7",
+            "extra": "mean: 1.3032056930414888 usec\nrounds: 83119"
           }
         ]
       }
