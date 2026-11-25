@@ -147,8 +147,10 @@ jobs:
           print("uv runs Python " + v + ", requested " + want);
           sys.exit(0 if v == want else 1)'
 
+      # --durations stay on (#1321): -v lists every test, so the table adds only the tests
+      # over 0.05s, and a later slowdown shows in the log.
       - name: Run tests
-        run: uv run pytest -n auto -v --ignore=tests/benchmarks/
+        run: uv run pytest -n auto -v --durations=0 --durations-min=0.05 --ignore=tests/benchmarks/
 
       # Windows only: run doit tasks end to end, the way a Windows developer
       # does (#1293). Each guards a bug that reached main because pytest alone
@@ -215,6 +217,8 @@ jobs:
           print("uv runs Python " + v + ", requested " + want);
           sys.exit(0 if v == want else 1)'
 
+      # --durations stay on (#1321): -v lists every test, so the table adds only the tests
+      # over 0.05s, and a later slowdown shows in the log.
       - name: Run tests with coverage
         env:
           # Logs which coverage core (sysmon or ctrace) ran.
@@ -222,7 +226,7 @@ jobs:
           COVERAGE_DEBUG_FILE: tmp/coverage-debug.txt
         run: |
           mkdir -p tmp
-          uv run pytest -n auto --cov --cov-report=xml:tmp/coverage.xml --cov-report=term -v --ignore=tests/benchmarks/
+          uv run pytest -n auto --cov --cov-report=xml:tmp/coverage.xml --cov-report=term -v --durations=0 --durations-min=0.05 --ignore=tests/benchmarks/
 
       - name: Show the coverage core
         if: always()
